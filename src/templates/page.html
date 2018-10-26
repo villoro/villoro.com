@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block style %}
+  /* Create a Parallax Effect */
+  .bgimg{
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: url('static/{% block image_parallax%}{% endblock %}');
+    min-height: 100%;
+  }
+
+  /* Turn off parallax scrolling for tablets and phones */
+  @media only screen and (max-device-width: 1600px) {
+    .bgimg{
+        background-attachment: scroll;
+        min-height: 400px;
+    }
+  }
+{% endblock %}
+
+{% block body %}
+  <!-- First Parallax Image with Logo Text -->
+  <div class="bgimg w3-display-container">
+    <div class="w3-display-middle" style="white-space:nowrap;">
+      <p class="w3-center w3-text-white v-title"> Hi, I am Arnau Villoro </p>
+      <p class="w3-center w3-text-white v-title2"> Trust me, I'm an engineer :) </p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="w3-container w3-red w3-center" style="padding:128px 16px">
+    <h1 class="w3-margin w3-jumbo">START PAGE</h1>
+    <p class="w3-xlarge">Template by w3.css</p>
+    <button class="w3-button w3-black w3-padding-large w3-large w3-margin-top">Get Started</button>
+  </header>
+{% endblock %}
