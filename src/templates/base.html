@@ -7,9 +7,21 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 <style>
+  body, html {
+      height: 100%;
+      color: #777;
+      line-height: 1.8;
+  }
+
+  /* Villoro custom classes */
   .v-text-theme {color:#2176ff !important}
   .v-theme{color:#fff!important;background-color:#2176ff!important}
   .v-gray{color:#fff!important;background-color:#616161!important}
+  .v-title{font-size:72px}
+  .v-title2{font-size:24px}
+
+  {% block style %}
+  {% endblock %}
 </style>
 
 <body>
@@ -20,10 +32,10 @@
 
       <!-- Navigation regular screens -->
       <div class="w3-right w3-hide-small">
-        <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 1</a>
-        <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 2</a>
-        <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 3</a>
-        <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 4</a>
+        <a href="/" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Home</a>
+        <a href="/about/" class="w3-bar-item w3-button w3-padding-large w3-hover-white">About me</a>
+        <a href="/portfolio/" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Portfolio</a>
+        <a href="/blog/" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Blog</a>
       </div>
 
       <!-- Sidebar three bars button on small screens -->
@@ -35,15 +47,17 @@
 
   <!-- Sidebar on small screens -->
   <div id="sidebar" class="w3-sidebar w3-bar-block w3-animate-right" style="display:none; z-index:5; right:0">
-    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Link 1</a>
-    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Link 2</a>
-    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Link 3</a>
-    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Link 4</a>
+    <a href="/" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Home</a>
+    <a href="/about/" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">About me</a>
+    <a href="/portfolio/" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Portfolio</a>
+    <a href="/blog/" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Blog</a>
   </div>
 
   <!-- Overlay -->
   <div class="w3-overlay w3-animate-opacity" onclick="sidebar_close()" style="cursor:pointer" id="overlay"></div>
 
+  {% block body %}
+  {% endblock %}
 
   <script>
     function sidebar_open() {
