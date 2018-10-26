@@ -25,16 +25,16 @@
 <body>
   <!-- Navbar -->
   <div class="w3-top">
-    <div class="w3-bar v-gray w3-card w3-left-align w3-large">
+    <div class="w3-bar w3-left-align w3-large" id="navbar">
       <!-- Villoro logo -->
       <img href="#" src="static/logo_white34.png" class="w3-bar-item w3-button" alt="Logo">
 
       <!-- Navigation regular screens -->
       <div class="w3-right w3-hide-small">
-        <a href="/" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Home</a>
-        <a href="/about" class="w3-bar-item w3-button w3-padding-large w3-hover-white">About me</a>
-        <a href="/portfolio" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Portfolio</a>
-        <a href="/blog" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Blog</a>
+        <a href="/" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Home</a>
+        <a href="/about" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">About me</a>
+        <a href="/portfolio" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Portfolio</a>
+        <a href="/blog" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Blog</a>
       </div>
 
       <!-- Sidebar three bars button on small screens -->
@@ -55,8 +55,8 @@
   <!-- Overlay -->
   <div class="w3-overlay w3-animate-opacity" onclick="sidebar_close()" style="cursor:pointer" id="overlay"></div>
 
-  {% block body %}
-  {% endblock %}
+  <!-- Add children body -->
+  {% block body %}{% endblock %}
 
   <script>
     // Open sidebar (only for small screens)
@@ -69,6 +69,8 @@
         document.getElementById("sidebar").style.display = "none";
         document.getElementById("overlay").style.display = "none";
     }
+    // Add children scripts
+    {% block scripts %}{% endblock %}
   </script>
 </body>
 </html>

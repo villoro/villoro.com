@@ -36,5 +36,18 @@
   </div>
 
   {% block page_content%}{% endblock %}
+{% endblock %}
 
+
+{% block scripts %}
+    // Change style of navbar on scroll
+    window.onscroll = function() {hide_show_navbar_border()};
+    function hide_show_navbar_border() {
+        var navbar = document.getElementById("navbar");
+        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+            navbar.className += " w3-card v-gray";
+        } else {
+            navbar.className = navbar.className.replace(" w3-card v-gray", "");
+        }
+    }
 {% endblock %}
