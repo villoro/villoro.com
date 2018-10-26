@@ -7,29 +7,32 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 <style>
-  .vblue{color:#fff!important;background-color:#2176ff!important}
-  .vgray{color:#fff!important;background-color:#616161!important}
+  .v-text-theme {color:#2176ff !important}
+  .v-theme{color:#fff!important;background-color:#2176ff!important}
+  .v-gray{color:#fff!important;background-color:#616161!important}
 </style>
 
 <body>
   <div class="w3-top">
-    <div class="w3-bar vgray w3-card w3-left-align w3-large">
-      <a href="#" class="w3-bar-item w3-button w3-padding-large">Home</a>
+    <div class="w3-bar v-gray w3-card w3-left-align w3-large">
+      <img href="#" src="static/logo_white34.png" class="w3-bar-item w3-button" alt="Logo">
 
       <!-- Navigation regular screens -->
-      <a href="#" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Link 1</a>
-      <a href="#" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Link 2</a>
-      <a href="#" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Link 3</a>
-      <a href="#" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Link 4</a>
+      <div class="w3-right w3-hide-small">
+        <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 1</a>
+        <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 2</a>
+        <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 3</a>
+        <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 4</a>
+      </div>
 
       <!-- Toggle navbar on small screens -->
-      <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-blue w3-large vgray" href="javascript:void(0);"onclick="myFunction()" title="Toggle Navigation Menu">
+      <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-blue w3-large v-gray" href="javascript:void(0);"onclick="myFunction()" title="Toggle Navigation Menu">
         <i class="fa fa-bars"></i>
       </a>
     </div>
 
     <!-- Navbar on small screens -->
-    <div id="navSmall" class="w3-bar-block vgray w3-card w3-hide w3-hide-large w3-hide-medium w3-large">
+    <div id="navSmall" class="w3-bar-block v-gray w3-card w3-hide w3-hide-large w3-hide-medium w3-large">
       <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-top">Link 1</a>
       <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-top">Link 2</a>
       <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-top">Link 3</a>
