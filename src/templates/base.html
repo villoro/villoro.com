@@ -13,6 +13,7 @@
 </style>
 
 <body>
+  <!-- Navbar -->
   <div class="w3-top">
     <div class="w3-bar v-gray w3-card w3-left-align w3-large">
       <img href="#" src="static/logo_white34.png" class="w3-bar-item w3-button" alt="Logo">
@@ -25,31 +26,33 @@
         <a href="#" class="w3-bar-item w3-button w3-padding-large w3-hover-white">Link 4</a>
       </div>
 
-      <!-- Toggle navbar on small screens -->
-      <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-blue w3-large v-gray" href="javascript:void(0);"onclick="myFunction()" title="Toggle Navigation Menu">
+      <!-- Sidebar three bars button on small screens -->
+      <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-blue w3-large v-gray" href="javascript:void(0);"onclick="sidebar_open()" title="Toggle Navigation Menu">
         <i class="fa fa-bars"></i>
       </a>
     </div>
-
-    <!-- Navbar on small screens -->
-    <div id="navSmall" class="w3-bar-block v-gray w3-card w3-hide w3-hide-large w3-hide-medium w3-large">
-      <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-top">Link 1</a>
-      <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-top">Link 2</a>
-      <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-top">Link 3</a>
-      <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-top">Link 4</a>
-    </div>
   </div>
+
+  <!-- Sidebar on small screens -->
+  <div id="sidebar" class="w3-sidebar w3-bar-block w3-animate-right" style="display:none; z-index:5; right:0">
+    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Link 1</a>
+    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Link 2</a>
+    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Link 3</a>
+    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Link 4</a>
+  </div>
+
+  <!-- Overlay -->
+  <div class="w3-overlay w3-animate-opacity" onclick="sidebar_close()" style="cursor:pointer" id="overlay"></div>
 
 
   <script>
-    // Used to toggle the menu on small screens when clicking on the menu button
-    function myFunction() {
-        var x = document.getElementById("navSmall");
-        if (x.className.indexOf("w3-show") == -1) {
-            x.className += " w3-show";
-        } else { 
-            x.className = x.className.replace(" w3-show", "");
-        }
+    function sidebar_open() {
+        document.getElementById("sidebar").style.display = "block";
+        document.getElementById("overlay").style.display = "block";
+    }
+    function sidebar_close() {
+        document.getElementById("sidebar").style.display = "none";
+        document.getElementById("overlay").style.display = "none";
     }
   </script>
 </body>
