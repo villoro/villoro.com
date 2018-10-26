@@ -11,16 +11,20 @@
     min-height: {% block parallax_min_heightx%}75%{% endblock %};
   }
 
-  /* Titles in parallax */
-  .v-title{font-size:72px}
-  .v-title2{font-size:24px}
-
   /* Turn off parallax scrolling for tablets and phones */
   @media only screen and (max-device-width: 1600px) {
     .bgimg{
         background-attachment: scroll;
         min-height: 400px;
     }
+  }
+
+  /* Titles in parallax */
+  .v-title{font-size:72px}
+  .v-title2{font-size:24px}
+
+  /* Since the size of parallax is fixed, titles that are inside are redim in order to fit */
+  @media only screen and (max-device-width: 800px) {
     .v-title{font-size:32px}
     .v-title2{font-size:16px}
   }
