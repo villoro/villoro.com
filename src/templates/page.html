@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block style %}
+  /* Create a Parallax Effect */
+  .bgimg{
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: url('static/{% block image_parallax%}{% endblock %}');
+    min-height: {% block parallax_min_heightx%}75%{% endblock %};
+  }
+
+  /* Turn off parallax scrolling for tablets and phones */
+  @media only screen and (max-device-width: 1600px) {
+    .bgimg{
+        background-attachment: scroll;
+        min-height: 400px;
+    }
+  }
+
+  /* Titles in parallax */
+  .v-title{font-size:72px}
+  .v-title2{font-size:24px}
+
+  /* Since the size of parallax is fixed, titles that are inside are redim in order to fit */
+  @media only screen and (max-device-width: 800px) {
+    .v-title{font-size:32px}
+    .v-title2{font-size:16px}
+  }
+{% endblock %}
+
+{% block body %}
+  <!-- First Parallax Image with Logo Text -->
+  <div class="bgimg w3-display-container" id="home">
+    <div class="w3-display-middle">
+      <p class="w3-center w3-text-white v-title">{% block parallax_title1%}{% endblock %}</p>
+      <p class="w3-center w3-text-white v-title2">{% block parallax_title2%}{% endblock %}</p>
+    </div>
+  </div>
+
+  {% block page_content%}{% endblock %}
+{% endblock %}
+
+
+{% block scripts %}
+    // Change style of navbar on scroll
+    window.onscroll = function() {hide_show_navbar_border()};
+    function hide_show_navbar_border() {
+        var navbar = document.getElementById("navbar");
+        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+            navbar.className += " w3-card v-gray";
+        } else {
+            navbar.className = navbar.className.replace(" w3-card v-gray", "");
+        }
+    }
+{% endblock %}
