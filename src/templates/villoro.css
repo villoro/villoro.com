@@ -6,7 +6,7 @@ body, html {
 }
 
 /* Custom colors */   
-.v-text-theme {color:#2176ff !important}
+.v-text-theme{color:#2176ff !important}
 .v-theme{color:#fff!important;background-color:#2176ff!important}
 .v-gray{color:#fff!important;background-color:#616161!important}
 
@@ -17,3 +17,6 @@ h3 {font-size: 30px}
 h4 {font-size: 24px}
 h5 {font-size: 20px}
 h6 {font-size: 18px}
+
+/* Use theme-gray color for titles */
+h1,h2,h3,h4,h5,h6 {color:#616161 !important}
