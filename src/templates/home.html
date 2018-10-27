@@ -7,10 +7,23 @@
 {% block parallax_title2%} Trust me, I'm an engineer :) {% endblock %}
 
 {% block page_content%}
-  <!-- Header -->
-  <header class="w3-container w3-red w3-center" style="padding:128px 16px">
-    <h1 class="w3-margin w3-jumbo">LOREM IPSUM</h1>
-    <p class="w3-xlarge">dolor sit amet</p>
-    <button class="w3-button w3-black w3-padding-large w3-large w3-margin-top">Get Started</button>
-  </header>
+  <!-- Who I am part -->
+  <div class="w3-padding-32 w3-content" style="max-width:1600px">
+    <div class="w3-row">
+
+      <!-- Word cloud image -->
+      <div class="w3-col m6 w3-padding-large w3-center">
+        <img src="static/images/word_cloud.png" class="w3-image" alt="word_cloud" style="width: 100%; max-width: 600px;">
+      </div>
+
+      <!-- Short description -->
+      <div class="w3-col m6 w3-padding-large" style="font-size:18px">
+        <h1>Who I Am</h1>
+        <p><i class="fa fa-check v-text-theme"></i> Experience as an IT Consultant</p>
+        <p><i class="fa fa-check v-text-theme"></i> Strong engineering foundations</p>
+        <p><i class="fa fa-check v-text-theme"></i> Python Developer enthusiast</p>
+        <p><i class="fa fa-check v-text-theme"></i> Deep Learning knowledge</p>
+      </div>
+    </div>
+  </div>
 {% endblock %}

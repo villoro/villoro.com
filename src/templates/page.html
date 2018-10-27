@@ -7,7 +7,7 @@
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    background-image: url('static/{% block image_parallax%}{% endblock %}');
+    background-image: url('static/images/{% block image_parallax%}{% endblock %}');
     min-height: {% block parallax_min_heightx%}75%{% endblock %};
   }
 
@@ -49,11 +49,14 @@
     // Change style of navbar on scroll
     window.onscroll = function() {hide_show_navbar_border()};
     function hide_show_navbar_border() {
+        var mclasses = " w3-card v-gray w3-animate-opacity"
         var navbar = document.getElementById("navbar");
         if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
-            navbar.className += " w3-card v-gray";
+            if (!navbar.className.includes(mclasses)) {
+                navbar.className += mclasses;
+            }
         } else {
-            navbar.className = navbar.className.replace(" w3-card v-gray", "");
+            navbar.className = navbar.className.replace(mclasses, "");
         }
     }
 {% endblock %}
