@@ -25,7 +25,9 @@
     <div class="w3-top">
       <div class="w3-bar w3-left-align w3-large" id="navbar">
         <!-- Villoro logo -->
-        <img href="#" src="static/images/logo_white40.png" class="w3-bar-item w3-button" alt="Logo">
+        <a href="/">
+          <img src="static/images/logo_white40.png" class="w3-bar-item w3-button" alt="Logo">
+        </a>
 
         <!-- Navigation regular screens -->
         <div class="w3-right w3-hide-small">
@@ -56,6 +58,23 @@
 
     <!-- Add children body -->
     {% block body %}{% endblock %}
+
+    <!-- Footer with 3 columns (on medium/big screens) -->
+    <footer class="w3-container w3-center w3-row v-gray w3-padding-large w3-text-white">
+      <div class="w3-col m4">
+        Made by Villoro (<a href="mailto:arnau@villoro.com">arnau@villoro.com</a>)
+      </div>
+
+      <div class="w3-col m4">
+        If you like it you can fork it on <a href="https://github.com/villoro/villoro.com">github</a>
+      </div>
+
+      <!-- Github/linkedin links -->
+      <div class="w3-col m4">
+        <i href="https://github.com/villoro" class="fa fa-github w3-hover-opacity w3-xlarge" style="cursor: pointer; padding-right: 16px"></i>
+        <i href="https://www.linkedin.com/in/villoro/" class="fa fa-linkedin w3-hover-opacity w3-xlarge" style="cursor: pointer;"></i>
+      </div>
+    </footer>
 
     <script>
       // Open sidebar (only for small screens)
