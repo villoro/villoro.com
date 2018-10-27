@@ -11,18 +11,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
   <style>
-
-    /* Used by parallax efect */
-    body, html {
-        height: 100%;
-        color: #777;
-        line-height: 1.8;
-    }
-
-    /* Villoro custom classes */
-    .v-text-theme {color:#2176ff !important}
-    .v-theme{color:#fff!important;background-color:#2176ff!important}
-    .v-gray{color:#fff!important;background-color:#616161!important}
+    /* Villoro custom styles */
+    {% include 'villoro.css' %}
 
     /* Add children styles */
     {% block style %}{% endblock %}
