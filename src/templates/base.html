@@ -1,78 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-<title>Villoro</title>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <title>Villoro</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-  body, html {
-      height: 100%;
-      color: #777;
-      line-height: 1.8;
-  }
+  <!-- W3.css for styling: https://www.w3schools.com/w3css/4/w3.css -->
+  <link rel="stylesheet" href="static/css/w3.css">
 
-  /* Villoro custom classes */
-  .v-text-theme {color:#2176ff !important}
-  .v-theme{color:#fff!important;background-color:#2176ff!important}
-  .v-gray{color:#fff!important;background-color:#616161!important}
+  <!-- Icons font -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-  /* Add children styles */
-  {% block style %}{% endblock %}
-</style>
+  <style>
+    /* Villoro custom styles */
+    {% include 'villoro.css' %}
 
-<link rel="icon" href="static/favicon.ico"/>
+    /* Add children styles */
+    {% block style %}{% endblock %}
+  </style>
 
-<body>
-  <!-- Navbar -->
-  <div class="w3-top">
-    <div class="w3-bar w3-left-align w3-large" id="navbar">
-      <!-- Villoro logo -->
-      <img href="#" src="static/logo_white40.png" class="w3-bar-item w3-button" alt="Logo">
+  <link rel="icon" href="static/images/favicon.ico"/>
 
-      <!-- Navigation regular screens -->
-      <div class="w3-right w3-hide-small">
-        <a href="/" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Home</a>
-        <a href="/about" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">About me</a>
-        <a href="/portfolio" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Portfolio</a>
-        <a href="/blog" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Blog</a>
+  <body>
+    <!-- Navbar -->
+    <div class="w3-top">
+      <div class="w3-bar w3-left-align w3-large" id="navbar">
+        <!-- Villoro logo -->
+        <a href="/">
+          <img src="static/images/logo_white40.png" class="w3-bar-item w3-button" alt="Logo">
+        </a>
+
+        <!-- Navigation regular screens -->
+        <div class="w3-right w3-hide-small">
+          <a href="/" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Home</a>
+          <a href="/about" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">About me</a>
+          <a href="/portfolio" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Portfolio</a>
+          <a href="/blog" class="w3-bar-item w3-button w3-padding-large w3-hover-white w3-text-white">Blog</a>
+        </div>
+
+        <!-- Sidebar three bars button on small screens -->
+        <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-large w3-text-white"
+              href="javascript:void(0);" onclick="sidebar_open()" title="Toggle Navigation Menu">
+          <i class="fa fa-bars"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Sidebar on small screens -->
+    <div id="sidebar" class="w3-sidebar w3-bar-block w3-animate-right" style="display:none; z-index:5; right:0">
+      <a href="/" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Home</a>
+      <a href="/about" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">About me</a>
+      <a href="/portfolio" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Portfolio</a>
+      <a href="/blog" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Blog</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="w3-overlay w3-animate-opacity" onclick="sidebar_close()" style="cursor:pointer" id="overlay"></div>
+
+    <!-- Add children body -->
+    {% block body %}{% endblock %}
+
+    <!-- Footer with 3 columns (on medium/big screens) -->
+    <footer class="w3-container w3-center w3-row v-gray w3-padding-large w3-text-white">
+      <div class="w3-col m4">
+        Made by Villoro (<a href="mailto:arnau@villoro.com">arnau@villoro.com</a>)
       </div>
 
-      <!-- Sidebar three bars button on small screens -->
-      <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-large w3-text-white" href="javascript:void(0);"onclick="sidebar_open()" title="Toggle Navigation Menu">
-        <i class="fa fa-bars"></i>
-      </a>
-    </div>
-  </div>
+      <div class="w3-col m4">
+        If you like it you can fork it on <a href="https://github.com/villoro/villoro.com">github</a>
+      </div>
 
-  <!-- Sidebar on small screens -->
-  <div id="sidebar" class="w3-sidebar w3-bar-block w3-animate-right" style="display:none; z-index:5; right:0">
-    <a href="/" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Home</a>
-    <a href="/about" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">About me</a>
-    <a href="/portfolio" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Portfolio</a>
-    <a href="/blog" class="w3-bar-item w3-button w3-padding-large w3-border-bottom">Blog</a>
-  </div>
+      <!-- Github/linkedin links -->
+      <div class="w3-col m4">
+        <i href="https://github.com/villoro" class="fa fa-github w3-hover-opacity w3-xlarge" style="cursor: pointer; padding-right: 16px"></i>
+        <i href="https://www.linkedin.com/in/villoro/" class="fa fa-linkedin w3-hover-opacity w3-xlarge" style="cursor: pointer;"></i>
+      </div>
+    </footer>
 
-  <!-- Overlay -->
-  <div class="w3-overlay w3-animate-opacity" onclick="sidebar_close()" style="cursor:pointer" id="overlay"></div>
-
-  <!-- Add children body -->
-  {% block body %}{% endblock %}
-
-  <script>
-    // Open sidebar (only for small screens)
-    function sidebar_open() {
-        document.getElementById("sidebar").style.display = "block";
-        document.getElementById("overlay").style.display = "block";
-    }
-    // Close sidebar (only for small screens)
-    function sidebar_close() {
-        document.getElementById("sidebar").style.display = "none";
-        document.getElementById("overlay").style.display = "none";
-    }
-    // Add children scripts
-    {% block scripts %}{% endblock %}
-  </script>
-</body>
+    <script>
+      // Open sidebar (only for small screens)
+      function sidebar_open() {
+          document.getElementById("sidebar").style.display = "block";
+          document.getElementById("overlay").style.display = "block";
+      }
+      // Close sidebar (only for small screens)
+      function sidebar_close() {
+          document.getElementById("sidebar").style.display = "none";
+          document.getElementById("overlay").style.display = "none";
+      }
+      // Add children scripts
+      {% block scripts %}{% endblock %}
+    </script>
+  </body>
 </html>
