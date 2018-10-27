@@ -1,0 +1,22 @@
+/* Used by parallax efect */
+body, html {
+    height: 100%;
+    color: #777;
+    line-height: 1.8;
+}
+
+/* Custom colors */   
+.v-text-theme{color:#2176ff !important}
+.v-theme{color:#fff!important;background-color:#2176ff!important}
+.v-gray{color:#fff!important;background-color:#616161!important}
+
+/* Override w3 titles sizes */
+h1 {font-size: 48px}
+h2 {font-size: 36px}
+h3 {font-size: 30px}
+h4 {font-size: 24px}
+h5 {font-size: 20px}
+h6 {font-size: 18px}
+
+/* Use theme-gray color for titles */
+h1,h2,h3,h4,h5,h6 {color:#616161 !important}
