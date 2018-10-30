@@ -8,7 +8,7 @@ body, html {
 /* Custom colors */   
 .v-text-theme{color:#2176ff !important}
 .v-theme{color:#fff!important;background-color:#2176ff!important}
-.v-gray{color:#fff!important;background-color:#616161!important} /* Gray 700 */
+.v-grey{color:#fff!important;background-color:#616161!important} /* Gray 700 */
 
 /* Override w3 titles sizes */
 h1, h1w {font-size: 48px}
