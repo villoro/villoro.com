@@ -1,5 +1,7 @@
 """ Flask app index """
 
+import json
+
 from flask import Flask, render_template
 
 APP = Flask(__name__)
@@ -11,7 +13,8 @@ def home():
 
 @APP.route('/about.html')
 def about():
-    return render_template("about.html")
+    with open('skills.json') as file:
+        return render_template("about.html", skills=json.load(file))
 
 @APP.route('/portfolio.html')
 def portfolio():
