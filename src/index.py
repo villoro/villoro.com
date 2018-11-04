@@ -6,6 +6,8 @@ from flask import Flask, render_template
 
 APP = Flask(__name__)
 
+PATH_ROOT = "src/"
+
 @APP.route('/')
 @APP.route('/home.html')
 def home():
@@ -16,7 +18,7 @@ def home():
 @APP.route('/about.html')
 def about():
     """ about me page """
-    with open('src/skills.yaml') as file:
+    with open(PATH_ROOT + "skills.yaml") as file:
         skills = yaml.load(file)
 
     tools = ["python", "jupyter", "tensorflow", "plotly", "sublime", "git"]
@@ -34,6 +36,18 @@ def portfolio():
 def blog():
     """ blog page """
     return render_template("blog.html")
+
+
+@APP.route('/portfolio-items/<item>')
+def portfolio_item(item):
+    """ portfolio item """
+
+    item_name = item.split(".")[0]
+
+    with open('{}portfolio/{}.yaml'.format(PATH_ROOT, item_name)) as file:
+        kwa = yaml.load(file)
+
+    return render_template("portfolio_item.html", **kwa)
 
 
 if __name__ == '__main__':
