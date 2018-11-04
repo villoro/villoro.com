@@ -7,7 +7,7 @@ image_square: simpsons_square.jpg
 brief: |
   The aim of this project was to work with Natural Language Processing (NLP)
 
-  To practise with NLP I created a neural network that was able to generate a new Simpson’s episode script.
+  To practise with NLP I created a neural network that was able to generate a new Simpson's episode script.
 
   The network created was a Recurrent Neural Network (RNN) with Long Short.term Memory (LSTM) cells.
 

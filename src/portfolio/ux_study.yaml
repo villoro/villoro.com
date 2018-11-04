@@ -7,7 +7,7 @@ image_square: expensor_app_square.jpg
 brief: |
   For my Masters Thesis I did a UX Study focusing on how to create an app to manage personal finances. The main objective of the project was how to successfully design and create an Android App that convey a good UX.
 
-  I followed Rex Hartson and Pardha S. Pyla‘s guidelines in order to ensure a quality User Experience.
+  I followed [Rex Hartson and Pardha S. Pyla's](https://www.amazon.com/UX-Book-Guidelines-Ensuring-Experience/dp/0123852412) guidelines in order to ensure a quality User Experience.
 
   I also created a working prototype developed with Android Studio including cloud syncronization using SaaS.
 
