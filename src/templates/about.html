@@ -78,8 +78,8 @@
       <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
         <h1>Tools</h1>
         <p>These are the tools I normally use.</p>
-        <div class="w3-row">
 
+        <div class="w3-row" style="padding-top: 32px">
           {% for tool in tools %}
           <div class="w3-col l2 m4 s6 w3-padding w3-center">
             <img src="static/images/tools/{{ tool }}.png" alt="{{ tool }}" style="width: 100%; max-width: 96px;">
@@ -88,8 +88,8 @@
             </div>
           </div>
           {% endfor %}
-
         </div>
+
       </div>
     </div>
   </div>
