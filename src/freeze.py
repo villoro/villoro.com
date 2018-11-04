@@ -18,7 +18,7 @@ def portfolio_items():
 
 if __name__ == '__main__':
 
-    if "preview" == sys.argv[1]:
+    if (len(sys.argv) > 1) and ("preview" == sys.argv[1]):
         print("Running Flask-frozen preview mode")
         FREEZER.run(debug=True)
 
