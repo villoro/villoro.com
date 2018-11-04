@@ -80,42 +80,14 @@
         <p>These are the tools I normally use.</p>
         <div class="w3-row">
 
+          {% for tool in tools %}
           <div class="w3-col l2 m4 s6 w3-padding w3-center">
-            <img src="static/images/tools/python.png" alt="python" style="width: 100%; max-width: 96px;">
+            <img src="static/images/tools/{{ tool }}.png" alt="{{ tool }}" style="width: 100%; max-width: 96px;">
             <div class="w3-container">
-              <h4>Python</h4>
+              <h4>{{ tool.title() }}</h4>
             </div>
           </div>
-          <div class="w3-col l2 m4 s6 w3-padding w3-center">
-            <img src="static/images/tools/jupyter.png" alt="jupyter" style="width: 100%; max-width: 96px;">
-            <div class="w3-container">
-              <h4>Jupyter</h4>
-            </div>
-          </div>
-          <div class="w3-col l2 m4 s6 w3-padding w3-center">
-            <img src="static/images/tools/tensorflow.png" alt="tensorflow" style="width: 100%; max-width: 96px;">
-            <div class="w3-container">
-              <h4>Tensorflow</h4>
-            </div>
-          </div>
-          <div class="w3-col l2 m4 s6 w3-padding w3-center">
-            <img src="static/images/tools/plotly.png" alt="plotly" style="width: 100%; max-width: 96px;">
-            <div class="w3-container">
-              <h4>Plotly</h4>
-            </div>
-          </div>
-          <div class="w3-col l2 m4 s6 w3-padding w3-center">
-            <img src="static/images/tools/sublime.png" alt="sublime" style="width: 100%; max-width: 96px;">
-            <div class="w3-container">
-              <h4>Sublime</h4>
-            </div>
-          </div>
-          <div class="w3-col l2 m4 s6 w3-padding w3-center">
-            <img src="static/images/tools/git.png" alt="git" style="width: 100%; max-width: 96px;">
-            <div class="w3-container">
-              <h4>Git</h4>
-            </div>
-          </div>
+          {% endfor %}
 
         </div>
       </div>

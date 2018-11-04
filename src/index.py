@@ -13,8 +13,13 @@ def home():
 
 @APP.route('/about.html')
 def about():
+
     with open('skills.json') as file:
-        return render_template("about.html", skills=json.load(file))
+        skills = json.load(file)
+
+    tools = ["python", "jupyter", "tensorflow", "plotly", "sublime", "git"]
+
+    return render_template("about.html", skills=skills, tools=tools)
 
 @APP.route('/portfolio.html')
 def portfolio():
