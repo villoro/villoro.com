@@ -1,6 +1,6 @@
 """ Flask app index """
 
-import json
+import oyaml as yaml
 
 from flask import Flask, render_template
 
@@ -14,8 +14,8 @@ def home():
 @APP.route('/about.html')
 def about():
 
-    with open('src/skills.json') as file:
-        skills = json.load(file)
+    with open('src/skills.yaml') as file:
+        skills = yaml.load(file)
 
     tools = ["python", "jupyter", "tensorflow", "plotly", "sublime", "git"]
 
