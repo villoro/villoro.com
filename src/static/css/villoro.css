@@ -6,7 +6,7 @@ body, html {
 }
 
 /* Custom colors */   
-.v-text-theme{color:#2176ff !important}
+.v-text-theme{color:#2176ff!important}
 .v-theme{color:#fff!important;background-color:#2176ff!important}
 .v-grey{color:#fff!important;background-color:#616161!important} /* Gray 700 */
 
@@ -19,5 +19,9 @@ h5, h5w {font-size: 20px}
 h6, h6w {font-size: 18px}
 
 /* Use theme-gray color for titles */
-h1,h2,h3,h4,h5,h6 {color:#424242 !important} /* Gray 800 */
-h1w,h2w,h3w,h4w,h5w,h6w {color:#fff !important} /* Gray 800 */
+h1,h2,h3,h4,h5,h6 {color:#424242!important} /* Gray 800 */
+h1w,h2w,h3w,h4w,h5w,h6w {color:#fff!important} /* Gray 800 */
+
+/* change link colors */
+a {color:#2176ff!important}
+a:hover {color:#FFCA28!important}
