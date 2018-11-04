@@ -21,7 +21,7 @@ results: |
   Finally I put everything together in order to have a program that was able to:
 
   * Extracts all faces from any image
-  * Uses those faces as an input for a CNN that detects their’s keypoints
+  * Uses those faces as an input for a CNN that detects their's keypoints
   * Uses those predictions and shows them back in the original image
 
   At the end I could use those keypoints to add some stickers to any photo.

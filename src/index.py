@@ -1,7 +1,8 @@
 """ Flask app index """
 
-import oyaml as yaml
+from markdown import markdown
 
+import oyaml as yaml
 from flask import Flask, render_template
 
 APP = Flask(__name__)
@@ -46,6 +47,10 @@ def portfolio_item(item):
 
     with open('{}portfolio/{}.yaml'.format(PATH_ROOT, item_name)) as file:
         kwa = yaml.load(file)
+
+    # Transform some blocks from markdown to html
+    for x in ["brief", "results"]:
+        kwa[x] = markdown(kwa[x])
 
     return render_template("portfolio_item.html", **kwa)
 
