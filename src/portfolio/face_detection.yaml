@@ -1,0 +1,27 @@
+code: face_detection
+title: Face detection
+subtitle: Creation of a compute vision pipeline to detect keypoints on photo's faces.
+image: face_detection.jpg
+image_square: face_detection_square.jpg
+
+brief: |
+  The idea of this project was to create a Computer Vision (CV) pipeline.
+
+  In the first part I explored some CV techniques to detect faces or edges. I also learned how to denoise an image and to blur people's faces to hide their identities. 
+
+  Then a neural network was used to detect the keypoints in all faces present in any photo. To do so I trained a CNN using Keras.
+
+results: |
+  In the first part I used [Haar-Cascade](https://docs.opencv.org/3.3.0/dc/d88/tutorial_traincascade.html) to detect faces and eyes. This is a technique that consists of using a series of kernels in order to create a classifier that detects some object/feature. I used a pretrained classifier to detect faces.
+
+  I also worked with Non-Local Means denoising to clean images. With this I was able to make the face detection step more robust. I also worked with canny edge detection to detect edges but I ended up not using it in the final pipeline.
+
+  For the second part I created a simple CNN to detect the keypoints of any face.
+
+  Finally I put everything together in order to have a program that was able to:
+
+  * Extracts all faces from any image
+  * Uses those faces as an input for a CNN that detects their's keypoints
+  * Uses those predictions and shows them back in the original image
+
+  At the end I could use those keypoints to add some stickers to any photo.
