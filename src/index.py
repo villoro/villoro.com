@@ -14,7 +14,7 @@ def home():
 @APP.route('/about.html')
 def about():
 
-    with open('skills.json') as file:
+    with open('src/skills.json') as file:
         skills = json.load(file)
 
     tools = ["python", "jupyter", "tensorflow", "plotly", "sublime", "git"]
