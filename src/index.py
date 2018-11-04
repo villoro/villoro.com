@@ -9,11 +9,13 @@ APP = Flask(__name__)
 @APP.route('/')
 @APP.route('/home.html')
 def home():
+    """ home page """
     return render_template("home.html")
+
 
 @APP.route('/about.html')
 def about():
-
+    """ about me page """
     with open('src/skills.yaml') as file:
         skills = yaml.load(file)
 
@@ -21,12 +23,16 @@ def about():
 
     return render_template("about.html", skills=skills, tools=tools)
 
+
 @APP.route('/portfolio.html')
 def portfolio():
+    """ portfolio page """
     return render_template("portfolio.html")
+
 
 @APP.route('/blog.html')
 def blog():
+    """ blog page """
     return render_template("blog.html")
 
 

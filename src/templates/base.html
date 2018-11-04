@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- W3.css for styling: https://www.w3schools.com/w3css/4/w3.css -->
-  <link rel="stylesheet" href="static/css/w3.css">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/w3.css") }}">
 
   <!-- Material colors -->
-  <link rel="stylesheet" href="static/css/material-colors.css">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/material-colors.css") }}">
 
   <!-- Custom styles -->
-  <link rel="stylesheet" href="static/css/villoro.css">
+  <link rel="stylesheet" href="{{ url_for("static", filename="css/villoro.css") }}">
 
   <!-- Icons font -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -21,15 +21,15 @@
     {% block style %}{% endblock %}
   </style>
 
-  <link rel="icon" href="static/images/favicon.ico"/>
+  <link rel="icon" href="{{ url_for("static", filename="images/favicon.ico") }}"/>
 
   <body>
     <!-- Navbar -->
     <div class="w3-top">
-      <div class="w3-bar w3-left-align w3-large" id="navbar">
+      <div class="w3-bar w3-left-align w3-large {% block navbar_classes %}v-grey{% endblock %}" id="navbar">
         <!-- Villoro logo -->
         <a href="/">
-          <img src="static/images/logo_white40.png" class="w3-bar-item w3-button" alt="Logo">
+          <img src="{{ url_for("static", filename="images/logo_white40.png") }}" class="w3-bar-item w3-button" alt="Logo">
         </a>
 
         <!-- Navigation regular screens -->
