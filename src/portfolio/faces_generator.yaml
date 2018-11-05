@@ -1,5 +1,5 @@
 code: faces_generator
-title: Faces Generator
+title: Faces generator
 subtitle: Use a GAN to create new human faces.
 image: gan_faces.jpg
 image_square: gan_faces_square.jpg

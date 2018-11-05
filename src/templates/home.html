@@ -26,4 +26,29 @@
       </div>
     </div>
   </div>
+
+
+  <!-- SECTION: portfolio -->
+  <div class="w3-light-grey">
+    <div class="w3-padding-32 w3-content" style="max-width:1200px">
+      <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
+        <h1>Portfolio</h1>
+        <p>Take a look at my recent projects.</p>
+
+        <div class="w3-row" style="padding-top: 32px">
+          {% for port in portfolio %}
+          <div class="w3-col l3 m6 s12 w3-padding w3-center">
+            <div class="w3-card w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale">
+              <a href="{{ url_for('portfolio_item', item="{}.html".format(port["code"])) }}">
+                <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}"" alt="{{ tool }}" style="width:100%">
+              </a>
+              <div class="w3-padding-small" style="z-index:4">{{ port["title"] }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+  </div>
 {% endblock %}

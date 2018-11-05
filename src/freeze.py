@@ -11,9 +11,9 @@ FREEZER = Freezer(APP)
 # TODO: this is temporal
 # Generate portfolio pages
 @FREEZER.register_generator
-def portfolio_items():
+def portfolio_item():
     for name in os.listdir("src/portfolio"):
-        yield '/portfolio-items/{}.html'.format(name.split(".")[0])
+        yield '/portfolio_item/{}.html'.format(name.split(".")[0])
 
 
 if __name__ == '__main__':
