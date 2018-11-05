@@ -38,4 +38,19 @@
         {% endautoescape %}
     </div>
   </div>
+
+  <!-- SECTION: portfolio -->
+  <div class="w3-display-container">
+    <img src="{{ url_for("static", filename="images/project_bar.jpg") }}" alt="Lights" style="width:100%; max-height: 300px">
+
+    <!-- large screens -->
+    <div class="w3-display-middle w3-hide-medium w3-hide-small" style="max-width:1200px;">
+      <h1w>More Projects</h1w>
+    </div>
+    
+    <!-- medium and small screens -->
+    <div class="w3-display-left w3-hide-large" style="max-width:1200px;">
+      <h1w class="w3-padding-large">More Projects</h1w>
+    </div>
+  </div>
 {% endblock %}
