@@ -13,7 +13,7 @@
         <p>A sample of my projects.</p>
 
         <div class="w3-row" style="padding-top: 32px">
-          {% for port in portfolio %}
+          {% for port in portfolio.values() %}
           <div class="w3-col l4 m6 s12 w3-padding w3-center">
             <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-light-grey">
               <a href="{{ url_for('portfolio_item', item="{}.html".format(port["code"])) }}">

@@ -3,6 +3,7 @@ title: TV Script Generation
 subtitle: Creation of a neural network to generate a Simpsons script.
 image: simpsons.jpg
 image_square: simpsons_square.jpg
+highlight: True
 
 brief: |
   The aim of this project was to work with Natural Language Processing (NLP)
