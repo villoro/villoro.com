@@ -15,6 +15,13 @@ def get_skills():
         return yaml.load(file)
 
 
+def get_tools():
+    """ Get tools as ordered dict """
+
+    with open(PATH_ROOT + "tools.yaml") as file:
+        return yaml.load(file)
+
+
 def get_portfolio():
     """ Return list of portfolio items with info as dict"""
 

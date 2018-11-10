@@ -2,7 +2,7 @@ code: sudoku
 title: Sudoku solver
 subtitle: Implementing an AI that can solve any sudoku.
 image: sudoku.gif
-image_square: sudoku.png
+image_square: sudoku.jpg
 highlight: True
 
 brief: |

@@ -77,14 +77,19 @@
     <div class="w3-padding-32 w3-content" style="max-width:1200px">
       <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
         <h1>Tools</h1>
-        <p>These are the tools I normally use.</p>
+        <h6>These are the tools/services I normally use.</h6>
 
         <div class="w3-row" style="padding-top: 32px">
-          {% for tool in tools %}
+          {% for tool_name, tool_url in tools.items() %}
           <div class="w3-col l2 m4 s6 w3-padding w3-center">
-            <img src="{{ url_for("static", filename="images/tools/{}.png".format(tool)) }}"" alt="{{ tool }}" style="width: 100%; max-width: 96px;">
+            <!-- Tool image and link -->
+            <a href="{{ tool_url }}">
+              <img src="{{ url_for("static", filename="images/tools/{}.png".format(tool_name)) }}"" alt="{{ tool_name }}" style="width: 100%; max-width: 96px;">
+            </a>
+
+            <!-- Tool name -->
             <div class="w3-container">
-              <h4>{{ tool.title() }}</h4>
+              <h4>{{ tool_name.title() }}</h4>
             </div>
           </div>
           {% endfor %}
