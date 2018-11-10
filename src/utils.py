@@ -1,6 +1,7 @@
 """ Flask app index """
 
 import os
+from collections import OrderedDict
 
 import oyaml as yaml
 from markdown import markdown
@@ -14,22 +15,29 @@ def get_skills():
         return yaml.load(file)
 
 
-def get_portfolio_item_data(item):
-    """ Return porfolio item data as ordered dict """
+def get_tools():
+    """ Get tools as ordered dict """
 
-    item_name = item.split(".")[0]
-
-    with open('{}portfolio/{}.yaml'.format(PATH_ROOT, item_name)) as file:
-        output = yaml.load(file)
-
-        # Transform some blocks from markdown to html
-    for x in ["brief", "results"]:
-        output[x] = markdown(output[x])
-
-    return output
+    with open(PATH_ROOT + "tools.yaml") as file:
+        return yaml.load(file)
 
 
-def get_portfolio(max_num=4):
+def get_portfolio():
     """ Return list of portfolio items with info as dict"""
 
-    return [get_portfolio_item_data(x) for x in os.listdir("src/portfolio")[:max_num]]
+    out = OrderedDict()
+
+    for filename in os.listdir(PATH_ROOT + "portfolio"):
+        num, name = filename.split("-")
+
+        # Strip extensions
+        name = name.split(".")[0]
+
+        with open('{}portfolio/{}-{}.yaml'.format(PATH_ROOT, num, name)) as file:
+            out[name] = yaml.load(file)
+
+            # Transform some blocks from markdown to html
+        for x in ["brief", "results"]:
+            out[name][x] = markdown(out[name][x])
+
+    return out
