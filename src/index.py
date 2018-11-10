@@ -9,13 +9,18 @@ APP = Flask(__name__)
 
 PATH_ROOT = "src/"
 
+# Pre load projects in order to speed up
+PROJECTS = u.get_portfolio()
+PROJECTS_HIGH = {i: data for i, data in PROJECTS.items() if data.get("highlight", False)}
+
+
 @APP.route('/')
 @APP.route('/home.html')
 def home():
     """ home page """
 
-    portfolio = u.get_portfolio()
-    return render_template("home.html", portfolio=portfolio)
+    
+    return render_template("home.html", portfolio=PROJECTS_HIGH)
 
 
 @APP.route('/about.html')
@@ -31,7 +36,8 @@ def about():
 @APP.route('/portfolio.html')
 def portfolio():
     """ portfolio page """
-    return render_template("portfolio.html")
+
+    return render_template("portfolio.html", portfolio=PROJECTS)
 
 
 @APP.route('/blog.html')
@@ -44,8 +50,8 @@ def blog():
 def portfolio_item(item):
     """ portfolio item """
 
-    kwa = u.get_portfolio_item_data(item)
-    return render_template("portfolio_item.html", **kwa)
+    name = item.split(".")[0] # No extension
+    return render_template("portfolio_item.html", **PROJECTS[name])
 
 
 if __name__ == '__main__':

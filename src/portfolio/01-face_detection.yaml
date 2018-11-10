@@ -3,6 +3,7 @@ title: Face detection
 subtitle: Creation of a compute vision pipeline to detect keypoints on photo's faces.
 image: face_detection.jpg
 image_square: face_detection_square.jpg
+highlight: True
 
 brief: |
   The idea of this project was to create a Computer Vision (CV) pipeline.
