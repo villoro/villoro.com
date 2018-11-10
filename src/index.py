@@ -19,7 +19,6 @@ PROJECTS_HIGH = {i: data for i, data in PROJECTS.items() if data.get("highlight"
 def home():
     """ home page """
 
-    
     return render_template("home.html", portfolio=PROJECTS_HIGH)
 
 
@@ -28,7 +27,7 @@ def about():
     """ about me page """
 
     skills = u.get_skills()
-    tools = ["python", "jupyter", "tensorflow", "plotly", "sublime", "git"]
+    tools = u.get_tools()
 
     return render_template("about.html", skills=skills, tools=tools)
 
