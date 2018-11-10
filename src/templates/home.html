@@ -17,12 +17,12 @@
       </div>
 
       <!-- Short description -->
-      <div class="w3-col m6 w3-padding-large" style="font-size:18px">
+      <div class="w3-col m6 w3-padding-large">
         <h1>Who I Am</h1>
-        <p><i class="fa fa-check v-text-theme"></i> Experience as an IT Consultant</p>
-        <p><i class="fa fa-check v-text-theme"></i> Strong engineering foundations</p>
-        <p><i class="fa fa-check v-text-theme"></i> Python Developer enthusiast</p>
-        <p><i class="fa fa-check v-text-theme"></i> Deep Learning knowledge</p>
+        <h6><i class="fa fa-check v-text-theme"></i> Experience as an IT Consultant</h6>
+        <h6><i class="fa fa-check v-text-theme"></i> Strong engineering foundations</h6>
+        <h6><i class="fa fa-check v-text-theme"></i> Python Developer enthusiast</h6>
+        <h6><i class="fa fa-check v-text-theme"></i> Deep Learning knowledge</h6>
       </div>
     </div>
   </div>
@@ -38,9 +38,9 @@
         <div class="w3-row" style="padding-top: 32px">
           {% for port in portfolio %}
           <div class="w3-col l3 m6 s12 w3-padding w3-center">
-            <div class="w3-card w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale">
+            <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-light-grey">
               <a href="{{ url_for('portfolio_item', item="{}.html".format(port["code"])) }}">
-                <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}"" alt="{{ tool }}" style="width:100%">
+                <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}"" alt="{{ tool }}" class="v-round-image">
               </a>
               <div class="w3-padding-small" style="z-index:4">{{ port["title"] }}</div>
             </div>
