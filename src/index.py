@@ -31,7 +31,9 @@ def about():
 @APP.route('/portfolio.html')
 def portfolio():
     """ portfolio page """
-    return render_template("portfolio.html")
+
+    portfolio = u.get_portfolio()
+    return render_template("portfolio.html", portfolio=portfolio)
 
 
 @APP.route('/blog.html')
