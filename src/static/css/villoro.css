@@ -9,14 +9,30 @@ body, html {
 .v-text-theme{color:#2176ff!important}
 .v-theme{color:#fff!important;background-color:#2176ff!important}
 .v-grey{color:#fff!important;background-color:#616161!important} /* Gray 700 */
+.v-light-grey{background-color:#FAFAFA!important}
 
 /* Override w3 titles sizes */
-h1, h1w {font-size: 48px}
-h2, h2w {font-size: 36px}
-h3, h3w {font-size: 30px}
-h4, h4w {font-size: 24px}
-h5, h5w {font-size: 20px}
-h6, h6w {font-size: 18px}
+/* Large screens */
+@media screen and (min-width: 601px) {
+    h1, h1w {font-size: 48px}
+    h2, h2w {font-size: 36px}
+    h3, h3w {font-size: 30px}
+    h4, h4w {font-size: 24px}
+    h5, h5w {font-size: 20px}
+    h6, h6w {font-size: 18px}
+}
+/* Small screens */
+@media screen and (max-width: 600px) {
+    h1, h1w {font-size: 36px}
+    h2, h2w {font-size: 30px}
+    h3, h3w {font-size: 24px}
+    h4, h4w {font-size: 20px}
+    h5, h5w {font-size: 18px}
+    h6, h6w {font-size: 16px}
+}
+
+/* Titles styles */
+h1,h2,h3,h4,h5,h6,h1w,h2w,h3w,h4w,h5w,h6w{font-family:"Segoe UI",Arial,sans-serif;font-weight:400;margin:10px 0;display: block;}
 
 /* Use theme-gray color for titles */
 h1,h2,h3,h4,h5,h6 {color:#424242!important} /* Gray 800 */
@@ -25,3 +41,5 @@ h1w,h2w,h3w,h4w,h5w,h6w {color:#fff!important} /* Gray 800 */
 /* change link colors */
 a {color:#2176ff!important}
 a:hover {color:#FFCA28!important}
+
+.v-round-image{width:100%;border-top-left-radius:4px;border-top-right-radius:4px}

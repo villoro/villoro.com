@@ -3,6 +3,7 @@ title: Faces generator
 subtitle: Use a GAN to create new human faces.
 image: gan_faces.jpg
 image_square: gan_faces_square.jpg
+highlight: True
 
 brief: The idea of this project was to use a Generative Adversial Network (GAN) to create new content.
 
