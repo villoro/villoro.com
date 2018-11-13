@@ -7,8 +7,6 @@ import utils as u
 
 APP = Flask(__name__)
 
-PATH_ROOT = "src/"
-
 # Pre load projects in order to speed up
 PROJECTS = u.get_portfolio()
 PROJECTS_HIGH = {i: data for i, data in PROJECTS.items() if data.get("highlight", False)}
