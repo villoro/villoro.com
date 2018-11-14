@@ -15,7 +15,7 @@
   }
 
   /* Turn off parallax scrolling for tablets and phones */
-  @media only screen and (max-device-width: 1600px) {
+  @media (max-device-width: 1000px) and (orientation: portrait) {
     .bgimg{
         background-attachment: scroll;
         min-height: 400px;
@@ -28,7 +28,7 @@
   <div class="bgimg w3-display-container" id="home">
     <div class="w3-display-middle">
       <h1 class="w3-center w3-text-white">{% block parallax_title1%}{% endblock %}</h1>
-      <h4 class="w3-center w3-text-white">{% block parallax_title2%}{% endblock %}</h4>
+      <h5 class="w3-center w3-text-white">{% block parallax_title2%}{% endblock %}</h5>
     </div>
   </div>
 
