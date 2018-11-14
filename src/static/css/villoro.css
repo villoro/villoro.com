@@ -9,9 +9,9 @@ body, html {
 
 /* Custom colors */   
 .v-text-theme{color:#2176ff!important}
-.v-theme{background-color:#2176ff!important}
+.v-theme{color:#fff!important;background-color:#2176ff!important}
 .v-grey{background-color:#616161!important} /* Gray 700 */
-.v-light-grey{background-color:#FAFAFA!important} /* Gray 50 */
+.v-light-grey{background-color:#F5F5F5!important} /* Gray 100 */
 
 /* Override w3 titles sizes */
 /* Large screens */
