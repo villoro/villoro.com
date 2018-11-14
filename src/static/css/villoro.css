@@ -3,6 +3,8 @@ body, html {
     height: 100%;
     color: #777;
     line-height: 1.8;
+    font-family: 'Roboto', serif;
+    font-size: 16px
 }
 
 /* Custom colors */   
@@ -14,13 +16,14 @@ body, html {
 /* Override w3 titles sizes */
 /* Large screens */
 @media screen and (min-width: 601px) {
-    h1, h1w {font-size: 48px}
+    h1, h1w {font-size: 42px}
     h2, h2w {font-size: 36px}
     h3, h3w {font-size: 30px}
     h4, h4w {font-size: 24px}
     h5, h5w {font-size: 20px}
     h6, h6w {font-size: 18px}
 }
+
 /* Small screens */
 @media screen and (max-width: 600px) {
     h1, h1w {font-size: 36px}
@@ -32,7 +35,12 @@ body, html {
 }
 
 /* Titles styles */
-h1,h2,h3,h4,h5,h6,h1w,h2w,h3w,h4w,h5w,h6w{font-family:"Segoe UI",Arial,sans-serif;font-weight:400;margin:10px 0;display: block;}
+h1,h2,h3,h4,h5,h6,h1w,h2w,h3w,h4w,h5w,h6w{
+    font-family: 'Roboto', serif;
+    font-weight:300;
+    margin:10px 0;
+    display: block;
+}
 
 /* Use theme-gray color for titles */
 h1,h2,h3,h4,h5,h6 {color:#424242!important} /* Gray 800 */
