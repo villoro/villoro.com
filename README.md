@@ -1,5 +1,4 @@
 # <img src="images/logo.png" alt="logo_villoro" width="90px"/> My personal webpage
----
 
 ![powered by Flask](https://img.shields.io/badge/powered_by-Frozen_Flask-blue.svg)
 ![powered by Netlify](https://img.shields.io/badge/hosted_by-Netlify-blue.svg)
