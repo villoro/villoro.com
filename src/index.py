@@ -24,10 +24,7 @@ def home():
 def about():
     """ about me page """
 
-    skills = u.get_skills()
-    tools = u.get_tools()
-
-    return render_template("about.html", skills=skills, tools=tools)
+    return render_template("about.html", **u.get_yaml("about"))
 
 
 @APP.route('/portfolio.html')

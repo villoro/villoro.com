@@ -12,10 +12,8 @@
 
       <!-- Short description -->
       <div class="w3-col m6 w3-padding-large">
-        <h1>A Bit About Me</h1>
-        <p>My name is Arnau Villoro and I am an engineer located in Barcelona. I love automating almost everything I can and I enjoy building things all by myself.</p>
-        <p>I have an MS in Management and I am currently studying Artificial Intelligence. I am also working full time as an IT Consultant offering both managment and development services.</p>
-        <p>When I am not with a computer I enjoy doing sports such as climbing and biking.</p>
+        <!-- Raw html block -->
+        {% autoescape false %} {{ about }} {% endautoescape %}
       </div>
 
       <!-- Barcelona map -->
@@ -32,19 +30,17 @@
         <!-- Short Term goals -->
         <div class="w3-col m6 w3-padding-large">
           <h1w>Short Term Goals</h1w>
-          <p><i class="fa fa-check v-color-text-accent"></i> Finish my current studies in AI</p>
-          <p><i class="fa fa-check v-color-text-accent"></i> Strengthen my software operations knowledge</p>
-          <p><i class="fa fa-check v-color-text-accent"></i> Continue improving my development skills</p>
-          <p><i class="fa fa-check v-color-text-accent"></i> Gain more experience managing big teams</p>
+          {% for goal in goals["short_term"] %}
+          <p><i class="fa fa-check v-color-text-accent"></i> {{ goal }} </p>
+          {% endfor %}
         </div>
 
         <!-- Long Term goals -->
         <div class="w3-col m6 w3-padding-large">
           <h1w>Long Term Goals</h1w>
-          <p><i class="fa fa-check v-color-text-accent"></i> Become an AI Expert</p>
-          <p><i class="fa fa-check v-color-text-accent"></i> Be able to create and deploy an AI project all by myself</p>
-          <p><i class="fa fa-check v-color-text-accent"></i> Remain up to date with AI/technology</p>
-          <p><i class="fa fa-check v-color-text-accent"></i> Get an AI related PhD</p>
+          {% for goal in goals["long_term"] %}
+          <p><i class="fa fa-check v-color-text-accent"></i> {{ goal }} </p>
+          {% endfor %}
         </div>
       </div>
     </div>

@@ -9,18 +9,18 @@ from markdown import markdown
 PATH_CONTENT = "src/content/"
 
 
-def get_skills():
-    """ Get skills as ordered dict """
-    with open(PATH_CONTENT + "skills.yaml") as file:
-        return yaml.load(file)
+def get_yaml(name):
+    """ Get data from yaml as ordered dict """
 
+    with open("{}{}.yaml".format(PATH_CONTENT, name)) as file:
+        out = yaml.load(file)
 
-def get_tools():
-    """ Get tools as ordered dict """
+    # Transform from makrdown to html if needed
+    for name, data in out.items():
+        if ("markdown" in data) and ("text" in data):
+            out[name] = markdown(data["text"])
 
-    with open(PATH_CONTENT + "tools.yaml") as file:
-        return yaml.load(file)
-
+    return out
 
 def get_portfolio():
     """ Return list of portfolio items with info as dict"""
@@ -36,7 +36,7 @@ def get_portfolio():
         with open('{}portfolio/{}-{}.yaml'.format(PATH_CONTENT, num, name)) as file:
             out[name] = yaml.load(file)
 
-            # Transform some blocks from markdown to html
+        # Transform some blocks from markdown to html
         for x in ["brief", "results"]:
             out[name][x] = markdown(out[name][x])
 
