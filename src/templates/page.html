@@ -10,7 +10,7 @@
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
-    background-image: url('static/images/pages/{% block image_parallax%}{% endblock %}');
+    background-image: url('static/images/pages/{{ image_parallax }}');
     min-height: {% block parallax_min_heightx%}75%{% endblock %};
   }
 
@@ -27,8 +27,8 @@
   <!-- First Parallax Image with Logo Text -->
   <div class="bgimg w3-display-container" id="home">
     <div class="w3-display-middle">
-      <h1 class="w3-center w3-text-white">{% block parallax_title1%}{% endblock %}</h1>
-      <h5 class="w3-center w3-text-white">{% block parallax_title2%}{% endblock %}</h5>
+      <h1 class="w3-center w3-text-white">{{ parallax_title1 }}</h1>
+      <h5 class="w3-center w3-text-white">{{ parallax_title2 }}</h5>
     </div>
   </div>
 

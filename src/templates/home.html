@@ -1,11 +1,5 @@
 {% extends "page.html" %}
 
-{% block image_parallax%}me_thinking.jpg{% endblock %}
-{% block parallax_min_heightx%}100%{% endblock %}
-
-{% block parallax_title1%} Hi, I am Arnau Villoro {% endblock %}
-{% block parallax_title2%} Trust me, I'm an engineer :) {% endblock %}
-
 {% block page_content%}
   <!-- SECTION: Who I am -->
   <div class="w3-padding-32 w3-content" style="max-width:1200px">
@@ -19,11 +13,11 @@
       <!-- Short description -->
       <div class="w3-col m6 w3-padding-large">
         <h1>Who I Am</h1>
-        <p>IT Consultant during workdays, Artificial Intelligence Engineer on weekends and nights.</p>
-        <p><i class="fa fa-check v-color-text-accent"></i> Experience as an IT Consultant</p>
-        <p><i class="fa fa-check v-color-text-accent"></i> Strong engineering foundations</p>
-        <p><i class="fa fa-check v-color-text-accent"></i> Python Developer enthusiast</p>
-        <p><i class="fa fa-check v-color-text-accent"></i> Deep Learning knowledge</p>
+        <p> {{ short_description }} </p>
+
+        {% for bullet in bullets %}
+        <p><i class="fa fa-check v-color-text-accent"></i> {{ bullet }} </p>
+        {% endfor %}
 
         <!-- Button to about page -->
         <div class="w3-padding-32">
