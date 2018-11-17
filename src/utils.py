@@ -9,10 +9,10 @@ from markdown import markdown
 PATH_CONTENT = "src/content/"
 
 
-def get_yaml(name):
+def get_page(name):
     """ Get data from yaml as ordered dict """
 
-    with open("{}{}.yaml".format(PATH_CONTENT, name)) as file:
+    with open("{}{}{}.yaml".format(PATH_CONTENT, "pages/", name)) as file:
         out = yaml.load(file)
 
     # Transform from makrdown to html if needed
