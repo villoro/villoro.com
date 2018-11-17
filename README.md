@@ -7,7 +7,7 @@ This is the code of my personal webpage. You can view it live here: [villoro.net
 
 It is created to be very fast. You can check it with [pagespeed](https://developers.google.com/speed/pagespeed/insights/?hl=ca&url=villoro.netlify.com).
 
-<img src="images/pagespeed.png" alt="pagespeed" width="400px"/>
+<img src="images/pagespeed_rating.png" alt="pagespeed" width="400px"/>
 
 ## Overview
 It is a static webpage build with [flask](http://flask.pocoo.org/) that has been made static with [frozen flask](https://pythonhosted.org/Frozen-Flask/). It uses the power of [jinja2](http://jinja.pocoo.org/docs/2.10/) templates.
