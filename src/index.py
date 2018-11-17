@@ -17,30 +17,27 @@ PROJECTS_HIGH = {i: data for i, data in PROJECTS.items() if data.get("highlight"
 def home():
     """ home page """
 
-    return render_template("home.html", portfolio=PROJECTS_HIGH)
+    return render_template("home.html", portfolio=PROJECTS_HIGH, **u.get_page("home"))
 
 
 @APP.route('/about.html')
 def about():
     """ about me page """
 
-    skills = u.get_skills()
-    tools = u.get_tools()
-
-    return render_template("about.html", skills=skills, tools=tools)
+    return render_template("about.html", **u.get_page("about"))
 
 
 @APP.route('/portfolio.html')
 def portfolio():
     """ portfolio page """
 
-    return render_template("portfolio.html", portfolio=PROJECTS)
+    return render_template("portfolio.html", portfolio=PROJECTS, **u.get_page("portfolio"))
 
 
 @APP.route('/blog.html')
 def blog():
     """ blog page """
-    return render_template("blog.html")
+    return render_template("blog.html", **u.get_page("blog"))
 
 
 @APP.route('/portfolio_item/<item>')

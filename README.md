@@ -1,7 +1,13 @@
-# Web villoro.com
+# <img src="images/logo.png" alt="logo_villoro" width="90px"/> My personal webpage
 
-This is the code of my personal webpage. You can view it here: [villoro.netlify.com](https://villoro.netlify.com/).
+![powered by Flask](https://img.shields.io/badge/powered_by-Frozen_Flask-blue.svg)
+![powered by Netlify](https://img.shields.io/badge/hosted_by-Netlify-blue.svg)
 
+This is the code of my personal webpage. You can view it live here: [villoro.netlify.com](https://villoro.netlify.com/).
+
+It is created to be very fast. You can check it with [pagespeed](https://developers.google.com/speed/pagespeed/insights/?hl=ca&url=villoro.netlify.com).
+
+<img src="images/pagespeed_rating.png" alt="pagespeed" width="400px"/>
 
 ## Overview
 It is a static webpage build with [flask](http://flask.pocoo.org/) that has been made static with [frozen flask](https://pythonhosted.org/Frozen-Flask/). It uses the power of [jinja2](http://jinja.pocoo.org/docs/2.10/) templates.
@@ -9,8 +15,8 @@ It is a static webpage build with [flask](http://flask.pocoo.org/) that has been
 The webpage is responsive by design. It should be nicely displayed in both computers and smartphones. 
 
 Some screenshoots:
-![home](screenshoots/home.png)
-![about](screenshoots/about.jpg)
+![home](images/home.png)
+![about](images/about.jpg)
 
 ## Run/view the web
 You can run the flask app with the following command:

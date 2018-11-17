@@ -8,10 +8,11 @@ body, html {
 }
 
 /* Custom colors */   
-.v-text-theme{color:#2176ff!important}
-.v-theme{color:#fff!important;background-color:#2176ff!important}
-.v-grey{background-color:#616161!important} /* Gray 700 */
-.v-light-grey{background-color:#F5F5F5!important} /* Gray 100 */
+.v-color-accent{color:#fff!important;background-color:#2176ff!important}
+.v-color-text-accent{color:#2176ff!important}
+.v-color-header{background-color:#616161!important} /* Gray 700 */
+.v-color-grey{background-color:#303845!important}
+.v-color-light-grey{background-color:#F5F5F5!important} /* Gray 100 */
 
 /* Override w3 titles sizes */
 /* Large screens */
@@ -36,7 +37,7 @@ body, html {
 
 /* Titles styles */
 h1,h2,h3,h4,h5,h6,h1w,h2w,h3w,h4w,h5w,h6w{
-    font-family: 'Roboto', serif;
+    font-family: "Trebuchet MS", 'Roboto', serif;
     font-weight:300;
     margin:10px 0;
     display: block;
