@@ -40,7 +40,7 @@
     // Change style of navbar on scroll
     window.onscroll = function() {hide_show_navbar_border()};
     function hide_show_navbar_border() {
-        var mclasses = " w3-card v-grey w3-animate-opacity"
+        var mclasses = " w3-card v-color-header w3-animate-opacity"
         var navbar = document.getElementById("navbar");
         if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
             if (!navbar.className.includes(mclasses)) {
