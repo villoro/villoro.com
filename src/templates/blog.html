@@ -1,10 +1,25 @@
 {% extends "page.html" %}
 
 {% block page_content%}
-  <!-- Header -->
-  <header class="w3-container light_green500 w3-center" style="padding:128px 16px">
-    <h1 class="w3-margin w3-jumbo">LOREM IPSUM</h1>
-    <p class="w3-xlarge">dolor sit amet</p>
-    <button class="w3-button w3-black w3-padding-large w3-large w3-margin-top">Get Started</button>
-  </header>
+  <!-- SECTION: blog -->
+  <div class="w3-padding-32 w3-content" style="max-width:1200px">
+    <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
+      <h1>Latests posts</h1>
+
+      <div class="w3-row" style="padding-top: 32px">
+        {% for post in blog.values() %}
+        <div class="w3-col l4 m6 s12 w3-padding w3-center">
+          <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-color-light-grey">
+            <a href="{{ url_for('post', item="{}.html".format(post["code"])) }}">
+              <img src="{{ url_for("static", filename="images/blog/{}".format(post["image"])) }}"" alt="{{ tool }}" class="v-round-image">
+            </a>
+            <div class="w3-padding-small w3-text-black" style="z-index:4">
+            	{{ "{} | {}".format(post["date"], post["title"]) }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 {% endblock %}

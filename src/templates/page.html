@@ -11,7 +11,7 @@
     background-repeat: no-repeat;
     background-size: cover;
     background-image: url('static/images/pages/{{ image_parallax }}');
-    min-height: {% block parallax_min_heightx%}75%{% endblock %};
+    min-height: {{ parallax_min_height or '75%' }};
   }
 
   /* Turn off parallax scrolling for tablets and phones */

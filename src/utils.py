@@ -12,7 +12,7 @@ PATH_CONTENT = "src/content/"
 def get_page(name):
     """ Get data from yaml as ordered dict """
 
-    with open("{}{}{}.yaml".format(PATH_CONTENT, "pages/", name)) as file:
+    with open(f"{PATH_CONTENT}pages/{name}.yaml") as file:
         out = yaml.load(file)
 
     # Transform from makrdown to html if needed
@@ -22,22 +22,33 @@ def get_page(name):
 
     return out
 
-def get_portfolio():
-    """ Return list of portfolio items with info as dict"""
+
+def get_items(group):
+    """
+        Return list of items with info as dict
+
+        Args:
+            group:  wether to return portfolio or blog entries [portfolio/blog]
+    """
+
+    markdown_tags = {
+        "portfolio": ["brief", "results"],
+        "blog": ["content"]
+    }
 
     out = OrderedDict()
 
-    for filename in os.listdir(PATH_CONTENT + "portfolio"):
+    for filename in os.listdir(PATH_CONTENT + group):
         num, name = filename.split("-")
 
         # Strip extensions
         name = name.split(".")[0]
 
-        with open('{}portfolio/{}-{}.yaml'.format(PATH_CONTENT, num, name)) as file:
+        with open(f"{PATH_CONTENT}{group}/{num}-{name}.yaml") as file:
             out[name] = yaml.load(file)
 
         # Transform some blocks from markdown to html
-        for x in ["brief", "results"]:
-            out[name][x] = markdown(out[name][x])
+        for x in markdown_tags[group]:
+            out[name][x] = markdown(out[name][x], extensions=["fenced_code", "codehilite"])
 
     return out
