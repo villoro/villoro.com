@@ -41,7 +41,7 @@ def portfolio():
 @APP.route('/blog.html')
 def blog():
     """ blog page """
-    return render_template("blog.html", **u.get_page("blog"))
+    return render_template("blog.html", blog=BLOG, **u.get_page("blog"))
 
 
 @APP.route('/portfolio_item/<item>')
@@ -53,7 +53,7 @@ def portfolio_item(item):
 
 
 @APP.route('/post/<item>')
-def blog_item(item):
+def post(item):
     """ blog item """
 
     name = item.split(".")[0] # No extension
