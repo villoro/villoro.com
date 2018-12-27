@@ -11,6 +11,7 @@ body, html {
 .v-color-accent{color:#fff!important;background-color:#2176ff!important}
 .v-color-text-accent{color:#2176ff!important}
 .v-color-header{background-color:#616161!important} /* Gray 700 */
+.v-color-footer{background-color:#616161!important} /* Gray 700 */
 .v-color-grey{background-color:#303845!important}
 .v-color-light-grey{background-color:#F5F5F5!important} /* Gray 100 */
 
