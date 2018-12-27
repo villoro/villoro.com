@@ -3,7 +3,7 @@
 ![powered by Flask](https://img.shields.io/badge/powered_by-Frozen_Flask-blue.svg)
 ![powered by Netlify](https://img.shields.io/badge/hosted_by-Netlify-blue.svg)
 
-This is the code of my personal webpage. You can view it live here: [villoro.netlify.com](https://villoro.netlify.com/).
+This is the code of my personal webpage. You can view it live here: [villoro.com](https://villoro.com/).
 
 It is created to be very fast. You can check it with [pagespeed](https://developers.google.com/speed/pagespeed/insights/?hl=ca&url=villoro.netlify.com).
 
@@ -15,7 +15,7 @@ It is a static webpage build with [flask](http://flask.pocoo.org/) that has been
 The webpage is responsive by design. It should be nicely displayed in both computers and smartphones. 
 
 Some screenshoots:
-![home](images/home.png)
+![home](images/home.jpg)
 ![about](images/about.jpg)
 
 ## Run/view the web
