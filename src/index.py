@@ -52,5 +52,13 @@ def portfolio_item(item):
     return render_template("portfolio_item.html", **PORTFOLIO[name])
 
 
+@APP.route('/post/<item>')
+def blog_item(item):
+    """ blog item """
+
+    name = item.split(".")[0] # No extension
+    return render_template("post.html", **BLOG[name])
+
+
 if __name__ == '__main__':
     APP.run(debug=True)

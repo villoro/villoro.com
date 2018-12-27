@@ -33,7 +33,7 @@ def get_items(group):
 
     markdown_tags = {
         "portfolio": ["brief", "results"],
-        "blog": []
+        "blog": ["content"]
     }
 
     out = OrderedDict()
@@ -49,6 +49,6 @@ def get_items(group):
 
         # Transform some blocks from markdown to html
         for x in markdown_tags[group]:
-            out[name][x] = markdown(out[name][x])
+            out[name][x] = markdown(out[name][x], extensions=["fenced_code", "codehilite"])
 
     return out
