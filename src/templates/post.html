@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block body %}
+  <!-- spacer -->
+  <div style="padding-top: 64px"></div>
+
+  <!-- SECTION: title -->
+  <div class="w3-padding-32 w3-content" style="max-width:1200px">
+
+    <!-- title and subtitle -->
+    <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
+        <h1>{{ title }}</h1>
+
+        {% autoescape false %} {{ content }} {% endautoescape %}
+    </div>
+
+  </div>
+
+{% endblock %}
