@@ -37,7 +37,7 @@
     </div>
   </div>
 
-  <!-- SECTION: More projects -->
+  <!-- SECTION: More projects blue banner -->
   <div class="w3-display-container">
     <a href="{{ url_for('portfolio') }}">
       <img src="{{ url_for("static", filename="images/project_bar.jpg") }}" alt="Lights" style="width:100%; max-height: 200px">
@@ -54,6 +54,7 @@
     </a>
   </div>
 
+  <!-- SECTION: Grid with highlited projects -->
   <div class="w3-display-container">
     <div class="w3-row">
       {% for port in portfolio.values() %}

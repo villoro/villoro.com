@@ -86,7 +86,7 @@
     </div>
 
     {% for post in blog.values() %}
-    <div class="w3-row w3-hover-grayscale" style="padding-top: 32px">
+    <div class="w3-row w3-container w3-hover-grayscale" style="padding-top: 32px">
 
       <a href="{{ url_for('post', item="{}.html".format(post["code"])) }}">
       <!-- Image at left (except small screens) -->
