@@ -56,7 +56,7 @@
           <div class="w3-col l3 m6 s12 w3-padding w3-center">
             <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-color-light-grey">
               <a href="{{ url_for('portfolio_item', item="{}.html".format(port["code"])) }}">
-                <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}"" alt="{{ tool }}" class="v-round-image">
+                <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}"" alt="{{ port["title"] }}" class="v-round-image">
               </a>
               <div class="w3-padding-small w3-text-black" style="z-index:4">{{ port["title"] }}</div>
             </div>

@@ -3,7 +3,9 @@ title: UX Study
 subtitle: UX Study I did as my Masters Thesis.
 image: expensor_app.jpg
 image_square: expensor_app_square.jpg
-highlight: False
+
+main: False
+highlight: True
 
 brief: |
   For my Masters Thesis I did a UX Study focusing on how to create an app to manage personal finances. The main objective of the project was how to successfully design and create an Android App that convey a good UX.

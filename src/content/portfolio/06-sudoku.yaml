@@ -3,7 +3,9 @@ title: Sudoku solver
 subtitle: Implementing an AI that can solve any sudoku.
 image: sudoku.gif
 image_square: sudoku.jpg
-highlight: False
+
+main: False
+highlight: True
 
 brief: |
   The aim of this project was to create a game agent to solve any diagonal sudoku.

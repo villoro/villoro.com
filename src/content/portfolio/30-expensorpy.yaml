@@ -3,6 +3,8 @@ title: Expenses Visualization App
 subtitle: Dash app to visualize personal finance data.
 image: expensorpy.jpg
 image_square: expensorpy_square.jpg
+
+main: True
 highlight: True
 
 brief: |
