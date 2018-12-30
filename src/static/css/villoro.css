@@ -7,6 +7,10 @@ body, html {
     font-size: 16px
 }
 
+.v-text {
+    color: #777!important;
+}
+
 /* Custom colors */   
 .v-color-accent{color:#fff!important;background-color:#2176ff!important}
 .v-color-text-accent{color:#2176ff!important}
@@ -49,7 +53,10 @@ h1,h2,h3,h4,h5,h6 {color:#424242!important} /* Gray 800 */
 h1w,h2w,h3w,h4w,h5w,h6w {color:#fff!important} /* Gray 800 */
 
 /* change link colors */
-a {color:#2176ff!important}
-a:hover {color:#FFCA28!important}
+a {color:#2176ff}
+a:hover {color:#FFCA28}
 
 .v-round-image{width:100%;border-top-left-radius:4px;border-top-right-radius:4px}
+
+.v-padding-small{padding:8px 8px!important}
+.v-padding-16h{padding-left: 16px; padding-right: 16px;}
