@@ -4,22 +4,39 @@
   <!-- SECTION: blog -->
   <div class="w3-padding-32 w3-content" style="max-width:1200px">
     <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
-      <h1>Latests posts</h1>
+    
+    <h1>Latests posts</h1>
 
-      <div class="w3-row" style="padding-top: 32px">
-        {% for post in blog.values() %}
-        <div class="w3-col l4 m6 s12 w3-padding w3-center">
-          <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-color-light-grey">
-            <a href="{{ url_for('post', item="{}.html".format(post["code"])) }}">
-              <img src="{{ url_for("static", filename="images/blog/{}".format(post["image"])) }}"" alt="{{ tool }}" class="v-round-image">
-            </a>
-            <div class="w3-padding-small w3-text-black" style="z-index:4">
-            	{{ "{} | {}".format(post["date"], post["title"]) }}
-            </div>
+    {% for post in blog.values() %}
+    <div class="w3-row w3-hover-grayscale" style="padding-top: 32px">
+
+      <a href="{{ url_for('post', item="{}.html".format(post["code"])) }}">
+      <!-- Image at left (except small screens) -->
+      <div class="w3-col l2 m4 s5 w3-center v-padding-small w3-hide-small">
+        <img src="{{ url_for("static", filename="images/blog/{}".format(post["image"])) }}"" alt="{{ tool }}" class="w3-image">
+      </div>
+
+      <!-- Summary at right -->
+      <div class="w3-col l10 m8 s12 w3-padding">
+        <div class="w3-row">
+          <div class="w3-col l6 m6 s6">
+            <h3> {{ post["title"] }} </h3>
+          </div>
+
+          <div class="w3-col l6 m6 s6 w3-right-align">
+            <h3> {{ post["date"] }} </h3>
           </div>
         </div>
-        {% endfor %}
+
+        <!-- Preview of the post -->
+        <p class="v-text"> {{ post["brief"] + " ..."}} </p>
+
       </div>
+      </a>
+    </div>
+    {% endfor %}
+
     </div>
   </div>
+
 {% endblock %}
