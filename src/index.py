@@ -21,7 +21,9 @@ BLOG_HIGH = {i: data for i, data in BLOG.items() if data.get("highlight", False)
 def home():
     """ home page """
 
-    return render_template("home.html", portfolio=PORTFOLIO_HIGH, **u.get_page("home"))
+    return render_template(
+        "home.html", portfolio=PORTFOLIO_HIGH, blog=BLOG_HIGH, **u.get_page("home")
+    )
 
 
 @APP.route('/about.html')
