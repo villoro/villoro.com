@@ -3,6 +3,8 @@ title: Sudoku solver
 subtitle: Implementing an AI that can solve any sudoku.
 image: sudoku.gif
 image_square: sudoku.jpg
+
+main: False
 highlight: True
 
 brief: |

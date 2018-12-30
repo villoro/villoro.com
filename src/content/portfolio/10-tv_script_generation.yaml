@@ -3,6 +3,8 @@ title: TV Script Generation
 subtitle: Creation of a neural network to generate a Simpsons script.
 image: simpsons.jpg
 image_square: simpsons_square.jpg
+
+main: True
 highlight: True
 
 brief: |

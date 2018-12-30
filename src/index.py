@@ -9,8 +9,11 @@ APP = Flask(__name__)
 
 # Pre load projects and blog items in order to speed up
 PORTFOLIO = u.get_items("portfolio")
-PORTFOLIO_HIGH = {i: data for i, data in PORTFOLIO.items() if data.get("highlight", False)}
+# Projects that will be at the main page
+PORTFOLIO_MAIN = {i: data for i, data in PORTFOLIO.items() if data.get("main", False)}
 
+# Featured projects at the end of a project
+PORTFOLIO_HIGH = {i: data for i, data in PORTFOLIO.items() if data.get("highlight", False)}
 
 BLOG = u.get_items("blog")
 BLOG_HIGH = {i: data for i, data in BLOG.items() if data.get("highlight", False)}
@@ -22,7 +25,7 @@ def home():
     """ home page """
 
     return render_template(
-        "home.html", portfolio=PORTFOLIO_HIGH, blog=BLOG_HIGH, **u.get_page("home")
+        "home.html", portfolio=PORTFOLIO_MAIN, blog=BLOG_HIGH, **u.get_page("home")
     )
 
 
@@ -51,7 +54,7 @@ def portfolio_item(item):
     """ portfolio item """
 
     name = item.split(".")[0] # No extension
-    return render_template("portfolio_item.html", **PORTFOLIO[name])
+    return render_template("portfolio_item.html", portfolio=PORTFOLIO_HIGH, **PORTFOLIO[name])
 
 
 @APP.route('/post/<item>')
