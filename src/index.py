@@ -52,7 +52,7 @@ def blog():
     )
 
 
-@APP.route('/portfolio_item/<item>')
+@APP.route('/project/<item>')
 def portfolio_item(item):
     """ portfolio item """
 
