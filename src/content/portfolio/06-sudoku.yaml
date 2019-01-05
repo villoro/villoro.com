@@ -1,3 +1,6 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
 code: sudoku
 title: Sudoku solver
 subtitle: Implementing an AI that can solve any sudoku.
@@ -7,10 +10,27 @@ image_square: sudoku.jpg
 main: False
 highlight: True
 
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: 
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
 brief: |
   The aim of this project was to create a game agent to solve any diagonal sudoku.
 
   The sudoku is solved by using both elimination and constrain propagation. And we this is not enough the agent uses decision trees to explore different scenarios until it reaches a feasible solution.
 
-results: |
+tags:
+  - AI
+  - Constrain propagation
+  - Python
+
+solution: |
   The AI created is able to solve any sudoku that have a solution. It can also solve sudokus that have more than one solution but it will only get one of them.

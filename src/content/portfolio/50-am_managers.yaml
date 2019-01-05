@@ -1,11 +1,11 @@
 # --------------------------------------------------------------------------------------------------
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
-code: expensorpy
-title: Expenses Visualization App
-subtitle: Dash app to visualize personal finance data.
-image: expensorpy.jpg
-image_square: expensorpy_square.jpg
+code: am_managers
+title: AM Managers for Naturgy
+subtitle: Automatization and Reporting (BI) for Naturgy.
+image: am_managers.jpg
+image_square: am_managers_square.jpg
 
 main: True
 highlight: True
@@ -15,21 +15,34 @@ highlight: True
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
 link: 
-  text: Github
-  url: https://github.com/villoro/expensor_personal
+  text: More info
+  url: https://www.basetis.com/exito/am-managers-para-naturgy-informatica/
 
 
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
 brief: |
-  I created a [dash](https://plot.ly/products/dash/) app in order to visualize financial data. 
+  The brief
 
 tags:
   - Python
+  - Luigi
+  - Selenium
+  - PowerBI
   - Dash
-  - Plotly
-  - Business Intelligence
+  - Business Intelligence (BI)
+
+metrics:
+  - 17 reports per day
+  - More than 1 million tickets audited
+  - Leading 6 - 10 people
+
+motivation: |
+  a
+
+# body: | # This is optional
+#   this is the body
 
 solution: |
-  This app works as a dashboard for all my financial data.
+  this is the solution
