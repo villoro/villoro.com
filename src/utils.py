@@ -11,7 +11,7 @@ PATH_CONTENT = "src/content/"
 NUM_SEPARATOR = "-"
 
 MARKDOWN_BLOCKS = {
-    "portfolio": ["brief", "results"],
+    "portfolio": ["brief", "motivation", "body", "solution", "results"],
     "blog": ["content"]
 }
 
@@ -63,13 +63,15 @@ def get_items(group):
 
         # Transform some blocks from markdown to html
         for x in MARKDOWN_BLOCKS[group]:
-            out[name][x] = _transform_markdown(out[name][x])
+
+            if x in out[name]:
+                out[name][x] = _transform_markdown(out[name][x])
 
     return out
 
 
 def get_all_items():
-    """ Read all portfolio and blog items and split highlited """
+    """ Read all portfolio and blog items and split highlighted """
 
     out = {}
 
