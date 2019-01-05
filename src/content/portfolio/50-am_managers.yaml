@@ -28,8 +28,8 @@ metrics:
 motivation: |
   a
 
-body: |
-  this is the body
+# body: |
+#   this is the body
 
 solution: |
   this is the solution
