@@ -28,10 +28,10 @@ def _transform_markdown(text):
     return markdown(text, extensions=["fenced_code", "codehilite"])
 
 
-def get_page(name):
+def get_page(pagename):
     """ Get data from yaml as ordered dict """
 
-    out = _read_yaml(f"{PATH_CONTENT}pages/{name}.yaml")
+    out = _read_yaml(f"{PATH_CONTENT}pages/{pagename}.yaml")
 
     # Transform from makrdown to html if needed
     for name, data in out.items():
@@ -49,7 +49,7 @@ def get_items(group):
             group:  wether to return portfolio or blog entries [portfolio/blog]
     """
 
-    assert(group in MARKDOWN_BLOCKS.keys())
+    assert group in MARKDOWN_BLOCKS.keys()
 
     out = OrderedDict()
 
@@ -73,7 +73,7 @@ def get_all_items():
 
     out = {}
 
-    for x in MARKDOWN_BLOCKS.keys():
+    for x in MARKDOWN_BLOCKS:
         out[x] = get_items(x)
 
         # Add highlited items as a new entry
@@ -88,6 +88,6 @@ def get_all_items():
     num_portfolio_main = len(out["portfolio_main"])
 
     # At home page there should be a multiple of 4 portfolio items (and at least 4 of them)
-    assert((num_portfolio_main % 4 == 0) and (num_portfolio_main > 0))
+    assert (num_portfolio_main % 4 == 0) and (num_portfolio_main > 0)
 
     return out
