@@ -1,3 +1,6 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
 code: ux_study
 title: UX Study
 subtitle: UX Study I did as my Masters Thesis.
@@ -7,6 +10,18 @@ image_square: expensor_app_square.jpg
 main: False
 highlight: False
 
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url:
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
 brief: |
   For my Masters Thesis I did a UX Study focusing on how to create an app to manage personal finances. The main objective of the project was how to successfully design and create an Android App that convey a good UX.
 
@@ -14,5 +29,10 @@ brief: |
 
   I also created a working prototype developed with Android Studio including cloud syncronization using SaaS.
 
-results: |
+tags:
+  - UX
+  - Android
+  - Java
+
+solution: |
   In the next images you can see the different pages of the App I designed and created. You can also see how it evolved from wireframes to sketches and then finally how it looked in the prototype.

@@ -26,9 +26,12 @@
         {% endif %}
       </div>
 
+      {% if subtitle %}
+      <!-- Subtitle -->
       <div class="w3-row">
         <p>{{ subtitle }}</p>
       </div>
+      {% endif %}
     </div>
 
 
@@ -56,8 +59,8 @@
     </div>
   </div>
 
-  <!-- SECTION: metrics -->
   {% if metrics %}
+  <!-- SECTION: metrics -->
   <div class="w3-padding-32 w3-content" style="max-width:1200px;">
     <div class="v-padding-8h">
       <div class="v-padding-16h">
@@ -91,8 +94,8 @@
   <div class="w3-padding-32 w3-content" style="max-width:1200px;">
     <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
 
-        <!-- If present show body -->
         {% if body %}
+        <!-- If present show body -->
           <div style="padding-bottom: 32px">
             {% autoescape false %} {{ body }} {% endautoescape %}
           </div>

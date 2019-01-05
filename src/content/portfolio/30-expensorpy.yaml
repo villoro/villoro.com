@@ -1,3 +1,6 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
 code: expensorpy
 title: Expenses Visualization App
 subtitle: Dash app to visualize personal finance data.
@@ -7,8 +10,26 @@ image_square: expensorpy_square.jpg
 main: True
 highlight: True
 
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Github
+  url: https://github.com/villoro/expensor_personal
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
 brief: |
   I created a [dash](https://plot.ly/products/dash/) app in order to visualize financial data. 
 
-results: |
+tags:
+  - Python
+  - Dash
+  - Plotly
+  - Business Intelligence
+
+solution: |
   This app works as a dashboard for all my financial data.
