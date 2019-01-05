@@ -10,20 +10,24 @@
     <!-- title and subtitle -->
     <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
       <!-- container with titles and link -->
-      <div>
+      <div class="w3-row">
         <div class="w3-left">
           <h1>{{ title }}</h1>
-          <p>{{ subtitle }}</p>
+          
         </div>
 
         {% if link %}
         <!-- Button with more info -->
-        <div class="w3-right" style="padding-top: 30px">
+        <div class="w3-right" style="padding-top: 20px">
           <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
             {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
           </a>
         </div>
         {% endif %}
+      </div>
+
+      <div class="w3-row">
+        <p>{{ subtitle }}</p>
       </div>
     </div>
 
