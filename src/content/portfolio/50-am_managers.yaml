@@ -1,15 +1,27 @@
-# Meta
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
 code: am_managers
 title: AM Managers for Naturgy
-subtitle: Automatization and Reporting (BI) for Naturgy Informática.
+subtitle: Automatization and Reporting (BI) for Naturgy.
 image: am_managers.jpg
 image_square: am_managers_square.jpg
 
-# Highlighting
 main: True
 highlight: True
 
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: More info
+  url: https://www.basetis.com/exito/am-managers-para-naturgy-informatica/
+
+
+# --------------------------------------------------------------------------------------------------
 # Content
+# --------------------------------------------------------------------------------------------------
 brief: |
   The brief
 
@@ -28,7 +40,7 @@ metrics:
 motivation: |
   a
 
-# body: |
+# body: | # This is optional
 #   this is the body
 
 solution: |
