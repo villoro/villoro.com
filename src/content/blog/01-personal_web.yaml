@@ -1,9 +1,24 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
 code: personal_web
 title: Personal webpage
 date: "2018-12-27"
 image: personal_web.jpg
 highlight: True
 
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro.com
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
 brief: |
   I used to have a personal webpage made with wordpress. Since I have been working as a developer for some years I decided that I could create something that better suited my needs.
 
@@ -23,6 +38,3 @@ content: |
   Some screenshoots:
   <img src="/static/images/posts/01-personal_web-home.jpg" alt="webpage_home" class="w3-image w3-padding-16"/>
   <img src="/static/images/posts/01-personal_web-about.jpg" alt="webpage_about" class="w3-image w3-padding-16"/>
-
-  ## Source code
-  You can view the code at [github](https://github.com/villoro/villoro.com).
