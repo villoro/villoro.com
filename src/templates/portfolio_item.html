@@ -38,25 +38,23 @@
         <img src="{{ url_for("static", filename="images/portfolio/{}".format(image)) }}" class="w3-image" alt="{{ image.split(".")[0] }}" style="width: 100%; max-width: 800px;">
       </div>
 
-      <!-- Brief -->
       <div class="w3-col m6 w3-padding-large">
+        <!-- Tags -->
+        {% if tags %}
+        <div>
+          {% for x in tags %}
+            <span class="w3-tag v-color-accent" style="margin-bottom: 8px;">{{ x }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Brief -->
         <h2>Brief</h2>
         <!-- Raw html block -->
         {% autoescape false %} {{ brief }} {% endautoescape %}
       </div>
     </div>
   </div>
-
-  {% if tags %}
-  <!-- SECTION: body -->
-  <div class="v-padding-24h w3-content" style="max-width:1200px;">
-    <div>
-      {% for x in tags %}
-        <span class="w3-tag v-color-accent">{{ x }}</span>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
 
   <!-- SECTION: metrics -->
   {% if metrics %}
@@ -67,7 +65,7 @@
       </div>
       <div class="w3-row">
         {% for x in metrics %}
-          <div class="w3-col m4 w3-padding">
+          <div class="w3-col m4 v-padding-16h">
             <div class="w3-panel w3-border w3-border-grey w3-center">
               <p>{{ x }}</p>
             </div>
