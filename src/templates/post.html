@@ -9,11 +9,31 @@
 
     <!-- title and subtitle -->
     <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
-        <h1>{{ title }}</h1>
+      <!-- container with titles and link -->
+      <div class="w3-row">
+        <div class="w3-left">
+          <h1>{{ title }}</h1>
+          
+        </div>
 
-        {% autoescape false %} {{ content }} {% endautoescape %}
+        {% if link %}
+        <!-- Button with more info -->
+        <div class="w3-right" style="padding-top: 20px">
+          <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+            {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Date -->
+      <div class="w3-row">
+        <p>{{ date }}</p>
+      </div>
+
+      <!-- Content -->
+      {% autoescape false %} {{ content }} {% endautoescape %}
     </div>
-
   </div>
 
 {% endblock %}
