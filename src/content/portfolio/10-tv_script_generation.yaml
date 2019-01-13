@@ -36,7 +36,11 @@ tags:
   - LSTM
   - Tensorflow
 
-solution: |
+motivation: |
+  This was my third project of the [Deep Learning Nanodegree](https://eu.udacity.com/course/deep-learning-nanodegree--nd101) and the first one about NLP. The aim was that we got to understant RNN and the implementation of LSTM using tensorflow.
+
+body: |
+  ## Results
   After some training the network was able to produce plausible text. The generated text is correctly structured as a conversation where there is a person speaking and the sentence has all punctuation needed.
 
   The only problem is that the script lacks coherence between sentences.

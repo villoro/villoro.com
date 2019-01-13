@@ -35,11 +35,17 @@ tags:
   - Computer Vision (CV)
   - Keras
 
-solution: |
+motivation: |
+  I did this project as a part of the [Artificial Intelligence Nanodegree](https://eu.udacity.com/course/ai-artificial-intelligence-nanodegree--nd898) (udacity moved the project to the (Computer Vision Nanodegree)[https://eu.udacity.com/course/computer-vision-nanodegree--nd891]). This project was designed so that students could learn everything involved with having a CV machine learning model working. This includes all the preprocessing of the image and the creation of the pipeline itself.
+
+body: |
+  ## Pipline designed
+  ### Detecting faces
   In the first part I used [Haar-Cascade](https://docs.opencv.org/3.3.0/dc/d88/tutorial_traincascade.html) to detect faces and eyes. This is a technique that consists of using a series of kernels in order to create a classifier that detects some object/feature. I used a pretrained classifier to detect faces.
 
   I also worked with Non-Local Means denoising to clean images. With this I was able to make the face detection step more robust. I also worked with canny edge detection to detect edges but I ended up not using it in the final pipeline.
 
+  ### Detecting keypoints in faces
   For the second part I created a simple CNN to detect the keypoints of any face.
 
   Finally I put everything together in order to have a program that was able to:

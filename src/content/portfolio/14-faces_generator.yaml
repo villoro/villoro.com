@@ -27,8 +27,13 @@ brief: The idea of this project was to use a Generative Adversial Network (GAN) 
 tags:
   - AI
   - CNN
+  - GAN
   - Computer Vision (CV)
   - Tensorflow
 
-solution: |
+motivation: |
+  This was my fifth and last project of the [Deep Learning Nanodegree](https://eu.udacity.com/course/deep-learning-nanodegree--nd101). With this project we were asked to create a generative adversarial networks (GAN). The first neural network had to create faces using a random vector and the second one guess which faces were fake and which ones were real.
+
+body: |
+  ## Results
   The faces generated looks enough realistic. The dataset used to train the network is big (it have around 200k images) so in order to reduce training times I cropped the images to 28 x 28 pixels. In the future I would like to train it without the cropping to see how the network performs.
