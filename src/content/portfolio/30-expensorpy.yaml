@@ -45,12 +45,22 @@ body: |
   For the app itself is a multipaged dash app. It uses the [dash-bootstrap](https://dash-bootstrap-components.opensource.asidatascience.com/) library and some parts of [w3css](https://www.w3schools.com/w3css/default.asp) for the html part.
 
   ## Screenshoots
-  Below you can see both expenses and income headmaps along with a histogram.
+  This page shows the evolution of the incomes, expenses and earning before interests and taxes (EBIT).
   <div class="w3-center">
     <img src="/static/images/portfolio/expensorpy_screenshot_1.jpg" alt="expensorpy screnshot 1" class="w3-image w3-padding-16"/>
   </div>
 
-  This other page shows the evolution of the incomes, expenses and earning before interests and taxes (EBIT).
+  This is a comparison of both expenses and incomes over the years.
+  <div class="w3-center">
+    <img src="/static/images/portfolio/expensorpy_screenshot_2.jpg" alt="expensorpy screnshot 3" class="w3-image w3-padding-16"/>
+  </div>
+
+  Below you can see both expenses and income headmaps along with a histogram.
   <div class="w3-center">
     <img src="/static/images/portfolio/expensorpy_screenshot_3.jpg" alt="expensorpy screnshot 3" class="w3-image w3-padding-16"/>
+  </div>
+
+  In this last page we can see the availabe liquid.
+  <div class="w3-center">
+    <img src="/static/images/portfolio/expensorpy_screenshot_4.jpg" alt="expensorpy screnshot 3" class="w3-image w3-padding-16"/>
   </div>
