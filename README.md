@@ -1,13 +1,12 @@
 # <img src="images/logo.png" alt="logo_villoro" width="90px"/> My personal webpage
 
+![PageSpeed](https://img.shields.io/badge/PageSpeed-95%25-brightgreen.svg)
 ![powered by Flask](https://img.shields.io/badge/powered_by-Frozen_Flask-blue.svg)
 ![powered by Netlify](https://img.shields.io/badge/hosted_by-Netlify-blue.svg)
 
 This is the code of my personal webpage. You can view it live here: [villoro.com](https://villoro.com/).
 
-It is created to be very fast. You can check it with [pagespeed](https://developers.google.com/speed/pagespeed/insights/?hl=ca&url=villoro.netlify.com).
-
-<img src="images/pagespeed_rating.png" alt="pagespeed" width="400px"/>
+It is created to be very fast. You can check it with [pagespeed](https://developers.google.com/speed/pagespeed/insights/?hl=ca&url=villoro.com).
 
 ## Overview
 It is a static webpage build with [flask](http://flask.pocoo.org/) that has been made static with [frozen flask](https://pythonhosted.org/Frozen-Flask/). It uses the power of [jinja2](http://jinja.pocoo.org/docs/2.10/) templates.
@@ -15,8 +14,9 @@ It is a static webpage build with [flask](http://flask.pocoo.org/) that has been
 The webpage is responsive by design. It should be nicely displayed in both computers and smartphones. 
 
 Some screenshoots:
-![home](images/home.jpg)
-![about](images/about.jpg)
+
+![home](images/mockup_1.jpg)
+![about](images/mockup_2.jpg)
 
 ## Run/view the web
 You can run the flask app with the following command:
