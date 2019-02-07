@@ -12,13 +12,14 @@ NUM_SEPARATOR = "-"
 
 MARKDOWN_BLOCKS = {
     "portfolio": ["brief", "motivation", "body", "solution", "results"],
-    "blog": ["content"]
+    "blog": ["content"],
 }
+
 
 def _read_yaml(uri):
     """ auxiliar function to raad a yaml """
 
-    with open(uri, encoding='utf-8') as file:
+    with open(uri, encoding="utf-8") as file:
         return yaml.load(file)
 
 
@@ -80,7 +81,6 @@ def get_all_items():
 
         # Add highlited items as a new entry
         out[f"{x}_high"] = {i: data for i, data in out[x].items() if data.get("highlight", False)}
-
 
     # Projects that will be at the main page
     out["portfolio_main"] = {

@@ -11,8 +11,8 @@ APP = Flask(__name__)
 CONTENT = u.get_all_items()
 
 
-@APP.route('/')
-@APP.route('/home.html')
+@APP.route("/")
+@APP.route("/home.html")
 def home():
     """ home page """
 
@@ -24,57 +24,46 @@ def home():
     )
 
 
-@APP.route('/about.html')
+@APP.route("/about.html")
 def about():
     """ about me page """
 
     return render_template("about.html", **u.get_page("about"))
 
 
-@APP.route('/portfolio.html')
+@APP.route("/portfolio.html")
 def portfolio():
     """ portfolio page """
 
     return render_template(
-        "portfolio.html",
-        portfolio=CONTENT["portfolio"],
-        **u.get_page("portfolio")
+        "portfolio.html", portfolio=CONTENT["portfolio"], **u.get_page("portfolio")
     )
 
 
-@APP.route('/blog.html')
+@APP.route("/blog.html")
 def blog():
     """ blog page """
-    return render_template(
-        "blog.html",
-        blog=CONTENT["blog"],
-        **u.get_page("blog")
-    )
+    return render_template("blog.html", blog=CONTENT["blog"], **u.get_page("blog"))
 
 
-@APP.route('/project/<item>')
+@APP.route("/project/<item>")
 def portfolio_item(item):
     """ portfolio item """
 
-    name = item.split(".")[0] # No extension
+    name = item.split(".")[0]  # No extension
 
     return render_template(
-        "portfolio_item.html",
-        portfolio=CONTENT["portfolio_high"],
-        **CONTENT["portfolio"][name]
+        "portfolio_item.html", portfolio=CONTENT["portfolio_high"], **CONTENT["portfolio"][name]
     )
 
 
-@APP.route('/post/<item>')
+@APP.route("/post/<item>")
 def post(item):
     """ blog item """
 
-    name = item.split(".")[0] # No extension
-    return render_template(
-        "post.html",
-        **CONTENT["blog"][name]
-    )
+    name = item.split(".")[0]  # No extension
+    return render_template("post.html", **CONTENT["blog"][name])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     APP.run(debug=True)
