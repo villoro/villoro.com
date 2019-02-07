@@ -1,0 +1,89 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: black
+title: Black for code formatting
+date: "2019-02-07"
+image: black.jpg
+highlight: True
+
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Black github
+  url: https://github.com/ambv/black
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief: |
+  Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting.
+
+content: |
+
+  ## What is black
+
+  [Black](https://github.com/ambv/black) is python code formatter that allows developers to focus on code itself. You can try it online [here](https://black.now.sh/).
+
+
+  From their github:
+
+  > Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting. You will save time and mental energy for more important matters.
+
+  ## Installation and usage of black
+  
+  You can install black using pip by:
+
+  ```sh
+  pip install black
+  ```
+
+  You can 'black' any python file or directory with:
+  ```sh
+  # Run on a file
+  black file.py
+
+  # Run on a folder
+  black src/
+  ```
+
+  You can use a `pyproject.toml` file to configure some things in black. For example I like having a 100 line-length, so I would use:
+  ```toml
+  [tool.black]
+  line-length = 88
+  py36 = true
+  ```
+
+  ## Sublack
+
+  [Sublack](https://github.com/jgirardet/sublack) is a sublime extension to run black. 
+
+  To install sublack you should:
+
+  1. Open sublime
+  2. Press `CTRL + SHIFT + P`
+  3. Write `Package Controll: Install Package`
+  4. Find `sublack`
+
+  After that you can use sublack by:
+
+  * `CTRL + ALT + B`: black the current file.
+  * `CTRL + SHIFT + ALT + B`: show a diff file of the changes that black is attempting to do.
+
+  But the best part will be if you set sublack to auto format file when saving. This way every time you save a file if will be blackened. To do so you should:
+
+  1. With sublime go to `Preferences`
+  2. Select `Package Settings`
+  3. Select `sublack`
+  4. Select `Settings`
+  5. Change `black_on_save` to `true`
+
+  Note:
+  > If you are unable to modify the file, copy it's contents and save it in a new file in the same location (you can see the location at the top of sublime). In my case the path is `C:\Users\Villoro\AppData\Roaming\Sublime Text 3\Packages\sublack\sublack.sublime-settings`
+
+  I usually use sublime but there are black extensions for other programs as well.
+
+
