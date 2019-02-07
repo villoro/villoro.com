@@ -71,7 +71,7 @@ def get_items(group):
     return out
 
 
-def get_all_items():
+def get_content():
     """ Read all portfolio and blog items and split highlighted """
 
     out = {}
