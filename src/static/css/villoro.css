@@ -1,3 +1,4 @@
+/* ----------------------- Basic layout ----------------------------------------------------------*/
 /* Used by parallax efect */
 body, html {
     height: 100%;
@@ -11,7 +12,8 @@ body, html {
     color: #777!important;
 }
 
-/* Custom colors */   
+
+/* ----------------------- Custom colors ---------------------------------------------------------*/
 .v-color-accent{color:#fff!important;background-color:#2176ff!important}
 .v-color-text-accent{color:#2176ff!important}
 .v-color-header{background-color:#616161!important} /* Gray 700 */
@@ -19,6 +21,8 @@ body, html {
 .v-color-grey{background-color:#303845!important}
 .v-color-light-grey{background-color:#F5F5F5!important} /* Gray 100 */
 
+
+/* ----------------------- Titles ----------------------------------------------------------------*/
 /* Override w3 titles sizes */
 /* Large screens */
 @media screen and (min-width: 601px) {
@@ -52,13 +56,34 @@ h1,h2,h3,h4,h5,h6,h1w,h2w,h3w,h4w,h5w,h6w{
 h1,h2,h3,h4,h5,h6 {color:#424242!important} /* Gray 800 */
 h1w,h2w,h3w,h4w,h5w,h6w {color:#fff!important} /* Gray 800 */
 
+
+/* ----------------------- Paddings --------------------------------------------------------------*/
+.v-padding-small{padding:8px 8px!important}
+.v-padding-8h{padding-left: 8px; padding-right: 8px;}
+.v-padding-16h{padding-left: 16px; padding-right: 16px;}
+.v-padding-24h{padding-left: 24px; padding-right: 24px;}
+
+
+/* ----------------------- Markdown related styles -----------------------------------------------*/
+blockquote {
+  border-left: .25em solid #2176ff; /* Github color #DFE2E5*/
+  color: #6a737d;
+  padding: 0 1em;
+  margin: 0;
+}
+
+code {
+  background-color: rgba(27,31,35,.05);
+  border-radius: 3px;
+  font-size: 85%;
+  margin: 0;
+  padding: .2em .4em;
+}
+
+
+/* ----------------------- Other -----------------------------------------------------------------*/
 /* change link colors */
 a {color:#2176ff}
 a:hover {color:#FFCA28}
 
 .v-round-image{width:100%;border-top-left-radius:4px;border-top-right-radius:4px}
-
-.v-padding-small{padding:8px 8px!important}
-.v-padding-8h{padding-left: 8px; padding-right: 8px;}
-.v-padding-16h{padding-left: 16px; padding-right: 16px;}
-.v-padding-24h{padding-left: 24px; padding-right: 24px;}
