@@ -2,20 +2,20 @@
 /* Used by parallax efect */
 body, html {
     height: 100%;
-    color: #777;
+    color: #444444;
     line-height: 1.8;
     font-family: 'Roboto', serif;
     font-size: 16px
 }
 
 .v-text {
-    color: #777!important;
+    color: #444444!important;
 }
 
 
 /* ----------------------- Custom colors ---------------------------------------------------------*/
-.v-color-accent{color:#fff!important;background-color:#2176ff!important}
-.v-color-text-accent{color:#2176ff!important}
+.v-color-accent{color:#fff!important;background-color:#2176FF!important}
+.v-color-text-accent{color:#2176FF!important}
 .v-color-header{background-color:#616161!important} /* Gray 700 */
 .v-color-footer{background-color:#616161!important} /* Gray 700 */
 .v-color-grey{background-color:#303845!important}
@@ -66,15 +66,24 @@ h1w,h2w,h3w,h4w,h5w,h6w {color:#fff!important} /* Gray 800 */
 
 /* ----------------------- Markdown related styles -----------------------------------------------*/
 blockquote {
-  border-left: .25em solid #2176ff; /* Github color #DFE2E5*/
-  color: #6a737d;
+  border-left: .25em solid #2176FF; /* Github color #DFE2E5*/
+  color: #757575;
   padding: 0 1em;
   margin: 0;
 }
 
+code {
+  background-color: rgba(27,31,35,.05);
+  border-radius: 3px;
+  font-size: 85%;
+  margin: 0;
+  padding: .2em .4em;
+}
+
+
 /* ----------------------- Other -----------------------------------------------------------------*/
 /* change link colors */
-a {color:#2176ff}
+a {color:#2176FF}
 a:hover {color:#FFCA28}
 
 .v-round-image{width:100%;border-top-left-radius:4px;border-top-right-radius:4px}
