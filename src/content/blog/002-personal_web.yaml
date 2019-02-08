@@ -7,6 +7,10 @@ date: "2018-12-27"
 image: personal_web_square.jpg
 highlight: True
 
+tags:
+  - HTML
+  - Flask
+  - Python
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url

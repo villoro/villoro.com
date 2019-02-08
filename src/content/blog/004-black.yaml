@@ -7,6 +7,8 @@ date: "2019-02-07"
 image: black_square.jpg
 highlight: True
 
+tags:
+  - Python
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
