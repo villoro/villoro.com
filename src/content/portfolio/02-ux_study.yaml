@@ -10,6 +10,11 @@ image_square: expensor_app_square.jpg
 main: False
 highlight: False
 
+tags:
+  - UX
+  - Android
+  - Java
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
@@ -28,11 +33,6 @@ brief: |
   I followed [Rex Hartson and Pardha S. Pyla's](https://www.amazon.com/UX-Book-Guidelines-Ensuring-Experience/dp/0123852412) guidelines in order to ensure a quality User Experience.
 
   I also created a working prototype developed with Android Studio including cloud syncronization using SaaS.
-
-tags:
-  - UX
-  - Android
-  - Java
 
 motivation: |
   I have always enjoyed tracking almost everything I can and my expenses where not an exception. Back in 2014 I was not able to find any Android App that fullfilled my requirements so I decided to create my own. So when the oportunity arised I thought that doing an UX Study while creating and Android app was a really good idea.
