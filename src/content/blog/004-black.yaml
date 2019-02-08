@@ -4,7 +4,7 @@
 code: black
 title: Black for code formatting
 date: "2019-02-07"
-image: black.jpg
+image: black_square.jpg
 highlight: True
 
 
@@ -23,6 +23,8 @@ brief: |
   Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting.
 
 content: |
+  
+  <img src="https://raw.githubusercontent.com/ambv/black/master/docs/_static/logo2-readme.png" alt="black_logo" class="w3-image w3-padding-16"/>
 
   ## What is black
 
