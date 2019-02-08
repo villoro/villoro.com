@@ -2,7 +2,7 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: sql_alchemy
-title: Using SQL Alchemy to interact with databases
+title: SQL Alchemy with python
 date: "2019-02-08"
 image: sql_alchemy_square.jpg
 highlight: True
