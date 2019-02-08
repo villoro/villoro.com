@@ -54,7 +54,7 @@ def get_items(group):
 
     out = OrderedDict()
 
-    for filename in reversed(os.listdir(PATH_CONTENT + group)):
+    for filename in reversed(sorted(os.listdir(PATH_CONTENT + group))):
         num, name = filename.split(NUM_SEPARATOR)
 
         # Strip extensions

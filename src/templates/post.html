@@ -12,13 +12,14 @@
       <!-- container with titles and link -->
       <div class="w3-row">
         <div class="w3-left">
-          <h1>{{ title }}</h1>
-          
+          <h1>
+            {{ title }}
+          </h1>
         </div>
 
         {% if link %}
-        <!-- Button with more info -->
-        <div class="w3-right" style="padding-top: 20px">
+        <!-- Button with more info in large or medium screens -->
+        <div class="w3-right w3-hide-small" style="padding-top: 20px">
           <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
             {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
           </a>
@@ -27,12 +28,32 @@
       </div>
 
       <!-- Date -->
-      <div class="w3-row">
-        <p>{{ date }}</p>
+      <div class="w3-row w3-left v-color-text-grey">
+
+        <!-- Date creation -->
+        <span style="margin-right: 10px"> <i class="fa fa-clock-o"></i> {{ date }}</span>
+
+        <!-- Tags -->
+        {% if tags %}
+          {% for x in tags %}
+            <span class="w3-tag v-color-accent">{{ x }}</span>
+          {% endfor %}
+        {% endif %}
       </div>
 
+      <br>
       <!-- Content -->
       {% autoescape false %} {{ content }} {% endautoescape %}
+
+      {% if link %}
+      <!-- Button with more info in small screens -->
+      <div class="w3-center w3-hide-medium w3-hide-large">
+        <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+          {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
+        </a>
+      </div>
+      {% endif %}
+
     </div>
   </div>
 

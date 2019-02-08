@@ -17,8 +17,8 @@
         </div>
 
         {% if link %}
-        <!-- Button with more info -->
-        <div class="w3-right" style="padding-top: 20px">
+        <!-- Button with more info in large or medium screens -->
+        <div class="w3-right w3-hide-small" style="padding-top: 20px">
           <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
             {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
           </a>
@@ -97,6 +97,15 @@
         {% autoescape false %} {{ body }} {% endautoescape %}
     </div>
   </div>
+
+  <!-- Button with more info in small screens -->
+  {% if link %}
+  <div class="w3-center w3-hide-medium w3-hide-large" style="padding-bottom: 32px">
+    <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+      {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
+    </a>
+  </div>
+  {% endif %}
 
   <!-- SECTION: More projects blue banner -->
   <div class="w3-display-container">

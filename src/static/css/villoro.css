@@ -8,14 +8,13 @@ body, html {
     font-size: 16px
 }
 
-.v-text {
-    color: #444444!important;
-}
-
 
 /* ----------------------- Custom colors ---------------------------------------------------------*/
+.v-text {color: #444444!important;}
+.v-color-text-grey{color: #9E9E9E!important;} /* Gray 600 */
+.v-color-text-accent{color: #2176FF!important;}
+
 .v-color-accent{color:#fff!important;background-color:#2176FF!important}
-.v-color-text-accent{color:#2176FF!important}
 .v-color-header{background-color:#616161!important} /* Gray 700 */
 .v-color-footer{background-color:#616161!important} /* Gray 700 */
 .v-color-grey{background-color:#303845!important}

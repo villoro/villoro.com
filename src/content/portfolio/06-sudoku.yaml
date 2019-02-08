@@ -10,6 +10,11 @@ image_square: sudoku.jpg
 main: False
 highlight: True
 
+tags:
+  - AI
+  - Constrain propagation
+  - Python
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
@@ -29,11 +34,6 @@ brief: |
 
 motivation: |
   This is one of the projects I did when I was taken the [Artificial Intelligence Nanodegree](https://eu.udacity.com/course/ai-artificial-intelligence-nanodegree--nd898). The idea with this project was that we understand and develop a solution using elimination and constrain propagation and decision trees.
-
-tags:
-  - AI
-  - Constrain propagation
-  - Python
 
 body: |
   ## Result

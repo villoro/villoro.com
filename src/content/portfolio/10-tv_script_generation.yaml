@@ -10,6 +10,13 @@ image_square: simpsons_square.jpg
 main: True
 highlight: True
 
+tags:
+  - AI
+  - RNN
+  - Natural Language Processing (NLP)
+  - LSTM
+  - Tensorflow
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
@@ -28,13 +35,6 @@ brief: |
   To practise with NLP I created a neural network that was able to generate a new Simpson's episode script.
 
   The network created was a Recurrent Neural Network (RNN) with Long Short.term Memory (LSTM) cells.
-
-tags:
-  - AI
-  - RNN
-  - Natural Language Processing (NLP)
-  - LSTM
-  - Tensorflow
 
 motivation: |
   This was my third project of the [Deep Learning Nanodegree](https://eu.udacity.com/course/deep-learning-nanodegree--nd101) and the first one about NLP. The aim was that we got to understant RNN and the implementation of LSTM using tensorflow.

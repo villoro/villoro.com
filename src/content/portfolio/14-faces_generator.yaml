@@ -10,6 +10,13 @@ image_square: gan_faces_square.jpg
 main: False
 highlight: True
 
+tags:
+  - AI
+  - CNN
+  - GAN
+  - Computer Vision (CV)
+  - Tensorflow
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
@@ -23,13 +30,6 @@ highlight: True
 # Content
 # --------------------------------------------------------------------------------------------------
 brief: The idea of this project was to use a Generative Adversial Network (GAN) to create new content.
-
-tags:
-  - AI
-  - CNN
-  - GAN
-  - Computer Vision (CV)
-  - Tensorflow
 
 motivation: |
   This was my fifth and last project of the [Deep Learning Nanodegree](https://eu.udacity.com/course/deep-learning-nanodegree--nd101). With this project we were asked to create a generative adversarial networks (GAN). The first neural network had to create faces using a random vector and the second one guess which faces were fake and which ones were real.
