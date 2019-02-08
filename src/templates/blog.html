@@ -8,7 +8,7 @@
     </div>
 
     {% for post in blog.values() %}
-    <div class="w3-row w3-hover-grayscale w3-padding-large">
+    <div class="w3-row w3-hover-shadow w3-padding-large">
 
       <a href="{{ url_for('post', item="{}.html".format(post["code"])) }}">
       <!-- Image at left (except small screens) -->
@@ -19,13 +19,19 @@
       <!-- Summary at right -->
       <div class="w3-col l10 m8 s12 w3-padding">
         <div class="w3-row">
-          <div class="w3-col l6 m6 s6">
+          <div class="w3-col l6 m6 s12">
             <h3> {{ post["title"] }} </h3>
           </div>
 
-          <div class="w3-col l6 m6 s6 w3-right-align">
-            <h3> {{ post["date"] }} </h3>
+          <!-- On medium and large screens show date at right-->
+          <div class="w3-col l6 m6 w3-hide-small w3-right-align">
+            <h4> <i class="fa fa-clock-o"></i> {{ post["date"] }} </h4>
           </div>
+        </div>
+
+        <!-- On small screens show date below title -->
+        <div class="w3-hide-medium w3-hide-large" style="margin-top: -15px">
+          <p class="v-color-text-accent"> <i class="fa fa-clock-o"></i> {{ post["date"] }} </p>
         </div>
 
         <!-- Preview of the post -->
