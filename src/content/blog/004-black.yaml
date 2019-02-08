@@ -4,9 +4,11 @@
 code: black
 title: Black for code formatting
 date: "2019-02-07"
-image: black.jpg
+image: black_square.jpg
 highlight: True
 
+tags:
+  - Python
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
@@ -23,19 +25,119 @@ brief: |
   Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting.
 
 content: |
+  
+  <img src="https://raw.githubusercontent.com/ambv/black/master/docs/_static/logo2-readme.png" alt="black_logo" class="w3-image w3-padding-16"/>
 
   ## What is black
 
-  [Black](https://github.com/ambv/black) is python code formatter that allows developers to focus on code itself. You can try it online [here](https://black.now.sh/).
+  [Black](https://github.com/ambv/black) is a python code formatter that allows developers to focus on code itself. You can try it online [here](https://black.now.sh/).
 
 
   From their github:
 
   > Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting. You will save time and mental energy for more important matters.
 
+  The best way to explain it will using and example.
+
+  ### Input
+
+  ```python
+  from seven_dwwarfs import Grumpy, Happy, Sleepy, Bashful, Sneezy, Dopey, Doc
+  x = {  'a':37,'b':42,
+
+  'c':927}
+
+  x = 123456789.1234
+
+  if very_long_variable_name is not None and \
+   very_long_variable_name.field > 0 or \
+   very_long_variable_name.is_debug:
+   z = 'hello '+'world'
+  else:
+   world = 'world'
+   a = 'hello {}'.format(world)
+   f = rf'hello {world}'
+  if (this
+  and that): y = 'hello ''world'#FIXME: https://github.com/ambv/black/issues/26
+  class Foo  (     object  ):
+    def f    (self   ):
+      return       37*-2
+    def g(self, x,y=42):
+        return y
+  def f  (   a: List[ int ]) :
+    return      37-a[42-u :  y**3]
+  def very_important_function(template: str,*variables,file: os.PathLike,debug:bool=False,):
+      """Applies `variables` to the `template` and writes to `file`."""
+      with open(file, "w") as f:
+       x = f.read()
+  regular_formatting = [
+      0,  1,  2,
+      3,  4,  5,
+      6,  7,  8,
+  ]
+  ```
+
+  ### Output from black
+  ```python
+  from seven_dwwarfs import (
+      Grumpy,
+      Happy,
+      Sleepy,
+      Bashful,
+      Sneezy,
+      Dopey,
+      Doc,
+  )
+
+  x = {"a": 37, "b": 42, "c": 927}
+
+  x = 123_456_789.1234
+
+  if (
+      very_long_variable_name is not None
+      and very_long_variable_name.field > 0
+      or very_long_variable_name.is_debug
+  ):
+      z = "hello " + "world"
+  else:
+      world = "world"
+      a = "hello {}".format(world)
+      f = rf"hello {world}"
+  if this and that:
+      y = (
+          "hello " "world"
+      )  # FIXME: https://github.com/ambv/black/issues/26
+
+
+  class Foo(object):
+      def f(self):
+          return 37 * -2
+
+      def g(self, x, y=42):
+          return y
+
+
+  def f(a: List[int]):
+      return 37 - a[42 - u : y ** 3]
+
+
+  def very_important_function(
+      template: str,
+      *variables,
+      file: os.PathLike,
+      debug: bool = False,
+  ):
+      """Applies `variables` to the `template` and writes to `file`."""
+      with open(file, "w") as f:
+          x = f.read()
+
+
+  regular_formatting = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+  ```
+
   ## Installation and usage of black
   
-  You can install black using pip by:
+  You can install black using pip with:
 
   ```sh
   pip install black
@@ -53,7 +155,7 @@ content: |
   You can use a `pyproject.toml` file to configure some things in black. For example I like having a 100 line-length, so I would use:
   ```toml
   [tool.black]
-  line-length = 88
+  line-length = 100
   py36 = true
   ```
 
@@ -73,7 +175,7 @@ content: |
   * `CTRL + ALT + B`: black the current file.
   * `CTRL + SHIFT + ALT + B`: show a diff file of the changes that black is attempting to do.
 
-  But the best part will be if you set sublack to auto format file when saving. This way every time you save a file if will be blackened. To do so you should:
+  But the best part will be if you set sublack to auto format the current file when saving. This way every time you save a file it will be blackened. To do so you should:
 
   1. With sublime go to `Preferences`
   2. Select `Package Settings`
@@ -85,5 +187,3 @@ content: |
   > If you are unable to modify the file, copy it's contents and save it in a new file in the same location (you can see the location at the top of sublime). In my case the path is `C:\Users\Villoro\AppData\Roaming\Sublime Text 3\Packages\sublack\sublack.sublime-settings`
 
   I usually use sublime but there are black extensions for other programs as well.
-
-
