@@ -9,13 +9,15 @@
 
       <!-- List of tags -->
       {% for tag in tags %}
-        <span class="w3-tag v-color-accent" style="margin-bottom: 8px;">{{ tag }}</span>
+        <button class="v-filter-button v-color-accent w3-round-large w3-hover-grayscale" style="margin-bottom: 8px;" onclick="filter_items( '{{ tag }}' )" tag="hello">
+          {{ tag }}
+        </button>
       {% endfor %}
     </div>
 
     <div class="w3-row" style="padding-top: 32px">
       {% for port in portfolio.values() %}
-      <div class="w3-col l4 m6 s12 w3-padding w3-center" style="margin-bottom: 16px">
+      <div class="w3-col l4 m6 s12 w3-padding w3-center {{ ' '.join(port['tags_filter']) }}" style="margin-bottom: 16px">
 
         <!-- one card for each project -->
         <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-color-light-grey">
@@ -29,4 +31,11 @@
       {% endfor %}
     </div>
   </div>
+{% endblock %}
+
+
+{% block scripts%}
+function filter_items(x) {
+  alert("You clicked " + x + " with " + this.className);
+}
 {% endblock %}
