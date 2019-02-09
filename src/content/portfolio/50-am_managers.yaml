@@ -18,12 +18,12 @@ tags:
   - Dash
   - Business Intelligence (BI)
   - DevOps
+  - Web
 
 tags_filter:
-  - Python
-  - BI
-  - Dash
+  - Business Intelligence
   - DevOps
+  - Web
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url

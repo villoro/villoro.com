@@ -14,12 +14,12 @@ tags:
   - Python
   - Dash
   - Plotly
-  - Business Intelligence
+  - Business Intelligence (BI)
+  - Web
 
 tags_filter:
-  - Python
-  - Dash
-  - BI
+  - Business Intelligence
+  - Web
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url

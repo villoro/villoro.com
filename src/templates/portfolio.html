@@ -9,13 +9,17 @@
 
       <!-- Filtering buttons -->
       <div id="buttonsContainer">
-        <button class="v-filter-button w3-round-large active" style="margin-bottom: 8px;" onclick="filterSelection('all')" tag="hello">
+        <button class="v-filter-button w3-round-large active"
+                style="margin-bottom: 8px; margin-right: 24px;"
+                onclick="filterSelection('all')">
           Show all
         </button>
 
         <!-- List of tags -->
         {% for tag in tags %}
-          <button class="v-filter-button w3-round-large" style="margin-bottom: 8px;" onclick="filterSelection( '{{ tag }}' )" tag="hello">
+          <button class="v-filter-button w3-round-large"
+                  style="margin-bottom: 8px;"
+                  onclick="filterSelection( '{{ tag }}' )">
             {{ tag }}
           </button>
         {% endfor %}
@@ -25,12 +29,15 @@
 
     <div class="w3-row" style="padding-top: 32px">
       {% for port in portfolio.values() %}
-      <div class="w3-col l4 m6 s12 w3-padding w3-center v-filterable {{ ' '.join(port['tags_filter']) }}" style="margin-bottom: 16px">
+      <div class="w3-col l4 m6 s12 w3-padding w3-center v-filterable {{ ' '.join(port['tags_filter']) }}"
+           style="margin-bottom: 16px">
 
         <!-- one card for each project -->
         <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-color-light-grey">
           <a href="{{ url_for('portfolio_item', item="{}.html".format(port["code"])) }}">
-            <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}"" alt="{{ tool }}" class="v-round-image">
+            <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}""
+                 alt="{{ tool }}"
+                 class="v-round-image">
           </a>
 
           <div class="w3-padding-small w3-text-black" style="z-index:4">{{ port["title"] }}</div>
