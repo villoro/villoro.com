@@ -7,17 +7,25 @@
       <h1>Portfolio</h1>
       <p>A sample of my projects.</p>
 
-      <!-- List of tags -->
-      {% for tag in tags %}
-        <button class="v-filter-button v-color-accent w3-round-large w3-hover-grayscale" style="margin-bottom: 8px;" onclick="filter_items( '{{ tag }}' )" tag="hello">
-          {{ tag }}
+      <!-- Filtering buttons -->
+      <div id="buttonsContainer">
+        <button class="v-filter-button w3-round-large active" style="margin-bottom: 8px;" onclick="filterSelection('all')" tag="hello">
+          Show all
         </button>
-      {% endfor %}
+
+        <!-- List of tags -->
+        {% for tag in tags %}
+          <button class="v-filter-button w3-round-large" style="margin-bottom: 8px;" onclick="filterSelection( '{{ tag }}' )" tag="hello">
+            {{ tag }}
+          </button>
+        {% endfor %}
+      </div>
+
     </div>
 
     <div class="w3-row" style="padding-top: 32px">
       {% for port in portfolio.values() %}
-      <div class="w3-col l4 m6 s12 w3-padding w3-center {{ ' '.join(port['tags_filter']) }}" style="margin-bottom: 16px">
+      <div class="w3-col l4 m6 s12 w3-padding w3-center v-filterable {{ ' '.join(port['tags_filter']) }}" style="margin-bottom: 16px">
 
         <!-- one card for each project -->
         <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-color-light-grey">
@@ -35,7 +43,46 @@
 
 
 {% block scripts%}
-function filter_items(x) {
-  alert("You clicked " + x + " with " + this.className);
+filterSelection("all")
+function filterSelection(c) {
+  var x, i;
+  x = document.getElementsByClassName("v-filterable");
+  if (c == "all") c = "";
+  for (i = 0; i < x.length; i++) {
+    w3RemoveClass(x[i], "show");
+    if (x[i].className.indexOf(c) > -1) w3AddClass(x[i], "show");
+  }
+}
+
+function w3AddClass(element, name) {
+  var i, arr1, arr2;
+  arr1 = element.className.split(" ");
+  arr2 = name.split(" ");
+  for (i = 0; i < arr2.length; i++) {
+    if (arr1.indexOf(arr2[i]) == -1) {element.className += " " + arr2[i];}
+  }
+}
+
+function w3RemoveClass(element, name) {
+  var i, arr1, arr2;
+  arr1 = element.className.split(" ");
+  arr2 = name.split(" ");
+  for (i = 0; i < arr2.length; i++) {
+    while (arr1.indexOf(arr2[i]) > -1) {
+      arr1.splice(arr1.indexOf(arr2[i]), 1);     
+    }
+  }
+  element.className = arr1.join(" ");
+}
+
+// Add active class to the current button (highlight it)
+var btnContainer = document.getElementById("buttonsContainer");
+var btns = btnContainer.getElementsByClassName("v-filter-button");
+for (var i = 0; i < btns.length; i++) {
+  btns[i].addEventListener("click", function(){
+    var current = document.getElementsByClassName("active");
+    current[0].className = current[0].className.replace(" active", "");
+    this.className += " active";
+  });
 }
 {% endblock %}

@@ -88,17 +88,7 @@ code {
 }
 
 
-/* ----------------------- Other -----------------------------------------------------------------*/
-/* change link colors */
-a {color:#2176FF}
-a:hover {color:#FFCA28}
-
-.v-round-image{
-  width:100%;
-  border-top-left-radius:4px;
-  border-top-right-radius:4px;
-}
-
+/* ----------------------- Filters ---------------------------------------------------------------*/
 .v-filter-button{
   border:none;
   display:inline-block;
@@ -109,4 +99,34 @@ a:hover {color:#FFCA28}
   text-align:center;
   cursor:pointer;
   white-space:nowrap;
+}
+
+.v-filter-button.active {
+  background-color: #2176FF; /* theme color */
+  color: white;
+}
+
+.v-filter-button:hover {
+  background-color: #FFCA28; /* contrast color */
+  color: white;
+}
+
+.v-filterable {
+  display: none;
+}
+
+.show {
+  display: block;
+}
+
+
+/* ----------------------- Other -----------------------------------------------------------------*/
+/* change link colors */
+a {color:#2176FF}
+a:hover {color:#FFCA28}
+
+.v-round-image{
+  width:100%;
+  border-top-left-radius:4px;
+  border-top-right-radius:4px;
 }
