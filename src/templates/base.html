@@ -116,9 +116,12 @@
       }
     </script>
 
+    <!-- Add children scripts -->
     <script>
-      // Add children scripts
-      {% block scripts %}{% endblock %}
+      {% block script_lv1 %}{% endblock %}
+    </script>
+    <script>
+      {% block script_lv2 %}{% endblock %}
     </script>
 
   </body>

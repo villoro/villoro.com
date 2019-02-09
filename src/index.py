@@ -37,7 +37,7 @@ def portfolio():
     content = u.get_content()["portfolio"]
 
     # Get all possible filtering tags
-    tags = sorted(set([x for port in content.values() for x in port["tags_filter"]]))
+    tags = u.extract_tags(content.values())
 
     return render_template(
         "portfolio.html", portfolio=content, tags=tags, **u.get_page("portfolio")
@@ -47,7 +47,13 @@ def portfolio():
 @APP.route("/blog.html")
 def blog():
     """ blog page """
-    return render_template("blog.html", blog=u.get_content()["blog"], **u.get_page("blog"))
+
+    content = u.get_content()["blog"]
+
+    # Get all possible filtering tags
+    tags = u.extract_tags(content.values())
+
+    return render_template("blog.html", blog=content, tags=tags, **u.get_page("blog"))
 
 
 @APP.route("/project/<item>")
