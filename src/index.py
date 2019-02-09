@@ -34,8 +34,13 @@ def about():
 def portfolio():
     """ portfolio page """
 
+    content = u.get_content()["portfolio"]
+
+    # Get all possible filtering tags
+    tags = sorted(set([x for port in content.values() for x in port["tags_filter"]]))
+
     return render_template(
-        "portfolio.html", portfolio=u.get_content()["portfolio"], **u.get_page("portfolio")
+        "portfolio.html", portfolio=content, tags=tags, **u.get_page("portfolio")
     )
 
 

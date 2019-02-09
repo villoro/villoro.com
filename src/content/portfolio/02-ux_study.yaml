@@ -15,6 +15,9 @@ tags:
   - Android
   - Java
 
+tags_filter:
+  - UX
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
