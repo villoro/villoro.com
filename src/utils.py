@@ -93,3 +93,10 @@ def get_content():
     assert (num_portfolio_main % 4 == 0) and (num_portfolio_main > 0)
 
     return out
+
+
+def extract_tags(data):
+    """ Retrives a sorted list of all tags presents """
+
+    tags = [x for elem in data for x in elem.get("tags_filter", None)]
+    return sorted(set(tags))

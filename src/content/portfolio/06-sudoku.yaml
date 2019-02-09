@@ -15,6 +15,9 @@ tags:
   - Constrain propagation
   - Python
 
+tags_filter:
+  - AI
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
