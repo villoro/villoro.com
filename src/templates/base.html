@@ -114,8 +114,15 @@
           document.getElementById("sidebar").style.display = "none";
           document.getElementById("overlay").style.display = "none";
       }
-      // Add children scripts
-      {% block scripts %}{% endblock %}
     </script>
+
+    <!-- Add children scripts -->
+    <script>
+      {% block script_lv1 %}{% endblock %}
+    </script>
+    <script>
+      {% block script_lv2 %}{% endblock %}
+    </script>
+
   </body>
 </html>
