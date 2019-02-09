@@ -1,47 +1,44 @@
-{% extends "page.html" %}
+{% extends "page_filters.html" %}
 
-{% block page_content%}
-  <!-- SECTION: blog -->
-  <div class="w3-padding-32 w3-content" style="max-width:1200px">
-    <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
-      <h1>Latests posts</h1>
+{% block grid_items%}
+<div>
+  {% for post in blog.values() %}
+  <div class="w3-row w3-hover-shadow w3-padding-large v-filterable {{ ' '.join(post['tags_filter']) }}">
+
+    <a href="{{ url_for('post', item="{}.html".format(post["code"])) }}">
+    <!-- Image at left (except small screens) -->
+    <div class="w3-col l2 m4 s5 w3-center v-padding-small w3-hide-small">
+      <img src="{{ url_for("static", filename="images/blog/{}".format(post["image"])) }}""
+           alt="{{ tool }}"
+           class="w3-image">
     </div>
 
-    {% for post in blog.values() %}
-    <div class="w3-row w3-hover-shadow w3-padding-large">
-
-      <a href="{{ url_for('post', item="{}.html".format(post["code"])) }}">
-      <!-- Image at left (except small screens) -->
-      <div class="w3-col l2 m4 s5 w3-center v-padding-small w3-hide-small">
-        <img src="{{ url_for("static", filename="images/blog/{}".format(post["image"])) }}"" alt="{{ tool }}" class="w3-image">
-      </div>
-
-      <!-- Summary at right -->
-      <div class="w3-col l10 m8 s12 w3-padding">
-        <div class="w3-row">
-          <div class="w3-col l6 m6 s12">
-            <h3> {{ post["title"] }} </h3>
-          </div>
-
-          <!-- On medium and large screens show date at right-->
-          <div class="w3-col l6 m6 w3-hide-small w3-right-align">
-            <h4> <i class="fa fa-clock-o"></i> {{ post["date"] }} </h4>
-          </div>
+    <!-- Summary at right -->
+    <div class="w3-col l10 m8 s12 w3-padding">
+      <div class="w3-row">
+        <div class="w3-col l6 m6 s12">
+          <h3> {{ post["title"] }} </h3>
         </div>
 
-        <!-- On small screens show date below title -->
-        <div class="w3-hide-medium w3-hide-large" style="margin-top: -15px">
-          <p class="v-color-text-accent"> <i class="fa fa-clock-o"></i> {{ post["date"] }} </p>
+        <!-- On medium and large screens show date at right-->
+        <div class="w3-col l6 m6 w3-hide-small w3-right-align">
+          <h4> <i class="fa fa-clock-o"></i> {{ post["date"] }} </h4>
         </div>
-
-        <!-- Preview of the post -->
-        <p class="v-text"> {{ post["brief"] + " ..."}} </p>
-
       </div>
-      </a>
+
+      <!-- On small screens show date below title -->
+      <div class="w3-hide-medium w3-hide-large" style="margin-top: -15px">
+        <p class="v-color-text-accent">
+          <i class="fa fa-clock-o"></i> {{ post["date"] }}
+        </p>
+      </div>
+
+      <!-- Preview of the post -->
+      <p class="v-text"> {{ post["brief"] + " ..."}} </p>
+
     </div>
-    {% endfor %}
-
+    </a>
   </div>
-
+  {% endfor %}
+</div>
 {% endblock %}
