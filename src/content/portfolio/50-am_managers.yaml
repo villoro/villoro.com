@@ -17,7 +17,13 @@ tags:
   - PowerBI
   - Dash
   - Business Intelligence (BI)
+  - DevOps
 
+tags_filter:
+  - Python
+  - BI
+  - Dash
+  - DevOps
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url

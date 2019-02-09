@@ -16,6 +16,10 @@ tags:
   - Plotly
   - Business Intelligence
 
+tags_filter:
+  - Python
+  - Dash
+  - BI
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url

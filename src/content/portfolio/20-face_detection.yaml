@@ -16,6 +16,10 @@ tags:
   - Computer Vision (CV)
   - Keras
 
+tags_filter:
+  - AI
+  - CNN
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url

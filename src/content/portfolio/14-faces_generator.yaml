@@ -17,6 +17,11 @@ tags:
   - Computer Vision (CV)
   - Tensorflow
 
+tags_filter:
+  - AI
+  - CNN
+  - GAN
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url

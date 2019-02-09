@@ -6,6 +6,11 @@
     <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
       <h1>Portfolio</h1>
       <p>A sample of my projects.</p>
+
+      <!-- List of tags -->
+      {% for tag in tags %}
+        <span class="w3-tag v-color-accent" style="margin-bottom: 8px;">{{ tag }}</span>
+      {% endfor %}
     </div>
 
     <div class="w3-row" style="padding-top: 32px">

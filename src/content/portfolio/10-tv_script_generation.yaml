@@ -17,6 +17,11 @@ tags:
   - LSTM
   - Tensorflow
 
+tags_filter:
+  - AI
+  - RNN
+  - NLP
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
