@@ -27,11 +27,23 @@
         {% endif %}
       </div>
 
+      {% if link %}
+      <!-- Button with more info in small screens -->
+      <div class="w3-center w3-hide-medium w3-hide-large w3-padding-large">
+        <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+          {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
+        </a>
+      </div>
+      {% endif %}
+
       <!-- Date -->
       <div class="w3-row w3-left v-color-text-grey">
 
         <!-- Date creation -->
         <span style="margin-right: 10px"> <i class="fa fa-clock-o"></i> {{ date }}</span>
+
+        <!-- On small screens set date and tags in different lines -->
+        <div class="w3-hide-medium w3-hide-large"></div>
 
         <!-- Tags -->
         {% if tags %}
@@ -47,14 +59,13 @@
       <!-- Content -->
       {% autoescape false %} {{ content }} {% endautoescape %}
 
-      {% if link %}
-      <!-- Button with more info in small screens -->
-      <div class="w3-center w3-hide-medium w3-hide-large">
-        <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
-          {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
+      <!-- Subscribe link -->
+      <div class="w3-center w3-padding-large">
+        <a href="http://eepurl.com/ghAetb" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+          Subscribe to the mailing list <i class="fa fa-angle-right"></i>
         </a>
+        
       </div>
-      {% endif %}
 
     </div>
   </div>

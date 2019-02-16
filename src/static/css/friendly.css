@@ -5,6 +5,8 @@
   padding-right: 10px;
   font-size: 14px;
   border-radius: 3px;
+  overflow: auto;
+  line-height: 1.4;
 }
 
 .codehilite .hll { background-color: #ffffcc }
@@ -63,7 +65,7 @@
 .codehilite .s2 { color: #4070a0 } /* Literal.String.Double */
 .codehilite .se { color: #4070a0; font-weight: bold } /* Literal.String.Escape */
 .codehilite .sh { color: #4070a0 } /* Literal.String.Heredoc */
-.codehilite .si { color: #70a0d0; font-style: italic } /* Literal.String.Interpol */
+.codehilite .si { color: #4070a0 } /* Literal.String.Interpol */
 .codehilite .sx { color: #c65d09 } /* Literal.String.Other */
 .codehilite .sr { color: #235388 } /* Literal.String.Regex */
 .codehilite .s1 { color: #4070a0 } /* Literal.String.Single */
