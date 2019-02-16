@@ -41,7 +41,9 @@
         {% endif %}
       </div>
 
-      <br>
+      <!-- Add some separation -->
+      <br><br>
+
       <!-- Content -->
       {% autoescape false %} {{ content }} {% endautoescape %}
 
@@ -58,3 +60,14 @@
   </div>
 
 {% endblock %}
+
+<!-- If there are extra scripts include them -->
+{% if scripts %}
+  {% block raw_scripts %}
+
+  {% for x in scripts %}
+    <script src="{{ x }}"></script>
+  {% endfor %}
+
+  {% endblock %}
+{% endif %}
