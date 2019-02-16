@@ -117,12 +117,19 @@
     </script>
 
     <!-- Add children scripts -->
-    <script>
-      {% block script_lv1 %}{% endblock %}
-    </script>
-    <script>
-      {% block script_lv2 %}{% endblock %}
-    </script>
+    {% if script_lv1 %}
+      <script>
+        {% block script_lv1 %}{% endblock %}
+      </script>
+    {% endif %}
+
+    {% if script_lv2 %}
+      <script>
+        {% block script_lv2 %}{% endblock %}
+      </script>
+    {% endif %}
+
+    {% block raw_scripts %}{% endblock %}
 
   </body>
 </html>

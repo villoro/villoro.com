@@ -31,6 +31,9 @@ link:
 brief: |
   Choosing between colors is always a difficult task. But with the material design palette it is possible to solve most of color related problems easily.
 
+scripts:
+  - https://cdn.plot.ly/plotly-latest.min.js
+
 content: |
 
   Choosing between colors is always a difficult task, especially for people like me who are not very good a design tasks.
@@ -41,9 +44,13 @@ content: |
 
   ## Material design palette
 
+  There are 19 colors with 10 different intensities for each one plus the white and black colors. This gives us 192 different colors ordered in a matrix.
+
   <div class="w3-center">
     <img src="/static/images/blog/material_colors.svg" alt="material_colors" class="w3-image w3-padding-16"/>
   </div>
+
+  This allows us to use gradients of the same colors like in the following plot
 
   More info about colors and palettes can be found at [htmlcolorcodes.com](https://htmlcolorcodes.com/color-chart/).
 
