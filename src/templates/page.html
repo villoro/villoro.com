@@ -4,6 +4,7 @@
 {% block navbar_classes %}{% endblock %}
 
 {% block style %}
+<style>
   /* Create a Parallax Effect */
   .bgimg{
     background-attachment: fixed;
@@ -21,6 +22,7 @@
         min-height: 400px;
     }
   }
+</style>
 {% endblock %}
 
 {% block body %}
@@ -37,6 +39,7 @@
 
 
 {% block script_lv1 %}
+  <script>
     // Change style of navbar on scroll
     window.onscroll = function() {hide_show_navbar_border()};
     function hide_show_navbar_border() {
@@ -50,4 +53,5 @@
             navbar.className = navbar.className.replace(mclasses, "");
         }
     }
+  </script>
 {% endblock %}
