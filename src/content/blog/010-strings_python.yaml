@@ -17,9 +17,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: Github
-#   url: https://github.com/villoro/v-palette
+link: 
+  text: Python intro
+  url: https://docs.python.org/2/tutorial/introduction.html#unicode-strings
 
 
 # --------------------------------------------------------------------------------------------------
