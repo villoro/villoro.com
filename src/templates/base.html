@@ -17,6 +17,8 @@
     }
   </script>
 
+  {% block raw_scripts %}{% endblock %}
+
   <!-- W3.css for styling: https://www.w3schools.com/w3css/4/w3.css -->
   <link rel="stylesheet" href="{{ url_for("static", filename="css/w3.css") }}">
 
@@ -35,10 +37,8 @@
   <!-- Icons font -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-  <style>
-    /* Add children styles */
-    {% block style %}{% endblock %}
-  </style>
+  <!-- Add children styles -->
+  {% block style %}{% endblock %}
 
   <link rel="icon" href="{{ url_for("static", filename="images/favicon.ico") }}"/>
 
@@ -117,12 +117,8 @@
     </script>
 
     <!-- Add children scripts -->
-    <script>
-      {% block script_lv1 %}{% endblock %}
-    </script>
-    <script>
-      {% block script_lv2 %}{% endblock %}
-    </script>
+    {% block script_lv1 %}{% endblock %}
+    {% block script_lv2 %}{% endblock %}
 
   </body>
 </html>
