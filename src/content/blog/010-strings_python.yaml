@@ -32,9 +32,9 @@ content: |
 
   There a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 
-  ## Formatting strings
+  ## 1. Formatting strings
 
-  ### Raw strings with `r" "`
+  ### 1.1. Raw strings with `r" "`
 
   This allows to have a literal string without scaping characters or special ones.
 
@@ -49,8 +49,7 @@ content: |
   <b style="color:red;">Don't do</b>
 
   ```python
-  "C:\some\name"
-  # \n will be interpreted as new line
+  "C:\some\name" # \n will be interpreted as new line
   ```
 
   **Out:**
@@ -59,7 +58,7 @@ content: |
   ame
   ```
 
-  ### Formatting with repeated ocurrencies
+  ### 1.2. Formatting with repeated ocurrencies
 
   You can use `"".format()` and use names for each text that you want to insert. For example:
 
@@ -68,9 +67,7 @@ content: |
 
   print("""
       Hello {name},
-
       Welcome to {company}. Your new email is: {name}@{company}.
-
       Regards,
 
       {date:%Y-%m-%d}
@@ -84,7 +81,7 @@ content: |
 
   > Triple quotation marks (`"""`) allows to have more than one line in a string 
 
-  ### Formatting with `f" "` (Python 3.6+)
+  ### 1.3. Formatting with `f" "` (Python 3.6+)
 
   Imagine you have the following filename `src/data/2019-02-16.xlsx`. The best way to get the filename giving the following parameters:
 
@@ -96,7 +93,7 @@ content: |
   mdate = date(2019, 2, 16)
   ```
 
-  <b style="color:limegreen;">Do</b>
+  <b style="color:limegreen;">Do (python 3.6+)</b>
 
   ```python
   filename = f"{path}/{mdate:%Y-%m-%d}.xlsx"
@@ -116,9 +113,9 @@ content: |
 
   All give the same result but with `f" "` it is more compact and easier to read.
 
-  ## Concatenating strings
+  ## 2. Concatenating strings
 
-  ### Concat few strings
+  ### 2.1. Concat few strings
   For small concatenations you can simply put two strings togther:
 
   ```python
@@ -128,10 +125,10 @@ content: |
   You can also repeat strings with:
 
   ```python
-  "hello_" * 4:       "hello_hello_hello_hello_"
+  "hello_" * 4:         "hello_hello_hello_hello_"
   ```
 
-  ### Concat a lot of strings
+  ### 2.2. Concat a lot of strings
 
   To concatenate strings you should work with lists and join them at the end. Its faster and cleaner.
 
@@ -156,28 +153,28 @@ content: |
 
   > 105 µs ± 3.92 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
-  ## Slicing strings
+  ## 3. Slicing strings
 
   ```python
   text = "hello world"
 
-  text[0]:         "h"
-  text[:4]:        "hell"
-  text[-1]:        "d"
-  text[-5: -1]:    "worl"
-  text[1:-1]:      "ello worl"
+  text[0]:          "h"
+  text[:4]:         "hell"
+  text[-1]:         "d"
+  text[-5: -1]:     "worl"
+  text[1:-1]:       "ello worl"
   ```
 
-  ## String builtin functions
+  ## 4. String builtin functions
 
   `Upper`, `lower` and `title` functions:
 
   ```python
   text = "heLLo world"
 
-  text.upper():      "HELLO WORLD"
-  text.lower():      "hello world"
-  text.title():      "Hello World"
+  text.upper():     "HELLO WORLD"
+  text.lower():     "hello world"
+  text.title():     "Hello World"
   ```
 
   Clean spaces, identation and other special chars:

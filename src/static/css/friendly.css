@@ -5,6 +5,8 @@
   padding-right: 10px;
   font-size: 14px;
   border-radius: 3px;
+  overflow: auto;
+  line-height: 1.4;
 }
 
 .codehilite .hll { background-color: #ffffcc }
