@@ -67,13 +67,15 @@ content: |
   from v_palette import get_colors
 
   # Retrive one color
-  color = get_colors(("red", 100))
-  # color will be: '#FFCDD2'
-
-  # Retrive some colors
-  colors = get_colors([("red", 100), ("blue", 100)])
-  # colors will be: ['#FFCDD2', '#BBDEFB']
+  get_colors(("red", 100))
   ```
+  **Out:** `'#FFCDD2'`
+
+  ```python
+  # Retrive some colors
+  get_colors([("red", 100), ("blue", 100)])
+  ```
+  **Out:** `['#FFCDD2', '#BBDEFB']`
 
   Remeber to install it using pip with:
 

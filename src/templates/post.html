@@ -33,6 +33,9 @@
         <!-- Date creation -->
         <span style="margin-right: 10px"> <i class="fa fa-clock-o"></i> {{ date }}</span>
 
+        <!-- On small screens set date and tags in different lines -->
+        <div class="w3-hide-medium w3-hide-large"></div>
+
         <!-- Tags -->
         {% if tags %}
           {% for x in tags %}
