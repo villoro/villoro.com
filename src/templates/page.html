@@ -37,6 +37,7 @@
 
 
 {% block script_lv1 %}
+  <script>
     // Change style of navbar on scroll
     window.onscroll = function() {hide_show_navbar_border()};
     function hide_show_navbar_border() {
@@ -50,4 +51,5 @@
             navbar.className = navbar.className.replace(mclasses, "");
         }
     }
+  </script>
 {% endblock %}

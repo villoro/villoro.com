@@ -119,17 +119,8 @@
     </script>
 
     <!-- Add children scripts -->
-    {% if script_lv1 %}
-      <script>
-        {% block script_lv1 %}{% endblock %}
-      </script>
-    {% endif %}
-
-    {% if script_lv2 %}
-      <script>
-        {% block script_lv2 %}{% endblock %}
-      </script>
-    {% endif %}
+    {% block script_lv1 %}{% endblock %}
+    {% block script_lv2 %}{% endblock %}
 
   </body>
 </html>
