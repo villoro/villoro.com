@@ -17,6 +17,8 @@
     }
   </script>
 
+  {% block raw_scripts %}{% endblock %}
+
   <!-- W3.css for styling: https://www.w3schools.com/w3css/4/w3.css -->
   <link rel="stylesheet" href="{{ url_for("static", filename="css/w3.css") }}">
 
@@ -128,8 +130,6 @@
         {% block script_lv2 %}{% endblock %}
       </script>
     {% endif %}
-
-    {% block raw_scripts %}{% endblock %}
 
   </body>
 </html>
