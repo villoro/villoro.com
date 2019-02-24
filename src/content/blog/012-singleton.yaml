@@ -1,0 +1,114 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: singleton
+title: Singleton in python
+date: "2019-02-24"
+image: singleton_square.jpg
+highlight: True
+
+tags:
+  - Python
+
+tags_filter:
+  - Python
+
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Singleton docs
+  url: https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief: |
+  The singleton pattern will help you have only one instance and allow you to call only one sync function.
+
+content: |
+  Python classes are very useful but sometimes they lack some features that might be very useful.
+
+  ## The problem
+  Let's imagine you want to create a class that have some data. This class will also have a sync function to update the data. As an example let's create two loader instances of the same class.
+
+  ```python
+  class loader:
+    
+    def __init__(self):
+        self.value = 0
+        
+    def sync(self):
+        self.value += 1
+        
+    def get_value(self):
+        return self.value
+
+  loader1 = loader()
+  loader2 = loader()
+  ```
+
+  After synchronizing the data `loader1` will have `value = 1`. But `loader2` will have `value = 0`
+  
+  ```python
+  loader1.sync()
+  loader1.get_value()
+  ```
+  Out: `1`
+
+  ```python
+  loader2.get_value()
+  ```
+  Out: `0`
+
+  If what you need is to use this data in multiple python files and you want to only call the sync function once and not in every python file this won't work as expected.
+
+  ## The singleton pattern
+  What is needed is a class that can only have **one instance**. This is the singleton (more info at [python3 patterns and idioms](https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html)). The simpliest way to achive that is by creating a new python file since by design it will be unique.
+
+  So for example let's create `single_loader.py`.
+
+  ```python
+  data = {"value": 0}
+
+  def sync():
+      # It is important to update the data variable instead of assign a new value
+      # data = {"value": data.get("value", 0) + 1} won't work as expected
+      data.update({"value": data.get("value", 0) + 1})
+
+
+  def get_value():
+      return data.get("value", 0)
+
+  ```
+
+  This file will also have the `sync` and `get_value` functions.
+
+  Now we can call the `single_loader.py` in any file.
+
+  ```python
+  import single_loader
+  loader1 = single_loader
+  loader2 = single_loader
+  ```
+
+  This time if we do the same as the example above the `get_value` function will always return the same value.
+
+  ```python
+  loader1.sync()
+  loader1.get_value()
+  ```
+  Out: `1`
+
+  ```python
+  loader2.get_value()
+  ```
+  Out: `1`
+
+  ## Real usage
+
+  While I was working with one of my [Dash](https://plot.ly/products/dash/) projects I made use of that to create a `data_loader.py` file. You can view the code [here](https://github.com/villoro/expensor_personal/tree/4.3.3/src).
+
+  What I have is a `data_loader.py` that implements a `sync` function to update both `DFS` and `YML` vars. Those two vars are then used in all files inside the `pages` folder. And the `sync` function of the `data_loader.py` is only called in `index.py/update_sync_count()`.
