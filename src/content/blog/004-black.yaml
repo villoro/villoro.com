@@ -5,7 +5,7 @@ code: black
 title: Black for code formatting
 date: "2019-02-07"
 image: black_square.jpg
-highlight: True
+highlight: False
 
 tags:
   - Python
