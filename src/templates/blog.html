@@ -1,5 +1,14 @@
 {% extends "page_filters.html" %}
 
+
+<!-- Google search div -->
+{% block google_search_bar%}
+<div>
+  <gcse:search></gcse:search>
+</div>
+{% endblock %}
+
+
 {% block grid_items%}
 <div>
   {% for post in blog.values() %}
@@ -41,4 +50,19 @@
   </div>
   {% endfor %}
 </div>
+{% endblock %}
+
+<!-- Google search code -->
+{% block script_lv3 %}
+<script>
+  (function() {
+    var cx = '013808806325250472388:6ih9rrzbcvi';
+    var gcse = document.createElement('script');
+    gcse.type = 'text/javascript';
+    gcse.async = true;
+    gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(gcse, s);
+  })();
+</script>
 {% endblock %}
