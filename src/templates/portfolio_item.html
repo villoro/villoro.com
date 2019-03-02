@@ -19,7 +19,7 @@
         {% if link %}
         <!-- Button with more info in large or medium screens -->
         <div class="w3-right w3-hide-small" style="padding-top: 20px">
-          <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+          <a href="{{ link.get('url') }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
             {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
           </a>
         </div>
@@ -38,7 +38,7 @@
     <div class="w3-row">
       <!-- Image -->
       <div class="w3-col m6 w3-padding-large w3-center">
-        <img src="{{ url_for("static", filename="images/portfolio/{}".format(image)) }}" class="w3-image" alt="{{ image.split(".")[0] }}" style="width: 100%; max-width: 800px;">
+        <img src="{{ url_for('static', filename='images/portfolio/{}'.format(image)) }}" class="w3-image" alt="{{ image.split('.'')[0] }}" style="width: 100%; max-width: 800px;">
       </div>
 
       <div class="w3-col m6 w3-padding-large">
@@ -101,7 +101,7 @@
   <!-- Button with more info in small screens -->
   {% if link %}
   <div class="w3-center w3-hide-medium w3-hide-large" style="padding-bottom: 32px">
-    <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+    <a href="{{ link.get('url') }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
       {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
     </a>
   </div>
@@ -110,7 +110,7 @@
   <!-- SECTION: More projects blue banner -->
   <div class="w3-display-container">
     <a href="{{ url_for('portfolio') }}">
-      <img src="{{ url_for("static", filename="images/project_bar.jpg") }}" alt="Lights" style="width:100%; max-height: 200px">
+      <img src="{{ url_for('static', filename='images/project_bar.jpg') }}" alt="Lights" style="width:100%; max-height: 200px">
 
       <!-- large screens -->
       <div class="w3-display-middle w3-hide-medium w3-hide-small" style="max-width:1200px;">
@@ -129,8 +129,8 @@
     <div class="w3-row">
       {% for port in portfolio.values() %}
       <div class="w3-col l2 m2 s4 w3-hover-grayscale">
-        <a href="{{ url_for('portfolio_item', item="{}.html".format(port["code"])) }}">
-          <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}"" alt="{{ port["title"] }}" class="w3-image">
+        <a href="{{ url_for('portfolio_item', item='{}.html'.format(port['code'])) }}">
+          <img src="{{ url_for('static', filename='images/portfolio/{}'.format(port['image_square'])) }}"" alt="{{ port['title'] }}" class="w3-image">
         </a>
       </div>
       {% endfor %}
