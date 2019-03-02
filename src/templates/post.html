@@ -82,8 +82,11 @@
 
     </div>
   </div>
+{% endblock %}
 
-  <!-- Disqus code -->
+
+<!-- Disqus code -->
+{% block script_lv1 %}
   <script>
     var disqus_config = function () {
       this.page.url = 'http://villoro.com/post/{{ code }}';  // Replace PAGE_URL with your page's canonical URL variable
@@ -101,6 +104,7 @@
     Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
   </noscript>
 {% endblock %}
+
 
 <!-- If there are extra scripts include them -->
 {% if scripts %}
