@@ -5,7 +5,7 @@ code: sql_alchemy
 title: SQL Alchemy with python
 date: "2019-02-08"
 image: sql_alchemy_square.jpg
-highlight: True
+highlight: False
 
 tags:
   - Python
@@ -31,11 +31,11 @@ tags_filter:
 brief: |
   SQL is one of the most relevant language for databases. So at one point you will need to interact to get, store or modify some data. Fortunatelly you can do it in python using SQL Alchemy.
 
-content: |
+image_head:
+  filename: sql_alchemy.jpg
+  caption: sql_alchemy_logo
 
-  <div class="w3-center" style="padding-top: 16px;">
-    <img src="/static/images/blog/sql_alchemy.jpg" alt="sql_alchemy_logo" class="w3-image w3-padding-16"/>
-  </div>
+content: |
 
   SQL is one of the most relevant language for databases. So at one point you will need to interact to get, store or modify some data. Fortunatelly you can do it in python using **SQL Alchemy**.
 

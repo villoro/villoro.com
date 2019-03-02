@@ -59,6 +59,12 @@
 
       <hr>
 
+      {% if image_head %}
+        <div class="w3-center" style="padding-top: 16px;">
+          <img src="/static/images/blog/{{ image_head["filename"] }}" alt="{{ image_head['caption'] }}" class="w3-image w3-padding-16"/>
+        </div>
+      {% endif %}
+
       <!-- Content -->
       {% autoescape false %} {{ content }} {% endautoescape %}
 
