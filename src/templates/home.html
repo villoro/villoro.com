@@ -7,7 +7,7 @@
 
       <!-- Word cloud image -->
       <div class="w3-col m6 w3-padding-large w3-center">
-        <img src="{{ url_for("static", filename="images/pages/word_cloud.jpg") }}" class="w3-image" alt="word_cloud" style="width: 100%; max-width: 600px;">
+        <img src="{{ url_for('static', filename='images/pages/word_cloud.jpg') }}" class="w3-image" alt="word_cloud" style="width: 100%; max-width: 600px;">
       </div>
 
       <!-- Short description -->
@@ -57,10 +57,13 @@
         <div class="w3-row" style="padding-top: 32px">
           {% for port in portfolio.values() %}
           <div class="w3-col l3 m6 s12 w3-padding w3-center">
-            <div class="w3-card w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-color-light-grey">
-              <a href="{{ url_for('portfolio_item', item="{}.html".format(port["code"])) }}">
-                <img src="{{ url_for("static", filename="images/portfolio/{}".format(port["image_square"])) }}"" alt="{{ port["title"] }}" class="v-round-image">
+            <div class="w3-border w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale v-color-light-grey">
+              <!-- Image -->
+              <a href="{{ url_for('portfolio_item', item='{}.html'.format(port['code'])) }}">
+                <img src="{{ url_for('static', filename='images/portfolio/{}'.format(port['image_square'])) }}"" alt="{{ port["title"] }}" class="v-round-image">
               </a>
+
+              <!-- Title, date and caption -->
               <div class="w3-padding-small w3-text-black" style="z-index:4">{{ port["title"] }}</div>
             </div>
           </div>
@@ -88,40 +91,24 @@
       </div>
     </div>
 
-    {% for post in blog.values() %}
-    <div class="w3-row w3-container w3-hover-shadow" style="padding-top: 32px">
+    <div class="w3-row" style="padding-top: 32px">
+      {% for post in blog.values() %}
+      <div class="w3-col l3 m6 s12 w3-padding w3-center">
+        <div class="w3-border w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale">
+          <!-- Image -->
+          <a href="{{ url_for('post', item='{}.html'.format(post['code'])) }}">
+            <img src="{{ url_for('static', filename='images/blog/{}'.format(post['image'])) }}"" alt="{{ post["title"] }}" class="v-round-image">
+          </a>
 
-      <a href="{{ url_for('post', item="{}.html".format(post["code"])) }}">
-      <!-- Image at left (except small screens) -->
-      <div class="w3-col l2 m4 s5 w3-center v-padding-small w3-hide-small">
-        <img src="{{ url_for("static", filename="images/blog/{}".format(post["image"])) }}"" alt="{{ tool }}" class="w3-image">
-      </div>
-
-      <!-- Summary at right -->
-      <div class="w3-col l10 m8 s12 w3-padding">
-        <div class="w3-row">
-          <div class="w3-col l6 m6 s12">
-            <h4> {{ post["title"] }} </h4>
-          </div>
-
-          <!-- On medium and large screens show date at right-->
-          <div class="w3-col l6 m6 w3-hide-small w3-right-align">
-            <h4> <i class="fa fa-clock-o"></i> {{ post["date"] }} </h4>
+          <!-- Title, date and caption -->
+          <div class="w3-padding-small w3-text-black" style="z-index:4">
+            <h6>{{ post["title"] }}</h6>
+            <p class=" v-color-text-grey"> <i class="fa fa-clock-o"></i> {{ post["date"] }} </p>
           </div>
         </div>
-
-        <!-- On small screens show date below title -->
-        <div class="w3-hide-medium w3-hide-large" style="margin-top: -15px">
-          <p class="v-color-text-accent"> <i class="fa fa-clock-o"></i> {{ post["date"] }} </p>
-        </div>
-
-        <!-- Preview of the post -->
-        <p class="v-text"> {{ post["brief"] }} </p>
-
       </div>
-      </a>
+      {% endfor %}
     </div>
-    {% endfor %}
 
     </div>
   </div>

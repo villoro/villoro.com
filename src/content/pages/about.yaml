@@ -24,49 +24,88 @@ goals:
         - Get an AI related PhD
 
 skills:
-    Development:
+    Programming Languages:
         color: blue
         skills:
             Python: {value: 95, color: 700}
-            Pandas: {value: 90, color: 500}
-            Java: {value: 80, color: 300}
-            DevOps: {value: 60, color: 100}
+            SQL: {value: 80, color: 600}
+            VBA: {value: 75, color: 500}
+            Java: {value: 70, color: 400}
+            HTML: {value: 70, color: 400}
+            CSS: {value: 50, color: 200}
 
     AI:
         color: orange
         skills:
-            Data Mining: {value: 90, color: 700}
+            Data Mining: {value: 95, color: 700}
+            Data Visualization: {value: 90, color: 600}
             Deep Learning: {value: 80, color: 500}
-            NLP: {value: 75, color: 300}
+            NLP: {value: 75, color: 400}
             CV: {value: 75, color: 300}
-            Data science: {value: 70, color: 100}
+            Data science: {value: 70, color: 200}
 
-    Soft Skills:
+    DevOps:
         color: light_green
         skills:
-            Attitude: {value: 95, color: 700}
-            Adaptability: {value: 85, color: 500}
-            Empathy: {value: 80, color: 300}
-            Communication: {value: 75, color: 100}
+            Development: {value: 90, color: 700}
+            CI/CD: {value: 75, color: 500}
+            Operations: {value: 60, color: 300}
+            AWS: {value: 60, color: 100}
 
-    Others:
+    Languages:
         color: red
         skills:
-            Management: {value: 90, color: 700}
-            Engineering: {value: 82, color: 500}
-            GIT: {value: 80, color: 300}
-            UX: {value: 65, color: 100}
+            Catalan: {value: 100, color: 500}
+            Spanish: {value: 100, color: 500}
+            English: {value: 90, color: 300}
+            French: {value: 15, color: 100}
 
 tools:
-    python: https://www.python.org/
-    jupyter: http://jupyter.org/
-    tensorflow: https://www.tensorflow.org/
-    plotly: https://plot.ly/python/
-    sublime: https://www.sublimetext.com/
-    git: https://git-scm.com/
-    aws: https://aws.amazon.com/
-    travis: https://travis-ci.com/
-    heroku: https://heroku.com/apps
-    pandas: https://pandas.pydata.org/
-    teamwork: https://www.teamwork.com/project-management-software
-    excel: https://products.office.com/en-us/excel
+    Deployment/Hosting:
+        AWS: https://aws.amazon.com/
+        Heroku: https://heroku.com/apps
+        Netlify: https://www.netlify.com/
+
+    CI/CD:
+        Travis CI: https://travis-ci.com/
+        Github: https://github.com/
+        Sublime Merge: https://www.sublimemerge.com/
+        #Sourcetree: https://www.sourcetreeapp.com/
+
+    AI:
+        Tensorflow: https://www.tensorflow.org/
+        Keras: https://keras.io/
+        Scikit Learn: https://scikit-learn.org/
+
+    Data:
+        Pandas: https://pandas.pydata.org/
+        Airflow: https://airflow.apache.org/
+        Excel: https://products.office.com/en-us/excel
+
+    Web:
+        Flask: http://flask.pocoo.org/
+        Django: https://www.djangoproject.com/
+        Dash: https://plot.ly/products/dash/
+
+    Management:
+        Teamwork: https://www.teamwork.com/project-management-software
+        Trello: https://trello.com/
+        Jira: https://www.atlassian.com/software/jira
+
+    IDE:
+        Jupyter: http://jupyter.org/
+        Sublime Text: https://www.sublimetext.com/
+
+    BI:
+        Plotly: https://plot.ly/python/
+        PowerBI: https://powerbi.microsoft.com/
+
+    # SQL:
+    #     PostgreSQL: https://www.postgresql.org/
+    #     Redshift: https://aws.amazon.com/es/redshift/
+    #     MySQL: https://www.mysql.com/
+
+certifications:
+    ITIL Foundation
+    PRINCE2 Practitioner
+    Certificate Advance in English (CAE)
