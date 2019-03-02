@@ -13,7 +13,10 @@
 
       <!-- Barcelona map -->
       <div class="w3-col m6 w3-padding-large" style="font-size:18px">
-        <img src="{{ url_for("static", filename="images/pages/barcelona-guernica.jpg") }}" class="w3-image w3-round-large" alt="barcelona_guernica" style="width: 100%; max-width: 600px;">
+        <img src="{{ url_for('static', filename='images/pages/barcelona-guernica.jpg') }}"
+             class="w3-image w3-round-large"
+             alt="barcelona_guernica"
+             style="width: 100%; max-width: 600px;">
       </div>
     </div>
   </div>
@@ -54,7 +57,8 @@
         <h3>{{ group_name }}</h3>
         {% for skill_name, skill_data in group_data["skills"].items() %}
         <div class="v-color-light-grey" style="margin-bottom: 12px;">
-          <div class="w3-container {{ group_data['color'] }}{{ skill_data['color']}}" style="height:24px;width:{{ skill_data['value'] }}%">
+          <div class="w3-container {{ group_data['color'] }}{{ skill_data['color']}}"
+               style="height:24px;width:{{ skill_data['value'] }}%">
             {{ skill_name }}
           </div>
         </div>
@@ -89,7 +93,9 @@
                 <div class="w3-col l4 m4 s6 w3-padding-small w3-center">
                   <!-- Tool image and link -->
                   <a href="{{ tool_url }}">
-                    <img src="{{ url_for('static', filename='images/tools/{}.png'.format(tool_name.replace(' ', '_'))) }}"" alt="{{ tool_name }}" style="width: 100%; max-width: 96px;">
+                    <img src="{{ url_for('static', filename='images/tools/{}.png'.format(tool_name.lower().replace(' ', '_'))) }}"
+                         alt="{{ tool_name }}"
+                         style="width: 100%; max-width: 96px;">
                   </a>
 
                   <!-- Tool name -->
