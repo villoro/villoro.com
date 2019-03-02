@@ -3,15 +3,15 @@
 # --------------------------------------------------------------------------------------------------
 code: blog_basic_tools
 title: Basic tools for blogs
-date: "2019-02-24"
+date: "2019-03-02"
 image: blog_basic_tools_square.jpg
 highlight: True
 
 tags:
-  - Python
+  - Blog
 
 tags_filter:
-  - Python
+  - Blog
 
 
 # --------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief: |
-  zz
+  View how to set up a mailing list (Mailchimp), add a comments section (Disqus) on posts and track visits (Google Analytics).
 
 image_head:
   filename: blog_basic_tools.jpg
