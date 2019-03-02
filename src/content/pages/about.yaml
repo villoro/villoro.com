@@ -24,38 +24,41 @@ goals:
         - Get an AI related PhD
 
 skills:
-    Development:
+    Programming Languages:
         color: blue
         skills:
             Python: {value: 95, color: 700}
-            Pandas: {value: 90, color: 500}
-            Java: {value: 80, color: 300}
-            DevOps: {value: 60, color: 100}
+            SQL: {value: 80, color: 600}
+            VBA: {value: 75, color: 500}
+            Java: {value: 70, color: 400}
+            HTML: {value: 70, color: 400}
+            CSS: {value: 50, color: 200}
 
     AI:
         color: orange
         skills:
-            Data Mining: {value: 90, color: 700}
+            Data Mining: {value: 95, color: 700}
+            Data Visualization: {value: 90, color: 600}
             Deep Learning: {value: 80, color: 500}
-            NLP: {value: 75, color: 300}
+            NLP: {value: 75, color: 400}
             CV: {value: 75, color: 300}
-            Data science: {value: 70, color: 100}
+            Data science: {value: 70, color: 200}
 
-    Soft Skills:
+    DevOps:
         color: light_green
         skills:
-            Attitude: {value: 95, color: 700}
-            Adaptability: {value: 85, color: 500}
-            Empathy: {value: 80, color: 300}
-            Communication: {value: 75, color: 100}
+            Development: {value: 90, color: 700}
+            CI/CD: {value: 70, color: 500}
+            Operations: {value: 60, color: 300}
+            AWS: {value: 60, color: 100}
 
-    Others:
+    Languages:
         color: red
         skills:
-            Management: {value: 90, color: 700}
-            Engineering: {value: 82, color: 500}
-            GIT: {value: 80, color: 300}
-            UX: {value: 65, color: 100}
+            Catalan: {value: 100, color: 500}
+            Spanish: {value: 100, color: 500}
+            English: {value: 90, color: 300}
+            French: {value: 15, color: 100}
 
 tools:
     python: https://www.python.org/
