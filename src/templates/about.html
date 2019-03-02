@@ -72,21 +72,38 @@
         <h1>Tools</h1>
         <h6>These are the tools/services I normally use.</h6>
 
-        <div class="w3-row" style="padding-top: 32px">
-          {% for tool_name, tool_url in tools.items() %}
-          <div class="w3-col l2 m4 s6 w3-padding w3-center">
-            <!-- Tool image and link -->
-            <a href="{{ tool_url }}">
-              <img src="{{ url_for('static', filename='images/tools/{}.png'.format(tool_name)) }}"" alt="{{ tool_name }}" style="width: 100%; max-width: 96px;">
-            </a>
+      </div>
 
-            <!-- Tool name -->
-            <div class="w3-container">
-              <h5>{{ tool_name.title() }}</h5>
+
+      <div class="w3-row">
+
+        {% for group_name, group_data in tools.items() %}
+          <div class="w3-col l6 m6 s12 w3-padding">
+
+            <div class="w3-border w3-round w3-padding">
+              
+              <h3>{{ group_name }}</h3>
+              <div class="w3-row">
+
+                {% for tool_name, tool_url in group_data.items() %}
+                <div class="w3-col l4 m4 s6 w3-padding-small w3-center">
+                  <!-- Tool image and link -->
+                  <a href="{{ tool_url }}">
+                    <img src="{{ url_for('static', filename='images/tools/{}.png'.format(tool_name.replace(' ', '_'))) }}"" alt="{{ tool_name }}" style="width: 100%; max-width: 96px;">
+                  </a>
+
+                  <!-- Tool name -->
+                  <div class="w3-container">
+                    <h6>{{ tool_name.title() }}</h6>
+                  </div>
+
+                </div>
+                {% endfor %}
+
+              </div>
             </div>
           </div>
-          {% endfor %}
-        </div>
+        {% endfor %}
 
       </div>
     </div>

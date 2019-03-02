@@ -48,7 +48,7 @@ skills:
         color: light_green
         skills:
             Development: {value: 90, color: 700}
-            CI/CD: {value: 70, color: 500}
+            CI/CD: {value: 75, color: 500}
             Operations: {value: 60, color: 300}
             AWS: {value: 60, color: 100}
 
@@ -61,15 +61,42 @@ skills:
             French: {value: 15, color: 100}
 
 tools:
-    python: https://www.python.org/
-    jupyter: http://jupyter.org/
-    tensorflow: https://www.tensorflow.org/
-    plotly: https://plot.ly/python/
-    sublime: https://www.sublimetext.com/
-    git: https://git-scm.com/
-    aws: https://aws.amazon.com/
-    travis: https://travis-ci.com/
-    heroku: https://heroku.com/apps
-    pandas: https://pandas.pydata.org/
-    teamwork: https://www.teamwork.com/project-management-software
-    excel: https://products.office.com/en-us/excel
+    Deployment/Hosting:
+        AWS: https://aws.amazon.com/
+        Heroku: https://heroku.com/apps
+        Netlify: https://www.netlify.com/
+
+    CI/CD:
+        Git: https://git-scm.com/
+        Travis CI: https://travis-ci.com/
+        Sublime Merge: https://www.sublimemerge.com/
+        #Sourcetree: https://www.sourcetreeapp.com/
+
+    IDE:
+        Jupyter: http://jupyter.org/
+        Sublime Text: https://www.sublimetext.com/
+
+    AI:
+        Tensorflow: https://www.tensorflow.org/
+        Keras: https://keras.io/
+
+    Data:
+        Pandas: https://pandas.pydata.org/
+        Excel: https://products.office.com/en-us/excel
+
+    BI:
+        Plotly: https://plot.ly/python/
+        PowerBI: https://powerbi.microsoft.com/
+
+    Web:
+        Flask: http://flask.pocoo.org/
+        Django: https://www.djangoproject.com/
+
+    Management:
+        Teamwork: https://www.teamwork.com/project-management-software
+        Trello: https://trello.com/
+
+certifications:
+    ITIL Foundation
+    PRINCE2 Practitioner
+    Certificate Advance in English (CAE)
