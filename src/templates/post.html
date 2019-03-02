@@ -7,8 +7,9 @@
   <!-- SECTION: title -->
   <div class="w3-padding-32 w3-content" style="max-width:1200px">
 
-    <!-- title and subtitle -->
+    <!-- Content -->
     <div class="w3-padding-large"> <!-- This helps having text aligned with other blocks (2 divs with padding) -->
+
       <!-- container with titles and link -->
       <div class="w3-row">
         <div class="w3-left">
@@ -36,7 +37,7 @@
       </div>
       {% endif %}
 
-      <!-- Date -->
+      <!-- Date and tags -->
       <div class="w3-row w3-left v-color-text-grey">
 
         <!-- Date creation -->
@@ -55,6 +56,8 @@
 
       <!-- Add some separation -->
       <br><br>
+
+      <hr>
 
       <!-- Content -->
       {% autoescape false %} {{ content }} {% endautoescape %}
