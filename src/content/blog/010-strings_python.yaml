@@ -18,8 +18,8 @@ tags_filter:
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
 link: 
-  text: Python intro
-  url: https://docs.python.org/2/tutorial/introduction.html#unicode-strings
+  text: Github examples
+  url: https://github.com/villoro/villoro_posts/tree/master/010-strings_python
 
 
 # --------------------------------------------------------------------------------------------------
