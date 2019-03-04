@@ -37,14 +37,14 @@ content: |
   ```python
   class loader:
     
-    def __init__(self):
-        self.value = 0
+      def __init__(self):
+          self.value = 0
         
-    def sync(self):
-        self.value += 1
+      def sync(self):
+          self.value += 1
         
-    def get_value(self):
-        return self.value
+      def get_value(self):
+          return self.value
 
   loader1 = loader()
   loader2 = loader()
@@ -112,3 +112,34 @@ content: |
   While I was working with one of my [Dash](https://plot.ly/products/dash/) projects I made use of that to create a `data_loader.py` file. You can view the code [here](https://github.com/villoro/expensor_personal/tree/4.3.3/src).
 
   What I have is a `data_loader.py` that implements a `sync` function to update both `DFS` and `YML` vars. Those two vars are then used in all files inside the `pages` folder. And the `sync` function of the `data_loader.py` is only called in `index.py/update_sync_count()`.
+
+  ## Another option: Using class variables
+  As pointed out by **Gustau** in the comments there is another way to do it using classes.
+
+  ```python
+  class single_loader2:
+      
+      value = 0
+
+      def sync(self):
+          single_loader2.value += 1
+
+      def get_value(self):
+          return self.value
+
+  loader1 = single_loader2()
+  loader2 = single_loader2()
+  ```
+
+  This time we will call directly the class variable and the result will be the same as the example above.
+
+  ```python
+  loader1.sync()
+  loader1.get_value()
+  ```
+  Out: `1`
+
+  ```python
+  loader2.get_value()
+  ```
+  Out: `1`
