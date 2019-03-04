@@ -18,8 +18,8 @@ tags_filter:
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
 link: 
-  text: Singleton docs
-  url: https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
+  text: Github examples
+  url: https://github.com/villoro/villoro_posts/tree/master/012-singleton
 
 
 # --------------------------------------------------------------------------------------------------
@@ -41,6 +41,7 @@ content: |
           self.value = 0
         
       def sync(self):
+          """ This will only sync the current instance """
           self.value += 1
         
       def get_value(self):
@@ -90,24 +91,24 @@ content: |
 
   ```python
   import single_loader
-  loader1 = single_loader
-  loader2 = single_loader
+  single_loader1 = single_loader
+  single_loader2 = single_loader
   ```
 
   This time if we do the same as the example above the `get_value` function will always return the same value.
 
   ```python
-  loader1.sync()
-  loader1.get_value()
+  single_loader1.sync()
+  single_loader1.get_value()
   ```
   Out: `1`
 
   ```python
-  loader2.get_value()
+  single_loader2.get_value()
   ```
   Out: `1`
 
-  ## Real usage
+  ### On real example
 
   While I was working with one of my [Dash](https://plot.ly/products/dash/) projects I made use of that to create a `data_loader.py` file. You can view the code [here](https://github.com/villoro/expensor_personal/tree/4.3.3/src).
 
@@ -121,7 +122,9 @@ content: |
       
       value = 0
 
-      def sync(self):
+      @staticmethod
+      def sync_all():
+          """ This will update the value in ALL instances"""
           single_loader2.value += 1
 
       def get_value(self):
@@ -134,7 +137,7 @@ content: |
   This time we will call directly the class variable and the result will be the same as the example above.
 
   ```python
-  loader1.sync()
+  loader.sync_all() # It is a staticmethod, you can call directly the class function
   loader1.get_value()
   ```
   Out: `1`
@@ -143,3 +146,55 @@ content: |
   loader2.get_value()
   ```
   Out: `1`
+
+  ### Mixing the two methods
+
+  Be careful, you probably don't want to mix both types of variable assignments because it can yield unexpected results. Let's take the following example:
+
+  ```python
+  class mloader:
+      
+      value = 0
+      
+      def sync(self, new_value):
+          """ This will only sync the current instance. If you use that one time the sync all won't work"""
+          self.value = new_value
+
+      @staticmethod
+      def sync_all(new_value):
+          """ This will update the value in ALL instances"""
+          mloader.value = new_value
+
+      def get_value(self):
+          return self.value
+      
+  mloader_1 = mloader()
+  mloader_2 = mloader()
+  ```
+
+  You can then call the staticmethod `sync_all` and all will work as expected
+
+  ```python
+  mloader.sync_all(5)
+  print(f"Loader_1: {mloader_1.get_value()}. Loader_2: {mloader_2.get_value()}")
+  ```
+
+  Out: `Loader_1: 5. Loader_2: 5`
+
+  And of course you can call the `sync` function of one of the loaders:
+
+  ```python
+  mloader_1.sync(2)
+  print(f"Loader_1: {mloader_1.get_value()}. Loader_2: {mloader_2.get_value()}")
+  ```
+
+  Out: `Loader_1: 2. Loader_2: 5`
+
+  But after that the `sync_all` won't sync both instances:
+
+  ```python
+  mloader.sync_all(7)
+  print(f"Loader_1: {mloader_1.get_value()}. Loader_2: {mloader_2.get_value()}")
+  ```
+
+  Out: `Loader_1: 2. Loader_2: 7`
