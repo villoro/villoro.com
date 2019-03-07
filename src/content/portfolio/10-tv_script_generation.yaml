@@ -7,7 +7,7 @@ subtitle: Creation of a neural network to generate a Simpsons script.
 image: simpsons.jpg
 image_square: simpsons_square.jpg
 
-main: True
+main: False
 highlight: True
 
 tags:
