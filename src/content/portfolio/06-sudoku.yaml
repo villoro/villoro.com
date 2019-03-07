@@ -8,7 +8,7 @@ image: sudoku.gif
 image_square: sudoku.jpg
 
 main: False
-highlight: True
+highlight: False
 
 tags:
   - AI
