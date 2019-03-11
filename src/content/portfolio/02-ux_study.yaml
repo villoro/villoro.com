@@ -30,17 +30,17 @@ link:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   For my Masters Thesis I did a UX Study focusing on how to create an app to manage personal finances. The main objective of the project was how to successfully design and create an Android App that convey a good UX.
 
   I followed [Rex Hartson and Pardha S. Pyla's](https://www.amazon.com/UX-Book-Guidelines-Ensuring-Experience/dp/0123852412) guidelines in order to ensure a quality User Experience.
 
   I also created a working prototype developed with Android Studio including cloud syncronization using SaaS.
 
-motivation: |
+motivation_markdown: |
   I have always enjoyed tracking almost everything I can and my expenses where not an exception. Back in 2014 I was not able to find any Android App that fullfilled my requirements so I decided to create my own. So when the oportunity arised I thought that doing an UX Study while creating and Android app was a really good idea.
 
-body: |
+body_markdown: |
   ## Result
   In the next images you can see the different pages of the App I designed and created. You can also see how it evolved from wireframes to sketches and then finally how it looked in the prototype.
 

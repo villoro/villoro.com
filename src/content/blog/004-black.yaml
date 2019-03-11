@@ -25,10 +25,10 @@ link:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting.
 
-content: |
+content_markdown: |
 
   <div class="w3-center">
     <img src="/static/images/blog/black.png" alt="black_logo" class="w3-image w3-padding-16"/>

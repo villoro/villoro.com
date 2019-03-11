@@ -37,7 +37,7 @@ link:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   While working with [Basetis](https://www.basetis.com/) I was part of a Service for [Naturgy](https://www.naturgy.com/en/home) (one of the biggest energy company in Spain). In this service I lead a team that was in charge of automation and costs reduction.
 
   We were able to create a pipeline with [Luigi](https://pypi.org/project/luigi/) that created some reports with [plotly](https://plot.ly/) that used to be created by hand using Power Point. We also automated some repetitive tasks using [selenium](https://www.seleniumhq.org/).
@@ -47,7 +47,7 @@ metrics:
   - More than 1 million tickets audited
   - Leading 6 - 10 people
 
-motivation: |
+motivation_markdown: |
   Naturgy Informática, the IT provider for [Naturgy](https://www.naturgy.com/en/home), needed to centralize the professional services provided by different providers in a single service called AM Managers.
 
   This service would provide control and support tasks of the IT suppliers.
@@ -58,7 +58,7 @@ motivation: |
   <p><i class="fa fa-check v-color-text-accent"></i> to have homogeneous indicators </p>
   <p><i class="fa fa-check v-color-text-accent"></i> to establish an efficient management model. </p>
 
-body: |
+body_markdown: |
   ## Solution
   We relied on the [ITIL](https://www.axelos.com/certifications/itil-certifications) framework to implement the most appropriate solution, which contemplated various aspects.
 

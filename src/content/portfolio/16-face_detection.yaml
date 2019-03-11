@@ -32,17 +32,17 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   The idea of this project was to create a Computer Vision (CV) pipeline.
 
   In the first part I explored some CV techniques to detect faces or edges. I also learned how to denoise an image and to blur people's faces to hide their identities. 
 
   Then a neural network was used to detect the keypoints in all faces present in any photo. To do so I trained a CNN using Keras.
 
-motivation: |
+motivation_markdown: |
   I did this project as a part of the [Artificial Intelligence Nanodegree](https://eu.udacity.com/course/ai-artificial-intelligence-nanodegree--nd898) (udacity moved the project to the (Computer Vision Nanodegree)[https://eu.udacity.com/course/computer-vision-nanodegree--nd891]). This project was designed so that students could learn everything involved with having a CV machine learning model working. This includes all the preprocessing of the image and the creation of the pipeline itself.
 
-body: |
+body_markdown: |
   ## Pipline designed
   ### Detecting faces
   In the first part I used [Haar-Cascade](https://docs.opencv.org/3.3.0/dc/d88/tutorial_traincascade.html) to detect faces and eyes. This is a technique that consists of using a series of kernels in order to create a classifier that detects some object/feature. I used a pretrained classifier to detect faces.

@@ -25,10 +25,10 @@ link:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   The singleton pattern will help you have only one instance and allow you to call only one sync function.
 
-content: |
+content_markdown: |
   Python classes are very useful but sometimes they lack some features that might be very useful.
 
   ## The problem
