@@ -1,4 +1,4 @@
-""" Flask app index """
+""" Content utilities """
 
 import os
 from collections import OrderedDict
@@ -10,10 +10,7 @@ PATH_CONTENT = "src/content/"
 
 NUM_SEPARATOR = "-"
 
-MARKDOWN_BLOCKS = {
-    "portfolio": ["brief", "motivation", "body", "solution", "results"],
-    "blog": ["content"],
-}
+BLOCKS = ["portfolio", "blog"]
 
 
 def _read_yaml(uri):
@@ -23,10 +20,20 @@ def _read_yaml(uri):
         return yaml.load(file)
 
 
-def _transform_markdown(text):
+def _transform_markdown(mdict):
     """ auxiliar function to transform markdown to html """
 
-    return markdown(text, extensions=["fenced_code", "codehilite"])
+    for name, data in mdict.items():
+
+        # If there is text and is markdown, fix it
+        if isinstance(data, str) and name.endswith("_markdown"):
+            mdict[name] = markdown(data, extensions=["fenced_code", "codehilite"])
+
+        # If there is a dict, do the same
+        if isinstance(data, dict):
+            _transform_markdown(data)
+
+    return mdict
 
 
 def get_page(pagename):
@@ -34,12 +41,7 @@ def get_page(pagename):
 
     out = _read_yaml(f"{PATH_CONTENT}pages/{pagename}.yaml")
 
-    # Transform from makrdown to html if needed
-    for name, data in out.items():
-        if ("markdown" in data) and ("text" in data):
-            out[name] = _transform_markdown(data["text"])
-
-    return out
+    return _transform_markdown(out)
 
 
 def get_items(group):
@@ -50,7 +52,7 @@ def get_items(group):
             group:  wether to return portfolio or blog entries [portfolio/blog]
     """
 
-    assert group in MARKDOWN_BLOCKS.keys()
+    assert group in BLOCKS
 
     out = OrderedDict()
 
@@ -62,13 +64,7 @@ def get_items(group):
 
         out[name] = _read_yaml(f"{PATH_CONTENT}{group}/{num}-{name}.yaml")
 
-        # Transform some blocks from markdown to html
-        for x in MARKDOWN_BLOCKS[group]:
-
-            if x in out[name]:
-                out[name][x] = _transform_markdown(out[name][x])
-
-    return out
+    return _transform_markdown(out)
 
 
 def get_content():
@@ -76,7 +72,7 @@ def get_content():
 
     out = {}
 
-    for x in MARKDOWN_BLOCKS:
+    for x in BLOCKS:
         out[x] = get_items(x)
 
         # Add highlited items as a new entry

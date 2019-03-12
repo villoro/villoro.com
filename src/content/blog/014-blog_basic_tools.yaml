@@ -25,14 +25,14 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   View how to set up a mailing list (Mailchimp), add a comments section (Disqus) on posts and track visits (Google Analytics).
 
 image_head:
   filename: blog_basic_tools.jpg
   caption: blog_basic_tools
 
-content: |
+content_markdown: |
   If you just created a blog you will probably want to have common and usefull features like:
 
   * Analytics
