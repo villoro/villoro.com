@@ -1,8 +1,8 @@
 # <img src="images/logo.png" alt="logo_villoro" width="90px"/> My personal webpage
 
-![PageSpeed](https://img.shields.io/badge/PageSpeed-95%25-brightgreen.svg)
-![powered by Flask](https://img.shields.io/badge/powered_by-Frozen_Flask-blue.svg)
-![powered by Netlify](https://img.shields.io/badge/hosted_by-Netlify-blue.svg)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/6f3b0fb4-f908-426f-b880-6629be37bc4b/deploy-status)](https://app.netlify.com/sites/villoro/deploys)
+[![PageSpeed](https://img.shields.io/badge/PageSpeed-95%25-brightgreen.svg)](https://developers.google.com/speed/pagespeed/insights/?url=villoro.com)
+[![powered by Flask](https://img.shields.io/badge/powered_by-Frozen_Flask-blue.svg)](https://pythonhosted.org/Frozen-Flask/)
 
 This is the code of my personal webpage. You can view it live here: [villoro.com](https://villoro.com/).
 

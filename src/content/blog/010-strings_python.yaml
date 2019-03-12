@@ -5,7 +5,7 @@ code: strings_python
 title: Python strings best practices
 date: "2019-02-16"
 image: python_strings_square.jpg
-highlight: True
+highlight: False
 
 tags:
   - Python
@@ -25,10 +25,10 @@ link:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   There a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 
-content: |
+content_markdown: |
 
   There a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 
