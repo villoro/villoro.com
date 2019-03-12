@@ -25,10 +25,10 @@ link:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   There a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 
-content: |
+content_markdown: |
 
   There a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 

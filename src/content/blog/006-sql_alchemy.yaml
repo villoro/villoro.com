@@ -28,14 +28,14 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
-brief: |
+brief_markdown: |
   SQL is one of the most relevant language for databases. So at one point you will need to interact to get, store or modify some data. Fortunatelly you can do it in python using SQL Alchemy.
 
 image_head:
   filename: sql_alchemy.jpg
   caption: sql_alchemy_logo
 
-content: |
+content_markdown: |
 
   SQL is one of the most relevant language for databases. So at one point you will need to interact to get, store or modify some data. Fortunatelly you can do it in python using **SQL Alchemy**.
 
