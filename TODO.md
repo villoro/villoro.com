@@ -2,6 +2,10 @@
 * Lateral bar with list of posts
 
 
+# About
+Add a T with domains of knowledge
+
+
 # Posts
 Decorators
 EC2 set up

@@ -90,7 +90,7 @@
               <div class="w3-row">
 
                 {% for tool_name, tool_url in group_data.items() %}
-                <div class="w3-col l4 m4 s6 w3-padding-small w3-center">
+                <div class="w3-col l4 m4 s4 w3-padding-small w3-center">
                   <!-- Tool image and link -->
                   <a href="{{ tool_url }}">
                     <img src="{{ url_for('static', filename='images/tools/{}.png'.format(tool_name.lower().replace(' ', '_'))) }}"

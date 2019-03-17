@@ -91,10 +91,12 @@ tools:
     IDE:
         Jupyter: http://jupyter.org/
         Sublime Text: https://www.sublimetext.com/
+        PyCharm: https://www.jetbrains.com/pycharm/
 
     BI:
         Plotly: https://plot.ly/python/
         PowerBI: https://powerbi.microsoft.com/
+        Chart js: https://www.chartjs.org/
 
     # SQL:
     #     PostgreSQL: https://www.postgresql.org/
