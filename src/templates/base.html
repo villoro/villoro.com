@@ -31,8 +31,8 @@
   <!-- Code styles -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/friendly.css') }}">
 
-  <!-- Roboto Font -->
-  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto">
+  <!-- Google Fonts: Roboto 400,500 and Raleway -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600|Roboto" rel="stylesheet">
 
   <!-- Icons font -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -48,7 +48,7 @@
       <div class="w3-bar w3-left-align w3-large {% block navbar_classes %}v-color-header{% endblock %}" id="navbar">
         <!-- Villoro logo -->
         <a href="{{ url_for('home') }}">
-          <img src="{{ url_for('static', filename='images/logo_white40.png') }}" class="w3-bar-item w3-button" alt="Logo">
+          <img src="{{ url_for('static', filename='images/logo_white_40.png') }}" class="w3-bar-item w3-button" alt="Logo">
         </a>
 
         <!-- Navigation regular screens -->
