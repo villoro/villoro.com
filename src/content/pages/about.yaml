@@ -2,13 +2,11 @@ image_parallax: me_plotly.jpg
 parallax_title1: Who I am
 parallax_title2: A little bit of information about myself
 
-about: 
-    markdown: true
-    text: |
-        # A Bit About Me
-        My name is Arnau Villoro and I am an engineer located in Barcelona. I love automating almost everything I can and I enjoy building things all by myself.
-        I have an MS in Management and I am currently studying Artificial Intelligence. I am also working full time as an IT Consultant offering both managment and development services.
-        When I am not with a computer I enjoy doing sports such as climbing and biking.
+about_markdown: |
+    # A Bit About Me
+    My name is Arnau Villoro and I am an engineer located in Barcelona. I love automating almost everything I can and I enjoy building things all by myself.
+    I have an MS in Management and I am currently studying Artificial Intelligence. I am also working full time as an IT Consultant offering both managment and development services.
+    When I am not with a computer I enjoy doing sports such as climbing and biking.
 
 goals:
     short_term:
