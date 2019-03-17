@@ -4,7 +4,7 @@ body, html {
     height: 100%;
     color: #444444;
     line-height: 1.8;
-    font-family: 'Roboto', serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 16px
 }
 
@@ -53,8 +53,8 @@ body, html {
 
 /* Titles styles */
 h1,h2,h3,h4,h5,h6,h1w,h2w,h3w,h4w,h5w,h6w{
-    font-family: "Trebuchet MS", 'Roboto', serif;
-    font-weight:300;
+    font-family: "Open Sans", sans-serif;
+    font-weight:600;
     margin:10px 0;
     display: block;
 }
@@ -73,8 +73,10 @@ h1w,h2w,h3w,h4w,h5w,h6w {color:#fff!important} /* Gray 800 */
 
 /* ----------------------- Markdown related styles -----------------------------------------------*/
 blockquote {
+  font-family: "Raleway", sans-serif;
   border-left: .25em solid #2176FF; /* Github color #DFE2E5*/
   color: #757575;
+  background-color: #FAFAFA; /* Gray 100 */
   padding: 0 1em;
   margin: 0;
 }
