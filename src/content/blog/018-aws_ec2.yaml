@@ -1,0 +1,113 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: aws_ec2
+title: "AWS: EC2"
+date: "2019-03-18"
+image: aws_ec2_square.png
+highlight: True
+
+tags:
+  - Web
+  - AWS
+
+tags_filter:
+  - Web
+  - AWS
+
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: AWS
+  url: https://aws.amazon.com/es/
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  How to create an EC2 AWS instance. Detailed instructions on how to do it in some minutes.
+
+# image_head:
+#   filename: image.jpg
+#   caption: image
+
+content_markdown: |
+  Amazon is one of the most important infrastructure services provider. This includes computing power, storage, networking and databases among the a lot of others. One of the computing service that it offers are the **EC2** instances. In this post I am going to explain how to set up an Ubuntu server using an EC2 instance.
+
+  ## 1. Create an EC2 instance
+
+  First of all go to [AWS console](https://aws.amazon.com/) and log in. From there is important to select the **Region** where you want your services. You should select somewhere that is close to the locations that will receive most traffic. In my case I will use `UE (London)` since is close to where I live.
+
+  Using the AWS navigation go to `EC2` and press `Launch Instance`. I would suggest you start with a `Ubuntu Server 18.04 LTS`.
+
+  For the configuration of the instance I suggest the following:
+
+  1. Create a new instance
+      *  Use `t2.micro` (it is included in the **free tier**) or t3.micro (not in **free tier** but cheaper than `t2` family). You can change it later to a more powerful instance if needed.
+  2. Next (Configure Instance details)
+      * If you selected an instance of the `t3` family disable the `T2/T3 Unlimited` to reduce costs.
+  3. Next (Add storage).
+      * 8 GB might not be enough. Increase the storage size if needed.
+  4. Next (Add tags)
+      * Here you can define tags to classify the instances. It can be very useful to classify the costs ([more info](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html))
+  5. Next (Security groups)
+      * Here you can define which **IP** can access and which **ports** they can use to enter the instance. I suggest that right now you only use your IP.
+  6. Review and Launch
+  7. Create a new key pair
+      * This will be used to log in usin **SSH** to the instance. It is **very important to store this key in a safe place** (the `.pem` file).
+  8. Launch Instances
+
+  > Some people have a **dynamic IP**. If this is your case and you have restricted the access to the instance you should update periodically the Security Group so that you can allways access the instance.
+
+  ## 2. Accessing the instance
+  You can access your instance through an SSH connection. I suggest using the open source [PuTTY](https://www.putty.org/).
+
+  ### 2.1. Transform pem to ppk
+  After installing PuTTY open `PuTTYgen` to transform the `.pem` file with the key to a `.ppk`.
+
+  1. Select load and import the `.pem` file.
+  2. Select `Save private key` and store the `ppk` file.
+  3. Open the `ppk` file key so that it gets loaded into PuTTY.
+
+  ### 2.2. Access the EC2 with SSH
+  1. From the AWS console at the EC2 page find the public IP of the instance you just created (The format should be XX.XXX.XXX.XXX where X are numbers).
+  2. Write that IP into PuTTY and do not change the port (22).
+  3. Select `Open`
+  4. Accept the Security Alert (`Yes`)
+  5. Log in using `ubuntu` as user. The key you just imported should serve as password (you should not write anything)
+
+
+  ## 3. Do something with the instance
+  If you did all the above correctly you should have a fully working `Ubuntu` instance and a connection with PuTTY through `SSH`.
+
+  From here you can do whatever you want with it.
+
+  ### 3.1. Set up python (Optional)
+  Since I use python in almost every project I will include how to set it up.
+
+  First check that you have python 3 installed with the command:
+
+  ```sh
+  python3
+
+  # It should open python 3.X if it has worked you can closed it with:
+  exit()
+  ```
+
+  Then install `pip3` as a python package manager with:
+
+  ```sh
+  sudo apt-get update
+  sudo apt install python3-pip -y
+
+  pip3 freeze # To check it has worked
+  ```
+
+  Right now you can use python calling `python3` and install packages with `pip3 install X`
+
+  And that's it, you have your own server!
+
+  In the next posts I will explain some things you can do with that server.
