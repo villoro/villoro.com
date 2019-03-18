@@ -11,7 +11,6 @@ Decorators
 EC2 set up
 Airflow
 Linux
-AWS
 AWS Lambdas
 Python performance: dask
 Python performance: numba
