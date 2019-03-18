@@ -5,7 +5,7 @@ code: blog_basic_tools
 title: Basic tools for blogs
 date: "2019-03-02"
 image: blog_basic_tools_square.jpg
-highlight: True
+highlight: False
 
 tags:
   - Blog
