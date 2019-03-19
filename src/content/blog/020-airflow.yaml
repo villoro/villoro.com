@@ -1,0 +1,225 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: airflow
+title: "Airflow Task Scheduler"
+date: "2019-03-19"
+image: airflow_square.png
+highlight: True
+
+tags:
+  - Python
+  - Automation
+
+tags_filter:
+  - Python
+  - Automation
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Airflow
+  url: https://airflow.apache.org/
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  How to set up Apache Airflow, the platform to programmatically author, schedule and monitor workflows.
+
+image_head:
+  filename: airflow.svg
+  caption: airflow
+
+content_markdown: |
+  Apache Airflow is a platform to programmatically author, schedule and monitor workflows. The airflow scheduler executes your tasks on an array of workers following the specified dependencies.
+
+  ## 1. Why Airflow?
+  People usually need to execute some tasks periodically. One common solution is to use [cron](https://es.wikipedia.org/wiki/Cron_(Unix)) wich is a good solution for simple tasks. But the more tasks you need to schedule the more problems I will have, specially if there are dependencies between one another.
+
+  Airflow allows to define workflows of tasks and you can define them as code making ig more maintainable, versionable, testable and collaborative. Check out the [Airflow documentation](https://airflow.apache.org/) for more information.
+
+
+  ## 2. Installation
+  First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance. You can see [here](https://villoro.com/post/aws_ec2.html) how to create one.
+
+  Then you can download airflow:
+  ```sh
+  sudo AIRFLOW_GPL_UNIDECODE=yes pip3 install apache-airflow
+  ```
+
+  When it is installed you can initialize the database (it will be SQLite by default):
+  ```sh
+  airflow initdb
+  ```
+
+  ### 2.1 Test Airflow
+  We will test airflow with an example from [airflow documentation](https://airflow.apache.org/tutorial.html). You will need to create the file `~/airflow/dags/tutorial.py`:
+
+  ```sh
+  cd airflow
+  mkdir dags
+  cd airflow
+  nano tutorial.py
+  ```
+
+  And then paste the example and save the file:
+
+  ```python
+  """
+  Code that goes along with the Airflow tutorial located at:
+  https://github.com/apache/airflow/blob/master/airflow/example_dags/tutorial.py
+  """
+  from airflow import DAG
+  from airflow.operators.bash_operator import BashOperator
+  from datetime import datetime, timedelta
+
+
+  default_args = {
+      'owner': 'airflow',
+      'depends_on_past': False,
+      'start_date': datetime(2015, 6, 1),
+      'email': ['airflow@example.com'],
+      'email_on_failure': False,
+      'email_on_retry': False,
+      'retries': 1,
+      'retry_delay': timedelta(minutes=5),
+  }
+
+  dag = DAG(
+      'tutorial', default_args=default_args, schedule_interval=timedelta(days=1))
+
+  # t1, t2 and t3 are examples of tasks created by instantiating operators
+  t1 = BashOperator(
+      task_id='print_date',
+      bash_command='date',
+      dag=dag)
+
+  t2 = BashOperator(
+      task_id='sleep',
+      bash_command='sleep 5',
+      retries=3,
+      dag=dag)
+
+  templated_command = """
+      {% for i in range(5) %}
+          echo "{{ ds }}"
+          echo "{{ macros.ds_add(ds, 7)}}"
+          echo "{{ params.my_param }}"
+      {% endfor %}
+  """
+
+  t3 = BashOperator(
+      task_id='templated',
+      bash_command=templated_command,
+      params={'my_param': 'Parameter I passed in'},
+      dag=dag)
+
+  t2.set_upstream(t1)
+  t3.set_upstream(t1)
+  ```
+
+  You can test that things are going as expected if the following command does not raise any exception:
+
+  ```sh
+  python3 ~/airflow/dags/tutorial.py
+  ```
+
+  #### 2.1.1. Validate metadata
+  You can chech that the tutorial dag has been properly created with:
+
+  ```sh
+  # print the list of active DAGs
+  airflow list_dags
+
+  # prints the list of tasks the "tutorial" dag_id
+  airflow list_tasks tutorial
+
+  # prints the hierarchy of tasks in the tutorial DAG
+  airflow list_tasks tutorial --tree
+  ```
+
+  #### 2.1.2 Run the test
+  You can launch tasks with the following commands:
+
+  ```sh
+  # command layout: command subcommand dag_id task_id date
+
+  # testing print_date
+  airflow test tutorial print_date 2015-06-01
+
+  # testing sleep
+  airflow test tutorial sleep 2015-06-01
+
+  # testing templated
+  airflow test tutorial templated 2015-06-01
+  ```
+
+  ## 3. Use Airflow UI
+
+  Of the great things about apache is the [UI](https://airflow.apache.org/ui.html).
+
+  <div class="w3-center">
+    <img src="/static/images/posts/airflow.gif" alt="airflow_ui" class="w3-image w3-padding-16" style="max-height: 500px;"/>
+  </div>
+
+  ### 3.1. Open EC2 ports (optional)
+  If you are using and **AWS EC2** you will probably have only the 22 port open to connect through SSH.
+
+  1. Go to AWS console and then to the EC2 page. Use the sidebar to go to `NETWORK & SECURITY/Security Groups`.
+  2. Find the security group of your EC2 instance and edit the **Inbound** rules.
+  3. Add `Custom TCP Rule` with port `8080`.
+
+  ### 3.2. Start Airflow
+  You can start airflow with:
+
+  ```sh
+  airflow webserver -p 8080 # or simply use 'airflow webserver'
+  ```
+
+  You can now view Apache at XX.XXX.XXX.XXX:8080 (Use your EC2 IP).
+
+  ### 3.3. Secure Airflow UI
+  First we will edit the airflow configuration.
+
+  ```sh
+  nano ~/airflow/airflow.cfg
+  ```
+
+  Inside the section `[webserver]` find the line `authenticate=X` and replace it with:
+  ```cfg
+  authenticate = True
+  auth_backend = airflow.contrib.auth.backends.password_auth
+  ```
+
+  Install `flask_bcrypt` and start python:
+
+  ```sh
+  pip3 install flask-bcrypt
+
+  # start python
+  python3
+  ```
+
+  And add a new user with:
+
+  ```python
+  import airflow
+  from airflow import models, settings
+  from airflow.contrib.auth.backends.password_auth import PasswordUser
+  user = PasswordUser(models.User())
+  user.username = 'new_user_name'
+  user.email = 'new_user_email@example.com'
+  user.password = 'set_the_password'
+  session = settings.Session()
+  session.add(user)
+  session.commit()
+  session.close()
+  exit()
+  ```
+
+  > Remeber that you can start airflow with `airflow webserver`
+
+  And that's it. You can now start using airflow.
