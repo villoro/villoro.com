@@ -1,0 +1,46 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: airflow
+title: "Airflow Task Scheduler"
+date: "2019-03-19"
+image: airflow_square.png
+highlight: True
+
+tags:
+  - Python
+  - Automation
+
+tags_filter:
+  - Python
+  - Automation
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Airflow
+  url: https://airflow.apache.org/
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  How to set up Apache Airflow, the platform to programmatically author, schedule and monitor workflows.
+
+image_head:
+  filename: airflow.svg
+  caption: airflow
+
+content_markdown: |
+  Apache Airflow is a platform to programmatically author, schedule and monitor workflows. The airflow scheduler executes your tasks on an array of workers following the specified dependencies.
+
+  ## Why Airflow?
+  People usually need to execute some tasks periodically. One common solution is to use [cron](https://es.wikipedia.org/wiki/Cron_(Unix)) wich is a good solution for simple tasks. But the more tasks you need to schedule the more problems I will have, specially if there are dependencies between one another.
+
+  Airflow allows to define workflows of tasks and you can define them as code making ig more maintainable, versionable, testable and collaborative. Check out the [Airflow documentation](https://airflow.apache.org/) for more information.
+
+
+  ## Installation
+  
