@@ -5,7 +5,7 @@ code: colors
 title: Using Material colors
 date: "2019-02-16"
 image: material_colors_square.svg
-highlight: True
+highlight: False
 
 tags:
   - Python

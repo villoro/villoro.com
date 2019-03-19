@@ -3,15 +3,18 @@
 
 
 # About
-Add a T with domains of knowledge
+* Add a T with domains of knowledge
 
 
 # Posts
-Decorators
-EC2 set up
-Airflow
-Linux
-AWS Lambdas
-Python performance: dask
-Python performance: numba
-Python performance: falcon
+* Airflow
+* Linux
+* Docker
+* AWS:
+    * AWS + Docker
+    * AWS Lambdas
+* Python performance series:
+    * Python performance: dask
+    * Python performance: numba
+    * Python performance: falcon
+* Decorators
