@@ -172,7 +172,7 @@ content_markdown: |
   2. Find the security group of your EC2 instance and edit the **Inbound** rules.
   3. Add `Custom TCP Rule` with port `8080`.
 
-  ### 3.1. Start Airflow
+  ### 3.2. Start Airflow
   You can start airflow with:
 
   ```sh
@@ -181,7 +181,7 @@ content_markdown: |
 
   You can now view Apache at XX.XXX.XXX.XXX:8080 (Use your EC2 IP).
 
-  ### 3.2. Secure Airflow UI
+  ### 3.3. Secure Airflow UI
   First we will edit the airflow configuration.
 
   ```sh
