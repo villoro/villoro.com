@@ -39,6 +39,7 @@ body, html {
     h5, h5w {font-size: 20px}
     h6, h6w {font-size: 18px}
     body, html {font-size: 16px}
+    blockquote {font-size: 14px}
 }
 
 /* Small screens */
@@ -50,6 +51,7 @@ body, html {
     h5, h5w {font-size: 18px}
     h6, h6w {font-size: 16px}
     body, html {font-size: 14px}
+    blockquote {font-size: 12px}
 }
 
 /* Titles styles */
