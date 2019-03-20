@@ -29,11 +29,98 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  Learn how to serve a python web aplication from a linux machine (AWS) using Nginx and Gunicorn.
+  Learn how to serve a python web aplication from a server (AWS) using Nginx and Gunicorn.
 
-# image_head:
-#   filename:
-#   caption: 
+image_head:
+  filename: nginx_gunicorn.jpg
+  caption: nginx_gunicorn_diagram
 
 content_markdown: |
-  Nginx
+  In order to serve a python web app hosted on a server there are some tools that you need to install and set up.
+
+  ## Basic schema
+  First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance. You can see [here](https://villoro.com/post/aws_ec2.html) how to create one. You will need to connect using PuTTY or something similar.
+
+  There are three main components needed for serving a python app:
+
+  1. Python app
+  2. WSGI
+  3. Web server
+
+  You can read more about why you need those [here](https://serverfault.com/questions/331256/why-do-i-need-nginx-and-something-like-gunicorn).
+  
+  ## 1. Python app
+  We will create very simple flask app to test `nginx` and `gunicorn`. First let's create the `index.py` with the app:
+
+  ```sh
+  mkdir /var/www/html
+  cd /var/www/html
+
+  nano /var/www/html/index.py
+  ```
+
+  And paste the following code:
+
+  ```python
+  from flask import Flask
+
+  app = Flask(__name__)
+
+  @app.route('/')
+  def index():
+      return "Hello World"
+
+  if __name__ == '__main__':
+      app.run(debug=True)
+  ```
+
+  You can try it by running:
+  ```sh
+  python3 index.py
+  ```
+
+  You can now view it by going at XX.XXX.XXX.XXX:PORT (Use your EC2 IP and the port).
+
+  > Default flask port is **5000**. To try it you need to open the port.
+
+  ### 1.1. Open EC2 ports (optional)
+  If you are using and **AWS EC2** it is possible that you don't have the port 80 opened. You can do it with:
+
+  1. Go to AWS console and then to the EC2 page. Use the sidebar to go to `NETWORK & SECURITY/Security Groups`.
+  2. Find the security group of your EC2 instance and edit the **Inbound** rules.
+  3. Add `Custom TCP Rule` with port `5000` (or the one you used).
+  4. If you are opening a port for testing, remeber to close it back when you are done.
+
+  ## 1. Web server
+  This component will handle the requests and among other things it will deal with static files (images, css, js...).
+
+  In this post we are going to use [Nginx](https://www.nginx.com/) since it is more commonly used for python. Another popular option is [apache](https://httpd.apache.org/).
+
+  To install nginx run:
+  ```sh
+  sudo apt-get update
+  sudo apt install nginx -y
+  ```
+
+  You can now view if nginx is serving content by going at XX.XXX.XXX.XXX (Use your EC2 IP). You will see the `nginx` default landing page:
+
+  <div class="w3-center">
+    <img src="/static/images/posts/welcome_nginx.png" alt="welcome_nginx" class="w3-image w3-padding-16 w3-border" style="max-height: 300px;"/>
+  </div>
+
+  You will see the `nginx` default landing page:
+  > You will need the port **80** opened
+
+  ### 1.1. Open EC2 ports (optional)
+  If you are using and **AWS EC2** it is possible that you don't have the port 80 opened. You can do it with:
+
+  1. Go to AWS console and then to the EC2 page. Use the sidebar to go to `NETWORK & SECURITY/Security Groups`.
+  2. Find the security group of your EC2 instance and edit the **Inbound** rules.
+  3. Add `Custom TCP Rule` with port `80`.
+
+  ## 2. WSGI
+  Web servers cannot communicate directly with python apps so we need a Web Server Gateway Interface ([WSGI](https://wsgi.readthedocs.io/en/latest/what.html)).
+  In this case we will use [Gunicorn](https://gunicorn.org/) because it is a simple solution. Another common choice would be [uwsgi](https://uwsgi-docs.readthedocs.io/en/latest/).
+
+
+
