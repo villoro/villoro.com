@@ -159,7 +159,7 @@ content_markdown: |
 
   ## 3. Use Airflow UI
 
-  Of the great things about apache is the [UI](https://airflow.apache.org/ui.html).
+  Of the great things about airflow is the [UI](https://airflow.apache.org/ui.html).
 
   <div class="w3-center">
     <img src="/static/images/posts/airflow.gif" alt="airflow_ui" class="w3-image w3-padding-16" style="max-height: 500px;"/>
