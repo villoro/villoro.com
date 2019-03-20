@@ -1,0 +1,39 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: nginx_gunicorn
+title: "Serving python apps"
+date: "2019-03-20"
+image: nginx_gunicorn_square.jpg
+highlight: True
+
+tags:
+  - Python
+  - Web
+  - AWS
+
+tags_filter:
+  - Python
+  - Web
+  - AWS
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: 
+#   url: 
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Learn how to serve a python web aplication from a linux machine (AWS) using Nginx and Gunicorn.
+
+# image_head:
+#   filename:
+#   caption: 
+
+content_markdown: |
+  Nginx
