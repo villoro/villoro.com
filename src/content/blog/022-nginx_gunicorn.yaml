@@ -39,7 +39,7 @@ content_markdown: |
   In order to serve a python web app hosted on a server there are some tools that you need to install and set up.
 
   ## 1. Basic schema
-  First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance. You can see [here](https://villoro.com/post/aws_ec2.html) how to create one. You will need to connect using PuTTY or something similar.
+  First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance. You can see [here](https://villoro.com/post/aws_ec2.html) how to create one.
 
   There are three main components needed for serving a python app:
 
@@ -49,9 +49,7 @@ content_markdown: |
   4. Supervisor
 
   ### 1.1 Web server
-  This component will handle the requests and among other things it will deal with static files (images, css, js...).
-
-  In this post we are going to use [Nginx](https://www.nginx.com/) since it is more commonly used for python. Another popular option is [apache](https://httpd.apache.org/).
+  This component will handle the requests and among other things it will deal with static files (images, css, js...). In this post we are going to use [Nginx](https://www.nginx.com/) since it is more commonly used for python. Another popular option is [apache](https://httpd.apache.org/).
 
   ### 1.2. WSGI
   Web servers cannot communicate directly with python apps so you need a Web Server Gateway Interface ([WSGI](https://wsgi.readthedocs.io/en/latest/what.html)).
@@ -66,9 +64,7 @@ content_markdown: |
   > You can read more about why a web server and wsgi [here](https://serverfault.com/questions/331256/why-do-i-need-nginx-and-something-like-gunicorn).
 
   ## 2. Installation
-  First you should create the flask app and test it. 
-
-  > TEEEEMP
+  First you should create the flask app and test it. After you will install and configure both wsgi and supervisor in order to have a service to serve the app. Finally you will configure nginx to serve the content to the web. 
 
   ### 2.1. Python app
    First let's create the `index.py` with the app:
@@ -216,3 +212,33 @@ content_markdown: |
   ```
 
   You can now go to XX.XXX.XXX.XXX and you should see the flask app `Hello World` message.
+
+  > If everything is working remeber to close the ports that you opened only for testing.
+
+  ## 3. Next steps
+
+  ### 3.1. Configure nginx
+
+  The nginx configuration you used is really simple. For example you can set nginx to serve static files directly instead of passing through the flask app by:
+
+  ```text
+  server {
+      listen 80 flask_server;
+
+      location /static/ {
+          root /var/www/html/;
+      }
+
+      location / {
+          proxy_pass http://127.0.0.1:8000;
+      }
+  }
+  ```
+
+  For more info about how to configure nginx [here](https://www.linode.com/docs/web-servers/nginx/how-to-configure-nginx/).
+
+  ### 3.2. SSL certificate
+
+  I strongly suggest you set up a SSL certificate for apps that are in production. You can learn how with this [tutorial](https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04).
+
+  While working on this post I set this app for my first time. It is normal to encounter difficultes but I was able to sort it out, you can do it too!
