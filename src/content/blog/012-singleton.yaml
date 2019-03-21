@@ -5,7 +5,7 @@ code: singleton
 title: Singleton in python
 date: "2019-02-24"
 image: singleton_square.jpg
-highlight: True
+highlight: False
 
 tags:
   - Python
