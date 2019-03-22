@@ -1,0 +1,171 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: tables_format
+title: Storing tables efficiently
+date: "2019-03-21"
+image: nginx_gunicorn_square.jpg
+highlight: True
+
+tags:
+  - Python
+
+tags_filter:
+  - Python
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: 
+#   url: 
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Brief
+
+# image_head:
+#   filename: 
+#   caption: 
+
+use_chartjs: True
+
+content_markdown: |
+  ## Size small and iterations 100 with all extensions
+  <canvas id="chart_s0_i100_time" style="width:100%;height:300px;"></canvas>
+  <canvas id="chart_s0_i100_size" style="width:100%;height:300px;"></canvas>
+
+  ## Size medium and iterations 10 with all extensions
+  <canvas id="chart_s1_i10_time" style="width:100%;height:300px;"></canvas>
+  <canvas id="chart_s1_i10_size" style="width:100%;height:300px;"></canvas>
+
+  [small](https://www.kaggle.com/contactprad/bike-share-daily-data)
+  [medium](https://www.kaggle.com/safegraph/visit-patterns-by-census-block-group)
+  [large](https://www.kaggle.com/city-of-seattle/seattle-checkouts-by-title)
+
+scripts: |
+  <script>
+    var chart_s0_i100_time = new Chart("chart_s0_i100_time", {
+      type: 'bar',
+      data: {
+        labels: ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx'],
+        datasets: [
+          {
+            label: 'read',
+            backgroundColor: "#64B5F6", 
+            data: [0.005766, 0.002291, 0.001909, 0.004744, 0.002504, 0.121258],
+          },
+          {
+            label: 'write',
+            backgroundColor: "#FFA726",
+            data: [0.027968, 0.006942, 0.005825, 0.008368, 0.007167, 0.221087],
+          }
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Read/write average time with small dataframe (56 KB)'
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Time [seconds]'
+            }
+          }]
+        }
+      }
+    });
+    var chart_s0_i100_size = new Chart("chart_s0_i100_size", {
+      type: 'bar',
+      data: {
+        labels: ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx'],
+        datasets: [
+          {
+            label: 'read',
+            backgroundColor: "#64B5F6", 
+            data: [62.22, 96.95, 94.28, 49.15, 96.15, 66.09],
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'File size with small dataframe (56 KB)'
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'File size [KB]'
+            }
+          }]
+        }
+      }
+    });
+
+    var chart_s1_i10_time = new Chart("chart_s1_i10_time", {
+      type: 'bar',
+      data: {
+        labels: ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx'],
+        datasets: [
+          {
+            label: 'read',
+            backgroundColor: "#64B5F6", 
+            data: [3.355233, 0.672547, 0.644967, 0.974831, 0.581298, 39.258066],
+          },
+          {
+            label: 'write',
+            backgroundColor: "#FFA726",
+            data: [6.443962, 1.004818, 1.486842, 1.969526, 1.476743, 95.992012],
+          }
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Read/write average time with medium dataframe (233 MB)'
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Time [seconds]'
+            }
+          }]
+        }
+      }
+    });
+    var chart_s1_i10_size = new Chart("chart_s1_i10_size", {
+      type: 'bar',
+      data: {
+        labels: ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx'],
+        datasets: [
+          {
+            label: 'read',
+            backgroundColor: "#64B5F6", 
+            data: [236.1, 213.38, 210.09, 96.37, 207.54, 68.21],
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'File size with medium dataframe (233 MB)'
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'File size [MB]'
+            }
+          }]
+        }
+      }
+    });
+  </script>
+  
