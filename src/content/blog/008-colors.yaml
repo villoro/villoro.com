@@ -31,8 +31,7 @@ link:
 brief_markdown: |
   Choosing between colors is always a difficult task. But with the material design palette it is possible to solve most of color related problems easily.
 
-scripts:
-  - https://cdn.plot.ly/plotly-latest.min.js
+use_plotly: True
 
 content_markdown: |
 
