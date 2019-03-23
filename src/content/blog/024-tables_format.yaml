@@ -34,17 +34,52 @@ brief_markdown: |
 use_chartjs: True
 
 content_markdown: |
-  ## Size small and iterations 100 with all extensions
-  <canvas id="chart_s0_i100_time" style="width:100%;height:300px;"></canvas>
-  <canvas id="chart_s0_i100_size" style="width:100%;height:300px;"></canvas>
 
-  ## Size medium and iterations 10 with all extensions
+  When working with **pandas** people usually need to store one or more tables. There are a lot of different formats to do that. In this post I am going to compare the performance between them.
+
+  ## How test will be done
+  To do the tests I downloaded 3 datasets of different sizes:
+
+  * [Small](https://www.kaggle.com/contactprad/bike-share-daily-data) (56 KB)
+  * [Medium](https://www.kaggle.com/safegraph/visit-patterns-by-census-block-group) (233 MB)
+  * [Large](https://www.kaggle.com/city-of-seattle/seattle-checkouts-by-title) (6.62 GB)
+
+  I downloaded them from kaggle, one of the best places to find datasets.
+
+  The formats that I will test are:
+
+  * csv
+  * feather
+  * msgpack
+  * parquet
+  * pickle
+  * xlsx
+
+  ## Test 1: Simple test
+  First of all I will check how they perform without changing any parameters. I will do 100 iterations with the small dataset and 10 with the medium one.
+
+  ### Size small and iterations 100 with all extensions
+
+  First of all the average reading/writing times for each format.
+
+  <canvas id="chart_s0_i100_time" style="width:100%;height:300px;"></canvas>
+
+  > It seems that `xlsx` is a slow option
+
+  ### Size medium and iterations 10 with all extensions
+
   <canvas id="chart_s1_i10_time" style="width:100%;height:300px;"></canvas>
+
+  With the medium dataframe the results are very similar.
+
+  > `xlsx` is a slow solution. I would only recommend it for small dataframes.
+
   <canvas id="chart_s1_i10_size" style="width:100%;height:300px;"></canvas>
 
-  [small](https://www.kaggle.com/contactprad/bike-share-daily-data)
-  [medium](https://www.kaggle.com/safegraph/visit-patterns-by-census-block-group)
-  [large](https://www.kaggle.com/city-of-seattle/seattle-checkouts-by-title)
+  Regarding the file size both `xlsx` and `parquet` outperform the rest. If you look the pandas documentation you will see that **all extensions except `xlsx` and `feather` allow different types of compression.** Also `parquet` uses a more agresive compression by default. We need to test the formats and the different compressions.
+
+
+
 
 scripts: |
   <script>
@@ -75,33 +110,6 @@ scripts: |
             scaleLabel: {
               display: true,
               labelString: 'Time [seconds]'
-            }
-          }]
-        }
-      }
-    });
-    var chart_s0_i100_size = new Chart("chart_s0_i100_size", {
-      type: 'bar',
-      data: {
-        labels: ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx'],
-        datasets: [
-          {
-            label: 'read',
-            backgroundColor: "#64B5F6", 
-            data: [62.22, 96.95, 94.28, 49.15, 96.15, 66.09],
-          },
-        ],
-      },
-      options: {
-        title: {
-          display: true,
-          text: 'File size with small dataframe (56 KB)'
-        },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'File size [KB]'
             }
           }]
         }
