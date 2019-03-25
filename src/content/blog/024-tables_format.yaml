@@ -217,8 +217,12 @@ content_markdown: |
     </tr>
   </table>
 
+  By plotting both reading and writing time is easier to se that writing times for `xz` compression are really slow.
+
   <canvas id="chart_s1_i5_time" style="width:100%;height:300px;"></canvas>
   <canvas id="chart_s1_i5_size" style="width:100%;height:300px;"></canvas>
+
+  It is not clear which formats and compressions work best. Let's plot reading/writing time vs file size.
 
   <canvas id="chart_s1_i5_scatter_read" style="width:100%;height:300px;"></canvas>
   <canvas id="chart_s1_i5_scatter_write" style="width:100%;height:300px;"></canvas>
@@ -234,7 +238,7 @@ scripts: |
         datasets: [
           {
             label: 'read',
-            backgroundColor: "#64B5F6", 
+            backgroundColor: "#AED581", 
             data: [0.005766, 0.002291, 0.001909, 0.004744, 0.002504, 0.121258],
           },
           {
@@ -267,7 +271,7 @@ scripts: |
         datasets: [
           {
             label: 'read',
-            backgroundColor: "#64B5F6", 
+            backgroundColor: "#AED581", 
             data: [3.355233, 0.672547, 0.644967, 0.974831, 0.581298, 39.258066],
           },
           {
@@ -309,6 +313,9 @@ scripts: |
           display: true,
           text: 'File size with medium dataframe (233 MB)'
         },
+        legend: {
+          display: false
+        },
         scales: {
           yAxes: [{
             scaleLabel: {
@@ -333,7 +340,7 @@ scripts: |
         datasets: [
           {
             label: 'read',
-            backgroundColor: "#64B5F6", 
+            backgroundColor: "#AED581", 
             data: [3.052051, 10.516266, 4.25702, 3.094328, 9.920079, 4.052968, 0.60659, 0.493087, 0.476919, 0.51484, 0.766749, 0.98578, 0.996152, 0.809635, 0.465547, 7.775791, 1.48881, 0.476745, 6.258862, 2.065088],
           },
           {
@@ -381,6 +388,9 @@ scripts: |
           display: true,
           text: 'File size with medium dataframe (233 MB)'
         },
+        legend: {
+          display: false
+        },
         scales: {
           yAxes: [{
             scaleLabel: {
@@ -403,8 +413,8 @@ scripts: |
         ],
         datasets: [
           {
-            label: 'read',
-            backgroundColor: "#64B5F6", 
+            label: 'csv',
+            backgroundColor: "#4FC3F7", 
             data: [
               {'x': 3.052051, 'y': 236.1},
               {'x': 10.516266, 'y': 47.58},
@@ -412,14 +422,38 @@ scripts: |
               {'x': 3.094328, 'y': 236.1},
               {'x': 9.920079, 'y': 43.99},
               {'x': 4.052968, 'y': 66.44},
+            ],
+          },
+          {
+            label: 'feather',
+            backgroundColor: "#EF5350", 
+            data: [
               {'x': 0.60659, 'y': 213.38},
+            ],
+          },
+          {
+            label: 'msgpack',
+            backgroundColor: "#AED581", 
+            data: [
               {'x': 0.493087, 'y': 210.09},
               {'x': 0.476919, 'y': 202.88},
               {'x': 0.51484, 'y': 202.9},
+            ],
+          },
+          {
+            label: 'parquet',
+            backgroundColor: "#9575CD", 
+            data: [
               {'x': 0.766749, 'y': 209.58},
               {'x': 0.98578, 'y': 50.82},
               {'x': 0.996152, 'y': 56.75},
               {'x': 0.809635, 'y': 96.37},
+            ],
+          },
+          {
+            label: 'pickle',
+            backgroundColor: "#FFB74D", 
+            data: [
               {'x': 0.465547, 'y': 207.54},
               {'x': 7.775791, 'y': 40.93},
               {'x': 1.48881, 'y': 54.85},
@@ -463,29 +497,53 @@ scripts: |
         ],
         datasets: [
           {
-            label: 'write',
-            backgroundColor: "#FFA726", 
+            label: 'csv',
+            backgroundColor: "#4FC3F7", 
             data: [
-              {'x': 3.052051, 'y': 236.1},
-              {'x': 10.516266, 'y': 47.58},
-              {'x': 4.25702, 'y': 65.8},
-              {'x': 3.094328, 'y': 236.1},
-              {'x': 9.920079, 'y': 43.99},
-              {'x': 4.052968, 'y': 66.44},
-              {'x': 0.60659, 'y': 213.38},
-              {'x': 0.493087, 'y': 210.09},
-              {'x': 0.476919, 'y': 202.88},
-              {'x': 0.51484, 'y': 202.9},
-              {'x': 0.766749, 'y': 209.58},
-              {'x': 0.98578, 'y': 50.82},
-              {'x': 0.996152, 'y': 56.75},
-              {'x': 0.809635, 'y': 96.37},
-              {'x': 0.465547, 'y': 207.54},
-              {'x': 7.775791, 'y': 40.93},
-              {'x': 1.48881, 'y': 54.85},
-              {'x': 0.476745, 'y': 207.54},
-              {'x': 6.258862, 'y': 38.05},
-              {'x': 2.065088, 'y': 55.43}
+              {'x': 5.898017, 'y': 236.1},
+              {'x': 24.439828, 'y': 47.58},
+              {'x': 49.018689, 'y': 65.8},
+              {'x': 6.003964, 'y': 236.1},
+              {'x': 288.619755, 'y': 43.99},
+              {'x': 21.263131, 'y': 66.44},
+            ],
+          },
+          {
+            label: 'feather',
+            backgroundColor: "#EF5350", 
+            data: [
+              {'x': 0.99833, 'y': 213.38},
+            ],
+          },
+          {
+            label: 'msgpack',
+            backgroundColor: "#AED581", 
+            data: [
+              {'x': 1.324669, 'y': 210.09},
+              {'x': 1.367148, 'y': 202.88},
+              {'x': 2.049314, 'y': 202.9},
+            ],
+          },
+          {
+            label: 'parquet',
+            backgroundColor: "#9575CD", 
+            data: [
+              {'x': 1.411415, 'y': 209.58},
+              {'x': 27.043478, 'y': 50.82},
+              {'x': 18.282706, 'y': 56.75},
+              {'x': 1.868614, 'y': 96.37},
+            ],
+          },
+          {
+            label: 'pickle',
+            backgroundColor: "#FFB74D", 
+            data: [
+              {'x': 1.339422, 'y': 207.54},
+              {'x': 18.5083, 'y': 40.93},
+              {'x': 40.682403, 'y': 54.85},
+              {'x': 1.368525, 'y': 207.54},
+              {'x': 254.315614, 'y': 38.05},
+              {'x': 17.856649, 'y': 55.43}
             ],
           },
         ],
