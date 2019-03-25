@@ -4,7 +4,7 @@
 code: tables_format
 title: Storing tables efficiently
 date: "2019-03-21"
-image: nginx_gunicorn_square.jpg
+image: tables_format_square.jpg
 highlight: True
 
 tags:
@@ -16,16 +16,16 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: 
-#   url: 
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/024-tables_format
 
 
 # --------------------------------------------------------------------------------------------------
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  Brief
+  When working with **pandas** people usually need to store one or more tables. There are a lot of different formats to do that. In this post I am going to compare the performance between them.
 
 # image_head:
 #   filename: 
@@ -227,6 +227,126 @@ content_markdown: |
   <canvas id="chart_s1_i5_scatter_read" style="width:100%;height:300px;"></canvas>
   <canvas id="chart_s1_i5_scatter_write" style="width:100%;height:300px;"></canvas>
 
+  > **csv** underperforms compared to the other formats
+
+  ## Test 3: Using the big table
+
+  For this test I will only use the best formats from the previous test. Those are:
+
+  * feather
+  * msgpack
+  * parquet
+  * pickle
+
+  <table class="v-table v-table-right" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">format</th>
+      <th class="v-table-header">compression</th>
+      <th class="v-table-header">read [min]</th>
+      <th class="v-table-header">write [min]</th>
+      <th class="v-table-header">size [GB]</th>
+    </tr>
+    <tr>
+      <td class="v-table-center"><b>feather</b></td>
+      <td class="v-table-center">feather</td>
+      <td>-</td>
+      <td>-</td>
+      <td>4,24</td>
+    </tr>
+    <tr>
+      <td rowspan="3"  class="v-table-center"><b>msgpack</b></td>
+      <td class="v-table-center">None</td>
+      <td>5.86</td>
+      <td>6.32</td>
+      <td>7.21</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">blosc</td>
+      <td>5,45</td>
+      <td>5,01</td>
+      <td>6,5</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">zlib</td>
+      <td>5,49</td>
+      <td>5,55</td>
+      <td>6,5</td>
+    </tr>
+    <tr>
+      <td rowspan="4" class="v-table-center"><b>parquet</b></td>
+      <td class="v-table-center">None</td>
+      <td>1,15</td>
+      <td>2,69</td>
+      <td>5,96</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">brotli</td>
+      <td>0,92</td>
+      <td>11,22</td>
+      <td>1,56</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">gzip</td>
+      <td>0,97</td>
+      <td>8,98</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">snappy</td>
+      <td>0,89</td>
+      <td>2,78</td>
+      <td>3,3</td>
+    </tr>
+    <tr>
+      <td rowspan="6" class="v-table-center"><b>pickle</b></td>
+      <td class="v-table-center">None</td>
+      <td>1,38</td>
+      <td>7,47</td>
+      <td>6,25</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">bz2</td>
+      <td>5,15</td>
+      <td>17,47</td>
+      <td>1,24</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">gzip</td>
+      <td>1,88</td>
+      <td>20,76</td>
+      <td>1,81</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">infer</td>
+      <td>1,46</td>
+      <td>5,80</td>
+      <td>6,25</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">xz</td>
+      <td>3,46</td>
+      <td>97,62</td>
+      <td>0,97</td>
+    </tr>
+  </table>
+
+  > **feather** did not work since it has a restriction of 2 GB per column and it was exceeded.
+
+  <canvas id="chart_s2_i1_scatter_read" style="width:100%;height:300px;"></canvas>
+  <canvas id="chart_s2_i1_scatter_write" style="width:100%;height:300px;"></canvas>
+
+  With a file of this size it is clear that **parquet** is the best option. For compression it depends if your priority is file size or Input/Output time. For fast writing/reading use **parquet** without compression, for minimum file size `blosc` and `zlib` is a solution that is between the other two.
+
+  > `parquet` is the best for big tables.
+
+  ## Conlusions
+
+  1. `Excel` is only useful for **small** files when you are planning to open with an Excel program.
+  2. `csv` performs poorly
+  3. `pickle`, `msgpack` and `parquet` are good options
+  4. `feather` is another option when the table is not big
+  5. `parquet` is a good option in general and the best one for **big files**.
+  6. `parquet without compression` is the **fastest solution for big files** and `parquet with blosc` the **best at compressing big files**.
 
 
 scripts: |
@@ -404,13 +524,6 @@ scripts: |
     var chart_s1_i5_scatter_read = new Chart("chart_s1_i5_scatter_read", {
       type: 'scatter',
       data: {
-        labels: [
-          'csv_None', 'csv_bz2', 'csv_gzip', 'csv_infer', 'csv_xz', 'csv_zip',
-          'feather', 'msgpack_None', 'msgpack_blosc', 'msgpack_zlib',
-          'parquet_None', 'parquet_brotli', 'parquet_gzip', 'parquet_snappy',
-          'pickle_None', 'pickle_bz2', 'pickle_gzip', 'pickle_infer', 'pickle_xz',
-          'pickle_zip'
-        ],
         datasets: [
           {
             label: 'csv',
@@ -482,30 +595,23 @@ scripts: |
               labelString: 'Read average time [s]'
             }
           }]
-        }
+        },
       }
     });
     var chart_s1_i5_scatter_write = new Chart("chart_s1_i5_scatter_write", {
       type: 'scatter',
       data: {
-        labels: [
-          'csv_None', 'csv_bz2', 'csv_gzip', 'csv_infer', 'csv_xz', 'csv_zip',
-          'feather', 'msgpack_None', 'msgpack_blosc', 'msgpack_zlib',
-          'parquet_None', 'parquet_brotli', 'parquet_gzip', 'parquet_snappy',
-          'pickle_None', 'pickle_bz2', 'pickle_gzip', 'pickle_infer', 'pickle_xz',
-          'pickle_zip'
-        ],
         datasets: [
           {
             label: 'csv',
             backgroundColor: "#4FC3F7", 
             data: [
-              {'x': 5.898017, 'y': 236.1},
-              {'x': 24.439828, 'y': 47.58},
-              {'x': 49.018689, 'y': 65.8},
-              {'x': 6.003964, 'y': 236.1},
-              {'x': 288.619755, 'y': 43.99},
-              {'x': 21.263131, 'y': 66.44},
+              {'x': 5.898017, 'y': 236.1, 'label': 'None'},
+              {'x': 24.439828, 'y': 47.58, 'label': 'bz2'},
+              {'x': 49.018689, 'y': 65.8, 'label': 'gzip'},
+              {'x': 6.003964, 'y': 236.1, 'label': 'infer'},
+              {'x': 288.619755, 'y': 43.99, 'label': 'xz'},
+              {'x': 21.263131, 'y': 66.44, 'label': 'zip'},
             ],
           },
           {
@@ -566,7 +672,122 @@ scripts: |
               labelString: 'Write average time [s]'
             }
           }]
-        }
+        },
+      }
+    });
+
+    var chart_s2_i1_scatter_read = new Chart("chart_s2_i1_scatter_read", {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'msgpack',
+            backgroundColor: "#AED581", 
+            data: [
+              {'x': 5.861692, 'y': 7.21},
+              {'x': 5.454967, 'y': 6.5},
+              {'x': 5.486474, 'y': 6.5},
+            ],
+          },
+          {
+            label: 'parquet',
+            backgroundColor: "#9575CD", 
+            data: [
+              {'x': 1.145516, 'y': 5.96},
+              {'x': 0.923015, 'y': 1.56},
+              {'x': 0.966764, 'y': 2.0},
+              {'x': 0.885568, 'y': 3.3},
+            ],
+          },
+          {
+            label: 'pickle',
+            backgroundColor: "#FFB74D", 
+            data: [
+              {'x': 1.377571, 'y': 6.25},
+              {'x': 5.153998, 'y': 1.24},
+              {'x': 1.88185, 'y': 1.81},
+              {'x': 1.455619, 'y': 6.25},
+              {'x': 3.45604, 'y': 0.97}
+            ],
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Average reading time vs file size'
+        },
+        scales: {
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'File size [GB]'
+            }
+          }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Read average time [min]'
+            }
+          }]
+        },
+      }
+    });
+    var chart_s2_i1_scatter_write = new Chart("chart_s2_i1_scatter_write", {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'msgpack',
+            backgroundColor: "#AED581", 
+            data: [
+              {'x': 6.323051, 'y': 7.21},
+              {'x': 5.013798, 'y': 6.5},
+              {'x': 5.549751, 'y': 6.5},
+            ],
+          },
+          {
+            label: 'parquet',
+            backgroundColor: "#9575CD", 
+            data: [
+              {'x': 2.686822, 'y': 5.96},
+              {'x': 11.22296, 'y': 1.56},
+              {'x': 8.98146, 'y': 2.0},
+              {'x': 2.781936, 'y': 3.3},
+            ],
+          },
+          {
+            label: 'pickle',
+            backgroundColor: "#FFB74D", 
+            data: [
+              {'x': 7.46794, 'y': 6.25},
+              {'x': 17.46643, 'y': 1.24},
+              {'x': 20.762572, 'y': 1.81},
+              {'x': 5.799293, 'y': 6.25},
+              {'x': 97.62412, 'y': 0.97}
+            ],
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Average writting time vs file size'
+        },
+        scales: {
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'File size [GB]'
+            }
+          }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Write average time [min]'
+            }
+          }]
+        },
       }
     });
   </script>
