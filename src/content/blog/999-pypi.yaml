@@ -25,12 +25,13 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  Brief
+  Learn how to create a python package that can be installed with pip.
 
+image_head:
+  filename: pypi.jpg
+  caption: pypi_logo
 
 content_markdown: |
-
-
   ## 1. Create a python package
 
   To work with python you only need a `.py` file. However if you are creating a package you need to follow a concrete structure and include some needed files.
