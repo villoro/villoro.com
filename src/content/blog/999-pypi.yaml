@@ -1,0 +1,64 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: pypi
+title: Creating Python packages
+date: "2019-03-21"
+image: nginx_gunicorn_square.jpg
+highlight: True
+
+tags:
+  - Python
+
+tags_filter:
+  - Python
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: PYPI docs
+  url: https://packaging.python.org/tutorials/packaging-projects/
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Brief
+
+
+content_markdown: |
+
+  ## 0. Prepare
+
+  Register [here](https://test.pypi.org/account/register/)
+
+  ```sh
+  pip install twine
+  ```
+  ## 1. Create package
+
+  ```sh
+  python setup.py sdist bdist_wheel
+  ```
+
+  ## 2. Upload to pypi test
+
+  Check if exists
+
+  > pip search package_name
+
+  ```sh
+  python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+  ```
+
+  ## 3. Install from pypi test
+  ```sh
+  pip install --index-url https://test.pypi.org/simple/ package_name
+  ```
+
+  ## 4. Upload to pypi
+  ```sh
+  python -m twine upload dist/*
+  ```
