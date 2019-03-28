@@ -51,17 +51,16 @@ content_markdown: |
   The code should be inside another folder with the name of the package. So the structure should be:
 
   ```
-  /package_name
-      /package_name
-          __init__.py
-          file1.py
-          file2.py
-          fileN.py
-
-      .gitignore
-      LICENSE.txt
-      README.md
-      setup.py
+  - /package_name
+      ├── /package_name
+      │   ├── __init__.py
+      │   ├── file1.py
+      │   ├── file2.py
+      │   └── fileN.py
+      ├── .gitignore
+      ├── LICENSE.txt
+      ├── README.md
+      └── setup.py
   ```
 
   #### 1.1.1. Main files
