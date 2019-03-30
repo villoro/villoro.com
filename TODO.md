@@ -40,6 +40,7 @@
 * ETL with APIs
     * Google Analytics
     * Facebook
+* git flow + git ssh
 
 # Other
 * Set google_analytics at `develop.villoro.com`
