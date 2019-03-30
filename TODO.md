@@ -19,3 +19,4 @@
     * Python performance: falcon
 * Decorators
 * Storage (h5 vs parquet vs pickle vs csv)
+* git flow + git ssh
