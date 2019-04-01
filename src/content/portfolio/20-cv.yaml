@@ -52,6 +52,6 @@ body_markdown: |
 
   Finally I created a small script that scans all `yaml` files in `input` folder and transform them to `pdf`.
 
-  I did not deploy it anywhere but with this base it could easily be deploy to an [AWS EC2](https://aws.amazon.com/es/ec2/) and set up a task that creates the CV periodically and automatically.
+  I did not deploy it anywhere but with this base it could easily be deployed to an [AWS EC2](https://aws.amazon.com/es/ec2/) and set up a task that creates the CV periodically and automatically.
 
   If you want to use it check it out on [github](https://github.com/villoro/cv).
