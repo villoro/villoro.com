@@ -46,7 +46,7 @@ content_markdown: |
   There are 19 colors with 10 different intensities for each one plus the white and black colors. This gives us 192 different colors ordered in a matrix.
 
   <div class="w3-center">
-    <img src="/static/images/blog/material_colors.svg" alt="material_colors" class="w3-image w3-padding-16"/>
+    <img src="/static/images/posts/material_colors.svg" alt="material_colors" class="w3-image w3-padding-16"/>
   </div>
 
   This allows us to use gradients of the same colors like in the following plot:
