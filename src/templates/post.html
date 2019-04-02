@@ -21,7 +21,7 @@
         {% if link %}
         <!-- Button with more info in large or medium screens -->
         <div class="w3-right w3-hide-small" style="padding-top: 20px">
-          <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+          <a href="{{ link.get('url') }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
             {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
           </a>
         </div>
@@ -31,7 +31,7 @@
       {% if link %}
       <!-- Button with more info in small screens -->
       <div class="w3-center w3-hide-medium w3-hide-large w3-padding-large">
-        <a href="{{ link.get("url") }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
+        <a href="{{ link.get('url') }}" class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber">
           {{ link.get("text", "More info") }} <i class="fa fa-angle-right"></i>
         </a>
       </div>
@@ -61,7 +61,7 @@
 
       {% if image_head %}
         <div class="w3-center" style="padding-top: 16px;">
-          <img src="/static/images/blog/{{ image_head["filename"] }}" alt="{{ image_head['caption'] }}" class="w3-image w3-padding-16"/>
+          <img src="/static/images/blog/{{ image_head['filename'] }}" alt="{{ image_head['caption'] }}" class="w3-image w3-padding-16"/>
         </div>
       {% endif %}
 
@@ -107,12 +107,6 @@
 
 
 <!-- If there are extra scripts include them -->
-{% if scripts %}
-  {% block raw_scripts %}
-
-  {% for x in scripts %}
-    <script src="{{ x }}"></script>
-  {% endfor %}
-
-  {% endblock %}
-{% endif %}
+{% block script_lv2 %}
+  {% autoescape false %} {{ scripts }} {% endautoescape %}
+{% endblock %}
