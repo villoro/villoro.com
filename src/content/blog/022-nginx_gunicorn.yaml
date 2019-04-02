@@ -2,8 +2,8 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: nginx_gunicorn
-title: "Serving python apps"
-date: "2019-03-20"
+title: Serving python apps
+date: "2019-03-21"
 image: nginx_gunicorn_square.jpg
 highlight: True
 

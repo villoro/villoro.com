@@ -31,8 +31,7 @@ link:
 brief_markdown: |
   Choosing between colors is always a difficult task. But with the material design palette it is possible to solve most of color related problems easily.
 
-scripts:
-  - https://cdn.plot.ly/plotly-latest.min.js
+use_plotly: True
 
 content_markdown: |
 
@@ -42,12 +41,12 @@ content_markdown: |
 
   But in 2014 google presented [Material Design](https://material.io/) and a very good [color palette](https://material.io/design/color/the-color-system.html#color-usage-palettes).
 
-  ## Material design palette
+  ## 1. Material design palette
 
   There are 19 colors with 10 different intensities for each one plus the white and black colors. This gives us 192 different colors ordered in a matrix.
 
   <div class="w3-center">
-    <img src="/static/images/blog/material_colors.svg" alt="material_colors" class="w3-image w3-padding-16"/>
+    <img src="/static/images/posts/material_colors.svg" alt="material_colors" class="w3-image w3-padding-16"/>
   </div>
 
   This allows us to use gradients of the same colors like in the following plot:
@@ -57,7 +56,7 @@ content_markdown: |
 
   More info about colors and palettes can be found at [htmlcolorcodes.com](https://htmlcolorcodes.com/color-chart/).
 
-  ## Using material colors in python
+  ## 2. Using material colors in python (v-palette)
 
   I use [plotly](https://plot.ly/) in a lot of projects and I like using the material colors as well.
 
@@ -80,3 +79,19 @@ content_markdown: |
   Remeber to install it using pip with:
 
       pip install v-palette
+
+  ### 2.1. Flat colors
+
+  If you use v-palette you can also use the [flat colors](https://htmlcolorcodes.com/color-chart/flat-design-color-chart/).
+
+  <div class="w3-center">
+    <img src="/static/images/posts/flat_colors.svg" alt="flat_colors" class="w3-image w3-padding-16"/>
+  </div>
+
+  You can use them by passing the param `palette="flat"`
+
+  ```python
+  # Retrive some colors
+  get_colors([("emerald", 100), ("silver", 100)], palette="flat")
+  ```
+  **Out:** `['#D5F5E3', '#F2F3F4']`

@@ -17,6 +17,14 @@
     }
   </script>
 
+  <!-- Common scripts -->
+  {% if use_plotly %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  {% endif %}
+  {% if use_chartjs %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+  {% endif %}
+
   {% block raw_scripts %}{% endblock %}
 
   <!-- W3.css for styling: https://www.w3schools.com/w3css/4/w3.css -->

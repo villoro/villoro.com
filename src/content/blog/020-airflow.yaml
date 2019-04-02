@@ -2,7 +2,7 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: airflow
-title: "Airflow Task Scheduler"
+title: Airflow Task Scheduler
 date: "2019-03-19"
 image: airflow_square.png
 highlight: True
