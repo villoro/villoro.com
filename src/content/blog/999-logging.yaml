@@ -1,0 +1,70 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: logging
+title: Logging with python
+date: "2019-04-03"
+image: v_log_square.jpg
+highlight: True
+
+tags:
+  - Python
+  - Tools
+
+tags_filter:
+  - Python
+  - Tools
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Github
+  url: https://github.com/villoro/v-log
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  brief
+
+# image_head:
+#   filename: 
+#   caption: 
+
+content_markdown: |
+
+  ## v-log
+
+      pip install v-log
+
+  Usage
+
+  ```python
+  from v_log import VLogger
+  log = VLogger(__name__)
+
+  log.critical("critical")
+  log.error("error")
+  log.warning("warning")
+  log.info("info")
+  log.debug("debug")
+  ```
+
+  It can also show execution times and errors:
+  ```python
+  # Show time
+  log.info("Test time", time=10)
+
+  # Show error. You need to pass the exception with the 'error' param
+  try:
+      1 / 0
+  except Exception as e:
+      log.error("Try errors", error=e)
+      log.error("Try errors %s", "full", time=10, error=e)
+  ```
+
+  <div class="w3-center">
+    <img src="/static/images/posts/v_log.png" alt="v_log" class="w3-image w3-padding-16" style="max-height: 300px;"/>
+  </div>
