@@ -37,9 +37,15 @@ content_markdown: |
 
   ## v-log
 
+  What I wanted was a `log` that would output good looking messages to the console while writting a properly formatted `csv` for further analysis. It is difficult to achive that with the regular `logging` library so I created `v-log`.
+
+  ### Using v-log
+
+  To install it run:
+
       pip install v-log
 
-  Usage
+  It works similar to the default log:
 
   ```python
   from v_log import VLogger
@@ -65,6 +71,66 @@ content_markdown: |
       log.error("Try errors %s", "full", time=10, error=e)
   ```
 
+  This is what you will see with the above example:
+
   <div class="w3-center">
     <img src="/static/images/posts/v_log.png" alt="v_log" class="w3-image w3-padding-16" style="max-height: 300px;"/>
   </div>
+
+  > Output in the console will have colors. `debug` is green, info the default color, `warning` is orange and both `error` and `critical` are red.
+
+  ### How it works
+
+  `v-log` creates a `VLogger` class that is a wrapper that has 2 logs inside, one for the file output and another one for the terminal. This way if you call `log.info` it will call both `log_terminal.info` and `log_console.info` functions.
+
+  The second intersting part is that you can pass `time` as and argument and it will process it. You can also pass an exception and it will show the **line** where the error happened, the **type** of error and the **details**.
+
+  ### Customizating v-log
+
+  When creating the `VLogger` instance you can define:
+
+  <table class="v-table" align="center">
+    <tr>
+      <th class="v-table-header">param</th>
+      <th class="v-table-header">description</th>
+      <th class="v-table-header">default</th>
+    </tr>
+    <tr>
+      <td>module_name</td>
+      <td>name of the module</td>
+      <td>"base"</td>
+    </tr>
+    <tr>
+      <td>uri_log</td>
+      <td>uri of the file where log will be stored</td>
+      <td>"log.csv"</td>
+    </tr>
+    <tr>
+      <td>file_log_level</td>
+      <td>minimum level of log events in order to be writed</td>
+      <td>logging.INFO</td>
+    </tr>
+    <tr>
+      <td>console_log_level</td>
+      <td>minimum level of log events in order to be printed</td>
+      <td>logging.INFO</td>
+    </tr>
+    <tr>
+      <td>csv_separator</td>
+      <td>csv separator</td>
+      <td>";"</td>
+    </tr>
+    <tr>
+      <td>base_path</td>
+      <td>name of the root folder of the execution</td>
+      <td>"src"</td>
+    </tr>
+  </table>
+
+  for example you could do:
+
+  ```python
+  import logging
+  from v_log import VLogger
+  log = VLogger(__name__, uri_log="data/log.log", file_log_level=logging.WARNING)
+  ```
