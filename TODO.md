@@ -35,7 +35,6 @@
     3. Python performance: [dask](http://docs.dask.org/en/latest/why.html)
     4. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
 * Decorators
-* Storage (h5 vs parquet vs pickle vs csv)
 * DNS
 * Heroku deployment
 * ETL with APIs
