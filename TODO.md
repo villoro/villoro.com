@@ -41,6 +41,9 @@
     * Google Analytics
     * Facebook
 * git flow + git ssh
+* NN with numpy
+* Intro to tensorflow 2.0
+
 
 # Other
 * Set google_analytics at `develop.villoro.com`
