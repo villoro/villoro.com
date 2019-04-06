@@ -2,7 +2,8 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: colors
-title: Using Material colors
+title: Using Material colors and other palettes
+title_short: Using Material colors
 date: "2019-02-16"
 image: material_colors_square.svg
 highlight: False
