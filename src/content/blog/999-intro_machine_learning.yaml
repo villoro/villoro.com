@@ -31,7 +31,8 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  brief
+  An introduction to what Machine Learning is and how it works using a real example.
+
 # image_head:
 #   filename: 
 #   caption: 
