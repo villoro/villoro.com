@@ -2,7 +2,8 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: strings_python
-title: Strings best practices (py)
+title: String best practices with python
+title_short: Strings best practices (py)
 date: "2019-02-16"
 image: python_strings_square.jpg
 highlight: False

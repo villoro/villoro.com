@@ -9,12 +9,12 @@
     <!-- one card for each project -->
     <div class="w3-border w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale">
       <a href="{{ url_for('portfolio_item', item='{}.html'.format(port['code'])) }}">
-        <img src="{{ url_for('static', filename='images/portfolio/{}'.format(port['image_square'])) }}""
+        <img src="{{ url_for('static', filename='images/portfolio/{}'.format(port['image_square'])) }}"
              alt="{{ port['image'] }}"
              class="v-round-image">
       </a>
 
-      <div class="w3-padding-small w3-text-black" style="z-index:4">{{ port["title"] }}</div>
+      <div class="w3-padding-small w3-text-black" style="z-index:4">{{ port.get("title_short", port["title"]) }}</div>
     </div>
   </div>
   {% endfor %}
