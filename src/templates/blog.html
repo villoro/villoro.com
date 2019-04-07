@@ -15,12 +15,12 @@
     <div class="w3-border w3-round w3-image w3-hover-border-black w3-hover-shadow w3-hover-grayscale">
       <!-- Image -->
       <a href="{{ url_for('post', item='{}.html'.format(post['code'])) }}">
-        <img src="{{ url_for('static', filename='images/blog/{}'.format(post['image'])) }}"" alt="{{ post["title"] }}" class="v-round-image">
+        <img src="{{ url_for('static', filename='images/blog/{}'.format(post['image'])) }}" alt="{{ post['title'] }}" class="v-round-image">
       </a>
 
       <!-- Title, date and caption -->
       <div class="w3-padding-small w3-text-black" style="z-index:4">
-        <h6>{{ post["title"] }}</h6>
+        <h6>{{ post.get("title_short", post["title"]) }}</h6>
         <p class=" v-color-text-grey"> <i class="fa fa-clock-o"></i> {{ post["date"] }} </p>
       </div>
     </div>

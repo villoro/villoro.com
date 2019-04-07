@@ -9,9 +9,12 @@ highlight: True
 
 tags:
   - Python
+  - Performance
+  - Benchmark
 
 tags_filter:
   - Python
+  - Performance
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
