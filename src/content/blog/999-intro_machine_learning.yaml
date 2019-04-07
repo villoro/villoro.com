@@ -2,15 +2,16 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: intro_machine_learning
-title: Intro to Machine Learning
+title_short: Intro to Machine Learning
+title: Intro to Machine Learning (ML)
 date: "2019-04-06"
 image: machine_learning_square.jpg
 highlight: True
 
 tags:
   - Python
-  - Machine Learning
-  - Artificial Intelligence
+  - ML
+  - AI
   - Supervised Learning
 
 tags_filter:
@@ -37,7 +38,40 @@ brief_markdown: |
 use_plotly: True
 
 content_markdown: |
-  Machine Learning
+  ## 1. What is Machine Learning?
+
+  Machine Learning is an application of Artificial Intelligence (AI) that allows computers to automatically learn from data without being explicitly programmed. Insted of using explicit instructions it relies on patterns and inference instead.
+
+  ### 1.1. Types of Machine Learning
+
+  There are different tasks that ML can perform and they can be categorized in three categories:
+
+  * Supervised Learning 
+  * Unsupervised Learning 
+  * Reinforcement Learning
+
+  <div class="w3-center">
+    <img src="/static/images/posts/machine_learning_types.jpg" alt="machine_learning_types" class="w3-image w3-padding" style="max-height: 250px;"/>
+  </div>
+
+  #### 1.1.1. Supervised Learning
+  Supervised Learning algorithms build a mathematical model from both the inputs and the desired outputs. Each training example has one or more inputs (features, usually represented as `x`) and at least one desired output (target, represented as `y`). It will have and objective function that will be optimized through iterations (training). After the training is completed the algorithm would be able to predict the target given the features of new examples.
+
+  Supervised learning algorithms include classification and regression.
+
+  #### 1.1.2. Unsupervised Learning
+
+  Unsupervised learning algorithms take a set of data that contains only the inputs and find a structure. The algorithm learn from unlabeled data and is able to create groups (clusters) of similar points.
+
+  #### 1.1.3. Reinforcement Learning
+
+  Reinforcement learning (RL) is an area of machine learning concerned with how software agents ought to take actions in an environment so as to maximize some notion of cumulative reward. The focus of the agent is in finding a balance between exploration (of uncharted territory) and exploitation (of current knowledge).
+
+  ## 2. A full example of Machine Learning
+
+  As a way to help you understand what is ML we will use an example of supervised learning. We will use the [bike sharing data](https://www.kaggle.com/contactprad/bike-share-daily-data) from [kaggle](https://www.kaggle.com).
+
+  Bike-sharing rental process is highly correlated to the environmental and seasonal settings. For instance, weather conditions, precipitation, day of week, season, hour of the day, etc. can affect the rental behaviors. So in this example of regression we will use that information to try to predict the bike rental.
 
   <div id="plotly_preview_target" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
 
