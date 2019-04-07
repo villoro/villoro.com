@@ -27,7 +27,7 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  brief
+  An overview of my own custom logging library that handles console and file output.
 
 # image_head:
 #   filename: 
@@ -35,11 +35,30 @@ brief_markdown: |
 
 content_markdown: |
 
-  ## v-log
+  In almost every program that we write we will need to show some output. The first thing that developers use is the `print` function but this lacks some really important features such as providing the time when the message was produced and the ability to save the output to a file. This is way is better to use a `logging`.
+
+  ## 1. pygogo
+
+  As always the first thing you should do when you need something is to look at the existing packages to avoid reinventing the wheel. [pygogo](https://github.com/reubano/pygogo) is a nice python package that is easy to use.
+
+  The key features I think it has are:
+
+  * You can write regular message (low) in one file and error-like messages (high) in another one
+  * It can have different formats for `low` and `high`
+  * It can be called from different files and handles well the different paths
+
+  What I belive it lacks:
+
+  * Ability to show full information of errors
+  * Easy way to have different formats for console handlers and file handlers.
+
+  > So I decided to create my own logging library
+
+  ## 2. v-log
 
   What I wanted was a `log` that would output good looking messages to the console while writting a properly formatted `csv` for further analysis. It is difficult to achive that with the regular `logging` library so I created `v-log`.
 
-  ### Using v-log
+  ### 2.1. Using v-log
 
   To install it run:
 
@@ -79,13 +98,13 @@ content_markdown: |
 
   > Output in the console will have colors. `debug` is green, info the default color, `warning` is orange and both `error` and `critical` are red.
 
-  ### How it works
+  ### 2.2. How it works
 
   `v-log` creates a `VLogger` class that is a wrapper that has 2 logs inside, one for the file output and another one for the terminal. This way if you call `log.info` it will call both `log_terminal.info` and `log_console.info` functions.
 
   The second intersting part is that you can pass `time` as and argument and it will process it. You can also pass an exception and it will show the **line** where the error happened, the **type** of error and the **details**.
 
-  ### Customizating v-log
+  ### 2.3. Customizating v-log
 
   When creating the `VLogger` instance you can define:
 
