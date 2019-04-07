@@ -25,6 +25,7 @@ tags_filter:
 #   text: Github
 #   url: https://github.com/villoro/villoro_posts/tree/master/TODO
 
+# TODO: fix also link inside the post
 
 # --------------------------------------------------------------------------------------------------
 # Content
@@ -83,6 +84,8 @@ content_markdown: |
 
   Bike-sharing rental process is highly correlated to the environmental and seasonal settings. For instance, weather conditions, precipitation, day of week, season, hour of the day, etc. can affect the rental behaviors. So in this example of regression we will use that information to try to predict the bike rental.
 
+  > To follow this post you should be looking at the code from [github](TODO)
+
   ### 2.1. How the data is used in a supervised learning problem
 
   The data will be splitted in 3 groups:
@@ -97,13 +100,51 @@ content_markdown: |
 
   The idea is to learn with **training** data. Then check the model with the **validation** data and if the results are not good tune the parameters train another time. When the results are good stop and do one final test with the **test** data.
 
+  ### 2.2. Preparing the data
+
+  The first thing we need to do is to handle the categorical features since machine learning algorithms don't work with text as inputs. In this dataset we have 5 categorical features:
+
+  * season
+  * weather situation
+  * month
+  * hour
+  * weekday
+
+  We will create new dummy columns for all categorical features. For example there are four seasons so we will create **season_1**, **season_2**, **season_3** and **season_4** columns with `1` if the point is in that season and `0` otherwise.
+
+  > We cannot use only one column and `1`, `2`, `3` or `4` as the options since the seasons are not **linearly related**. That is to say that `sumer + spring = winter` does not make sense. To avoid this relations we create the four new columns.
+
+  Let's also check the target we want to predict. In the dataset there are the rentals for `casual` and `registred` users as well as the sum of those two. This last one (`cnt`) will be our target.
+
   <div id="plotly_preview_target" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
+
+  > You can use zoom and scroling with this plot. I suggest you view it with a computer or on landscape if you are using a phone.
+
+  ### 2.3. Selecting the algorithm
+
+  In this example we will use Support Vector Regression (SVR). It is an algorithm that is similar to a liniar regression but using a treshold. It is out of the scope of this post to explain how it works but you can read it [here](https://medium.com/coinmonks/support-vector-regression-or-svr-8eb3acf6d0ff).
+
+  ### 2.4. Training and parameter tuning
+
+  First we fit the algorithm using the **training** data and we check the result using the **validation** data.
 
   <div id="plotly_predictions_validation_1" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
 
+  The results are not really good, so we train another time but changing some parameters. In this case we will only change the `C` parameter to **42**.
+
+  > I tried some parameters until the results where good but I didn't follow any plan when trying them.
+
   <div id="plotly_predictions_validation_2" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
 
+  > Now the results are way better.
+
+  #### 2.5. Check that the algorithm is working
+
+  Now we will use the **test** data to ensure that everything is working well.
+
   <div id="plotly_predictions_test" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
+
+  And it is indeed. It only has some problems around christmas since they are special days. One way to solve this would be to include more years so that the classifier can learn what happens on christmas 
 
 
 scripts: |
