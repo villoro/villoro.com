@@ -114,6 +114,8 @@ content_markdown: |
 
   > We cannot use only one column and `1`, `2`, `3` or `4` as the options since the seasons are not **linearly related**. That is to say that `sumer + spring = winter` does not make sense. To avoid this relations we create the four new columns.
 
+  Another important thing to do is to **normalize** the data. This step is mandatory for some algorithms and it never has a bad efect. To normalize the data we will calculate the mean and the standard deviation (std) of each column and then we will substract the mean to all values of the column and divide by the std. This will ensure that all columns have `mean = 0` and `std = 1`.
+
   Let's also check the target we want to predict. In the dataset there are the rentals for `casual` and `registred` users as well as the sum of those two. This last one (`cnt`) will be our target.
 
   <div id="plotly_preview_target" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
