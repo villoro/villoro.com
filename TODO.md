@@ -21,6 +21,10 @@
 * scripts with lazy loading
 
 
+# Projects
+* Voice User Interfeces (udacity AIND)
+
+
 # Posts
 * Airflow Tasks
 * Linux
