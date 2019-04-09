@@ -7,7 +7,7 @@ subtitle: Creation of a compute vision pipeline to detect keypoints on photo's f
 image: face_detection.jpg
 image_square: face_detection_square.jpg
 
-main: True
+main: False
 highlight: True
 
 tags:
