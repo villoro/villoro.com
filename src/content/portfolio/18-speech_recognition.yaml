@@ -5,7 +5,7 @@ code: speech_recognition
 title: Speech Recognition with Neural Networks
 title_short: Speech Recognition
 subtitle: Use a GAN to create new human faces.
-image: speech_recognition_square.png
+image: speech_recognition.jpg
 image_square: speech_recognition_square.png
 
 main: True
