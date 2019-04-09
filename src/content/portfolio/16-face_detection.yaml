@@ -40,7 +40,7 @@ brief_markdown: |
   Then a neural network was used to detect the keypoints in all faces present in any photo. To do so I trained a CNN using Keras.
 
 motivation_markdown: |
-  I did this project as a part of the [Artificial Intelligence Nanodegree](https://eu.udacity.com/course/ai-artificial-intelligence-nanodegree--nd898) (udacity moved the project to the (Computer Vision Nanodegree)[https://eu.udacity.com/course/computer-vision-nanodegree--nd891]). This project was designed so that students could learn everything involved with having a CV machine learning model working. This includes all the preprocessing of the image and the creation of the pipeline itself.
+  I did this project as a part of the [Artificial Intelligence Nanodegree](https://eu.udacity.com/course/ai-artificial-intelligence-nanodegree--nd898) (udacity moved the project to the [Computer Vision Nanodegree](https://eu.udacity.com/course/computer-vision-nanodegree--nd891)). This project was designed so that students could learn everything involved with having a CV machine learning model working. This includes all the preprocessing of the image and the creation of the pipeline itself.
 
 body_markdown: |
   ## Pipline designed
