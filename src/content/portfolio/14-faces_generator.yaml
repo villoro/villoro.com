@@ -8,7 +8,7 @@ image: gan_faces.jpg
 image_square: gan_faces_square.jpg
 
 main: False
-highlight: True
+highlight: False
 
 tags:
   - AI
