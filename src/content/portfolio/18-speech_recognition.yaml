@@ -4,7 +4,7 @@
 code: speech_recognition
 title: Speech Recognition with Neural Networks
 title_short: Speech Recognition
-subtitle: Use a GAN to create new human faces.
+subtitle: Predict the transcription from raw audio.
 image: speech_recognition.jpg
 image_square: speech_recognition_square.png
 
@@ -59,9 +59,9 @@ body_markdown: |
     <img src="/static/images/portfolio/speech_recognition_pipeline.png" alt="speech_recognition_pipeline" class="w3-image w3-padding-16" style="max-height: 300px;"/>
   </div>
 
-  1. The first step is pre-processing the raw audio
-  2. The second is an acoustic model that takes audio features and returns a probability distribution of all possible transcriptions (letters and punctuation).
-  3. The last step is to transform the probability and create a transcription
+  1. The first step is **pre-processing the raw audio**.
+  2. The second is an **acoustic model** that takes audio features and returns a probability distribution of all possible transcriptions (letters and punctuation).
+  3. The last step is to transform the probability and **create a transcription**.
 
   ### 1. Acoustic Features for Speech Recognition
 
@@ -90,6 +90,8 @@ body_markdown: |
   <div class="w3-center">
     <img src="/static/images/portfolio/speech_recognition_network_structure.png" alt="speech_recognition_network_structure" class="w3-image w3-padding-16" style="max-height: 300px;"/>
   </div>
+
+  > I used `dropout` and `batch normalization` to avoid overfitting and `Leaky ReLU` to avoid dead `ReLUs`.
 
   In order to get good results it is really important to note that this is a [Connectionist Temporal Classification (CTC)](https://en.wikipedia.org/wiki/Connectionist_temporal_classification) problem and the loss function needs to be a CTC loss.
 
