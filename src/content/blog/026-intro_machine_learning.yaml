@@ -21,9 +21,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: Github
-#   url: https://github.com/villoro/villoro_posts/tree/master/TODO
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/026-intro_machine_learning
 
 # TODO: fix also link inside the post
 
