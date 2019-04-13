@@ -39,7 +39,7 @@ body, html {
     h5 {font-size: 20px}
     h6 {font-size: 18px}
     body, html {font-size: 16px}
-    blockquote {font-size: 14px}
+    blockquote {font-size: 16px}
 }
 
 /* Small screens */
@@ -51,7 +51,7 @@ body, html {
     h5 {font-size: 18px}
     h6 {font-size: 16px}
     body, html {font-size: 14px}
-    blockquote {font-size: 12px}
+    blockquote {font-size: 14px}
 }
 
 /* Titles styles */
@@ -78,16 +78,26 @@ blockquote {
   font-family: "Open Sans", sans-serif;
   border-left: .25em solid #2176FF; /* Github color #DFE2E5*/
   background-color: #f7fcff; /* Really dim blue */
+  color: #455A64;
   padding: 0 1em;
+  margin: 0;
+}
+
+code, .output {
+  border-radius: 3px;
+  font-size: 85%;
   margin: 0;
 }
 
 code {
   background-color: rgba(27,31,35,.05);
-  border-radius: 3px;
-  font-size: 85%;
-  margin: 0;
   padding: .2em .4em;
+}
+
+.output {
+  font-family: "monospace", sans-serif;
+  background-color: #FFFDE7;
+  padding: .2em .2em;
 }
 
 
