@@ -69,13 +69,18 @@ content_markdown: |
   # Retrive one color
   get_colors(("red", 100))
   ```
-  **Out:** `'#FFCDD2'`
+
+  <div class="output">
+    <b>Out:</b> '#FFCDD2'
+  </div>
 
   ```python
   # Retrive some colors
   get_colors([("red", 100), ("blue", 100)])
   ```
-  **Out:** `['#FFCDD2', '#BBDEFB']`
+  <div class="output">
+    <b>Out:</b> ['#FFCDD2', '#BBDEFB']
+  </div>
 
   Remeber to install it using pip with:
 
@@ -95,7 +100,9 @@ content_markdown: |
   # Retrive some colors
   get_colors([("emerald", 100), ("silver", 100)], palette="flat")
   ```
-  **Out:** `['#D5F5E3', '#F2F3F4']`
+  <div class="output">
+    <b>Out:</b> ['#D5F5E3', '#F2F3F4']
+  </div>
 
 scripts: |
   # Example plot with colors

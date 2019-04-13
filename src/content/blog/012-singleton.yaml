@@ -57,12 +57,16 @@ content_markdown: |
   loader1.sync()
   loader1.get_value()
   ```
-  Out: `1`
+  <div class="output">
+    <b>Out:</b> 1
+  </div>
 
   ```python
   loader2.get_value()
   ```
-  Out: `0`
+  <div class="output">
+    <b>Out:</b> 0
+  </div>
 
   If what you need is to use this data in multiple python files and you want to only call the sync function once and not in every python file this won't work as expected.
 
@@ -101,12 +105,16 @@ content_markdown: |
   single_loader1.sync()
   single_loader1.get_value()
   ```
-  Out: `1`
+  <div class="output">
+    <b>Out:</b> 1
+  </div>
 
   ```python
   single_loader2.get_value()
   ```
-  Out: `1`
+  <div class="output">
+    <b>Out:</b> 1
+  </div>
 
   ### On real example
 
@@ -140,12 +148,16 @@ content_markdown: |
   loader.sync_all() # It is a staticmethod, you can call directly the class function
   loader1.get_value()
   ```
-  Out: `1`
+  <div class="output">
+    <b>Out:</b> 1
+  </div>
 
   ```python
   loader2.get_value()
   ```
-  Out: `1`
+  <div class="output">
+    <b>Out:</b> 1
+  </div>
 
   ### Mixing the two methods
 
@@ -178,8 +190,9 @@ content_markdown: |
   mloader.sync_all(5)
   print(f"Loader_1: {mloader_1.get_value()}. Loader_2: {mloader_2.get_value()}")
   ```
-
-  Out: `Loader_1: 5. Loader_2: 5`
+  <div class="output">
+    <b>Out:</b> Loader_1: 5. Loader_2: 5
+  </div>
 
   And of course you can call the `sync` function of one of the loaders:
 
@@ -187,8 +200,9 @@ content_markdown: |
   mloader_1.sync(2)
   print(f"Loader_1: {mloader_1.get_value()}. Loader_2: {mloader_2.get_value()}")
   ```
-
-  Out: `Loader_1: 2. Loader_2: 5`
+  <div class="output">
+    <b>Out:</b> Loader_1: 2. Loader_2: 5
+  </div>
 
   But after that the `sync_all` won't sync both instances:
 
@@ -196,7 +210,8 @@ content_markdown: |
   mloader.sync_all(7)
   print(f"Loader_1: {mloader_1.get_value()}. Loader_2: {mloader_2.get_value()}")
   ```
-
-  Out: `Loader_1: 2. Loader_2: 7`
+  <div class="output">
+    <b>Out:</b> Loader_1: 2. Loader_2: 7
+  </div>
 
   More info about classes variables in this [video](https://www.youtube.com/watch?v=BJ-VvGyQxho).

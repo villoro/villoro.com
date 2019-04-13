@@ -45,7 +45,9 @@ content_markdown: |
   r"C:\some\name"
   ```
 
-  **Out:** `C:\some\name`
+  <div class="output">
+    <b>Out:</b> C:\some\name
+  </div>
 
   <b style="color:red;">Don't do</b>
 
@@ -53,11 +55,11 @@ content_markdown: |
   "C:\some\name" # \n will be interpreted as new line
   ```
 
-  **Out:**
-  ```
-  C:\some
-  ame
-  ```
+  <div class="output">
+    <b>Out:</b>
+    <div>C:\some</div>
+    <div>ame</div>
+  </div>
 
   ### 1.2. Formatting with repeated ocurrencies
 
@@ -120,14 +122,20 @@ content_markdown: |
   For small concatenations you can simply put two strings togther:
 
   ```python
-  "hello " "world":     "hello world"
+  "hello " "world"
   ```
+  <div class="output">
+    <b>Out:</b> "hello world"
+  </div>
 
   You can also repeat strings with:
 
   ```python
-  "hello_" * 4:         "hello_hello_hello_hello_"
+  "hello_" * 4:
   ```
+  <div class="output">
+    <b>Out:</b> "hello_hello_hello_hello_"
+  </div>
 
   ### 2.2. Concat a lot of strings
 
