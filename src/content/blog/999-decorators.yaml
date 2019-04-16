@@ -72,9 +72,13 @@ content_markdown: |
       return make_h1
       
   hello_person_h1 = decorate_h1(hello_person)
+  hello_person_h1("John")
   ```
+  <div class="output">
+    <b>Out:</b> &lt;h1>hello John&lt;/h1>
+  </div>
 
-  Right now be have 'decorated' the `hello_person` function and save as the new function `hello_person_h1`. If we call `hello_person_h1("John")` the output will be `<h1>hello John</h1>`.
+  Right now be have 'decorated' the `hello_person` function and save as the new function `hello_person_h1`. By calling `hello_person_h1("John")` the output is `<h1>hello John</h1>`.
 
   We can see another example that will time the execution and the function and print with that time after the function is completed.
 
@@ -96,10 +100,13 @@ content_markdown: |
   def wait_3_seconds():
       sleep(3)
 
-
   wait_3_seconds_and_print = timeit(wait_3_seconds)
+  wait_3_seconds_and_print()
   ```
-
+  <div class="output">
+    Done in 3.00 seconds
+  </div>
+  
   > The `*args` parameter used at `timed` and `func` is a trick to preserve whatever parameter is passed to the original function.
 
   Now we have the `timeit` decorator, the `wait_3_seconds` and the `wait_3_seconds_and_print` functions. Those both will wait 3 seconds but the second one will print the execution time.
@@ -133,9 +140,15 @@ content_markdown: |
       """ Says hello to someone """
       sleep(3)
       return "hello {}".format(name)
-  ```
 
-  This will print `Done in 3.00 seconds` and the output will be `<h1>hello Turtle</h1>`
+  wait_and_say_hello("Turtle")
+  ```
+  <div class="output">
+    <div>Done in 3.00 seconds</div>
+    <b>Out:</b> &lt;h1>hello Turtle&lt;/h1>
+  </div>
+
+  This will prints `Done in 3.00 seconds` and the output is `<h1>hello Turtle</h1>`
 
   To sum up decorators allow to do things before or after (or both) a function:
 
@@ -158,13 +171,11 @@ content_markdown: |
 
   hello()
   ```
-
-  The output will be:
-
-      Before function
-      hello world
-      After function
-
+  <div class="output">
+    <div>Before function</div>
+    <div>hello world</div>
+    <div>After function</div>
+  </div>
 
   ## 4. Passing arguments to decorators
 
@@ -194,12 +205,11 @@ content_markdown: |
 
   hello_argh()
   ```
-
-  This will output:
-
-      Argh!
-      hello world
-      After function
+  <div class="output">
+    <div>Argh!</div>
+    <div>hello world</div>
+    <div>After function</div>
+  </div>
 
   > This decorator allows the user to decide what to print before the main function.
 
@@ -239,10 +249,9 @@ content_markdown: |
 
   wait_2_seconds_and_print()
   ```
-
-  Prints:
-
-      Done in 2.00 seconds
+  <div class="output">
+    Done in 2.00 seconds
+  </div>
 
   The intersting part is that we can use other outputting functions instead of `print`, for example some `logging`:
 
@@ -255,6 +264,9 @@ content_markdown: |
 
   wait_2_seconds_and_log()
   ```
+  <div class="output output-red">
+    WARNING:root:Done in 2.00 seconds
+  </div>
 
   Now the function logs the time.
 
@@ -282,6 +294,8 @@ content_markdown: |
       return infallible_decorator
   ```
 
+  > `func.__name__` is a way to get the function name as a string
+
   To see how it works let's create a function that crashes:
 
   ```python
@@ -289,9 +303,14 @@ content_markdown: |
   def wrong_math(x):
       """ This divides a number by 0 """
       return x/0
-  ```
 
-  If we run `wrong_math(1)` it will prints `Error in 'wrong_math': division by zero`
+  wrong_math(1)
+  ```
+  <div class="output">
+    Error in 'wrong_math': division by zero
+  </div>
+
+  > Now we see a message when it crashes
 
   ### 5.3. Using them both
 
@@ -308,7 +327,13 @@ content_markdown: |
 
   unuseful_function(10)
   ```
+  <div class="output output-red">
+    ERROR:root:Error in 'unuseful_function': division by zero
+  </div>
+  <div class="output">
+    Done in 2.00 seconds
+  </div>
 
-  This will log `ERROR:root:Error in 'unuseful_function': division by zero` and print `Done in 2.00 seconds`.
+  This logs `ERROR:root:Error in 'unuseful_function': division by zero` and print `Done in 2.00 seconds`.
 
   After that post you should now understand python **decorators** and be able to create your own. If you have a really good idea for a decorator writte it down in the comments!
