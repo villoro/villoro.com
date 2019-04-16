@@ -96,8 +96,12 @@ code {
 
 .output {
   font-family: "monospace", sans-serif;
-  background-color: #FFFDE7;
+  background-color: #FFFDE7; /* Yellow 50 */
   padding: .2em .2em;
+}
+
+.output-red {
+  background-color: #FFEBEE; /* red 50 */
 }
 
 
