@@ -3,7 +3,7 @@
 # --------------------------------------------------------------------------------------------------
 code: decorators
 title: Python decorators
-date: "2019-04-13"
+date: "2019-04-16"
 image: decorators_square.jpg
 highlight: True
 
@@ -16,9 +16,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: Github
-#   url: https://github.com/villoro/villoro_posts/tree/master/024-tables_format
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/028-decorators
 
 
 # --------------------------------------------------------------------------------------------------
