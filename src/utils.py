@@ -17,7 +17,7 @@ def _read_yaml(uri):
     """ auxiliar function to raad a yaml """
 
     with open(uri, encoding="utf-8") as file:
-        return yaml.load(file)
+        return yaml.load(file, Loader=yaml.SafeLoader)
 
 
 def _transform_markdown(mdict):
