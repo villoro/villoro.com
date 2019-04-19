@@ -18,7 +18,7 @@ def home():
     return render_template(
         "home.html",
         portfolio=content["portfolio_main"],
-        blog=content["blog_high"],
+        blog=content["blog_main"],
         **u.get_page("home")
     )
 
@@ -65,7 +65,9 @@ def portfolio_item(item):
     content = u.get_content()
 
     return render_template(
-        "portfolio_item.html", portfolio=content["portfolio_high"], **content["portfolio"][name]
+        "portfolio_item.html",
+        portfolio=content["portfolio_highlight"],
+        **content["portfolio"][name]
     )
 
 

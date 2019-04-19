@@ -75,17 +75,17 @@ def get_content():
     for x in BLOCKS:
         out[x] = get_items(x)
 
-        # Add highlited items as a new entry
-        out[f"{x}_high"] = {i: data for i, data in out[x].items() if data.get("highlight", False)}
+    # Add highlited items as a new entry and projects that will be at the main page
+    for group in ["highlight", "main"]:
+        out[f"portfolio_{group}"] = {
+            i: data for i, data in out["portfolio"].items() if data.get(group, False)
+        }
 
-    # Projects that will be at the main page
-    out["portfolio_main"] = {
-        i: data for i, data in out["portfolio"].items() if data.get("main", False)
-    }
-
-    num_portfolio_main = len(out["portfolio_main"])
+    # Use the first 4 posts
+    out["blog_main"] = {i: data for i, data in list(out["blog"].items())[:4]}
 
     # At home page there should be a multiple of 4 portfolio items (and at least 4 of them)
+    num_portfolio_main = len(out["portfolio_main"])
     assert (num_portfolio_main % 4 == 0) and (num_portfolio_main > 0)
 
     return out
