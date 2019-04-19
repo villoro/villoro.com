@@ -195,3 +195,13 @@ content_markdown: |
   text.lstrip():    "hello\r\t"
   text.rstrip():    "\n hello"
   ```
+
+  Counting the number of times a char appears in a string:
+
+  ```python
+  ip = "192.168.1.1"
+  ip.count(".")
+  ```
+  <div class="output">
+    <b>Out:</b> 3
+  </div>
