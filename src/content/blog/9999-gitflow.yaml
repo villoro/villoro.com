@@ -1,0 +1,31 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: gitflow
+title: Using gitflow for code control
+title_short: Using gitflow
+date: "2019-04-19"
+image: gitflow_square.jpg
+highlight: True
+
+tags:
+  - git
+  - best practices
+
+tags_filter:
+  - best practices
+
+
+image_head:
+  filename: gitflow_overview.jpg
+  caption: gitflow_overview
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  brief
+
+content_markdown: |
+
+  xx
