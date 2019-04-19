@@ -30,11 +30,13 @@ link:
 brief_markdown: |
   How to create an EC2 AWS instance. Detailed instructions on how to do it in some minutes.
 
-# image_head:
-#   filename: image.jpg
-#   caption: image
 
 content_markdown: |
+
+  <div class="w3-center">
+    <img src="/static/images/blog/aws_ec2.svg" alt="aws_ec2" class="w3-image" style="width: 100%;"/>
+  </div>
+
   Amazon is one of the most important infrastructure services provider. This includes computing power, storage, networking and databases among the a lot of others. One of the computing service that it offers are the **EC2** instances. In this post I am going to explain how to set up an Ubuntu server using an EC2 instance.
 
   ## 1. Create an EC2 instance
