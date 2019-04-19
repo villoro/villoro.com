@@ -5,7 +5,7 @@ code: static_webpage
 title: How to create a static web
 date: "2019-03-12"
 image: static_webpage_square.jpg
-highlight: False
+highlight: True
 
 tags:
   - Web
