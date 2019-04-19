@@ -5,14 +5,18 @@ code: aws_lambda
 title: Using AWS Lambda to start/stop instances
 title_short: AWS Lambdas
 date: "2019-04-19"
-image: aws_lambda_square.png
+image: aws_lambda_square.svg
 highlight: True
 
 tags:
   - Python
+  - AWS
+  - Lambda
 
 tags_filter:
   - Python
+  - AWS
+
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
@@ -26,7 +30,7 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  brief
+  Learn how to use AWS Lambdas to start/stop EC2 and RDS instances using an API.
 
 
 content_markdown: |
@@ -117,7 +121,7 @@ content_markdown: |
   }
   ```
 
-  ### 2.3. Create lambdas
+  ### 2.3. Create the lambda
   First of all there is some work to do in AWS IAM service. This will give the lambdas the following permissions:
 
   1. Act on `EC2` instances
@@ -191,7 +195,7 @@ content_markdown: |
   2. Go to sidebar ```functions```
   3. Create new
       1. Add name
-      2. Select **Python 3.6**
+      2. Select **Python 3.6** or higher
       3. Select role previously created
       4. Press ```create function```
   4. Add code
@@ -203,6 +207,12 @@ content_markdown: |
 
   #### 2.3.4. Create API
 
+  <div class="w3-center">
+    <img src="/static/images/posts/aws_lambda_screenshot.png" alt="aws_lambda_screenshot" class="w3-image w3-border" style="max-height: 500px;"/>
+  </div>
+
+  > API Gateway is set used as a triger. Click at the left of the image, where it says add triger.
+
   1. Go to AWS Lambda service
   2. Open **instances_api** function
   3. Add **API Gateway** triger
@@ -212,7 +222,13 @@ content_markdown: |
       4. Click **add**
   4. Save lambda and then the API will be created
 
-  #### 2.3.4. Create cloudwatch triggers
+  ## 3. Extending that lambda
+
+  One way to give more functions to this lambda is to set times to start or stop certain systems. For example you could want to start a system at 7 am and then stop it at 19 pm on workdays. This could be useful for `development` systems.
+
+  You can do this by two ways. First would be to create a second lambda that calls the first using html requests. The second would be to simply hardcode the action (look at `lambda_handler_start.py`) to see this second option.
+
+  And you need to set the time triger by using AWS CloudWatch.
 
   1. Go to AWS CloudWatch service
   2. Go to sidebar ```Events/rules```
@@ -222,7 +238,7 @@ content_markdown: |
   3. Configure
       1. Set name and description
 
-  The cron expressions for each lambda are:
+  The cron expressions could be:
 
   ```YAML
   'start_instances lambda':
@@ -231,5 +247,5 @@ content_markdown: |
   'stop_instances lambda':
       'stop-fri': '00 14 ? * FRI *''
       'stop_midnight': '0 23 ? * * *''
-      'stop_mon-thu': '00 17 ? * MON-THU *'
+      'stop_mon-thu': '00 19 ? * MON-THU *'
   ```

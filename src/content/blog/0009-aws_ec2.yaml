@@ -4,7 +4,7 @@
 code: aws_ec2
 title: "AWS: EC2"
 date: "2019-03-18"
-image: aws_ec2_square.png
+image: aws_ec2_square.svg
 highlight: False
 
 tags:
