@@ -1,0 +1,48 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: airflow_tasks
+title: Creating Airflow tasks
+date: "2019-04-20"
+image: default.jpg
+highlight: True
+
+tags:
+  - Python
+
+tags_filter:
+  - Python
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: 
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  brief
+
+
+content_markdown: |
+
+  ## Disable examples
+
+  Disable the loading of the examples by editing the airflow config file:
+
+  <div class="input">
+    ~/airflow/airflow.cfg
+  </div>
+  ```
+  load_examples = False
+  ```
+
+  Then
+
+      airflow resetdb -y
+
+  > This will delete the current **DAG** information
