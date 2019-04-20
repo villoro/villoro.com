@@ -52,7 +52,7 @@ content_markdown: |
   To add new functionalities you can create a `feature` branch. Those start from the `develop` branch since it has the latest stable code. Once they are finished they get merged to the `develop` branch.
 
   <div class="w3-center">
-    <img src="/static/images/posts/gitflow_feature.png" alt="gitflow_feature" class="w3-image w3-padding" style="max-width: 800px;"/>
+    <img src="/static/images/posts/gitflow_feature.png" alt="gitflow_feature" class="w3-image w3-padding" style="max-height: 152px;"/>
   </div>
 
   > **Feature** branches can have any name preceded by `feature/`
@@ -62,7 +62,7 @@ content_markdown: |
   Once you want to add new things to production you can do a `release`. By defition they start from the `develop` branch. When they are closed they must merge the new changes to the `master` branch and the `develop` to ensure that `master` and `develop` are aligned.
 
   <div class="w3-center">
-    <img src="/static/images/posts/gitflow_release.png" alt="gitflow_release" class="w3-image w3-padding" style="max-width: 800px;"/>
+    <img src="/static/images/posts/gitflow_release.png" alt="gitflow_release" class="w3-image w3-padding" style="max-height: 220px;"/>
   </div>
 
   After closing the release it will add a tag to the `master` branch with the version like X.X.X.
@@ -74,7 +74,7 @@ content_markdown: |
   `Hotfixs` are created if and only if there is a thing in production that needs to be fixed before doing a release. This usually means that there is some blocking problem to fix. This is way they are created form the `master` branch. When closing a `hotfix` it will be merged to both `master` and `develop` like a `release`.
 
   <div class="w3-center">
-    <img src="/static/images/posts/gitflow_hotfix.png" alt="gitflow_hotfix" class="w3-image w3-padding" style="max-width: 800px;"/>
+    <img src="/static/images/posts/gitflow_hotfix.png" alt="gitflow_hotfix" class="w3-image w3-padding" style="max-height: 220px;"/>
   </div>
 
   ## 3. Using code revision
