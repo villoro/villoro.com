@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <title>Villoro 404</title>
+  <title>Villoro</title>
 
   <head>
     <meta charset="utf-8">
@@ -10,6 +10,8 @@
 
     <!-- Google font -->
     <link href="https://fonts.googleapis.com/css?family=Montserrat:700,900" rel="stylesheet">
+
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}"/>
 
     <style type="text/css">
       * {
@@ -142,21 +144,20 @@
   </head>
 
   <body>
-
     <div id="notfound">
       <div class="notfound-bg"></div>
       <div class="notfound">
+
         <div class="notfound-404">
           <h1>404</h1>
         </div>
-        
-        <h2>we are sorry, but the page you requested was not found</h2>
+
+        <h2>The page you requested was not found</h2>
 
         <a href="{{ url_for('home') }}" class="home-btn">Go Home</a>
 
       </div>
     </div>
-
   </body>
 
   <!-- This templates was made by Colorlib (https://colorlib.com) -->
