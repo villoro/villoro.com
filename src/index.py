@@ -79,5 +79,13 @@ def post(item):
     return render_template("post.html", **u.get_content()["blog"][name])
 
 
+@APP.errorhandler(404)
+@APP.route("/404.html")
+def page_not_found():
+    """ Page not found error """
+
+    return render_template("404.html")
+
+
 if __name__ == "__main__":
     APP.run(debug=True)
