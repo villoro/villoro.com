@@ -32,6 +32,8 @@ content_markdown: |
 
   > Please use **git** you will be much more happy in the long term!
 
+  If you are using git from the command line you should check [this guide](http://rogerdudler.github.io/git-guide/) out.
+
   ## 1. Using 'git flows'
 
   There are some famous 'git flows' in the industry such as:
