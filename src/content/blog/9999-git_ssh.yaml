@@ -2,9 +2,9 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: git_ssh
-title: Using git with ssh
+title: Using git with SSH
 date: "2019-04-21"
-image: default.jpg
+image: git_ssh.jpg
 highlight: True
 
 tags:
@@ -19,7 +19,7 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  brief
+  Learn how to work securely with git by using SSH authentication with github.
 
 
 content_markdown: |
@@ -54,7 +54,7 @@ content_markdown: |
   ssh-add ~/.ssh/github_ssh
   ```
 
-  > If you needed you can delete all SSH keys with `ssh-add -D`
+  > If you needed you can **delete all SSH keys** with `ssh-add -D`
 
   ## 3. Add the SSH key to github
 
