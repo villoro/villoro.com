@@ -101,6 +101,7 @@ code {
 .input { 
   background-color: #E0E0E0; /* gray 300 */
   padding-left: 10px;
+  text-align: center;
 }
 
 .output {  
