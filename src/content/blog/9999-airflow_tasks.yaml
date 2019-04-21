@@ -41,8 +41,24 @@ content_markdown: |
   load_examples = False
   ```
 
-  Then
+  Then let's reset the database with:
 
-      airflow resetdb -y
+  ```sh
+  airflow resetdb -y
+  ```
+
+  Finally we will restart airflow by:
+
+  ```sh
+  # Kill the webserver
+  cat ~/airflow/airflow-webserver.pid | xargs kill -9
+  
+  # Start webserver
+  airflow webserver -p 8080
+  ```
 
   > This will delete the current **DAG** information
+
+  If you followed the tutorial you will have the `tutorial` DAG. To delete it first go to `~/airflow/dags` 
+
+  > To delete a dag first you should delete the file from `~/airflow/dags` and then you can delete if from the airflow UI.
