@@ -1,0 +1,96 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: git_ssh
+title: Using git with ssh
+date: "2019-04-21"
+image: default.jpg
+highlight: True
+
+tags:
+  - best practices
+  - AWS
+
+tags_filter:
+  - best practices
+  - AWS
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  brief
+
+
+content_markdown: |
+
+  **Secure Shell (SSH)** is a cryptographic network protocol for operating network services securely over an unsecured network. This allows you to connect securely to other services or machines.
+
+  In this post I am going to explain how to configure your linux machine to github using **SSH**.
+
+  ## 1. Create **SSH keys**
+  
+  First we will create a SSH key that will allow you to connect to github.
+
+  ```sh
+  ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+  ```  
+
+  Then I suggest you save the SSH key with some usefull name like `/home/ubuntu/.ssh/github_ssh`
+
+  Finally add a passphrase. This will ensure that your SSH credentials are safe even if someone access your computer.
+
+  ## 2. Add SSH key to the ssh-agent
+
+  Since you added a passphrase you need to add the `SSH key` to the `ssh-agent` so that you don't need to write the passphrase every time.
+
+  ```sh
+  # Open an ssh-agent in the background
+  eval $(ssh-agent -s)
+  ```
+
+  ```sh
+  # Add the SSH key
+  ssh-add ~/.ssh/github_ssh
+  ```
+
+  > If you needed you can delete all SSH keys with `ssh-add -D`
+
+  ## 3. Add the SSH key to github
+
+  This guide focus on github but you can do the same following similar steps for other git services like bitbucket.
+
+  1. Copy the content of the `~/.ssh/github_ssh.pub` file.
+  2. Go to github settings page.
+  3. Select `SSH and GPG keys` section.
+  4. Click `add new SSH keys`.
+  5. Use some meaningfull name like `aws_ec2`, paste the SSH key and save it.
+  6. If asked, write your github password.
+
+  ## 4. Check the SSH conection
+
+  Run the following command: 
+
+  ```sh
+  ssh -T git@github.com
+  ```
+
+  The first time it will say that the authenticity of **github.com** can't be established. Enter yes to add it to the list of known hosts so that you won't get asked each time.
+
+  > You should see a message saying `Hi XXXX! You've successfully authenticated`
+
+  ## 5. Cloning a **git** repo
+
+  Since you are using **SSH** the clone command will change a little bit. Instead of using:
+
+  ```sh
+  git clone https://github.com/username/repo_name.git
+  ```
+
+  You should use:
+
+  ```sh
+  git clone git@github.com:username/repo_name.git
+  ```
+
+  After doing all that you can use git without needing to worry about passwords or passphrases anymore.
