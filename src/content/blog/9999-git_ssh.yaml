@@ -50,7 +50,15 @@ content_markdown: |
   sudo apt install keychain
   ```
 
-  Then edit the `~/.bashrc` file so that **keychain** is started everytime you open a terminal.
+  First of all some people use **ssh-agent** to add the **SSH keys** but you need to start one every time you open a new terminal and they don't die. So after some time you will end with a lot of ssh-agents running. If you did that you can step them with:
+
+  ```sh
+  keychain --stop all
+  ```
+
+  > You can check that only one ssh-agent is running with `ps -ef | grep ssh-agent`
+
+  To set up **keychain** edit the `~/.bashrc` file so that **keychain** is started everytime you open a terminal.
 
   <div class="input">
     ~/.bashrc
