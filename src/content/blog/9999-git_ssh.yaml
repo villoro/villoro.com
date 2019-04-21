@@ -40,21 +40,27 @@ content_markdown: |
 
   Finally add a passphrase. This will ensure that your SSH credentials are safe even if someone access your computer.
 
-  ## 2. Add SSH key to the ssh-agent
+  ## 2. Use keychain
 
-  Since you added a passphrase you need to add the `SSH key` to the `ssh-agent` so that you don't need to write the passphrase every time.
+  The **SSH key** you just created has a passphrase and you probably don't want to write it every time you open a new terminal.
 
-  ```sh
-  # Open an ssh-agent in the background
-  eval $(ssh-agent -s)
-  ```
+  You can use **keychain** to remember the passphrase.
 
   ```sh
-  # Add the SSH key
-  ssh-add ~/.ssh/github_ssh
+  sudo apt install keychain
   ```
 
-  > If you needed you can **delete all SSH keys** with `ssh-add -D`
+  Then edit the `~/.bashrc` file so that **keychain** is started everytime you open a terminal.
+
+  <div class="input">
+    ~/.bashrc
+  </div>
+  ```
+  # Add this line at the end
+  eval `keychain --agents ssh --eval github_ssh`
+  ```
+
+  > `github_ssh` is the name of the SSH key to import you could add more separating them by spaces
 
   ## 3. Add the SSH key to github
 
