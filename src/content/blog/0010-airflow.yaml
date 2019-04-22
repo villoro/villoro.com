@@ -56,7 +56,7 @@ content_markdown: |
   ```
 
   ### 2.1 Test Airflow
-  We will test airflow with an example from [airflow documentation](https://airflow.apache.org/tutorial.html). You will need to create the file `~/airflow/dags/tutorial.py`:
+  We will test airflow with an example from [airflow documentation](https://airflow.apache.org/tutorial.html). You will need to create the file `tutorial.py`:
 
   ```sh
   cd airflow
@@ -67,6 +67,9 @@ content_markdown: |
 
   And then paste the example and save the file:
 
+  <div class="input">
+    ~/airflow/dags/tutorial.py
+  </div>
   ```python
   """
   Code that goes along with the Airflow tutorial located at:
@@ -189,6 +192,10 @@ content_markdown: |
   ```
 
   Inside the section `[webserver]` find the line `authenticate=X` and replace it with:
+
+  <div class="input">
+    ~/airflow/airflow.cfg
+  </div>
   ```cfg
   authenticate = True
   auth_backend = airflow.contrib.auth.backends.password_auth
