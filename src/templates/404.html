@@ -12,6 +12,17 @@
 
     <link rel="icon" href="{{ url_for('static', filename='images/favicon404.ico') }}"/>
 
+    <script>
+      /* Only track the page when it is in the main domain. No develop.villoro.com or localhost */
+      if (window.location.host==="villoro.com" || window.location.host==="www.villoro.com") {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-116253568-1');
+      }
+    </script>
+
     <style type="text/css">
       @import 'https://fonts.googleapis.com/css?family=Inconsolata';
 

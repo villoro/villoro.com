@@ -83,6 +83,9 @@ content_markdown: |
 
   And paste the following code:
 
+  <div class="input">
+    /var/www/html/index.py
+  </div>
   ```python
   from flask import Flask
 
@@ -135,6 +138,9 @@ content_markdown: |
 
   And write the following configuration:
 
+  <div class="input">
+    /etc/supervisor/conf.d/flask_test.conf
+  </div>
   ```
   [program:flask_test]
   command = gunicorn index:app -b localhost:8000
@@ -185,6 +191,9 @@ content_markdown: |
 
   And write the following configuration:
 
+  <div class="input">
+    /etc/nginx/sites-available/flask_test
+  </div>
   ```text
   server {
       listen 80 flask_server;
@@ -221,6 +230,9 @@ content_markdown: |
 
   The nginx configuration you used is really simple. For example you can set nginx to serve static files directly instead of passing through the flask app by:
 
+  <div class="input">
+    /etc/nginx/sites-available/flask_test
+  </div>
   ```text
   server {
       listen 80 flask_server;
