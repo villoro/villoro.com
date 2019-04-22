@@ -312,3 +312,34 @@ content_markdown: |
   ```
 
   And that's it. You can now start using airflow.
+
+  ## 5. Next steps
+
+  You can add **DAG**s in the folder `~/airflow/dags` and they should be automatically loaded. 
+
+  > It is advised to run airflow with at least a `t2.medium` **AWS instance**. You can run it with a smaller one (I use a `t2.micro` since it is in the free tier) but you can easily get your instance at 100% CPU usage while runing tasks.
+
+  ## 5.1. Using git
+  You can even change that path to a folder that is tracked with git to keep control of the **DAG**s by editing the `airflow.cfg`:
+
+  <div class="input">
+    ~/airflow/airflow.cfg
+  </div>
+  ```cfg
+  dags_folder = "home/ubuntu/airflow_tasks/src"
+  ```
+
+  To keep the code sync with the origin you could create an airflow task but it will fill the logs with unuseful information. This time ironically is better to use crontab to fetch the code. You can do it with:
+
+  ```sh
+  crontab -e
+  ```
+
+  Add this line at the end:
+
+  ```sh
+  * */5 * * * cd /home/ubuntu/airflow_tasks && git fetch && git checkout master && git pull origin master
+  ```
+
+  > I use `/home/ubuntu/airflow_tasks` for the repo path and the folder `src` for **DAG**s path. But you can use whatever you want.
+  
