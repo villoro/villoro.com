@@ -4,7 +4,7 @@
 code: aws_lambda
 title: Using AWS Lambda to start/stop instances
 title_short: AWS Lambdas
-date: "2019-04-19"
+date: "2019-04-23"
 image: aws_lambda_square.svg
 highlight: True
 
