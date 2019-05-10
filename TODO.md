@@ -34,7 +34,8 @@
     2. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
     3. Python performance: [dask](http://docs.dask.org/en/latest/why.html)
     4. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
-    5. Pandas? See that example: https://realpython.com/fast-flexible-pandas/
+    5. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
+    6. Pandas? See that example: https://realpython.com/fast-flexible-pandas/
 * DNS
 * Heroku deployment
 * ETL with APIs
