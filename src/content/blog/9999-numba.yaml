@@ -1,0 +1,53 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: numba
+title: Python performance I - numba
+title_short: py performance numba
+date: "2019-05-12"
+image: default.jpg
+highlight: True
+
+tags:
+  - Python
+  - Performance
+
+tags_filter:
+  - Python
+  - Performance
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Github
+  url: https://github.com/villoro/v-crypt
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  brief
+
+# image_head:
+#   filename: default.jpg
+#   caption: default
+# TODO: create some nice image
+
+content_markdown: |
+  This is the first post about python performance where and how to make python code go faster.
+
+  ## 1. Exploring python compilers
+  The first way to improve the python performance is by using different compilers. The most famous ones are:
+
+  * [cython](https://cython.org/)
+  * [pypy](https://pypy.org/)
+  * [numba](http://numba.pydata.org/)
+
+  ### 1.1. Cython overview
+  
+  
+  ### 1.2. Pypy overview
+
+  ### 1.3. Numba overview
