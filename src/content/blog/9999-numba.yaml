@@ -19,9 +19,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-link: 
-  text: Github
-  url: https://github.com/villoro/v-crypt
+# link: 
+#   text: Github
+#   url: TODO
 
 
 # --------------------------------------------------------------------------------------------------
@@ -112,7 +112,26 @@ content_markdown: |
 
   **Numba** provides some decorators that will transform functions to `C`. This way the execution times will be faster.
 
-  ### 2.1. Test `sum` function
+  By adding the `jit` decorator to a function **numba** will transform it to `C`. For example:
+
+  ```python
+  from numba import jit, njit
+
+  @jit
+  def m_sum(data):
+      out = 0
+      for x in data:
+          out += x
+
+      return out
+  ```
+
+  You can also use `@njit` (equivalent to `@jit(nopython=True)`) which is faster but does not support as much operations as the default ´jit´.
+
+
+  ## 3. Test numba performance
+
+  ### 3.1. Test `sum` function
 
   First we will time the execution of different `sum` functions. The first option will be a for loop in python:
 
@@ -129,7 +148,7 @@ content_markdown: |
       return out
   ```
 
-  And we will test both `jit` and `njit` decorators. As an example this is how the `jit` version would be defined:
+  And we will test both `jit` and `njit` **numba** decorators. As an example this is how the `jit` version would be defined:
 
   <div class="input">
     jit
@@ -219,6 +238,14 @@ content_markdown: |
 
   In general is a really good idea to use numpy functions since they use `cython` under the hood.
   In all cases using the raw loop `iter_and_sum` or the default python `sum` gives poor results.
+
+  > **numba** can be **400x** better than a python loop
+
+  ## 4. More info
+
+  You can read the [numba documentation](http://numba.pydata.org/numba-doc/latest/index.html).
+
+  I also suggest you read this post from Jake VanderPlas about [code optimization with numba](https://jakevdp.github.io/blog/2015/02/24/optimizing-python-with-numpy-and-numba/).
 
 scripts: |
   <script>
