@@ -34,6 +34,7 @@ image_head:
   filename: numba.svg
   caption: numba
 
+use_chartjs: True
 
 content_markdown: |
   This is the first post about python performance where and how to make python code go faster.
@@ -108,3 +109,128 @@ content_markdown: |
   So you can use python code without modifications and you won't have compatibility problems with other packages when using numba. This is the reason I preffer **numba** over **cython** and **pypy** and it is also one of the faster of the three.
 
   ## 2. Using numba
+
+  <table class="v-table v-table-right" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">numpy size</th>
+      <th class="v-table-header">iter_and_sum</th>
+      <th class="v-table-header">jit</th>
+      <th class="v-table-header">njit</th>
+      <th class="v-table-header">np.sum</th>
+      <th class="v-table-header">sum</th>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^4</td>
+      <td>0.000926</td>
+      <td>0.000160</td>
+      <td>0.000076</td>
+      <td>0.000008</td>
+      <td>0.000750</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^5</td>
+      <td>0.009162</td>
+      <td>0.000009</td>
+      <td>0.000010</td>
+      <td>0.000042</td>
+      <td>0.007416</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^6</td>
+      <td>0.092385</td>
+      <td>0.000107</td>
+      <td>0.000120</td>
+      <td>0.000407</td>
+      <td>0.075906</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^7</td>
+      <td>0.936596</td>
+      <td>0.002313</td>
+      <td>0.002352</td>
+      <td>0.004406</td>
+      <td>0.766648</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^8</td>
+      <td>9.353938</td>
+      <td>0.021365</td>
+      <td>0.020550</td>
+      <td>0.042787</td>
+      <td>7.554794</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^9</td>
+      <td>95.908613</td>
+      <td>0.240599</td>
+      <td>0.224245</td>
+      <td>0.432378</td>
+      <td>76.493193</td>
+    </tr>
+  </table>
+
+  <canvas id="chart_sum_times" style="width:100%;height:600px;"></canvas>
+
+scripts: |
+  <script>
+    var chart_sum_times = new Chart("chart_sum_times", {
+      type: 'line',
+      data: {
+        labels: ['10^4', '10^5', '10^6', '10^7', '10^8', '10^9'],
+        datasets: [
+          {
+            label: 'iter_and_sum',
+            borderColor: "#F44336", 
+            data: [0.000926, 0.009162, 0.092385, 0.936596, 9.353938, 95.908613],
+            fill: false
+          },
+          {
+            label: 'sum',
+            borderColor: "#FF9800", 
+            data: [0.00075, 0.007416, 0.075906, 0.766648, 7.554794, 76.493193],
+            fill: false
+          },
+          {
+            label: 'np.sum',
+            borderColor: "#03A9F4", 
+            data: [0.000008, 0.000042, 0.000407, 0.004406, 0.042787, 0.432378],
+            fill: false
+          },
+          {
+            label: 'jit',
+            borderColor: "#8BC34A", 
+            data: [0.00016, 0.000009, 0.000107, 0.002313, 0.021365, 0.240599],
+            fill: false
+          },
+          {
+            label: 'njit',
+            borderColor: "#4CAF50", 
+            data: [0.000076, 0.000010, 0.00012, 0.002352, 0.02055, 0.224245],
+            fill: false
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Time of different sum functions'
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Time [s]'
+            },
+            type: 'logarithmic',
+          }],
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Size of the numpy array'
+            },
+          }],
+        }
+      }
+    });
+  </script>
+  
