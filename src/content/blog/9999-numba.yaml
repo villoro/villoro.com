@@ -110,6 +110,48 @@ content_markdown: |
 
   ## 2. Using numba
 
+  **Numba** provides some decorators that will transform functions to `C`. This way the execution times will be faster.
+
+  ### 2.1. Test `sum` function
+
+  First we will time the execution of different `sum` functions. The first option will be a for loop in python:
+
+  <div class="input">
+    iter_and_sum
+  </div>
+  ```python
+  def iter_and_sum(data):
+      """ Sums each element in an iterable """
+      out = 0
+      for x in data:
+          out += x
+
+      return out
+  ```
+
+  And we will test both `jit` and `njit` decorators. As an example this is how the `jit` version would be defined:
+
+  <div class="input">
+    jit
+  </div>
+  ```python
+  @jit
+  def jit_iter_and_sum(data):
+      """ Sums each element in an iterable """
+      out = 0
+      for x in data:
+          out += x
+
+      return out
+
+  # Or equivalent:
+  jit(iter_and_sum)
+  ```
+
+  The other options is to use the `sum()` python function and the `numpy.sum()`.
+
+  For the tests we will try different array lenghts.
+
   <table class="v-table v-table-right" align="center">
     <tr class="v-table-center">
       <th class="v-table-header">numpy size</th>
@@ -169,7 +211,14 @@ content_markdown: |
     </tr>
   </table>
 
+  > It is important to mention that the results would be different using python lists instead of `numpy` arrays.
+
   <canvas id="chart_sum_times" style="width:100%;height:600px;"></canvas>
+
+  For small arrays `numpy.sum` is the best option but **for large arrays both `jit` and `njit` perform really well**.
+
+  In general is a really good idea to use numpy functions since they use `cython` under the hood.
+  In all cases using the raw loop `iter_and_sum` or the default python `sum` gives poor results.
 
 scripts: |
   <script>
