@@ -126,8 +126,15 @@ content_markdown: |
       return out
   ```
 
-  You can also use `@njit` (equivalent to `@jit(nopython=True)`) which is faster but does not support as much operations as the default ´jit´.
+  ## 2.1. `jit` vs `njit` decorators
 
+  The default **numba** decorator is `jit`. It is possible to pass use nopython mode with `@jit(nopython=True)` or with the decorator `njit` which is equivalent.
+
+  `njit` decorator is faster than `jit` but supports less features than jit.
+
+  For example you can't cast to string (like `str(10)`) inside a `njit` decorated function.
+  
+  So you should try to use `njit` decorator for numerical calculations.
 
   ## 3. Test numba performance
 
@@ -242,6 +249,200 @@ content_markdown: |
   In all cases using the raw loop `iter_and_sum` or the default python `sum` gives poor results.
 
   > **numba** can be **400x** better than a python loop
+
+  ## 3.2. Test fix time
+
+  At one of the projects I was working at my company I found an intersting problem. I had a huge dataframe (650 milion rows) and among other columns there was one for the `date` and one for `time`.
+
+  The `date` column followed the format `YYYY-MM-DD` like 2019-05-15. The problem was with the `time` column. The original format was `hhmmsscc` (`c` for centiseconds) and instead of being a string it was presented as an **integer**. So for example you could find the following values:
+
+  <table class="v-table v-table-right" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">value</th>
+      <th class="v-table-header">represents</th>
+    </tr>
+    <tr>
+      <td>23411210</td>
+      <td>23:41:12.10</td>
+    </tr>
+    <tr>
+      <td>9051137</td>
+      <td>09:05:11.37</td>
+    </tr>
+    <tr>
+      <td>712</td>
+      <td>00:00:07.12</td>
+    </tr>
+  </table>
+
+  ### 3.2.1. The functions
+
+  So to fix that I transformed the values to string, then added 0 until I had 8 chars and finally split and add `:` and `.` so that then it could be transformed.
+
+  Let's use this problem for testing **numba**. First let's see all different options I came up.
+
+  #### 3.2.1.1. zfill
+
+  This was my first approach which was good enough. The idea is to transform the `time` column to string and then apply `zfill(8)`. After that I created a string with the appropiate format and transform the whole `datetime` with `pd.to_datetime`.
+
+  ```python
+  def zfill(df):
+      """
+          1. Transform time to str
+          2. zfill
+          3. split time as string lists
+          4. pd.to_datetime
+      """
+
+      aux = df["time"].apply(str).apply(lambda x: x.zfill(8)).str
+      return pd.to_datetime(df["date"] + " " + aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:])
+  ```
+
+  #### 3.2.1.2. fix_time_individual
+
+  The idea in this option is to create a function decorated with `jit` that transform one element of the `time` column and apply the function to the column.
+
+  Insted of using `pd.to_datetime` I use `.astype(np.datetime64)` since is faster.
+
+  ``` 
+  def fix_time_individual(df):
+      """
+          1. pandas.apply a jit function to add 0 to time
+          2. concat date + time
+          3. change to np.datetime64
+      """
+      
+      @jit
+      def _fix_time(x):
+          aux = "0"*(8 - len(str(x))) + str(x)
+          return aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
+      
+      return (df["date"] + " " + df["time"].apply(_fix_time)).astype(np.datetime64)
+  ```
+
+  #### 3.2.1.3. fix_time_np_string
+
+  With this solution I created and empty `numpy` array and filled with a loop inside the `jit` decorated function.
+
+  ```python
+  def fix_time_np_string(df):
+      """
+          1. Use a jit function to add 0 to each time
+          2. concat date + time
+          3. change to np.datetime64
+      """
+
+      @jit
+      def _fix_time(mlist):
+      
+          out = np.empty(mlist.shape, dtype=np.object)
+
+          for i in range(len(mlist)):
+
+              elem = str(mlist[i])
+              aux = "0"*(8 - len(elem)) + elem
+
+              out[i] = aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
+
+          return out
+      
+      return (df["date"].values + " " + _fix_time(df["time"].values)).astype(np.datetime64)
+  ```
+
+  #### 3.2.1.4. fix_time_np_datetime
+
+  In this case the I also create an empty `numpy` array but with `datetime64[s]` dtype. This way I can iterate over both `time` and `date` at the same time.
+
+  ```python
+  def fix_time_np_datetime(df):
+      """
+          1. Iterate time and date with jit function
+          2. Transform each element to string and add 0s
+          3. Split the string
+          4. Cast each element to np.datetime64
+      """
+      
+      @jit
+      def _fix_date(mdate, mtime):
+
+          out = np.empty(mtime.shape, dtype="datetime64[s]")
+
+          for i in range(len(mtime)):
+
+              elem = str(mtime[i])
+              aux = "0"*(8 - len(elem)) + elem
+
+              aux = mdate[i] + " " + aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
+
+              out[i] = np.datetime64(aux)
+
+          return out
+      
+      return _fix_date(df["date"].values, df["time"].values)
+  ```
+
+  #### 3.2.1.5. np_divmod_jit
+
+  In this solution I process the `time` column as number and with the `np.divmod` function I create a value that represents a **timedelta**. After transforming the `time` column I change the dtype to `timedelta64[ms]` and sum it to the `date` column as a `datetime64`.
+
+  ```
+  def np_divmod_jit(df):
+      """
+          1. Iterate time and date with jit function
+          2. Use np.divmod to transfom HHMMSSCC to miliseconds integer
+          3. Cast date as np.datetime and time to timedelta
+          4. Sum date and time
+      """
+          
+      @jit
+      def _fix_date(mdate, mtime):
+
+          time_out = np.empty(mtime.shape[0], dtype=np.int32)
+
+          for i in range(mtime.shape[0]):
+              aux, cent = np.divmod(mtime[i], 100)
+              aux, seconds = np.divmod(aux, 100)
+              hours, minutes = np.divmod(aux, 100)
+
+              time_out[i] = 10*(cent + 100*(seconds + 60*(minutes + 60*hours)))
+
+          return mdate.astype(np.datetime64) + time_out.astype("timedelta64[ms]")
+      
+      return _fix_date(df["date"].values, df["time"].values)
+  ```
+
+  #### 3.2.1.6. divmod_njit
+
+  It is the same as the previous example but after changing `np.divmod` to the python `divmod` function I can use the `njit` decorator for the first time.
+
+  ```
+  def divmod_njit(df):
+      """
+          1. Iterate time with njit function
+          2. Use divmod to transfom HHMMSSCC to miliseconds integer
+          3. Outside the njit function cast date as np.datetime and time to timedelta
+          4. Sum date and time
+      """
+
+      @njit
+      def _fix_time(mtime):
+
+          time_out = np.empty(mtime.shape[0], dtype=np.int32)
+
+          for i in range(mtime.shape[0]):
+              aux, cent = divmod(mtime[i], 100)
+              aux, seconds = divmod(aux, 100)
+              hours, minutes = divmod(aux, 100)
+
+              time_out[i] = 10*(cent + 100*(seconds + 60*(minutes + 60*hours)))
+
+          return df["date"].values.astype(np.datetime64) +\
+                   _fix_time(df["time"].values).astype("timedelta64[ms]")
+  ```
+
+  ### 3.2.2. The results
+
+  
 
   ## 4. More info
 
