@@ -241,7 +241,7 @@ content_markdown: |
 
   It is important to mention that the results would be different using python lists instead of `numpy` arrays.
 
-  <canvas id="chart_sum_times" style="width:100%;height:600px;"></canvas>
+  <canvas id="chart_sum" style="width:100%;height:600px;"></canvas>
 
   For small arrays `numpy.sum` is the best option but **for large arrays both `jit` and `njit` perform really well**.
 
@@ -442,17 +442,18 @@ content_markdown: |
 
   ### 3.2.2. The results
 
-  
+  <canvas id="chart_fix_time" style="width:100%;height:600px;"></canvas>
 
   ## 4. More info
 
-  You can read the [numba documentation](http://numba.pydata.org/numba-doc/latest/index.html).
+  You can read the [numba documentation](http://numba.pydata.org/numba-doc/latest/index.html). Some examples of **numba** form their web page at [numba examples](http://numba.pydata.org/numba-doc/0.21.0/user/examples.html).
 
   I also suggest you read this post from Jake VanderPlas about [code optimization with numba](https://jakevdp.github.io/blog/2015/02/24/optimizing-python-with-numpy-and-numba/).
 
+
 scripts: |
   <script>
-    var chart_sum_times = new Chart("chart_sum_times", {
+    var chart_sum = new Chart("chart_sum", {
       type: 'line',
       data: {
         labels: ['10^4', '10^5', '10^6', '10^7', '10^8', '10^9'],
@@ -506,6 +507,73 @@ scripts: |
             scaleLabel: {
               display: true,
               labelString: 'Size of the numpy array'
+            },
+          }],
+        }
+      }
+    });
+
+
+    var chart_fix_time = new Chart("chart_fix_time", {
+      type: 'line',
+      data: {
+        labels: ['10^2', '10^3', '10^4', '10^5', '10^6'],
+        datasets: [
+          {
+            label: 'zfill',
+            borderColor: "#1E88E5", 
+            data: [0.002894, 0.005989, 0.032781, 0.320484, 3.206051],
+            fill: false
+          },
+          {
+            label: 'fix_time_individual',
+            borderColor: "#FF9800", 
+            data: [0.211693, 0.23923, 0.266779, 0.759002, 5.696991],
+            fill: false
+          },
+          {
+            label: 'fix_time_np_string',
+            borderColor: "#64B5F6", 
+            data: [0.429824, 0.44304, 0.479404, 0.811971, 4.296389],
+            fill: false
+          },
+          {
+            label: 'fix_time_np_datetime',
+            borderColor: "#BBDEFB", 
+            data: [0.540087, 0.544625, 0.574662, 0.897224, 4.062067],
+            fill: false
+          },
+          {
+            label: 'np_divmod_jit',
+            borderColor: "#F44336", 
+            data: [0.511084, 0.524487, 0.627856, 1.56957, 11.109812],
+            fill: false
+          },
+          {
+            label: 'divmod_njit',
+            borderColor: "#4CAF50", 
+            data: [0.000059, 0.000060, 0.000067, 0.000059, 0.000061],
+            fill: false
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Time of different sum functions'
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Time [s]'
+            },
+            type: 'logarithmic',
+          }],
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Number of rows'
             },
           }],
         }
