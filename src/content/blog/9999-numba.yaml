@@ -521,7 +521,7 @@ scripts: |
         datasets: [
           {
             label: 'zfill',
-            borderColor: "#1E88E5", 
+            borderColor: "#616161", 
             data: [0.002894, 0.005989, 0.032781, 0.320484, 3.206051],
             fill: false
           },
@@ -533,13 +533,13 @@ scripts: |
           },
           {
             label: 'fix_time_np_string',
-            borderColor: "#64B5F6", 
+            borderColor: "#2196F3", 
             data: [0.429824, 0.44304, 0.479404, 0.811971, 4.296389],
             fill: false
           },
           {
             label: 'fix_time_np_datetime',
-            borderColor: "#BBDEFB", 
+            borderColor: "#9C27B0", 
             data: [0.540087, 0.544625, 0.574662, 0.897224, 4.062067],
             fill: false
           },
@@ -560,13 +560,16 @@ scripts: |
       options: {
         title: {
           display: true,
-          text: 'Time of different sum functions'
+          text: 'Time of different fix_time functions'
         },
         scales: {
           yAxes: [{
             scaleLabel: {
               display: true,
-              labelString: 'Time [s]'
+              labelString: 'Time [s]',
+            },
+            ticks: {
+              min: 0.00002,
             },
             type: 'logarithmic',
           }],
