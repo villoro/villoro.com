@@ -183,8 +183,8 @@ content_markdown: |
     <tr>
       <td class="v-table-center">10^4</td>
       <td>0.000926</td>
-      <td>0.000160</td>
-      <td>0.000076</td>
+      <td>0.000001</td>
+      <td>0.000001</td>
       <td>0.000008</td>
       <td>0.000750</td>
     </tr>
@@ -194,43 +194,45 @@ content_markdown: |
       <td>0.000009</td>
       <td>0.000010</td>
       <td>0.000042</td>
-      <td>0.007416</td>
+      <td>0.007408</td>
     </tr>
     <tr>
       <td class="v-table-center">10^6</td>
-      <td>0.092385</td>
-      <td>0.000107</td>
+      <td>0.092395</td>
+      <td>0.000106</td>
       <td>0.000120</td>
-      <td>0.000407</td>
-      <td>0.075906</td>
+      <td>0.000408</td>
+      <td>0.075894</td>
     </tr>
     <tr>
       <td class="v-table-center">10^7</td>
-      <td>0.936596</td>
+      <td>0.936200</td>
       <td>0.002313</td>
-      <td>0.002352</td>
-      <td>0.004406</td>
-      <td>0.766648</td>
+      <td>0.002345</td>
+      <td>0.004393</td>
+      <td>0.766890</td>
     </tr>
     <tr>
       <td class="v-table-center">10^8</td>
-      <td>9.353938</td>
-      <td>0.021365</td>
-      <td>0.020550</td>
-      <td>0.042787</td>
-      <td>7.554794</td>
+      <td>9.335412</td>
+      <td>0.021232</td>
+      <td>0.020506</td>
+      <td>0.042701</td>
+      <td>7.549756</td>
     </tr>
     <tr>
       <td class="v-table-center">10^9</td>
-      <td>95.908613</td>
-      <td>0.240599</td>
-      <td>0.224245</td>
-      <td>0.432378</td>
-      <td>76.493193</td>
+      <td>96.134125</td>
+      <td>0.238718</td>
+      <td>0.225308</td>
+      <td>0.433185</td>
+      <td>76.537118</td>
     </tr>
   </table>
 
-  > It is important to mention that the results would be different using python lists instead of `numpy` arrays.
+  > First time result has been excluded to avoid computing the time of compilation before calculating the mean.
+
+  It is important to mention that the results would be different using python lists instead of `numpy` arrays.
 
   <canvas id="chart_sum_times" style="width:100%;height:600px;"></canvas>
 
@@ -257,31 +259,31 @@ scripts: |
           {
             label: 'iter_and_sum',
             borderColor: "#F44336", 
-            data: [0.000926, 0.009162, 0.092385, 0.936596, 9.353938, 95.908613],
+            data: [0.000926, 0.009162, 0.092395, 0.9362, 9.335412, 96.134125],
             fill: false
           },
           {
             label: 'sum',
             borderColor: "#FF9800", 
-            data: [0.00075, 0.007416, 0.075906, 0.766648, 7.554794, 76.493193],
+            data: [0.00075, 0.007408, 0.075894, 0.76689, 7.549756, 76.537118],
             fill: false
           },
           {
             label: 'np.sum',
             borderColor: "#03A9F4", 
-            data: [0.000008, 0.000042, 0.000407, 0.004406, 0.042787, 0.432378],
+            data: [0.000008, 0.000042, 0.000408, 0.004393, 0.042701, 0.433185],
             fill: false
           },
           {
             label: 'jit',
             borderColor: "#8BC34A", 
-            data: [0.00016, 0.000009, 0.000107, 0.002313, 0.021365, 0.240599],
+            data: [0.000001, 0.000009, 0.000106, 0.002313, 0.021232, 0.238718],
             fill: false
           },
           {
             label: 'njit',
             borderColor: "#4CAF50", 
-            data: [0.000076, 0.000010, 0.00012, 0.002352, 0.02055, 0.224245],
+            data: [0.000001, 0.000010, 0.00012, 0.002345, 0.020506, 0.225308],
             fill: false
           },
         ],
