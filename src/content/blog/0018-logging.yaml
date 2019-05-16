@@ -1,0 +1,155 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: logging
+title: Logging with python
+date: "2019-05-16"
+image: v_log_square.jpg
+highlight: True
+
+tags:
+  - Python
+  - Tools
+
+tags_filter:
+  - Python
+  - Tools
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Github
+  url: https://github.com/villoro/v-log
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  An overview of my own custom logging library that handles console and file output.
+
+# image_head:
+#   filename: 
+#   caption: 
+
+content_markdown: |
+
+  In almost every program that we write we will need to show some output. The first thing that developers use is the `print` function but this lacks some really important features such as providing the time when the message was produced and the ability to save the output to a file. This is way is better to use a `logging`.
+
+  ## 1. pygogo
+
+  As always the first thing you should do when you need something is to look at the existing packages to avoid reinventing the wheel. [pygogo](https://github.com/reubano/pygogo) is a nice python package that is easy to use.
+
+  The key features I think it has are:
+
+  * You can write regular message (low) in one file and error-like messages (high) in another one
+  * It can have different formats for `low` and `high`
+  * It can be called from different files and handles well the different paths
+
+  What I belive it lacks:
+
+  * Ability to show full information of errors
+  * Easy way to have different formats for console handlers and file handlers.
+
+  > So I decided to create my own logging library
+
+  ## 2. v-log
+
+  What I wanted was a `log` that would output good looking messages to the console while writting a properly formatted `csv` for further analysis. It is difficult to achive that with the regular `logging` library so I created `v-log`.
+
+  ### 2.1. Using v-log
+
+  To install it run:
+
+      pip install v-log
+
+  It works similar to the default log:
+
+  ```python
+  from v_log import VLogger
+  log = VLogger(__name__)
+
+  log.critical("critical")
+  log.error("error")
+  log.warning("warning")
+  log.info("info")
+  log.debug("debug")
+  ```
+
+  It can also show execution times and errors:
+  ```python
+  # Show time
+  log.info("Test time", time=10)
+
+  # Show error. You need to pass the exception with the 'error' param
+  try:
+      1 / 0
+  except Exception as e:
+      log.error("Try errors", error=e)
+      log.error("Try errors %s", "full", time=10, error=e)
+  ```
+
+  This is what you will see with the above example:
+
+  <div class="w3-center">
+    <img src="/static/images/posts/v_log.png" alt="v_log" class="w3-image w3-padding-16" style="max-height: 300px;"/>
+  </div>
+
+  > Output in the console will have colors. `debug` is green, info the default color, `warning` is orange and both `error` and `critical` are red.
+
+  ### 2.2. How it works
+
+  `v-log` creates a `VLogger` class that is a wrapper that has 2 logs inside, one for the file output and another one for the terminal. This way if you call `log.info` it will call both `log_terminal.info` and `log_console.info` functions.
+
+  The second intersting part is that you can pass `time` as and argument and it will process it. You can also pass an exception and it will show the **line** where the error happened, the **type** of error and the **details**.
+
+  ### 2.3. Customizating v-log
+
+  When creating the `VLogger` instance you can define:
+
+  <table class="v-table" align="center">
+    <tr>
+      <th class="v-table-header">param</th>
+      <th class="v-table-header">description</th>
+      <th class="v-table-header">default</th>
+    </tr>
+    <tr>
+      <td>module_name</td>
+      <td>name of the module</td>
+      <td>"base"</td>
+    </tr>
+    <tr>
+      <td>uri_log</td>
+      <td>uri of the file where log will be stored</td>
+      <td>"log.csv"</td>
+    </tr>
+    <tr>
+      <td>file_log_level</td>
+      <td>minimum level of log events in order to be writed</td>
+      <td>logging.INFO</td>
+    </tr>
+    <tr>
+      <td>console_log_level</td>
+      <td>minimum level of log events in order to be printed</td>
+      <td>logging.INFO</td>
+    </tr>
+    <tr>
+      <td>csv_separator</td>
+      <td>csv separator</td>
+      <td>";"</td>
+    </tr>
+    <tr>
+      <td>base_path</td>
+      <td>name of the root folder of the execution</td>
+      <td>"src"</td>
+    </tr>
+  </table>
+
+  for example you could do:
+
+  ```python
+  import logging
+  from v_log import VLogger
+  log = VLogger(__name__, uri_log="data/log.log", file_log_level=logging.WARNING)
+  ```
