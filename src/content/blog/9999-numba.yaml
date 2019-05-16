@@ -385,7 +385,7 @@ content_markdown: |
 
   In this solution I process the `time` column as number and with the `np.divmod` function I create a value that represents a **timedelta**. After transforming the `time` column I change the dtype to `timedelta64[ms]` and sum it to the `date` column as a `datetime64`.
 
-  ```
+  ```python
   def np_divmod_jit(df):
       """
           1. Iterate time and date with jit function
@@ -415,7 +415,7 @@ content_markdown: |
 
   It is the same as the previous example but after changing `np.divmod` to the python `divmod` function I can use the `njit` decorator for the first time.
 
-  ```
+  ```python
   def divmod_njit(df):
       """
           1. Iterate time with njit function
@@ -427,17 +427,46 @@ content_markdown: |
       @njit
       def _fix_time(mtime):
 
-          time_out = np.empty(mtime.shape[0], dtype=np.int32)
+          time_out = np.empty(mtime.shape)
 
           for i in range(mtime.shape[0]):
               aux, cent = divmod(mtime[i], 100)
               aux, seconds = divmod(aux, 100)
               hours, minutes = divmod(aux, 100)
 
-              time_out[i] = 10*(cent + 100*(seconds + 60*(minutes + 60*hours)))
+              time_out[i] = 10 * (cent + 100 * (seconds + 60 * (minutes + 60 * hours)))
 
-          return df["date"].values.astype(np.datetime64) +\
-                   _fix_time(df["time"].values).astype("timedelta64[ms]")
+          return time_out
+
+      return df["date"].values.astype(np.datetime64) + _fix_time(
+          df["time"].values.astype(np.int32)
+      ).astype("timedelta64[ms]")
+  ```
+
+  #### 3.2.1.7. divmod_vectorize
+
+  This case is exactly the same as the previous one but instead of doing the `for` loop I use the **numba** `vectorize` decorator.
+
+  ```python
+  def divmod_vectorize(df):
+      """
+          1. Use divmod to transfom HHMMSSCC to miliseconds integer with vectorize
+          2. Outside the njit function cast date as np.datetime and time to timedelta
+          3. Sum date and time
+      """
+
+      @vectorize([int32(int32)])
+      def _fix_time(mtime):
+
+          aux, cent = divmod(mtime, 100)
+          aux, seconds = divmod(aux, 100)
+          hours, minutes = divmod(aux, 100)
+
+          return 10 * (cent + 100 * (seconds + 60 * (minutes + 60 * hours)))
+
+      return df["date"].values.astype(np.datetime64) + _fix_time(
+          df["time"].values.astype(np.int32)
+      ).astype("timedelta64[ms]")
   ```
 
   ### 3.2.2. The results
@@ -517,42 +546,42 @@ scripts: |
     var chart_fix_time = new Chart("chart_fix_time", {
       type: 'line',
       data: {
-        labels: ['10^2', '10^3', '10^4', '10^5', '10^6'],
+        labels: ['10^2', '10^3', '10^4', '10^5', '10^6', '10^7'],
         datasets: [
           {
             label: 'zfill',
             borderColor: "#616161", 
-            data: [0.002894, 0.005989, 0.032781, 0.320484, 3.206051],
+            data: [0.00289, 0.00744, 0.036504, 0.304326, 3.294064, 35.19163],
             fill: false
           },
           {
             label: 'fix_time_individual',
             borderColor: "#FF9800", 
-            data: [0.211693, 0.23923, 0.266779, 0.759002, 5.696991],
+            data: [0.209243, 0.265968, 0.284079, 0.794159, 5.792156, 56.156008],
             fill: false
           },
           {
             label: 'fix_time_np_string',
             borderColor: "#2196F3", 
-            data: [0.429824, 0.44304, 0.479404, 0.811971, 4.296389],
+            data: [0.473128, 0.509899, 0.534069, 0.864384, 4.446666, 40.678107],
             fill: false
           },
           {
             label: 'fix_time_np_datetime',
             borderColor: "#9C27B0", 
-            data: [0.540087, 0.544625, 0.574662, 0.897224, 4.062067],
+            data: [0.573579, 0.598362, 0.64638, 0.995455, 4.25054, 33.934433],
             fill: false
           },
           {
             label: 'np_divmod_jit',
             borderColor: "#F44336", 
-            data: [0.511084, 0.524487, 0.627856, 1.56957, 11.109812],
+            data: [0.565875, 0.601575, 0.700274, 1.573341, 11.001268, 100.917274],
             fill: false
           },
           {
             label: 'divmod_njit',
             borderColor: "#4CAF50", 
-            data: [0.000059, 0.000060, 0.000067, 0.000059, 0.000061],
+            data: [0.000081, 0.000078, 0.000061, 0.000059, 0.000067, 0.000063],
             fill: false
           },
         ],
