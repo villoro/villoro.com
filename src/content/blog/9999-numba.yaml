@@ -124,17 +124,62 @@ content_markdown: |
           out += x
 
       return out
+
+  m_sum([1, 2, 3])
   ```
+  <div class="output">
+    <b>Out:</b> 6
+  </div>
 
   ## 2.1. `jit` vs `njit` decorators
 
   The default **numba** decorator is `jit`. It is possible to pass use nopython mode with `@jit(nopython=True)` or with the decorator `njit` which is equivalent.
-
   `njit` decorator is faster than `jit` but supports less features than jit.
 
-  For example you can't cast to string (like `str(10)`) inside a `njit` decorated function.
-  
-  So you should try to use `njit` decorator for numerical calculations.
+  For example you can't cast to string (with for example `str(10)`) inside a `njit` decorated function.
+  So you should try to use `njit` decorator if possible specialy for numerical calculations.
+
+  ## 2.4. `vectorize` decorator
+
+  Using the `vectorize` decorator, you write your function as operating over input scalars, rather than arrays. **Numba** will generate the surrounding loop (or kernel) allowing efficient iteration over the actual inputs.
+
+  So for example given a `np.array` we can calculat the square with the follwing function.
+
+  ```python
+  from numba import vectorize
+
+  mlist = np.array(range(10))
+
+  @vectorize
+  def square(x):
+      return x**2
+
+  square(mlist)
+  ```
+  <div class="output">
+    <b>Out:</b> array([ 0,  1,  4,  9, 16, 25, 36, 49, 64, 81], dtype=int64)
+  </div>
+
+  To increase the speed you can specify the inputs and output dtypes using `int8` since in this example is enough for storing `81` which is the max value.
+  You can check the [numpy documentation](https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html) to see the different `dtypes`.
+
+  ```python
+  from numba import vectorize, int8
+
+  mlist = np.array(range(10))
+
+  @vectorize([int8(int8)])
+  def square(x):
+      return x**2
+
+  square(mlist)
+  ```
+  <div class="output">
+    <b>Out:</b> array([ 0,  1,  4,  9, 16, 25, 36, 49, 64, 81], dtype=int8)
+  </div>
+
+  The format for declaring the `dtypes` is `[output(input1, input2, ...)]`.
+
 
   ## 3. Test numba performance
 
@@ -252,9 +297,11 @@ content_markdown: |
 
   ## 3.2. Test fix time
 
-  At one of the projects I was working at my company I found an intersting problem. I had a huge dataframe (650 milion rows) and among other columns there was one for the `date` and one for `time`.
+  At one of the projects I was working at my company I found an intersting problem.
+  I had a huge dataframe (650 milion rows) and among other columns there was one for the `date` and one for `time`.
 
-  The `date` column followed the format `YYYY-MM-DD` like 2019-05-15. The problem was with the `time` column. The original format was `hhmmsscc` (`c` for centiseconds) and instead of being a string it was presented as an **integer**. So for example you could find the following values:
+  The `date` column followed the format `YYYY-MM-DD` like 2019-05-15. The problem was with the `time` column.
+  The original format was `hhmmsscc` (`c` for centiseconds) and instead of being a string it was presented as an **integer**. So for example you could find the following values:
 
   <table class="v-table v-table-right" align="center">
     <tr class="v-table-center">
@@ -304,7 +351,7 @@ content_markdown: |
 
   Insted of using `pd.to_datetime` I use `.astype(np.datetime64)` since is faster.
 
-  ``` 
+  ```python
   def fix_time_individual(df):
       """
           1. pandas.apply a jit function to add 0 to time
@@ -473,6 +520,43 @@ content_markdown: |
 
   <canvas id="chart_fix_time" style="width:100%;height:600px;"></canvas>
 
+  ### 3.2.3. Speed with different machines
+
+  I did this test with up to `10^7` elements with my computer. I was not able to increase the number of elements due to an **out of memory error** (not enough RAM).
+
+  Then I repeated everything with an `M64` **azure** machine.
+
+  The specs of each machine are:
+
+  <table class="v-table v-table-center" align="center">
+    <tr>
+      <th class="v-table-header">feature</th>
+      <th class="v-table-header">my computer</th>
+      <th class="v-table-header">azure M64</th>
+    </tr>
+    <tr>
+      <td class="tg-0lax">processor</td>
+      <td class="tg-xldj">Intel Core i5-6500 3.2Ghz</td>
+      <td class="tg-xldj">Intel Xeon E7-8890 v3 2.5GHz (Haswell)<br></td>
+    </tr>
+    <tr>
+      <td class="tg-0lax">cores</td>
+      <td class="tg-0lax">4</td>
+      <td class="tg-0lax">64</td>
+    </tr>
+    <tr>
+      <td class="tg-0lax">RAM</td>
+      <td class="tg-xldj">16 GB</td>
+      <td class="tg-xldj">1 TB</td>
+    </tr>
+  </table>
+
+  Let's compare the results of two functions
+
+  <canvas id="chart_fix_time_comparison" style="width:100%;height:600px;"></canvas>
+
+  If we take a look at the results we can see that they both perform similar. It is important to remember that **pandas only work with one core** so I am not using the full potential of the machines. **Having more RAM allows to work with more data** but it does not increase the speed.
+
   ## 4. More info
 
   You can read the [numba documentation](http://numba.pydata.org/numba-doc/latest/index.html). Some examples of **numba** form their web page at [numba examples](http://numba.pydata.org/numba-doc/0.21.0/user/examples.html).
@@ -551,37 +635,43 @@ scripts: |
           {
             label: 'zfill',
             borderColor: "#616161", 
-            data: [0.00289, 0.00744, 0.036504, 0.304326, 3.294064, 35.19163],
+            data: [0.004002, 0.00541, 0.031415, 0.291654, 3.143935, 32.780381],
             fill: false
           },
           {
             label: 'fix_time_individual',
             borderColor: "#FF9800", 
-            data: [0.209243, 0.265968, 0.284079, 0.794159, 5.792156, 56.156008],
+            data: [0.238044, 0.229363, 0.270537, 0.758661, 5.794054, 55.193624],
             fill: false
           },
           {
             label: 'fix_time_np_string',
             borderColor: "#2196F3", 
-            data: [0.473128, 0.509899, 0.534069, 0.864384, 4.446666, 40.678107],
+            data: [0.509124, 0.488755, 0.521007, 0.870885, 4.311913, 40.807661],
             fill: false
           },
           {
             label: 'fix_time_np_datetime',
             borderColor: "#9C27B0", 
-            data: [0.573579, 0.598362, 0.64638, 0.995455, 4.25054, 33.934433],
+            data: [0.570413, 0.554003, 0.609695, 0.903506, 4.097512, 35.532061],
             fill: false
           },
           {
             label: 'np_divmod_jit',
             borderColor: "#F44336", 
-            data: [0.565875, 0.601575, 0.700274, 1.573341, 11.001268, 100.917274],
+            data: [0.622081, 0.567683, 0.665933, 1.616373, 10.953067, 115.129559],
             fill: false
           },
           {
             label: 'divmod_njit',
+            borderColor: "#8BC34A", 
+            data: [0.146383, 0.146691, 0.161497, 0.241048, 1.164362, 10.167152],
+            fill: false
+          },
+          {
+            label: 'divmod_vectorize',
             borderColor: "#4CAF50", 
-            data: [0.000081, 0.000078, 0.000061, 0.000059, 0.000067, 0.000063],
+            data: [0.090219, 0.09166, 0.100109, 0.191021, 1.051343, 9.71132],
             fill: false
           },
         ],
@@ -590,6 +680,63 @@ scripts: |
         title: {
           display: true,
           text: 'Time of different fix_time functions'
+        },
+        scales: {
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Time [s]',
+            },
+            ticks: {
+              min: 0.00002,
+            },
+            type: 'logarithmic',
+          }],
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Number of rows'
+            },
+          }],
+        }
+      }
+    });
+
+    var chart_fix_time_comparison = new Chart("chart_fix_time_comparison", {
+      type: 'line',
+      data: {
+        labels: ['10^2', '10^3', '10^4', '10^5', '10^6', '10^7'],
+        datasets: [
+          {
+            label: 'zfill azure',
+            borderColor: "#616161", 
+            data: [0.004461, 0, 0, 0.234915, 3.29883, 34.665924],
+            fill: false
+          },
+          {
+            label: 'divmod_vectorize azure',
+            borderColor: "#4CAF50", 
+            data: [0.090219, 0.09166, 0.100109, 0.191021, 1.051343, 9.71132],
+            fill: false
+          },
+          {
+            label: 'zfill i5',
+            borderColor: "#BDBDBD", 
+            data: [0.00289, 0.00744, 0.036504, 0.304326, 3.294064, 35.19163],
+            fill: false
+          },
+          {
+            label: 'divmod_vectorize i5',
+            borderColor: "#A5D6A7", 
+            data: [0.090219, 0.09166, 0.100109, 0.191021, 1.051343, 9.71132],
+            fill: false
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Time of different fix_time functions with different machines'
         },
         scales: {
           yAxes: [{
