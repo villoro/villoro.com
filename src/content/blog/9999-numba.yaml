@@ -28,7 +28,7 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  brief
+  Numba translates Python functions to optimized machine code at runtime. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN.
 
 image_head:
   filename: numba.svg
@@ -37,7 +37,7 @@ image_head:
 use_chartjs: True
 
 content_markdown: |
-  This is the first post about python performance where and how to make python code go faster.
+  This is the first post about python performance. This post will be of how to make python code go faster.
 
   ## 1. Exploring python compilers
   The first way to improve the python performance is by using different compilers. The most famous ones are:
@@ -179,7 +179,6 @@ content_markdown: |
   </div>
 
   The format for declaring the `dtypes` is `[output(input1, input2, ...)]`.
-
 
   ## 3. Test numba performance
 
@@ -518,7 +517,94 @@ content_markdown: |
 
   ### 3.2.2. The results
 
+  <table class="v-table v-table-center" align="center">
+    <tr>
+      <th class="v-table-header">size</th>
+      <th class="v-table-header">zfill</th>
+      <th class="v-table-header">fix_time_individual</th>
+      <th class="v-table-header">fix_time_np_string</th>
+      <th class="v-table-header">fix_time_np_datetime</th>
+      <th class="v-table-header">np_divmod_jit</th>
+      <th class="v-table-header">divmod_njit</th>
+      <th class="v-table-header">divmod_vectorize</th>
+    </tr>
+    <tr>
+      <td>10^2</td>
+      <td>0.004390</td>
+      <td>0.204020</td>
+      <td>0.430106</td>
+      <td>0.496474</td>
+      <td>0.405300</td>
+      <td>0.125152</td>
+      <td>0.080284</td>
+    </tr>
+    <tr>
+      <td>10^3</td>
+      <td>0.006994</td>
+      <td>0.211955</td>
+      <td>0.422009</td>
+      <td>0.495238</td>
+      <td>0.426922</td>
+      <td>0.127495</td>
+      <td>0.081339</td>
+    </tr>
+    <tr>
+      <td>10^4</td>
+      <td>0.031020</td>
+      <td>0.268275</td>
+      <td>0.446848</td>
+      <td>0.526634</td>
+      <td>0.506915</td>
+      <td>0.127667</td>
+      <td>0.083219</td>
+    </tr>
+    <tr>
+      <td>10^5</td>
+      <td>0.307263</td>
+      <td>1.351219</td>
+      <td>1.491735</td>
+      <td>1.677860</td>
+      <td>2.181725</td>
+      <td>0.152841</td>
+      <td>0.106557</td>
+    </tr>
+    <tr>
+      <td>10^6</td>
+      <td>2.937864</td>
+      <td>5.208377</td>
+      <td>4.054890</td>
+      <td>4.505218</td>
+      <td>10.782291</td>
+      <td>0.394638</td>
+      <td>0.356650</td>
+    </tr>
+    <tr>
+      <td>10^7</td>
+      <td>37.208313</td>
+      <td>50.453554</td>
+      <td>31.528912</td>
+      <td>34.143529</td>
+      <td>96.995535</td>
+      <td>2.823624</td>
+      <td>2.773030</td>
+    </tr>
+    <tr>
+      <td>10^8</td>
+      <td>740.887229</td>
+      <td>519.607623</td>
+      <td>323.907525</td>
+      <td>323.379231</td>
+      <td>978.160028</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </table>
+
+  Both `divmod_njit` and `divmod_vectorize` performs really well compared to the other options. Is intersting that my first approach (`zfill`) is the best for small dataframes but it starts to underperform at 10^5.
+
   <canvas id="chart_fix_time" style="width:100%;height:600px;"></canvas>
+
+  > Working with numbers in numba is really fast.
 
   ### 3.2.3. Speed with different machines
 
@@ -535,27 +621,85 @@ content_markdown: |
       <th class="v-table-header">azure M64</th>
     </tr>
     <tr>
-      <td class="tg-0lax">processor</td>
-      <td class="tg-xldj">Intel Core i5-6500 3.2Ghz</td>
-      <td class="tg-xldj">Intel Xeon E7-8890 v3 2.5GHz (Haswell)<br></td>
+      <td>processor</td>
+      <td>Intel Core i5-6500 3.2Ghz</td>
+      <td>Intel Xeon E7-8890 v3 2.5GHz (Haswell)<br></td>
     </tr>
     <tr>
-      <td class="tg-0lax">cores</td>
-      <td class="tg-0lax">4</td>
-      <td class="tg-0lax">64</td>
+      <td>cores</td>
+      <td>4</td>
+      <td>64</td>
     </tr>
     <tr>
-      <td class="tg-0lax">RAM</td>
-      <td class="tg-xldj">16 GB</td>
-      <td class="tg-xldj">1 TB</td>
+      <td>RAM</td>
+      <td>16 GB</td>
+      <td>1 TB</td>
     </tr>
   </table>
 
-  Let's compare the results of two functions
+  Let's compare the results of two functions.
 
+  <table class="v-table v-table-center" align="center">
+    <tr>
+      <th class="v-table-header" rowspan="2">size</th>
+      <th class="v-table-header" colspan="2">zfill</th>
+      <th class="v-table-header" colspan="2">divmod_vectorize</th>
+    </tr>
+    <tr>
+      <td class="v-table-header2">i5</td>
+      <td class="v-table-header2">azure</td>
+      <td class="v-table-header2">i5</td>
+      <td class="v-table-header2">azure</td>
+    </tr>
+    <tr>
+      <td>10^2</td>
+      <td>0.004002</td>
+      <td>0.004390</td>
+      <td>0.090219</td>
+      <td>0.080284</td>
+    </tr>
+    <tr>
+      <td>10^3</td>
+      <td>0.005410</td>
+      <td>0.006994</td>
+      <td>0.091660</td>
+      <td>0.081339</td>
+    </tr>
+    <tr>
+      <td>10^4</td>
+      <td>0.031415</td>
+      <td>0.031020</td>
+      <td>0.100109</td>
+      <td>0.083219</td>
+    </tr>
+    <tr>
+      <td>10^5</td>
+      <td>0.291654</td>
+      <td>0.307263</td>
+      <td>0.191021</td>
+      <td>0.106557</td>
+    </tr>
+    <tr>
+      <td>10^6</td>
+      <td>3.143935</td>
+      <td>2.937864</td>
+      <td>1.051343</td>
+      <td>0.356650</td>
+    </tr>
+    <tr>
+      <td>10^7</td>
+      <td>32.780381</td>
+      <td>37.208313</td>
+      <td>9.711320</td>
+      <td>2.773030</td>
+    </tr>
+  </table>
+
+  If we take a look at the results we can see that they both perform similar. 
+  
   <canvas id="chart_fix_time_comparison" style="width:100%;height:600px;"></canvas>
 
-  If we take a look at the results we can see that they both perform similar. It is important to remember that **pandas only work with one core** so I am not using the full potential of the machines. **Having more RAM allows to work with more data** but it does not increase the speed.
+  It is important to remember that **pandas only work with one core** so I am not using the full potential of the machines. **Having more RAM allows to work with more data** but it does not increase the speed. With the **numba** vectorize the azure machine performs better as the size increases.
 
   ## 4. More info
 
@@ -716,7 +860,7 @@ scripts: |
           {
             label: 'divmod_vectorize azure',
             borderColor: "#4CAF50", 
-            data: [0.090219, 0.09166, 0.100109, 0.191021, 1.051343, 9.71132],
+            data: [0.080284, 0.081339, 0.083219, 0.106557, 0.35665, 2.77303],
             fill: false
           },
           {
