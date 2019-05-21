@@ -79,6 +79,8 @@ content_markdown: |
     port: 3306
   ```
 
+  More info about SQL engines at [SQL Alchemy documentation](https://docs.sqlalchemy.org/en/13/core/engines.html).
+
   ## Read data from SQL
 
   To retrive a pandas dataframe it is easy. You can directly use pandas `read_sql_query` function:
