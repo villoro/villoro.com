@@ -120,7 +120,11 @@ code {
 }
 
 .v-table-header {
-  background-color:#64b5f6 /* blue 300 */
+  background-color:#64B5F6 /* blue 300 */
+}
+
+.v-table-header2 {
+  background-color:#90CAF9 /* blue 200 */
 }
 
 .v-table th, .v-table td {
