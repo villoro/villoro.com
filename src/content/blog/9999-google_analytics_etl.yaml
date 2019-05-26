@@ -1,0 +1,77 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: google_analytics_etl
+title: Google Analytics ETL
+#title_short: 
+date: "2019-05-26"
+image: default.png
+highlight: True
+
+tags:
+  - Python
+  - Pandas
+  - ETL
+  - API
+  - Google Analytics
+
+tags_filter:
+  - Python
+  - Pandas
+  - ETL
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: 
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  brief_markdown
+
+# image_head:
+#   filename: numba.svg
+#   caption: numba
+
+content_markdown: |
+  Google Analytics is really useful but sometimes you want retrive all the data and perform your own analysis and create your reports.
+  In this post you will see how to do that with python.
+
+  ## 1. Google permisions and keys
+
+  ### 1.1. Get the Google key
+
+  The first thing to do is to download the Google key. To do so you only need to follow
+  [Google Analytics API](https://developers.google.com/analytics/devguides/reporting/core/v3/quickstart/service-py)
+  steps.
+
+  To sum them up you will need to:
+
+  1. Go to [google service accounts page](https://console.developers.google.com/iam-admin/serviceaccounts).
+  2. Make sure to select the desired project from the navigation bar (at the top).
+  3. Start to create a new service account
+  4. Give it some roles (optional)
+  5. Create a `json` private key
+  6. Download that key. It will allow you to access google data
+
+  ### 1.2. Allow the user to see Google Analytics data
+
+  From the previous step you created and account with an email similar to `your_project@your_web.iam.gserviceaccount.com`
+  (you obviously need to change `your_web` and `your_project`). Then give it read permisions with:
+
+  1. Go to [Google Analytics web](https://analytics.google.com/).
+  2. Select the **Admin** section from the left bar
+  3. Click `Manage Users` at account level. **It is important that you give it at the account level** in order to work.
+  4. Add the user with the email from the previous step
+  5. Give it read access.
+
+  > It can take some time until the new user has reading permisions.
+
+  ## 2. Test the conection
+
+
