@@ -41,7 +41,7 @@
 * ETL with APIs
     * Google Analytics
     * Facebook
-* git flow + git ssh
+* git ssh
 * NN with numpy
 * Intro to tensorflow 2.0
 * Charting libraries ([plotly](https://plot.ly/python/), [plotly_express](https://github.com/plotly/plotly_express/), [altair](https://altair-viz.github.io/), [chartify](https://chartify.io/), [seaborn](https://seaborn.pydata.org/) and [chartjs](https://www.chartjs.org/))
