@@ -5,7 +5,7 @@ code: google_analytics_etl
 title: Google Analytics ETL
 #title_short: 
 date: "2019-05-26"
-image: default.png
+image: google_analytics_etl_square.jpg
 highlight: True
 
 tags:
@@ -32,11 +32,12 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  brief_markdown
+  Google Analytics is really useful but sometimes you want retrive all the data and perform your own analysis and create your reports.
+  In this post you will see how to do that with python.
 
-# image_head:
-#   filename: numba.svg
-#   caption: numba
+image_head:
+  filename: google_analytics_etl.png
+  caption: google_analytics_etl
 
 content_markdown: |
   Google Analytics is really useful but sometimes you want retrive all the data and perform your own analysis and create your reports.
@@ -244,6 +245,9 @@ content_markdown: |
 
   So for exemple having:
 
+  <div class="input">
+    constants.py
+  </div>
   ```python
   QUERY_DATA = {
     "traffic_google": {
@@ -261,6 +265,9 @@ content_markdown: |
 
   Finally to run the ETL for all the tables in ``QUERY_DATA` there is the function `do_etl`:
 
+  <div class="input">
+    etl.py
+  </div>
   ```python
   def do_etl():
       """ Reads from GA, transforms the data and loads into mysql """
@@ -284,6 +291,9 @@ content_markdown: |
 
   And the last function is for retriving all old data. This is meant to only be used the first time.
 
+  <div class="input">
+    etl.py
+  </div>
   ```python
   def import_old_stats(end=date.today()):
     """ Imports old data up until 2017-01-01 """
@@ -311,3 +321,129 @@ content_markdown: |
   Right now it will download all data from 2017 until today.
 
   ### 3.3. Load the data
+
+  In this example amb going to show how to insert the data into **MySQL**.
+  All this code is from `sql.py` file.
+
+  #### 3.3.1. Handling duplicated data
+
+  The idea is that the ETL can be run more than once without creating duplicated data.
+  This is also important since the ETL is designed with redundancy to allow some failures so it is needed to handle duplicates.
+
+  There are two aproaches to this problem:
+
+  ##### 3.3.1.1. Using date as identifier
+
+  Every time you download data you will have a dataframe with info of the last 7 days.
+  In order to avoid duplicates you can simply delete all rows that have data within the same days.
+
+  ##### 3.3.1.2. Use all 'index' columns
+
+  The other aproach is to load all existing data and concatenate with the new one.
+  This dataframe will have duplicates but they can be deleted with the `drop_duplicates` **pandas** function.
+  To do so you need to specify which are the columns that define a unique entry.
+
+  This solution is less efficient since it will need to load all existing data and this can be time consuming.
+
+  #### 3.2. Load code
+
+  The first thing to do is to create the SQL Alchemy engine for MySQL.
+  For other SQL engines check the [SQL Alchemy post](https://villoro.com/post/sql_alchemy).
+
+  <div class="input">
+    sql.py
+  </div>
+  ```python
+  def _get_mysql_engine():
+      """ Get MySQL SQLAlchemy engine """
+
+      return sa.create_engine(
+          sa.engine.url.URL(
+              drivername="mysql+pymysql",
+              username="username",  # Change that!!
+              password="password",  # Change that!!
+              host="host",  # Change that!!
+              port=c.PORT,
+              database=c.DATABASE,
+          ),
+          encoding="utf-8",  # Since there will be some japanse chars
+      )
+  ```
+
+  Using the `create_engine` and `engine.url.URL` functions from SQLAlchemy is the most elegant way to create the engine.
+
+  To retrive a table you can use:
+
+  <div class="input">
+    sql.py
+  </div>
+  ```python
+  def get_df_mysql(tablename, columns="*", engine=None):
+    """ Retrives one table from MySQL """
+
+    if engine is None:
+        engine = _get_mysql_engine()
+
+    query = "SELECT {} FROM {}".format(columns, tablename)
+
+    with engine.connect() as connection:
+        return pd.read_sql_query(query, connection)
+  ```
+
+  And finally the code to insert the data handling the duplicates:
+
+  <div class="input">
+    sql.py
+  </div>
+  ```python
+  def insert_into_mysql(df, tablename, cols_id=None, engine=None):
+      """
+          Insert dataframe into mysql.
+          If date column is present it will delete all rows that are in the same
+          date range as df to be inserted. Else it will truncate the sql table.
+          Args:
+              df:         dataframe to insert
+              tablename:  name of the table
+              cols_id:    allow dropping duplicates using those columns insted of deleting all
+              engine:     sql_alchemy engine
+      """
+
+      if engine is None:
+          engine = _get_mysql_engine()
+
+      # If date is present, delete rows of same date
+      if "date" in df.columns:
+          # Transform date to string to avoid SQL problems
+          df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
+
+          # Get all dates present in df to insert
+          dates = df["date"].unique()
+
+          # Delete data of same dates as the data that will be inserted
+          sentence = c.DELETE.format(table=tablename, dates="','".join(dates))
+          with engine.connect() as connection:
+              connection.execute(sentence)
+
+      # Truncate all data or keep non duplicated
+      else:
+
+          # Try to merge with existing data
+          if cols_id is not None:
+              # retrive existing data
+              df_prev = get_df_mysql(tablename, engine=engine)
+
+              # Drop duplicated data
+              df = pd.concat([df, df_prev], sort=False)
+              df.drop_duplicates(subset=cols_id, inplace=True)
+
+          with engine.connect() as connection:
+              connection.execute(c.TRUNCATE.format(tablename))
+
+      # Insert into SQL
+      df.to_sql(name=tablename, con=engine, if_exists="append", index=False)
+  ```
+
+  This code will check if the `date` column is present.
+  If it is it will handle duplicates using it, if not it will use the other aproach.
+
+  And with all that you can create an ETL to load data from Google Analytics.
