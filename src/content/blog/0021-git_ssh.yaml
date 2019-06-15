@@ -1,0 +1,110 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: git_ssh
+title: Using git with SSH
+date: "2019-06-15"
+image: git_ssh.jpg
+highlight: True
+
+tags:
+  - best practices
+  - AWS
+
+tags_filter:
+  - best practices
+  - AWS
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Learn how to work securely with git by using SSH authentication with github.
+
+
+content_markdown: |
+
+  **Secure Shell (SSH)** is a cryptographic network protocol for operating network services securely over an unsecured network. This allows you to connect securely to other services or machines.
+
+  In this post I am going to explain how to configure your linux machine to github using **SSH**.
+
+  ## 1. Create **SSH keys**
+  
+  First we will create a SSH key that will allow you to connect to github.
+
+  ```sh
+  ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+  ```  
+
+  Then I suggest you save the SSH key with some usefull name like `/home/ubuntu/.ssh/github_ssh`
+
+  Finally add a passphrase. This will ensure that your SSH credentials are safe even if someone access your computer.
+
+  ## 2. Use keychain
+
+  The **SSH key** you just created has a passphrase and you probably don't want to write it every time you open a new terminal.
+
+  You can use **keychain** to remember the passphrase.
+
+  ```sh
+  sudo apt install keychain
+  ```
+
+  First of all some people use **ssh-agent** to add the **SSH keys** but you need to start one every time you open a new terminal and they don't die. So after some time you will end with a lot of ssh-agents running. If you did that you can step them with:
+
+  ```sh
+  keychain --stop all
+  ```
+
+  > You can check that only one ssh-agent is running with `ps -ef | grep ssh-agent`
+
+  To set up **keychain** edit the `~/.bashrc` file so that **keychain** is started everytime you open a terminal.
+
+  <div class="input">
+    ~/.bashrc
+  </div>
+  ```
+  # Add this line at the end
+  eval `keychain --agents ssh --eval github_ssh`
+  ```
+
+  > `github_ssh` is the name of the SSH key to import you could add more separating them by spaces
+
+  ## 3. Add the SSH key to github
+
+  This guide focus on github but you can do the same following similar steps for other git services like bitbucket.
+
+  1. Copy the content of the `~/.ssh/github_ssh.pub` file.
+  2. Go to github settings page.
+  3. Select `SSH and GPG keys` section.
+  4. Click `add new SSH keys`.
+  5. Use some meaningfull name like `aws_ec2`, paste the SSH key and save it.
+  6. If asked, write your github password.
+
+  ## 4. Check the SSH conection
+
+  Run the following command: 
+
+  ```sh
+  ssh -T git@github.com
+  ```
+
+  The first time it will say that the authenticity of **github.com** can't be established. Enter yes to add it to the list of known hosts so that you won't get asked each time.
+
+  > You should see a message saying `Hi XXXX! You've successfully authenticated`
+
+  ## 5. Cloning a **git** repo
+
+  Since you are using **SSH** the clone command will change a little bit. Instead of using:
+
+  ```sh
+  git clone https://github.com/username/repo_name.git
+  ```
+
+  You should use:
+
+  ```sh
+  git clone git@github.com:username/repo_name.git
+  ```
+
+  After doing all that you can use git without needing to worry about passwords or passphrases anymore.
