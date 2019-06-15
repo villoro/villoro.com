@@ -34,17 +34,20 @@
     2. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
     3. Python performance: [dask](http://docs.dask.org/en/latest/why.html)
     4. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
+    5. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
+    6. Pandas? See that example: https://realpython.com/fast-flexible-pandas/
 * DNS
 * Heroku deployment
 * ETL with APIs
     * Google Analytics
     * Facebook
-* git flow + git ssh
+* git ssh
 * NN with numpy
 * Intro to tensorflow 2.0
-* Charting libraries ([plotly](https://plot.ly/python/), [altair](https://altair-viz.github.io/), [chartify](https://chartify.io/), [seaborn](https://seaborn.pydata.org/) and [chartjs](https://www.chartjs.org/))
+* Charting libraries ([plotly](https://plot.ly/python/), [plotly_express](https://github.com/plotly/plotly_express/), [altair](https://altair-viz.github.io/), [chartify](https://chartify.io/), [seaborn](https://seaborn.pydata.org/) and [chartjs](https://www.chartjs.org/))
+* File structure of python projects
+* args and kwargs
 * [delta](https://delta.io/)
-
 
 # Other
 * Set google_analytics at `develop.villoro.com`

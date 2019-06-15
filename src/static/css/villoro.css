@@ -83,8 +83,7 @@ blockquote {
   margin: 0;
 }
 
-code, .output {
-  border-radius: 3px;
+code, .input, .output {
   font-size: 85%;
   margin: 0;
 }
@@ -94,10 +93,19 @@ code {
   padding: .2em .4em;
 }
 
-.output {
+.input, .output {
   font-family: "monospace", sans-serif;
-  background-color: #FFFDE7; /* Yellow 50 */
   padding: .2em .2em;
+}
+
+.input { 
+  background-color: #E0E0E0; /* gray 300 */
+  padding-left: 10px;
+  text-align: center;
+}
+
+.output {  
+  background-color: #FFFDE7; /* yellow 50 */
 }
 
 .output-red {
@@ -112,7 +120,11 @@ code {
 }
 
 .v-table-header {
-  background-color:#64b5f6 /* Blue 300 */
+  background-color:#64B5F6 /* blue 300 */
+}
+
+.v-table-header2 {
+  background-color:#90CAF9 /* blue 200 */
 }
 
 .v-table th, .v-table td {

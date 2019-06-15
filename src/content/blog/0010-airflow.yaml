@@ -56,7 +56,7 @@ content_markdown: |
   ```
 
   ### 2.1 Test Airflow
-  We will test airflow with an example from [airflow documentation](https://airflow.apache.org/tutorial.html). You will need to create the file `~/airflow/dags/tutorial.py`:
+  We will test airflow with an example from [airflow documentation](https://airflow.apache.org/tutorial.html). You will need to create the file `tutorial.py`:
 
   ```sh
   cd airflow
@@ -67,6 +67,9 @@ content_markdown: |
 
   And then paste the example and save the file:
 
+  <div class="input">
+    ~/airflow/dags/tutorial.py
+  </div>
   ```python
   """
   Code that goes along with the Airflow tutorial located at:
@@ -189,6 +192,10 @@ content_markdown: |
   ```
 
   Inside the section `[webserver]` find the line `authenticate=X` and replace it with:
+
+  <div class="input">
+    ~/airflow/airflow.cfg
+  </div>
   ```cfg
   authenticate = True
   auth_backend = airflow.contrib.auth.backends.password_auth
@@ -220,6 +227,119 @@ content_markdown: |
   exit()
   ```
 
-  > Remeber that you can start airflow with `airflow webserver`
+  ## 4. Runing airflow with supervisor
+
+  If you want a process always runing and to be restarted on failure you should use **supervisor**.
+
+  ### 4.1. Clean examples and other tests
+
+  Edit the `airflow.cfg` to disable the examples by editing `load_examples = True` to:
+
+  <div class="input">
+  ~/airflow/airflow.cfg
+  </div>
+  ```
+  load_examples = False
+  ```
+
+  If you still have examples runing you can reset the database:
+
+  ```sh
+  airflow resetdb -y
+  ```
+
+  > This will **delete all data** be careful.
+
+  If you can't delete the previous example try deleting `~/airflow/dags/tutorial.py` first.
+
+  After cleaning all examples you should stop all `airflow` processes with:
+
+  ```sh
+  pkill -f airflow
+  ```
+
+  > This will delete the current **DAG** information
+
+  ### 4.2. Runing supervisor
+
+  First install it with:
+
+  ```sh
+  sudo apt install supervisor -y
+  ```
+
+  Then create a folder for the airflow logs:
+
+  ```sh
+  sudo mkdir /var/log/airflow/
+  ```
+
+  And now declare the `airflow` services with by creating the file `/etc/supervisor/conf.d/airflow.conf`
+
+  <div class="input">
+    /etc/supervisor/conf.d/airflow.conf
+  </div>
+  ```
+  [program:airflow_webserver]
+  command=airflow webserver -p 8080
+  stopsignal=QUIT
+  stopasgroup=true
+  stdout_logfile=/var/log/airflow/airflow_webserver.log
+  stderr_logfile=/var/log/airflow/airflow_webserver.error.log
+  autorestart=true
+  user=ubuntu
+
+  [program:airflow_scheduler]
+  command=airflow scheduler
+  stopsignal=QUIT
+  stopasgroup=true
+  stdout_logfile=/var/log/airflow/airflow_scheduler.log
+  stderr_logfile=/var/log/airflow/airflow_scheduler.error.log
+  autorestart=true
+  user=ubuntu
+  ```
+
+  > We are runing **airflow** with `ubuntu` user since by default it gets installed to `~/airflow`. You can change the default path and use another user.
+
+  Then start supervisor:
+
+  ```sh
+  sudo supervisorctl reread
+  sudo service supervisor restart
+
+  # Check the result
+  sudo supervisorctl status
+  ```
 
   And that's it. You can now start using airflow.
+
+  ## 5. Next steps
+
+  You can add **DAG**s in the folder `~/airflow/dags` and they should be automatically loaded. 
+
+  > It is advised to run airflow with at least a `t2.medium` **AWS instance**. You can run it with a smaller one (I use a `t2.micro` since it is in the free tier) but you can easily get your instance at 100% CPU usage while runing tasks.
+
+  ## 5.1. Using git
+  You can even change that path to a folder that is tracked with git to keep control of the **DAG**s by editing the `airflow.cfg`:
+
+  <div class="input">
+    ~/airflow/airflow.cfg
+  </div>
+  ```cfg
+  dags_folder = "home/ubuntu/airflow_tasks/src"
+  ```
+
+  To keep the code sync with the origin you could create an airflow task but it will fill the logs with unuseful information. This time ironically is better to use crontab to fetch the code. You can do it with:
+
+  ```sh
+  crontab -e
+  ```
+
+  Add this line at the end:
+
+  ```sh
+  * */5 * * * cd /home/ubuntu/airflow_tasks && git fetch && git checkout master && git pull origin master
+  ```
+
+  > I use `/home/ubuntu/airflow_tasks` for the repo path and the folder `src` for **DAG**s path. But you can use whatever you want.
+  
