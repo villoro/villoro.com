@@ -46,7 +46,8 @@
 * Intro to tensorflow 2.0
 * Charting libraries ([plotly](https://plot.ly/python/), [plotly_express](https://github.com/plotly/plotly_express/), [altair](https://altair-viz.github.io/), [chartify](https://chartify.io/), [seaborn](https://seaborn.pydata.org/) and [chartjs](https://www.chartjs.org/))
 * File structure of python projects
-
+* args and kwargs
+* [delta](https://delta.io/)
 
 # Other
 * Set google_analytics at `develop.villoro.com`
