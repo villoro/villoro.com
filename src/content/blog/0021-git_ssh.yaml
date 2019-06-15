@@ -3,7 +3,7 @@
 # --------------------------------------------------------------------------------------------------
 code: git_ssh
 title: Using git with SSH
-date: "2019-04-21"
+date: "2019-06-15"
 image: git_ssh.jpg
 highlight: True
 
