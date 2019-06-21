@@ -1,3 +1,6 @@
+# Home
+* Add button to subscribe to the mailing list
+
 # Blog
 * Lateral bar with list of posts
 * Lateral bar with navigation (https://codepen.io/clokey2k/pen/jgfFD)
