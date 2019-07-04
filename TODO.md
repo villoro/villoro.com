@@ -30,13 +30,11 @@
 * Docker
 * AWS:
     * AWS + Docker
-    * AWS Lambdas
     * AWS API security groups
 * Python performance series:
-    1. Python performance: [numba](http://numba.pydata.org/) / [cython](https://cython.org/) / [pypy](https://pypy.org/)
-    2. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
+    2. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
     3. Python performance: [dask](http://docs.dask.org/en/latest/why.html)
-    4. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
+    4. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
     5. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
     6. Pandas? See that example: https://realpython.com/fast-flexible-pandas/
 * DNS
