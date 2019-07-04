@@ -24,7 +24,7 @@ image_head:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  brief
+  Development good practices: how to using gitflow as code control.
 
 content_markdown: |
 
