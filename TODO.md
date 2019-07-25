@@ -49,6 +49,7 @@
 * File structure of python projects
 * args and kwargs
 * [delta](https://delta.io/)
+* python custom exceptions
 
 # Other
 * Set google_analytics at `develop.villoro.com`
