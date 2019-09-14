@@ -1,0 +1,184 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: dropbox_python
+title: Reading and writting files to Dropbox using python
+title_short: Dropbox python API
+date: "2019-09-14"
+image: dropbox_square.jpg
+highlight: True
+
+tags:
+  - Python
+  - Dropbox
+  - API
+  - Pandas
+
+tags_filter:
+  - Python
+  - Pandas
+  - ETL
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0023-dropbox_python
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Learn how to read, write and delete all kind of files using the dropbox library for python.
+
+image_head:
+  filename: dropbox_logo.png
+  caption: dropbox_logo
+
+content_markdown: |
+
+  When developing with python people usually want to store some data.
+  If this data is quite big and/or contains personal information it is not advised to store it in **github** (or other git providers).
+  One good option is to store it in [dropbox](https://www.dropbox.com/).
+
+  # 1. Using dropbox with python
+  Dropbox has a really nice package that you can install with
+
+  ```
+  pip install dropbox
+  ```
+
+  It is not really difficult to use it but I noticed that every time I wanted to I had to look for old code.
+  So I decided that I could create a post that explained everything.
+
+  The first thing to do is create an app inside **dropbox** since you cannot get a token without it.
+  To do so go to [dropbox developers](https://www.dropbox.com/developers/apps).
+
+  <div class="w3-center">
+    <img src="/static/images/posts/dropbox_create_app.png" alt="dropbox_create_app" class="w3-image w3-padding-16 w3-border" style="max-height: 800px;"/>
+  </div>
+
+  Register a new app that will use **Dropbox API** and will acces only the **app folder**.
+  Once you have create the app go to the app settings page and create a token.
+
+  <div class="w3-center">
+    <img src="/static/images/posts/dropbox_get_token.png" alt="dropbox_get_token" class="w3-image w3-padding-16 w3-border" style="max-height: 800px;"/>
+  </div>
+
+  You can now store that secret in a safe way (for example as an environment variable or a hidden file).
+
+  # 2. Writting files to dropbox
+
+  The first thing you need to do is to init the dropbox object with:
+
+  ```python
+  import io
+  import yaml
+
+  import dropbox
+  import pandas as pd
+
+  DBX = dropbox.Dropbox(token)
+  ```
+
+  After creating the `DBX` instance you can upload files using `DBX.files_upload`.
+
+  ## 2.1. Write a text file
+
+  The key to upload files is using `io.BytesIO` object.
+
+  ```python
+  txt = "Hello World"
+
+  with io.BytesIO(txt.encode()) as stream:
+      stream.seek(0)
+
+      # Write a text file
+      DBX.files_upload(stream.read(), "/test.txt")
+  ``` 
+
+  > **Important:** filenames should start with `/`. It won't work without it.
+
+  ## 2.2. Write a yaml/json
+
+  To write a dictionary-like file you can use the following:
+
+  ```python
+  data = {"a": 1, "b": "hey"}
+
+  with io.StringIO() as stream:
+      yaml.dump(data, stream, default_flow_style=False)
+
+      stream.seek(0)
+
+      DBX.files_upload(stream.read().encode(), "/test.yaml")
+  ```
+
+  > It is important to run `stream.seek(0)` to go to the begining of the stream.
+
+  This time we are encoding the stream to transform it to bytes.
+
+  ## 2.3. Write an Excel
+
+  ```python
+  df = pd.DataFrame([range(5), list("ABCDE")])
+
+  with io.BytesIO() as stream:
+
+      with pd.ExcelWriter(stream) as writer:
+          df.to_excel(writer)
+          writer.save()
+      
+      stream.seek(0)
+
+      DBX.files_upload(stream.getvalue(), "/test.xlsx")
+  ```
+
+  The key is to use the `ExcelWriter` from **pandas**.
+
+  # 3. Reading files
+
+  To read a file you can use `DBX.files_download`.
+  This will return some metadata as the first parameter and the result of the **API** call as the second.
+
+  ## 3.1. Read a text file
+
+  ```python
+  _, res = DBX.files_download("/test.txt")
+
+  with io.BytesIO(res.content) as stream:
+      txt = stream.read().decode()
+  ```
+
+  > Remember to decode the stream to transform it from bytes to string
+
+  ## 3.2. Read a yaml/json
+
+  ```python
+  _, res = DBX.files_download("/test.yaml")
+
+  with io.BytesIO(res.content) as stream:
+      data = yaml.safe_load(stream)
+  ```
+
+  > You should always use `yaml.safe_load` instead of `yaml.load`
+
+  ## 3.3. Read an Excel
+
+  ```python
+  _, res = DBX.files_download("/test.xlsx")
+
+  with io.BytesIO(res.content) as stream:
+      df = pd.read_excel(stream, index_col=0)
+  ```
+
+  > If you do not want a new dummy index use `index_col=0`.
+
+  # 4. Deleting files
+
+  To delete a file simply call `DBX.files_delete(filename)`.
+
+  With this post you should have enough to work with **dropbox** using python.
+  There could be other file formats that you could want to work with but they should work with a very similar way.
