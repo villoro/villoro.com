@@ -96,8 +96,10 @@ content_markdown: |
       stream.seek(0)
 
       # Write a text file
-      DBX.files_upload(stream.read(), "/test.txt")
+      DBX.files_upload(stream.read(), "/test.txt", mode=dropbox.files.WriteMode.overwrite)
   ``` 
+
+  To allow overwriting you need to pass `mode=dropbox.files.WriteMode.overwrite` to the function `DBX.files_upload`.
 
   > **Important:** filenames should start with `/`. It won't work without it.
 
@@ -113,7 +115,7 @@ content_markdown: |
 
       stream.seek(0)
 
-      DBX.files_upload(stream.read().encode(), "/test.yaml")
+      DBX.files_upload(stream.read().encode(), "/test.yaml", mode=dropbox.files.WriteMode.overwrite)
   ```
 
   > It is important to run `stream.seek(0)` to go to the begining of the stream.
@@ -133,7 +135,7 @@ content_markdown: |
       
       stream.seek(0)
 
-      DBX.files_upload(stream.getvalue(), "/test.xlsx")
+      DBX.files_upload(stream.getvalue(), "/test.xlsx", mode=dropbox.files.WriteMode.overwrite)
   ```
 
   The key is to use the `ExcelWriter` from **pandas**.
