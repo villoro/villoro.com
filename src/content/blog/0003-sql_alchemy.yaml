@@ -109,6 +109,8 @@ content_markdown: |
       cursor.commit()
   ```
 
+  If you don't have input parameters you can run `cursor.execute("my_stored_procedure")`.
+
   ## 5. Insert data to SQL
 
   Ideally to insert data to SQL is as easy as calling the datafram function `to_sql`. For example:
