@@ -41,7 +41,7 @@ content_markdown: |
 
   In this post I will show to do it while giving some advices based on problems I had.
 
-  ## Conect to a SQL database
+  ## 1. Conect to a SQL database
 
   In order to connect to a SQL database you will need to create an engine. The best way is to use the functions `create_engine` and `engine.url.URL`. For example:
 
@@ -81,17 +81,16 @@ content_markdown: |
 
   More info about SQL engines at [SQL Alchemy documentation](https://docs.sqlalchemy.org/en/13/core/engines.html).
 
-  ## Read data from SQL
+  ## 2. Read data from SQL
 
   To retrive a pandas dataframe it is easy. You can directly use pandas `read_sql_query` function:
 
   ```python
-  # MySQL
   with engine.connect() as connection:
       df = pd.read_sql_query("SELECT * FROM my_table", connection)
   ```
 
-  ## Run a SQL sentence
+  ## 3. Run a SQL sentence
 
   You can also run an `UPDATE`, `DELETE` or other SQL sentences by creating a connection with the engine as follows:
 
@@ -100,7 +99,17 @@ content_markdown: |
       connection.execute("DELETE FROM my_table WHERE id > 10")
   ```
 
-  ## Insert data to SQL
+  ## 4. Run stored procedures
+
+  It is also posible to run stored procedures and to pass parameters to it. To do so you need to access the raw connection of the engine.
+
+  ```python
+  with engine.raw_connection().cursor() as cursor:
+      cursor.execute("my_stored_procedure ?, ?", ['param_1', 'param_2'])
+      cursor.commit()
+  ```
+
+  ## 5. Insert data to SQL
 
   Ideally to insert data to SQL is as easy as calling the datafram function `to_sql`. For example:
 
@@ -113,7 +122,7 @@ content_markdown: |
   > I usually use `index=False` because the index will be a dummy one. If it is not the case first call `df.reset_index()`.
 
 
-  ### Inserting data to PostgreSQL
+  ### 5.1. Inserting data to PostgreSQL
   The function `df.to_sql` works well with `MySQL` but I had serious performance problems when working with `PostgreSQL`. Luckily there is a workaround:
 
   ```
