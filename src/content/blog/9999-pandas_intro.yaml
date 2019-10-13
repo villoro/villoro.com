@@ -4,7 +4,7 @@
 code: pandas_intro
 title: Pandas intro
 date: "2019-10-13"
-image: default.jpg
+image: pandas_square.png
 highlight: True
 
 tags:
@@ -29,9 +29,9 @@ tags_filter:
 brief_markdown: |
   Learn how to use python pandas library to work with tabular data.
 
-# image_head:
-#   filename: dropbox_logo.png
-#   caption: dropbox_logo
+image_head:
+  filename: pandas.png
+  caption: pangas
 
 content_markdown: |
 
