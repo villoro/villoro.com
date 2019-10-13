@@ -1,0 +1,92 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: pandas_intro
+title: Pandas intro
+date: "2019-10-13"
+image: default.jpg
+highlight: True
+
+tags:
+  - Python
+  - Pandas
+
+tags_filter:
+  - Python
+  - Pandas
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: https://github.com/villoro/villoro_posts/tree/master/0023-dropbox_python
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Learn how to use python pandas library to work with tabular data.
+
+# image_head:
+#   filename: dropbox_logo.png
+#   caption: dropbox_logo
+
+content_markdown: |
+
+  ## 0. Overview
+  **Pandas** is a python library used for working with tabular data.
+  It is easy to use and it is fast since it uses **C** under the hood.
+
+  The 2 main disadvantatges is that tt will fit all the information in the RAM memory so it has limits on the amounth of data it can work with.
+  And it only uses one core of the computer so it might be possible to improve.
+
+  The best source for information is the [pandas webpage](https://pandas.pydata.org/) and the [offical documentation](https://pandas.pydata.org/pandas-docs/stable/user_guide/index.html).
+
+  This post will be an overview of the basic usage of this library.
+
+  The first thing is to install it with pip:
+
+  ```sh
+  pip install pandas
+  ```
+
+  And the second one to import it:
+  ```python
+  import pandas as pd
+  print(pd.__version__)
+  ```
+
+  ## 1. Input/Output operations (reading and writting data).
+
+  ### 1.1. pd.DataFrame
+  To create a new DataFrame from python objects use `pd.DataFrame`.
+  It works with almost all python objects, for example:
+
+  ```python
+  df = pd.DataFrame({"A": range(5), "B": list("ABCDE")})
+  ```
+
+  ### 1.2. Read
+  The most common reading function is `pd.read_csv`.
+  But there are also functions to read almost everything ([more info](https://pandas.pydata.org/pandas-docs/stable/reference/io.html)).
+
+  They are really easy to use since in general you only need the filename of the file you want to read:
+
+  ```python
+  df = pd.read_csv("datasets/titanic_train.csv")
+
+  df_iris = pd.read_excel("datasets/iris.xlsx")
+  ```
+
+  ### 1.3. Writte
+  Dataframes have functions that allows you to export them to almost any format.
+  For example you can export it to `parquet` (a really eficient file format, more info [here](https://villoro.com/post/tables_format.html)).
+  
+  ```python
+  df.to_parquet("datasets/output.parquet")
+  ```
+
+  ## 2. Overview data
+  ###  2.1. Preview data
