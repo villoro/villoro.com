@@ -39,7 +39,7 @@ content_markdown: |
   **Pandas** is a python library used for working with tabular data.
   It is easy to use and it is fast since it uses **C** under the hood.
 
-  The 2 main disadvantatges is that tt will fit all the information in the RAM memory so it has limits on the amounth of data it can work with.
+  The 2 main disadvantatges is that it will try to fit all the information in the RAM memory so it has limits on the amounth of data it can work with.
   And it only uses one core of the computer so it might be possible to improve.
 
   The best source for information is the [pandas webpage](https://pandas.pydata.org/) and the [offical documentation](https://pandas.pydata.org/pandas-docs/stable/user_guide/index.html).
@@ -57,6 +57,8 @@ content_markdown: |
   import pandas as pd
   print(pd.__version__)
   ```
+
+  > This tutorial uses pandas **0.25.3** since it was the latest version avaible at the time this post was written.
 
   ## 1. Input/Output operations (reading and writting data).
 
@@ -89,4 +91,349 @@ content_markdown: |
   ```
 
   ## 2. Overview data
+
+  **Pandas** is usually used to handle a lot of data so it is difficult to view all of it.
+  That is why is important to preview, describe and summarize the data it contains.
+
   ###  2.1. Preview data
+
+  One of the most basic things to do is to view a part of the data.
+  The three most common functions to do so are:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">Function</th>
+      <th class="v-table-header">What it does</th>
+    </tr>
+    <tr>
+      <td>df.head(n)</td>
+      <td>Show first n rows</td>
+    </tr>
+    <tr>
+      <td>df.tail(n)</td>
+      <td>Show last n rows</td>
+    </tr>
+    <tr>
+      <td>df.sample(n)</td>
+      <td>Show a sample of n rows</td>
+    </tr>
+  </table>
+
+  ### 2.2. Describe the dataframe
+
+  There are some ways to describe the whole dataframe.
+  The most common way is by calling `df.describe()`.
+  This will give a report of the numerical columns with some basic stats like mean, std, min, max etc.
+
+  It is possible to include all columns with:
+
+  ```python
+  df.describe(include='all')
+  ```
+
+  The other important function is:
+
+  ```python
+  df.info(memory_usage='deep')
+  ```
+
+  This will show the types of each column and an aproximation of how much memory is used.
+
+  ### 2.3. View a column (Series)
+
+  A column of the dataframe in pandas is called a **Series**.
+  To best way to view a column is with `df[name]`.
+  It is possible to call `df.name` but it is not advised since it won't work with columns that have spaces or with some special names.
+
+  It is possible to use the functions to describe the dataframe to describe a column.
+  For example: `df["age"].head()`.
+
+  There are also some functions to describe the column. The most important are:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">Function</th>
+      <th class="v-table-header">What it does</th>
+    </tr>
+    <tr>
+      <td>df[column].head(n)</td>
+      <td>Show first n values</td>
+    </tr>
+    <tr>
+      <td>df[column].unique()</td>
+      <td>Show all unique values</td>
+    </tr>
+    <tr>
+      <td>df["Sex"].value_counts()</td>
+      <td>Show all unique values while counting how many times they appear</td>
+    </tr>
+  </table>
+
+  ### 2.4. Summarize
+
+  There are some functions to retrive one basic stat for the whole dataframe. Those are:
+
+  * mean
+  * median
+  * max
+  * min
+  * count
+  * sum
+  * var / std
+  * nunique (number of unique values)
+
+  As an example they can be called with `df.mean()`.
+
+  They can also be used for a column like `df[col].nunique()`.
+
+  ## 3. Slicing
+
+  **Pandas** is usually used to work with a lot of information.
+  So it is really important to know how to slice the dataframe to get a subset of it.
+
+  ### 3.1. Get one value
+
+  The best way to get one value is with the `.at` method.
+  The first parameter would be the name of the row and the second the name of the column.
+  So for example: 
+
+  ```python
+  df.at[1, "Sex"]
+  ```
+
+  This would yield the value of the `Sex` column on the row with index `1`.
+
+  ### 3.2. Accessing one or more columns
+
+  As seen in the previous section a column can be called like `df["Sex"]`.
+  By passing a list instead of only one name it will return some columns.
+  For example:
+
+  ```python
+  df[["Sex", "Age"]] # Return 'Age' and 'Sex' columns
+  ```
+
+  ### 3.3. Filter rows
+
+  To filter some rows you will need to call `df[some_filter]`.
+  This filter could be complex by using the and operator (`&`), the or (`|`) or the not (`~`).
+  You can't use the regular python operators (`and`, `or`, `not`).
+
+  Some examples of filters would be:
+
+  ```python
+  df[df["Sex"] == "male"] # Only rows with male people
+
+  df[(df["Age"] > 22) & (df["Age"] < 30)] # Age between 22 and 30
+  ```
+
+  And of course you can first create a filter and the apply it:
+
+  ```python
+  mfilter = df["Age"] > 20
+  df[mfilter]
+  ```
+
+  Apart from the basic operators there is the `isin` which will give all values inside a list and the `isna` which will give all null values.
+  So for example:
+
+  ```python
+  df[df["Pclass"].isin([1, 2])] # All with 'Pclass' 1 or 2
+  
+  df[df["Cabin"].isna()] # All that does not have 'Cabin' informed
+  ```
+
+  ### 3.4. Filtering rows and columns at the same time
+
+  You can use `loc` when using rows/columns names or `iloc` when using the position (number) for rows/columns.
+  Some examples:
+
+  ```python
+  df.loc[df["Age"] > 30, "Survived"] # First the filter for rows, then the column or columns
+
+  df.loc[df["Age"] > 30, ["Sex", "Survived"]].head() # You can always concatenate functions
+
+  df.iloc[0:5, 1:3] # Slice for rows, slice for columns
+  ```
+
+  This is one of the most powerful ways of working with pandas.
+  So you must really get comfortable with it!
+
+  > You might find the function `ix` but it has been deprecated in favor of `loc/iloc`. Please do not use `ix`.
+
+  ## 4. Modify data
+
+  It is important to see the data but it is usually not enough.
+
+  ### 4.1. Basic modifications
+  In general you can assing values by using the same functions that were used to acces data.
+  For example:
+
+  ```python
+  df.at[1, "Sex"] = "Other" # Assign one value
+
+  df["Ticket"] = "no ticket" # Assign a value to all rows
+
+  df["Dummy"] = df["Age"] + df["Survived"] # sum to columns and assign the value to a new column
+  ```
+
+  ### 4.2. Special types
+  #### 4.2.1. Strings
+
+  For columns that have string values it is possible the call `.str` and use some string special functions.
+  As an example:
+
+  ```python
+  df["Name"].str.replace("Mr", "Hello") # This only shows the modification but it does not replace the original value
+
+  df["Name"] = df["Name"].str.replace("Mr", "Hello") # This updates the values
+
+  df["Name"].str[:10] # First 10 chars of each string
+  ```
+
+  #### 4.2.2. Datetime
+
+  There are also some special functions for date columns by calling `.dt`.
+  But to use them first you would need to transform the column to datetime.
+
+  ```
+  df["key"] = pd.to_datetime(df["key"]) # Transform the column to datetime
+  ```
+
+  This function is really smart and usually there is no need to specify the format since it will get guessed.
+  The only parameter I find really useful is to pass `dayfirst=True` to work with formats like `dd/mm/yyyy`.
+
+  After transforming the column to date some of the things that you could do are:
+
+  ```python
+  df["key"].dt.day # Gets the day
+
+  df["key"].dt.strftime("%Y-%m-01") # Get first day of the month
+  ```
+
+  ### 4.3. Missing values
+
+  The function `fillna` will fill the missing values.
+  In order to update the original values you need to set **inplace** to true (`fillna.(fill_value, inplace=True)`)
+  As an example:
+
+  ```python
+  df["Cabin"].fillna("Unknown")
+  ```
+
+  It is also possible to drop rows with missing values with `df[col].dropna()`
+
+  ### 4.4. Sorting
+
+  This is really straight forward:
+
+  ```python
+  df.sort_values("Cabin", ascending=False) # Default ascending=True
+  ```
+
+  ### 4.5. Handling duplicates
+
+  It is possible to drop rows that have duplicates with:
+
+  ```python
+  df.drop_duplicates(["Pclass"]) # Discard the duplicates based on certain columns
+  ```
+
+  ### 4.6. Custom functions
+  You can apply custom functions.
+  Remeber that usually functions have names but you can define unamed functions using lambdas.
+  As an example:
+
+  ```python
+  def sum_1(x):
+      return x + 1
+
+  sum_2 = lambda x: x + 2
+  ```
+
+  You have three functions that will work when applying custom functions:
+
+  * `DataFrame.apply` operates on entire rows or columns at a time.
+  * `DataFrame.applymap`, `Series.apply`, and `Series.map` operate on one element at time.
+
+  So for example:
+
+  ```python
+  df[numerical_columns].apply(sum_1)
+  ```
+
+  Another example would be:
+
+  ```python
+  def custom_categories(x):
+      """ This needs to be applied to one element at a time """
+      if x > 5:
+          return "L"
+      if x < 1:
+          return "S"
+      return "M"
+
+  df["SL"].apply(custom_categories)
+  ```
+
+  ### 4.7. Apply changes to a slice
+  It is posible to apply changes to only part of the dataframe using `loc`.
+  For example:
+
+  ```python
+  df.loc[df["Sex"] == "male", "Pclass"] = 77 # Set 'Pclass' to 77 for all male passangers
+  ```
+
+  And this is where creating a filter before calling `.loc` is really useful. For example:
+
+  ```python
+  mfilter = df["Embarked"] == "S"
+  df.loc[mfilter, "Age"] = df.loc[mfilter, "Age"]*2
+  ```
+
+  This will double the Age for all rows where `Embarked = S`.
+
+  ## 5. Modify the dataframe
+
+  ### 5.1. Delete rows/columns
+
+  This is done with `df.drop`. To delete rows set `axis=0` and `axis=1` for columns.
+  For example:
+
+  ```python
+  df.drop("Dummy", axis=1)
+  df.drop(["Dummy", "Fare", "Cabin"], axis=1, inplace=True) # inplace=True to update the original dataframe
+  ```
+
+  ### 5.2. Rename columns
+
+  The function `df.columns` retrive the names of the columns.
+  To rename them simply pass a list with the desired names. For example:
+
+  ```python
+  df.columns = ['id', 'survived', 'pclass', 'name', 'sex', 'age', 'sibsp', 'parch', 'ticket', 'embarked']
+  ```
+
+  ## 6. Transformations
+  ### 6.1. Group by values
+
+  A really common transformation for tables is to group them by one or more columns.
+  Once the aggrupation is done you can call one or more aggregation function.
+  For example:
+
+  ```python
+  df.groupby("pclass").sum() # One aggregation
+
+  df.groupby("pclass").agg(["min", "max"]) # More than one aggregation
+  ```
+
+  With pandas `0.25` or higher you can specify what to do to what column and the name of the output column.
+  This is done with the following syntax: `agg.(new_name=(old_name, aggregation_function))`.
+  For example:
+
+  ```python
+  df.groupby("pclass").agg(age_avg=("age", "mean"), age_min=("age", "min"))
+  ```
+
+  And that would be a really good overview of the pandas library.
+  In the future I will writte another post with more advanced **pandas** tricks.
