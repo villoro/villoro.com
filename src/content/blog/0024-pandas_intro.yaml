@@ -3,7 +3,7 @@
 # --------------------------------------------------------------------------------------------------
 code: pandas_intro
 title: Pandas intro
-date: "2019-10-13"
+date: "2019-11-01"
 image: pandas_square.png
 highlight: True
 
@@ -18,9 +18,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: Github
-#   url: https://github.com/villoro/villoro_posts/tree/master/0023-dropbox_python
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0024-pandas_intro
 
 
 # --------------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ content_markdown: |
   The 2 main disadvantatges is that it will try to fit all the information in the RAM memory so it has limits on the amounth of data it can work with.
   And it only uses one core of the computer so it might be possible to improve.
 
-  The best source for information is the [pandas webpage](https://pandas.pydata.org/) and the [offical documentation](https://pandas.pydata.org/pandas-docs/stable/user_guide/index.html).
+  The best source for information are the [pandas webpage](https://pandas.pydata.org/) and the [offical documentation](https://pandas.pydata.org/pandas-docs/stable/user_guide/index.html).
 
   This post will be an overview of the basic usage of this library.
 
