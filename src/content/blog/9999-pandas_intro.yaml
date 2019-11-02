@@ -30,7 +30,7 @@ brief_markdown: |
   Learn how to use python pandas library to work with tabular data.
 
 image_head:
-  filename: pandas.png
+  filename: pandas.svg
   caption: pangas
 
 content_markdown: |
