@@ -28,6 +28,10 @@ content_markdown: |
 
   In this post I am going to explain how to configure your linux machine to github using **SSH**.
 
+  ## Table of Contents
+
+  [TOC]
+
   ## 1. Create **SSH keys**
   
   First we will create a SSH key that will allow you to connect to github.

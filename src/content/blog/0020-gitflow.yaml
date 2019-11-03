@@ -34,6 +34,10 @@ content_markdown: |
 
   If you are using git from the command line you should check [this guide](http://rogerdudler.github.io/git-guide/) out.
 
+  ## Table of Contents
+
+  [TOC]
+
   ## 1. Using 'git flows'
 
   There are some famous 'git flows' in the industry such as:

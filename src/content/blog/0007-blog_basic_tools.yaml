@@ -33,6 +33,13 @@ image_head:
   caption: blog_basic_tools
 
 content_markdown: |
+  
+  ## Table of Contents
+
+  [TOC]
+
+  ## 0. Why?
+
   If you just created a blog you will probably want to have common and usefull features like:
 
   * Analytics
@@ -45,7 +52,7 @@ content_markdown: |
 
   It won't be a step by step guide, instead I will highlight the things I think are more relevant.
 
-  ## Google Analytics
+  ## 1. Google Analytics
   You should first register your web page and then copy and paste at the scripts part of your base template the code they provide.
 
   One thing I belive is really important is to **filter out your own traffic** to the webpage while you are developing or testing. In my case I did a filter to check if the host of the page is the bare domain of my page. This way I will efectively exclude visits from `localhost` or testing branches like `develop.villoro.com`.
@@ -75,7 +82,7 @@ content_markdown: |
   * Using **IP** filters ([info](https://support.google.com/analytics/answer/1034840?hl=en)). You will need a static IP for every computer you use to develop.
   * Using cookies.
 
-  ## Mailchimp
+  ## 2. Mailchimp
   This service is the one that involves less code. Setting it up can be done through their webpage after singing up. I recommend that you customize some things:
 
   * Sing up form. There you will also get the URL that you will use in you site.
@@ -89,7 +96,7 @@ content_markdown: |
   </a>
   ```
 
-  ## Disqus
+  ## 3. Disqus
   Setting up Disqus is really easy. You only need to register and then copy and paste two code parts. The first one will be the div with the comments:
 
   ```html

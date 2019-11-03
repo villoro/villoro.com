@@ -37,6 +37,12 @@ image_head:
 
 content_markdown: |
 
+  ## Table of Contents
+
+  [TOC]
+
+  ## 0. Why SQL with python?
+
   SQL is one of the most relevant language for databases. So at one point you will need to interact to get, store or modify some data. Fortunatelly you can do it in python using **SQL Alchemy**.
 
   In this post I will show to do it while giving some advices based on problems I had.

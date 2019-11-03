@@ -37,7 +37,12 @@ image_head:
 use_chartjs: True
 
 content_markdown: |
-  This is the first post about python performance. This post will be of how to make python code go faster.
+  This is the first post about python performance.
+  This post will be of how to make python code go faster.
+
+  ## Table of Contents
+
+  [TOC]
 
   ## 1. Exploring python compilers
   The first way to improve the python performance is by using different compilers. The most famous ones are:
@@ -131,7 +136,7 @@ content_markdown: |
     <b>Out:</b> 6
   </div>
 
-  ## 2.1. `jit` vs `njit` decorators
+  ### 2.1. `jit` vs `njit` decorators
 
   The default **numba** decorator is `jit`. It is possible to pass use nopython mode with `@jit(nopython=True)` or with the decorator `njit` which is equivalent.
   `njit` decorator is faster than `jit` but supports less features than jit.
@@ -139,7 +144,7 @@ content_markdown: |
   For example you can't cast to string (with for example `str(10)`) inside a `njit` decorated function.
   So you should try to use `njit` decorator if possible specialy for numerical calculations.
 
-  ## 2.4. `vectorize` decorator
+  ### 2.2. `vectorize` decorator
 
   Using the `vectorize` decorator, you write your function as operating over input scalars, rather than arrays. **Numba** will generate the surrounding loop (or kernel) allowing efficient iteration over the actual inputs.
 
@@ -294,7 +299,7 @@ content_markdown: |
 
   > **numba** can be **400x** better than a python loop
 
-  ## 3.2. Test fix time
+  ### 3.2. Test fix time
 
   At one of the projects I was working at my company I found an intersting problem.
   I had a huge dataframe (650 milion rows) and among other columns there was one for the `date` and one for `time`.
@@ -321,13 +326,13 @@ content_markdown: |
     </tr>
   </table>
 
-  ### 3.2.1. The functions
+  #### 3.2.1. The functions
 
   So to fix that I transformed the values to string, then added 0 until I had 8 chars and finally split and add `:` and `.` so that then it could be transformed.
 
   Let's use this problem for testing **numba**. First let's see all different options I came up.
 
-  #### 3.2.1.1. zfill
+  ##### 3.2.1.1. zfill
 
   This was my first approach which was good enough. The idea is to transform the `time` column to string and then apply `zfill(8)`. After that I created a string with the appropiate format and transform the whole `datetime` with `pd.to_datetime`.
 
@@ -344,7 +349,7 @@ content_markdown: |
       return pd.to_datetime(df["date"] + " " + aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:])
   ```
 
-  #### 3.2.1.2. fix_time_individual
+  ##### 3.2.1.2. fix_time_individual
 
   The idea in this option is to create a function decorated with `jit` that transform one element of the `time` column and apply the function to the column.
 
@@ -366,7 +371,7 @@ content_markdown: |
       return (df["date"] + " " + df["time"].apply(_fix_time)).astype(np.datetime64)
   ```
 
-  #### 3.2.1.3. fix_time_np_string
+  ##### 3.2.1.3. fix_time_np_string
 
   With this solution I created and empty `numpy` array and filled with a loop inside the `jit` decorated function.
 
@@ -395,7 +400,7 @@ content_markdown: |
       return (df["date"].values + " " + _fix_time(df["time"].values)).astype(np.datetime64)
   ```
 
-  #### 3.2.1.4. fix_time_np_datetime
+  ##### 3.2.1.4. fix_time_np_datetime
 
   In this case the I also create an empty `numpy` array but with `datetime64[s]` dtype. This way I can iterate over both `time` and `date` at the same time.
 
@@ -427,7 +432,7 @@ content_markdown: |
       return _fix_date(df["date"].values, df["time"].values)
   ```
 
-  #### 3.2.1.5. np_divmod_jit
+  ##### 3.2.1.5. np_divmod_jit
 
   In this solution I process the `time` column as number and with the `np.divmod` function I create a value that represents a **timedelta**. After transforming the `time` column I change the dtype to `timedelta64[ms]` and sum it to the `date` column as a `datetime64`.
 
@@ -457,7 +462,7 @@ content_markdown: |
       return _fix_date(df["date"].values, df["time"].values)
   ```
 
-  #### 3.2.1.6. divmod_njit
+  ##### 3.2.1.6. divmod_njit
 
   It is the same as the previous example but after changing `np.divmod` to the python `divmod` function I can use the `njit` decorator for the first time.
 
@@ -489,7 +494,7 @@ content_markdown: |
       ).astype("timedelta64[ms]")
   ```
 
-  #### 3.2.1.7. divmod_vectorize
+  ##### 3.2.1.7. divmod_vectorize
 
   This case is exactly the same as the previous one but instead of doing the `for` loop I use the **numba** `vectorize` decorator.
 
@@ -515,7 +520,7 @@ content_markdown: |
       ).astype("timedelta64[ms]")
   ```
 
-  ### 3.2.2. The results
+  #### 3.2.2. The results
 
   <table class="v-table v-table-center" align="center">
     <tr>
@@ -606,7 +611,7 @@ content_markdown: |
 
   > Working with numbers in numba is really fast.
 
-  ### 3.2.3. Speed with different machines
+  #### 3.2.3. Speed with different machines
 
   I did this test with up to `10^7` elements with my computer. I was not able to increase the number of elements due to an **out of memory error** (not enough RAM).
 

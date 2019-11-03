@@ -36,6 +36,10 @@ image_head:
 content_markdown: |
   Apache Airflow is a platform to programmatically author, schedule and monitor workflows. The airflow scheduler executes your tasks on an array of workers following the specified dependencies.
 
+  ## Table of Contents
+
+  [TOC]
+
   ## 1. Why Airflow?
   People usually need to execute some tasks periodically. One common solution is to use [cron](https://es.wikipedia.org/wiki/Cron_(Unix)) wich is a good solution for simple tasks. But the more tasks you need to schedule the more problems I will have, specially if there are dependencies between one another.
 
@@ -319,7 +323,7 @@ content_markdown: |
 
   > It is advised to run airflow with at least a `t2.medium` **AWS instance**. You can run it with a smaller one (I use a `t2.micro` since it is in the free tier) but you can easily get your instance at 100% CPU usage while runing tasks.
 
-  ## 5.1. Using git
+  ### 5.1. Using git
   You can even change that path to a folder that is tracked with git to keep control of the **DAG**s by editing the `airflow.cfg`:
 
   <div class="input">
