@@ -27,7 +27,7 @@ def _transform_markdown(mdict):
 
         # If there is text and is markdown, fix it
         if isinstance(data, str) and name.endswith("_markdown"):
-            mdict[name] = markdown(data, extensions=["fenced_code", "codehilite"])
+            mdict[name] = markdown(data, extensions=["fenced_code", "codehilite", "toc"])
 
         # If there is a dict, do the same
         if isinstance(data, dict):

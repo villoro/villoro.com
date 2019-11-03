@@ -26,15 +26,21 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting.
+  Black is the uncompromising Python code formatter.
+  By using it, you agree to cede control over minutiae of hand-formatting.
+  In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting.
+
+image_head:
+  filename: black.png
+  caption: black_logo
 
 content_markdown: |
 
-  <div class="w3-center">
-    <img src="/static/images/blog/black.png" alt="black_logo" class="w3-image w3-padding-16"/>
-  </div>
+  ## Table of Contents
 
-  ## What is black
+  [TOC]
+
+  ## 1. What is black
 
   [Black](https://github.com/ambv/black) is a python code formatter that allows developers to focus on code itself. You can try it online [here](https://black.now.sh/).
 
@@ -45,7 +51,7 @@ content_markdown: |
 
   The best way to explain it will using and example.
 
-  ### Input
+  ### 1.1. Input
 
   ```python
   from seven_dwwarfs import Grumpy, Happy, Sleepy, Bashful, Sneezy, Dopey, Doc
@@ -83,7 +89,7 @@ content_markdown: |
   ]
   ```
 
-  ### Output from black
+  ### 1.2. Output from black
   ```python
   from seven_dwwarfs import (
       Grumpy,
@@ -141,7 +147,7 @@ content_markdown: |
   regular_formatting = [0, 1, 2, 3, 4, 5, 6, 7, 8]
   ```
 
-  ## Installation and usage of black
+  ## 2. Installation and usage of black
   
   You can install black using pip with:
 
@@ -169,7 +175,7 @@ content_markdown: |
   py36 = true
   ```
 
-  ## Sublack
+  ## 3. Sublack
 
   [Sublack](https://github.com/jgirardet/sublack) is a sublime extension to run black. 
 
