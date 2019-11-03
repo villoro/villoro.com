@@ -1,0 +1,56 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: databricks
+title: Using databricks Unified Analytics Platform
+title_short: Using databricks
+date: "2019-11-03"
+image: databricks_square.jpg
+highlight: True
+
+tags:
+  - AWS
+  - Azure
+  - Tools
+
+tags_filter:
+  - AWS
+  - Azure
+  - Tools
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Databricks
+  url: https://databricks.com/
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Databricks provides a Unified Analytics Platform that accelerates innovation by unifying data science, engineering and business.
+
+image_head:
+  filename: databricks.png
+  caption: databricks
+
+content_markdown: |
+
+  ## 0. Overview
+  **Databricks** provides a Unified Analytics Platform that accelerates innovation by unifying data science, engineering and business.
+
+  ## 1. Cluster creation
+
+  ## 2. Notebooks
+
+  ### 2.1. Multilanguage
+
+  ### 2.2. Spark
+
+  ### 2.3. dbutils
+
+  ## 3. Storing data
+
+  ## 4. Scheduling jobs
