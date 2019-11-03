@@ -32,6 +32,11 @@ image_head:
   caption: pypi_logo
 
 content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
   ## 1. Create a python package
 
   To work with python you only need a `.py` file. However if you are creating a package you need to follow a concrete structure and include some needed files.

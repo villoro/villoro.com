@@ -43,7 +43,11 @@ content_markdown: |
   If this data is quite big and/or contains personal information it is not advised to store it in **github** (or other git providers).
   One good option is to store it in [dropbox](https://www.dropbox.com/).
 
-  # 1. Using dropbox with python
+  ## Table of Contents
+
+  [TOC]
+
+  ## 1. Using dropbox with python
   Dropbox has a really nice package that you can install with
 
   ```
@@ -69,7 +73,7 @@ content_markdown: |
 
   You can now store that secret in a safe way (for example as an environment variable or a hidden file).
 
-  # 2. Writting files to dropbox
+  ## 2. Writting files to dropbox
 
   The first thing you need to do is to init the dropbox object with:
 
@@ -85,7 +89,7 @@ content_markdown: |
 
   After creating the `DBX` instance you can upload files using `DBX.files_upload`.
 
-  ## 2.1. Write a text file
+  ### 2.1. Write a text file
 
   The key to upload files is using `io.BytesIO` object.
 
@@ -103,7 +107,7 @@ content_markdown: |
 
   > **Important:** filenames should start with `/`. It won't work without it.
 
-  ## 2.2. Write a yaml/json
+  ### 2.2. Write a yaml/json
 
   To write a dictionary-like file you can use the following:
 
@@ -122,7 +126,7 @@ content_markdown: |
 
   This time we are encoding the stream to transform it to bytes.
 
-  ## 2.3. Write an Excel
+  ### 2.3. Write an Excel
 
   ```python
   df = pd.DataFrame([range(5), list("ABCDE")])
@@ -140,12 +144,12 @@ content_markdown: |
 
   The key is to use the `ExcelWriter` from **pandas**.
 
-  # 3. Reading files
+  ## 3. Reading files
 
   To read a file you can use `DBX.files_download`.
   This will return some metadata as the first parameter and the result of the **API** call as the second.
 
-  ## 3.1. Read a text file
+  ### 3.1. Read a text file
 
   ```python
   _, res = DBX.files_download("/test.txt")
@@ -156,7 +160,7 @@ content_markdown: |
 
   > Remember to decode the stream to transform it from bytes to string
 
-  ## 3.2. Read a yaml/json
+  ### 3.2. Read a yaml/json
 
   ```python
   _, res = DBX.files_download("/test.yaml")
@@ -167,7 +171,7 @@ content_markdown: |
 
   > You should always use `yaml.safe_load` instead of `yaml.load`
 
-  ## 3.3. Read an Excel
+  ### 3.3. Read an Excel
 
   ```python
   _, res = DBX.files_download("/test.xlsx")
@@ -178,7 +182,7 @@ content_markdown: |
 
   > If you do not want a new dummy index use `index_col=0`.
 
-  # 4. Deleting files
+  ## 4. Deleting files
 
   To delete a file simply call `DBX.files_delete(filename)`.
 
