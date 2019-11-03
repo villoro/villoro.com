@@ -35,6 +35,10 @@ image_head:
 
 content_markdown: |
 
+  ## Table of Contents
+
+  [TOC]
+
   ## 0. Overview
   **Pandas** is a python library used for working with tabular data.
   It is easy to use and it is fast since it uses **C** under the hood.

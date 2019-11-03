@@ -38,6 +38,10 @@ image_head:
 content_markdown: |
   In order to serve a python web app hosted on a server there are some tools that you need to install and set up.
 
+  ## Table of Contents
+
+  [TOC]
+
   ## 1. Basic schema
   First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance. You can see [here](https://villoro.com/post/aws_ec2.html) how to create one.
 
@@ -124,7 +128,7 @@ content_markdown: |
   pip3 install gunicorn
   ```
 
-  #### 2.3 Install supervisor
+  ### 2.3 Install supervisor
 
   ```sh
   sudo apt install supervisor -y

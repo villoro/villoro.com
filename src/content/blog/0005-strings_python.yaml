@@ -33,6 +33,10 @@ content_markdown: |
 
   There a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 
+  ## Table of Contents
+
+  [TOC]
+  
   ## 1. Formatting strings
 
   ### 1.1. Raw strings with `r" "`

@@ -43,6 +43,10 @@ content_markdown: |
   Google Analytics is really useful but sometimes you want retrive all the data and perform your own analysis and create your reports.
   In this post you will see how to do that with python.
 
+  ## Table of Contents
+
+  [TOC]
+
   ## 1. Google permisions and keys
 
   ### 1.1. Get the Google key
@@ -345,7 +349,7 @@ content_markdown: |
 
   This solution is less efficient since it will need to load all existing data and this can be time consuming.
 
-  #### 3.2. Load code
+  #### 3.3.2. Load code
 
   The first thing to do is to create the SQL Alchemy engine for MySQL.
   For other SQL engines check the [SQL Alchemy post](https://villoro.com/post/sql_alchemy).

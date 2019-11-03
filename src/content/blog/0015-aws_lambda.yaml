@@ -39,6 +39,10 @@ content_markdown: |
     <img src="/static/images/blog/aws_lambda.svg" alt="aws_lambda" class="w3-image" style="width: 100%;"/>
   </div>
 
+  ## Table of Contents
+
+  [TOC]
+
   ## 1. Intro to AWS Lambdas
   AWS Lambda is a compute service that lets you run code without provisioning or managing servers. AWS Lambda executes your code only when needed and scales automatically, from a few requests per day to thousands per second.
 
@@ -125,7 +129,7 @@ content_markdown: |
   }
   ```
 
-  ### 2.3. Create the lambda
+  ### 2.2. Create the lambda
   First of all there is some work to do in AWS IAM service. This will give the lambdas the following permissions:
 
   1. Act on `EC2` instances
@@ -134,7 +138,7 @@ content_markdown: |
 
   To do that first you will need to a **policy** and then assign it to a **role**.
 
-  #### 2.3.1. Create a IAM/Policy
+  #### 2.2.1. Create a IAM/Policy
 
   1. Go to AWS IAM service
   2. Create a Policy
@@ -184,7 +188,7 @@ content_markdown: |
   }
   ```
 
-  #### 2.3.2. Create a IAM/Role
+  #### 2.2.2. Create a IAM/Role
 
   1. Go to AWS IAM service
   2. Create a Policy
@@ -193,7 +197,7 @@ content_markdown: |
       3. Select previously created policy
       4. Add name + description
 
-  #### 2.3.3. Create lambda itself
+  #### 2.2.3. Create lambda itself
 
   1. Go to AWS Lambda service
   2. Go to sidebar ```functions```
@@ -209,7 +213,7 @@ content_markdown: |
   5. Add tags
   6. Add environment vars for **instances_api**
 
-  #### 2.3.4. Create API
+  #### 2.2.4. Create API
 
   <div class="w3-center">
     <img src="/static/images/posts/aws_lambda_screenshot.png" alt="aws_lambda_screenshot" class="w3-image w3-border" style="max-height: 500px;"/>

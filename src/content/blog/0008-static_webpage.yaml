@@ -43,6 +43,10 @@ content_markdown: |
 
   You only need some **html** knowledge.
 
+  ## Table of Contents
+
+  [TOC]
+
   ## 1. Install requirements
 
   Run:
