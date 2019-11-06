@@ -32,17 +32,15 @@
     * AWS + Docker
     * AWS API security groups
 * Python performance series:
-    2. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
-    3. Python performance: [dask](http://docs.dask.org/en/latest/why.html)
-    4. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
-    5. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
-    6. Pandas? See that example: https://realpython.com/fast-flexible-pandas/
+    1. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
+    2. Python performance: [dask](http://docs.dask.org/en/latest/why.html)
+    3. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
+    4. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
+    5. Pandas? See that example: https://realpython.com/fast-flexible-pandas/
 * DNS
 * Heroku deployment
 * ETL with APIs
-    * Google Analytics
     * Facebook
-* Git ssh
 * NN with numpy
 * Intro to tensorflow 2.0
 * Charting libraries ([plotly](https://plot.ly/python/), [plotly_express](https://github.com/plotly/plotly_express/), [altair](https://altair-viz.github.io/), [chartify](https://chartify.io/), [seaborn](https://seaborn.pydata.org/) and [chartjs](https://www.chartjs.org/))
@@ -54,6 +52,7 @@
 * Azure Data Factory (ADF)
 * Azure DevOps
 * Spark
+* Python performance [profiling](https://scikit-learn.org/stable/developers/performance.html)
 
 
 # Other
