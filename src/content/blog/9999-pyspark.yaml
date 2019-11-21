@@ -1,0 +1,58 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: pyspark
+title: Pyspark intro
+date: "2019-11-21"
+image: default.png
+highlight: True
+
+tags:
+  - Python
+  - Spark
+
+tags_filter:
+  - Python
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: https://github.com/villoro/villoro_posts/tree/master/0024-pandas_intro
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  TODO
+
+# image_head:
+#   filename: pandas.svg
+#   caption: pangas
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## Get one column
+
+  ```python
+  sdf.select("id").rdd.flatMap(lambda x: x).collect()
+  ```
+
+  ## isin
+
+  ```python
+  sdf.where(sdf["identifier"].isin(transactions))
+  ```
+  
+  ## max
+
+  ```python
+  sdf.agg({"id": "max"}).collect()[0][0]
+  ```
+  
