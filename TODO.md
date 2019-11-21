@@ -64,7 +64,7 @@
 
 ## Charting libraries
 * [plotly](https://plot.ly/python/)
-    * Plotly 4.0
+    * [Plotly 4.0](https://medium.com/plotly/plotly-py-4-0-is-here-offline-only-express-first-displayable-anywhere-fc444e5659ee)
 * [plotly_express](https://github.com/plotly/plotly_express/)
 * [altair](https://altair-viz.github.io/)
 * [chartify](https://chartify.io/)
