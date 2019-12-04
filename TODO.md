@@ -35,6 +35,7 @@
 * Args and Kwargs
 * Python custom exceptions
 * Python performance [profiling](https://scikit-learn.org/stable/developers/performance.html)
+* Advanced clauses (for+else, try+except+finally+else, yield...)
 
 ### Python performance
 1. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
