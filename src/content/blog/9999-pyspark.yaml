@@ -49,6 +49,12 @@ content_markdown: |
   ```python
   sdf.where(sdf["identifier"].isin(transactions))
   ```
+
+  ## set_a - set_b
+
+  ```python
+  sdf1.select("identifier").exceptAll(sdf2.select("identifier")))
+  ```
   
   ## max
 
