@@ -1,0 +1,78 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: cmder
+title: Cmder terminal
+date: "2019-12-15"
+image: cmder_square.png
+highlight: True
+
+tags:
+  - Tootls
+
+tags_filter:
+  - Tools
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Cmder
+  url: https://cmder.net/
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Cmder is a really good terminal for windows that can replace the default one.
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 0. Overview
+  
+  **Cmder** is a software package created out of pure frustration over the absence of nice console emulators on Windows.
+  It is based on amazing software, and spiced up with the Monokai color scheme and a custom prompt layout, looking sexy from the start.
+
+  ## 1. Instalation
+
+  You can download from the [webpage](https://cmder.net/).
+  If you already have git for windows yo can download the mini version.
+
+  After downloading it extract the data and copy it to `C:\Program Files (x86)\cmder_mini`.
+  Then open the `.exe` file (`C:\Program Files (x86)\cmder_mini\Cmder.exe`) to start using it.
+
+  ## 2. Setting it as the default terminal
+
+  Open the **cmder** settings wiht `WIN` + `ALT` + `P`.
+  Then go to `Integration` / `Default term` and mark `Force conEmu as default terminal for console applications`.
+
+  <div class="w3-center">
+    <img src="/static/images/posts/cmder_defualt.png" alt="cmder_defualt" class="w3-image w3-padding-16" style="max-height: 600px;"/>
+  </div>
+
+  After that any operation that opens the terminal or the powershell will open `cmder`.
+
+  ## 3. Features
+
+  One of the best features is that most linx commands (like `ls`) work here as well as the windows ones (like `dir`).
+  So for example, no more problems with `cls` vs `clear` both work here!
+
+  Another really great feature is that you can open multiple consoles as tabs (like with chrome) with `CTRL` + `T` and close it with `CTRL` + `W`.
+
+  It is also way better visually than the default windows terminal.
+  And it has git integrations so that you will see by default the branch you are working on.
+
+  <div class="w3-center">
+    <img src="/static/images/posts/cmder.png" alt="cmder" class="w3-image w3-padding-16" style="max-height: 600px;"/>
+  </div>
+
+  One other cool feature are alias.
+  For example you can write `alias jn=jupyter notebook` and the write `jn` to start jupyter notebooks.
+
+  It has a lot of other nice features, you can read about it in their webpage.
+  But the best way would be to install and try it.
