@@ -80,7 +80,6 @@
 ## Tools
 * [delta](https://delta.io/)
 * Databricks
-* Cmder
 
 ## Other
 * ETL with APIs
