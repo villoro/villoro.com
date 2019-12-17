@@ -74,5 +74,26 @@ content_markdown: |
   One other cool feature are alias.
   For example you can write `alias jn=jupyter notebook` and the write `jn` to start jupyter notebooks.
 
+  As an example some useful alias would be:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">command</th>
+      <th class="v-table-header">description</th>
+    </tr>
+    <tr>
+      <td>alias ll=ls -lah</td>
+      <td>list files with details and human readable sizes</td>
+    </tr>
+    <tr>
+      <td>alias jn=cd c:/PYTHON $t jupyter notebook</td>
+      <td>go to the python path and open jupyter notebook</td>
+    </tr>
+    <tr>
+      <td>alias jl=cd c:/PYTHON $t jupyter lab</td>
+      <td>go to the python path and open jupyter lab</td>
+    </tr>
+  </table>
+
   It has a lot of other nice features, you can read about it in their webpage.
   But the best way would be to install and try it.
