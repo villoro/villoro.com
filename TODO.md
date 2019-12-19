@@ -47,6 +47,8 @@
 * Pandas? See that example: https://realpython.com/fast-flexible-pandas/
 * Spark
     * Spark gridsearch
+    * H2O
+    * Koalas
 
 ## Cloud
 
