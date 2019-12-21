@@ -1,16 +1,18 @@
-# Home
+# 1. Home
 * Add button to subscribe to the mailing list
 
-# Blog
+
+# 2. Blog
 * Lateral bar with list of posts
 * Lateral bar with navigation (https://codepen.io/clokey2k/pen/jgfFD)
+* Add button to subscribe to the mailing list
 
 
-# About
+# 3. About
 * Add a T with domains of knowledge
 
 
-# Performance
+# 4. Performance
 * Use [fontello](http://fontello.com/) with:
     * fa-check
     * fa-bars
@@ -24,37 +26,69 @@
 * scripts with lazy loading
 
 
-# Posts
-* Airflow Tasks
-* Linux
-* Docker
-* AWS:
-    * AWS + Docker
-    * AWS API security groups
-* Python performance series:
-    2. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
-    3. Python performance: [dask](http://docs.dask.org/en/latest/why.html)
-    4. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
-    5. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
-    6. Pandas? See that example: https://realpython.com/fast-flexible-pandas/
-* DNS
-* Heroku deployment
-* ETL with APIs
-    * Google Analytics
-    * Facebook
-* Git ssh
-* NN with numpy
-* Intro to tensorflow 2.0
-* Charting libraries ([plotly](https://plot.ly/python/), [plotly_express](https://github.com/plotly/plotly_express/), [altair](https://altair-viz.github.io/), [chartify](https://chartify.io/), [seaborn](https://seaborn.pydata.org/) and [chartjs](https://www.chartjs.org/))
+# 5. Posts
+
+## Python
+
+### Python development
 * File structure of python projects
 * Args and Kwargs
-* [delta](https://delta.io/)
 * Python custom exceptions
-* Databricks
+* Python performance [profiling](https://scikit-learn.org/stable/developers/performance.html)
+* Advanced clauses (for+else, try+except+finally+else, yield...)
+* Python installation (windows + linux) + conda
+
+### Python performance
+1. Python performance: [modin](https://towardsdatascience.com/get-faster-pandas-with-modin-even-on-your-laptops-b527a2eeda74)
+2. Python performance: [dask](http://docs.dask.org/en/latest/why.html)
+3. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
+4. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
+
+* Pandas? See that example: https://realpython.com/fast-flexible-pandas/
+* Spark
+    * Spark gridsearch
+    * H2O
+    * Koalas
+
+## Cloud
+
+### AWS
+* AWS + Docker
+* AWS API security groups
+
+### Azure
 * Azure Data Factory (ADF)
 * Azure DevOps
-* Spark
+
+## Systems
+* Linux
+* Docker
+* DNS
+* Heroku deployment
+
+## Charting libraries
+* [plotly](https://plot.ly/python/)
+    * [Plotly 4.0](https://medium.com/plotly/plotly-py-4-0-is-here-offline-only-express-first-displayable-anywhere-fc444e5659ee)
+* [plotly_express](https://github.com/plotly/plotly_express/)
+* [altair](https://altair-viz.github.io/)
+* [chartify](https://chartify.io/)
+* [seaborn](https://seaborn.pydata.org/)
+* [chartjs](https://www.chartjs.org/))
+
+## ML / AI
+* NN with numpy
+* Intro to tensorflow 2.0
+
+## Tools
+* [delta](https://delta.io/)
+* Databricks
+* Cmder
+
+## Other
+* ETL with APIs
+    * Facebook
 
 
-# Other
+# 6. Other
+
 * Set google_analytics at `develop.villoro.com`
