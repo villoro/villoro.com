@@ -93,6 +93,14 @@ content_markdown: |
       <td>alias jl=cd c:/PYTHON $t jupyter lab</td>
       <td>go to the python path and open jupyter lab</td>
     </tr>
+    <tr>
+      <td>alias cdp=cd c:/PYTHON</td>
+      <td>go to the python path</td>
+    </tr>
+    <tr>
+      <td>alias rf=python src/index.py</td>
+      <td>open a flask app</td>
+    </tr>
   </table>
 
   It has a lot of other nice features, you can read about it in their webpage.
