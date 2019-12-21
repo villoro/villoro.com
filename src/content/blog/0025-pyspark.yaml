@@ -17,9 +17,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: Github
-#   url: https://github.com/villoro/villoro_posts/tree/master/0024-pandas_intro
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0025-pyspark
 
 
 # --------------------------------------------------------------------------------------------------
@@ -197,19 +197,140 @@ content_markdown: |
   > It is posible to only call `do_something(sdf)` but **it won't update the dataframe**.
 
   ### 4.1. Add columns
-  ### 4.2. Change dtypes
-  ### 4.3. Modify certain vales
-  ### 4.4. Sort
-  ### 4.5. Delete columns
-  ### 4.6. Drop duplicates
-  ### 4.7. UDF
 
-  ## 5. Transformations
+  As an example, to add a column called `new_col` with the same value as `Age` do:
+
+  ```python
+  sdf = sdf.withColumn("new_col", sdf["Age"])
+  ```
+
+  ### 4.2. Change dtypes
+
+  **Dtypes** are changed using the `cast` method of a column.
+
+  ```python
+  from pyspark.sql.types import IntegerType
+  sdf = sdf.withColumn("Age", sdf["Age"].cast(IntegerType()))
+  ```
+
+  > You need to specify a type from `pyspark.sql.types`.
+
+  ### 4.3. Modify certain vales
+
+  To modify the data itself use `sdf.withColumn`.
+  You can either create a new column at the same time or update the existing one.
+  For example:
+
+  ```python
+  from pyspark.sql.functions import when
+
+  sdf.withColumn("sex_code", sdf["Sex"].substr(1, 1).alias("Sex code"))
+
+  # This is the equivalent of pandas df.loc
+  sdf.withColumn("Age", when(sdf["Age"] > 0, sdf["Age"]).otherwise(-1))
+  ```
+
+  You can fill missing values of multiple columns using:
+
+  ```python
+  sdf.fillna({"Age": 0, "Cabin": "no cabin"})
+  ```
+
+  And replace values on certain columns:
+  ```python
+  sdf.replace("male", "m", "Sex")
+  ```
+
+  ### 4.4. Sort
+
+  ```python
+  sdf.sort("Age", ascending=False)
+  ```
+
+  ### 4.5. Delete columns
+
+  ```python
+  sdf.drop("new_col")
+  ```
+
+  ### 4.6. Drop duplicates
+
+  ```python
+  sdf.drop_duplicates(["Pclass"])
+  ```
+
+  ### 4.7. User Defined Functions (UDF)
+
+  It is posible to define new functions and apply them to a column.
+  To define it you need to specify the output type (int, str...).
+  The transformation will be apply element wise.
+
+  ```python
+  from pyspark.sql.functions import udf
+
+  @udf(IntegerType())
+  def sum_1(x):
+      if x is not None:
+          return x + 1
+      return None
+
+  sdf.withColumn("Next_Age", sum_1(sdf["Age"]))
+  ```
+
+  ## 5. Group data
+
+  To group data you can use the `sdf.groupby` method.
+  It is possible to call simple functions like `count` or use `agg` to apply custom aggregations at once.
+
+  ```python
+  sdf.groupby("Sex").count()
+
+  sdf.groupby("Sex").agg({"sex": "count", "Age": "max"})
+  ```
 
   ## 6. SQL
 
+  One really useful feature of spark is that you can use **SQL** syntax and **spark** will translate and apply it.
+
+  Before using **SQL** you need to register the table:
+
+  ```python
+  sdf.createOrReplaceTempView("titanic")
+  ```
+
+  Then you can perform queries using `spark` object:
+
+  ```python
+  spark.sql("SELECT * FROM titanic WHERE sex = 'female' LIMIT 5")
+  ```
+
+  > The output of `spark.sql` is another dataframe and you can save it with `sdf = spark.sql`
+
   ## 7. Write
 
+  **Spark** can write files in a lot of different formats. One of the best is `parquet`.
+  To save a parquet file use:
+
+  ```python
+  sdf.write.format("parquet").mode("overwrite").save("titanic_train.parquet")
+  ```
+
   ## 8. Interacting with python
+
+  Some times you need to retrive some data from spark to python.
+
+  For example you can always transform a dataframe to **pandas** with `sdf.toPandas()`.
+
+  > When transforming to Pandas it will load the data into memory. Be careful to not load a dataframe too big.
  
-  
+  To get a column as a python list use:
+
+  ```python
+  sdf.select("Name").rdd.flatMap(lambda x: x).collect()
+  ```
+
+  And finally yo can use collect to retrive one value:
+
+  ```python
+  sdf.agg({"Age": "max"}).collect()[0][0]
+  ```
