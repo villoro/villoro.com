@@ -4,7 +4,7 @@
 code: pyspark
 title: Pyspark intro
 date: "2019-11-21"
-image: default.png
+image: spark_square.png
 highlight: True
 
 tags:
@@ -28,9 +28,9 @@ tags_filter:
 brief_markdown: |
   TODO
 
-# image_head:
-#   filename: pandas.svg
-#   caption: pangas
+image_head:
+  filename: spark.svg
+  caption: spark
 
 content_markdown: |
 
@@ -38,27 +38,37 @@ content_markdown: |
 
   [TOC]
 
-  ## Get one column
+  ## 0. Overview
 
-  ```python
-  sdf.select("id").rdd.flatMap(lambda x: x).collect()
-  ```
+  ## 1. Create dataframe
+  ### 1.1. RDD
+  ### 1.2. Read file
 
-  ## isin
+  ## 2. Inspect
+  ### 2.1. Show data
+  ### 2.2. General info
 
-  ```python
-  sdf.where(sdf["identifier"].isin(transactions))
-  ```
+  ## 3. Slicing
+  ### 3.1. First rows
+  ### 3.2. Filter columns
+  ### 3.3. Filter rows
+  ### 3.4. Unique values
 
-  ## set_a - set_b
+  ## 4. Modify the dataframe
+  ### 4.1. Add columns
+  ### 4.2. Change dtypes
+  ### 4.3. Modify certain vales
+  ### 4.4. Sort
+  ### 4.5. Delete columns
+  ### 4.6. Drop duplicates
+  ### 4.7. UDF
 
-  ```python
-  sdf1.select("identifier").exceptAll(sdf2.select("identifier")))
-  ```
-  
-  ## max
+  ## 5. Transformations
 
-  ```python
-  sdf.agg({"id": "max"}).collect()[0][0]
-  ```
+  ## 6. SQL
+
+  ## 7. Write
+
+  ## 8. Interacting with python
+ 
   
