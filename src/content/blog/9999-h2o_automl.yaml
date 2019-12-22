@@ -1,0 +1,45 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: h2o_automl
+title: H2O AutoML
+date: "2019-12-22"
+image: h2o_autoML_square.jpg
+highlight: True
+
+tags:
+  - Python
+  - Spark
+  - H2O
+
+tags_filter:
+  - Python
+  - Spark
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: https://github.com/villoro/villoro_posts/tree/master/0025-pyspark
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  TODO
+
+image_head:
+  filename: h2o.png
+  caption: h2o
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 0. Overview
+
+  Apache Spark is a very fast unified analytics engine for big data and machine learning.

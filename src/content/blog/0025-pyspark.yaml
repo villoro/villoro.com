@@ -13,6 +13,7 @@ tags:
 
 tags_filter:
   - Python
+  - Spark
 
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
