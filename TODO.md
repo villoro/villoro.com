@@ -92,3 +92,4 @@
 # 6. Other
 
 * Set google_analytics at `develop.villoro.com`
+* Add tags to tables_format post

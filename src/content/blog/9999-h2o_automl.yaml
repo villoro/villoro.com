@@ -34,6 +34,8 @@ image_head:
   filename: h2o.png
   caption: h2o
 
+use_chartjs: True
+
 content_markdown: |
 
   ## Table of Contents
@@ -132,7 +134,7 @@ content_markdown: |
 
   ### 2.3. Check results
 
-  You can see the results with `aml.leaderboard`.
+  You can see the results with `lb = aml.leaderboard`.
   However it is more useful to see all possible information with:
 
   ```python
@@ -143,9 +145,113 @@ content_markdown: |
   lb.head(rows=lb.nrows)
   ```
 
+  The results from the example are:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">model_id</th>
+      <th class="v-table-header">auc</th>
+      <th class="v-table-header">logloss</th>
+      <th class="v-table-header">aucpr</th>
+      <th class="v-table-header">mean_per_class_error</th>
+    </tr>
+    <tr>
+      <td>StackedEnsemble_AllModels_AutoML_20191222_171149</td>
+      <td>0.786427</td>
+      <td>0.555344</td>
+      <td>0.803633</td>
+      <td>0.319589</td>
+    </tr>
+    <tr>
+      <td>StackedEnsemble_BestOfFamily_AutoML_20191222_171149</td>
+      <td>0.783762</td>
+      <td>0.557932</td>
+      <td>0.800806</td>
+      <td>0.33061</td>
+    </tr>
+    <tr>
+      <td>GBM_5_AutoML_20191222_171149</td>
+      <td>0.780862</td>
+      <td>0.559708</td>
+      <td>0.79783</td>
+      <td>0.325399</td>
+    </tr>
+    <tr>
+      <td>GBM_1_AutoML_20191222_171149</td>
+      <td>0.778997</td>
+      <td>0.56159</td>
+      <td>0.796523</td>
+      <td>0.326697</td>
+    </tr>
+    <tr>
+      <td>GBM_grid__1_AutoML_20191222_171149_model_2</td>
+      <td>0.778615</td>
+      <td>0.591319</td>
+      <td>0.795194</td>
+      <td>0.34516</td>
+    </tr>
+    <tr>
+      <td>GBM_2_AutoML_20191222_171149</td>
+      <td>0.778338</td>
+      <td>0.561527</td>
+      <td>0.79632</td>
+      <td>0.329805</td>
+    </tr>
+    <tr>
+      <td>GBM_3_AutoML_20191222_171149</td>
+      <td>0.776389</td>
+      <td>0.563906</td>
+      <td>0.793284</td>
+      <td>0.328065</td>
+    </tr>
+    <tr>
+      <td>GBM_4_AutoML_20191222_171149</td>
+      <td>0.770758</td>
+      <td>0.570912</td>
+      <td>0.790371</td>
+      <td>0.353743</td>
+    </tr>
+    <tr>
+      <td>DRF_1_AutoML_20191222_171149</td>
+      <td>0.765151</td>
+      <td>0.580246</td>
+      <td>0.783285</td>
+      <td>0.340491</td>
+    </tr>
+    <tr>
+      <td>XRT_1_AutoML_20191222_171149</td>
+      <td>0.765134</td>
+      <td>0.582172</td>
+      <td>0.783059</td>
+      <td>0.349171</td>
+    </tr>
+  </table>
+
   ## 3. H2O vs Manual ML
 
+  In order to compare the results of **H2O AutoML** I trained a Support Vector Classifier (SVC) and a Random Forest Classifier (RFC).
+  Then I also did a GridSearchCV with the RandomForest to get some numbers.
+
+  The parameters for the GridSearchCV are:
+  ```yaml
+  {'n_estimators': [50, 100, 150, 200], 'max_features': ['auto', 'sqrt', 'log2']}
+  ```
+
+  And the 3 metrics analized are:
+
+  * Training time
+  * Prediction time
+  * [AUC](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc)
+
+  Here you can see how all models perform
+  <canvas id="auc_training_time" style="width:100%;height:500px;"></canvas>
+  <canvas id="auc_predict_time" style="width:100%;height:500px;"></canvas>
+
   ## 4. Sparkling water
+
+  Even though **H2O** uses MapReduce it might be useful to integrate it with spark.
+  To do so you only need to use **Sparkling water**.
+  This will help distribute tasks to workers using **Spark**.
 
   <div class="w3-center">
     <img 
@@ -155,3 +261,94 @@ content_markdown: |
       style="max-height: 500px;"
     />
   </div>
+
+  To install it read the official documentation.
+
+  Once it is installed you only need to replace the **H2O** initalization (`h2o.init()`) for:
+
+  ```python
+  from pyspark.sql import SparkSession
+  from pysparkling import H2OContext
+
+  spark = SparkSession.builder.appName("h2o_auto_ml").getOrCreate()
+  hc = H2OContext.getOrCreate(spark)
+  ```
+
+
+scripts: |
+  <script>
+    var xAxes = [{
+      scaleLabel: {
+        display: true,
+        labelString: 'AUC'
+      }
+    }]
+
+    var data_auc_predict_time = {
+      datasets: [
+        {
+          label: 'AutoML_2min',
+          backgroundColor: "#2196F3", 
+          data: [
+            {'x': 0.6867, 'y': 0.668, 'name': 'StackedEnsemble_AllModels_AutoML_20191222_105612'},
+            {'x': 0.6797, 'y': 0.4454, 'name': 'StackedEnsemble_BestOfFamily_AutoML_20191222_105612'},
+            {'x': 0.703, 'y': 0.0952, 'name': 'GBM_5_AutoML_20191222_105612'},
+            {'x': 0.7066, 'y': 0.084, 'name': 'GBM_1_AutoML_20191222_105612'},
+            {'x': 0.6981, 'y': 0.1359, 'name': 'GBM_grid__1_AutoML_20191222_105612_model_2'},
+            {'x': 0.7072, 'y': 0.0852, 'name': 'GBM_2_AutoML_20191222_105612'},
+            {'x': 0.7004, 'y': 0.0868, 'name': 'GBM_3_AutoML_20191222_105612'},
+            {'x': 0.7138, 'y': 0.089, 'name': 'GBM_4_AutoML_20191222_105612'},
+            {'x': 0.6349, 'y': 0.1039, 'name': 'DRF_1_AutoML_20191222_105612'},
+            {'x': 0.6328, 'y': 0.1095, 'name': 'XRT_1_AutoML_20191222_105612'},
+            {'x': 0.665, 'y': 0.0504, 'name': 'GBM_grid__1_AutoML_20191222_105612_model_3'},
+            {'x': 0.6512, 'y': 0.0547, 'name': 'DeepLearning_1_AutoML_20191222_105612'},
+            {'x': 0.6134, 'y': 0.0458, 'name': 'GLM_1_AutoML_20191222_105612'}
+          ],
+        },
+        {
+          label: 'sklearn',
+          backgroundColor: "#FF9800", 
+          data: [
+            {'x': 0.642, 'y': 1.5882, 'name': 'SVC_sklearn'},
+            {'x': 0.7015, 'y': 0.0974, 'name': 'RFC_sklearn'},
+            {'x': 0.7081, 'y': 0.203, 'name': 'RFC_GS_sklearn'}
+          ],
+        },
+      ]
+    }
+
+    var tooltips = {
+      callbacks: {
+        label: function(tooltipItem, data) {
+          var index = tooltipItem.index;
+          var datasetIndex = tooltipItem.datasetIndex;
+          
+          var dataset = data.datasets[datasetIndex];
+          var item = dataset.data[index];
+
+          return item.name + " (AUC: " + item.x + ", time: " + item.y + ")";
+        }
+      }
+    }
+
+    var auc_predict_time = new Chart("auc_predict_time", {
+      type: 'scatter',
+      data: data_auc_predict_time,
+      options: {
+        title: {
+          display: true,
+          text: 'AUC vs predict time [s]'
+        },
+        scales: {
+          xAxes: xAxes,
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Predict time [seconds]'
+            }
+          }]
+        },
+        tooltips: tooltips
+      }
+    });
+  </script>
