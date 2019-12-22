@@ -19,9 +19,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: Github
-#   url: https://github.com/villoro/villoro_posts/tree/master/0025-pyspark
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0026-h2o_automl
 
 
 # --------------------------------------------------------------------------------------------------
@@ -40,6 +40,118 @@ content_markdown: |
 
   [TOC]
 
-  ## 0. Overview
+  ## 1. What is H2O
 
-  Apache Spark is a very fast unified analytics engine for big data and machine learning.
+  According to their website, H2O is a fully open source, distributed in-memory machine learning platform with linear scalability.
+  H2O supports the most widely used statistical & machine learning algorithms including gradient boosted machines, generalized linear models, deep learning and more.
+
+  It uses MapReduce to break down tasks so that it can send tasts to workers on a cluster.
+
+  H2O also has an AutoML functionality that automatically runs through all the algorithms and their hyperparameters to produce a leaderboard of the best models.
+
+  ## 2. H2O AutoML
+
+  The best way to understand **AutoML** is by showing a practical case.
+  As an example we will use the [Higgs Challenge](https://www.kaggle.com/c/higgs-boson/data) data.
+  Since the preprocessing is out of the scope of this post we can directly use a copy of the preprocessed data:
+
+  <div class="w3-row w3-center" style="max-width:600px">
+    <div class="w3-col m2 w3-margin">
+      <a 
+        href="https://s3.amazonaws.com/erin-data/higgs/higgs_train_10k.csv"
+        class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber"
+      >
+        Train data
+      </a>
+    </div>
+
+    <div class="w3-col m2 w3-margin">
+      <a
+        href="https://s3.amazonaws.com/erin-data/higgs/higgs_test_5k.csv"
+        class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber"
+      >
+        Test data
+      </a>
+    </div>
+  </div>
+
+  ### 2.1. Start H2O session
+
+  This is really straightforward:
+
+  ```python
+  import h2o
+  from h2o.automl import H2OAutoML, get_leaderboard
+
+  h2o.init()
+  ```
+
+  This code will init an H2O session.
+
+  ### 2.2. Get data
+
+  The first step is to load the data.
+  Then we will create a list with the names of all feature columns an another for the target.
+  The last step is to mark the target as a `factor`. This means setting it as a target.
+  All this can be done with:
+
+  ```python
+  # Import a sample binary outcome train/test set into H2O
+  train = h2o.import_file("https://s3.amazonaws.com/erin-data/higgs/higgs_train_10k.csv")
+  test = h2o.import_file("https://s3.amazonaws.com/erin-data/higgs/higgs_test_5k.csv")
+
+  # Identify predictors and response
+  x = train.columns
+  y = "response"
+  x.remove(y)
+
+  # For binary classification, response should be a factor
+  train[y] = train[y].asfactor()
+  test[y] = test[y].asfactor()
+  ```
+
+  > This creates an `H2O` dataframe. You can always transform it to **Pandas** with `x.as_data_frame()`
+
+  ### 2.3. Train
+
+  The first step is to create the `H2OAutoML` object.
+  Since we aim to get reproducibility of the example we will set a seed.
+  When you do so you also need to specify the maximum number of models to be trained.
+
+  ```python
+  aml = H2OAutoML(max_models=20, seed=1, max_runtime_secs=training_minutes*60)
+  ```
+
+  I also find it useful to limit the total amount of time that **AutoML** can spend on training.
+
+  Once the **AutoML** object is declared to train you only need to pass the `training_frame` and the names of both **features** and **targets**.
+
+  ```python
+  aml.train(x=x, y=y, training_frame=train)
+  ```
+
+  ### 2.3. Check results
+
+  You can see the results with `aml.leaderboard`.
+  However it is more useful to see all possible information with:
+
+  ```python
+  # Optionally add extra model information to the leaderboard
+  lb = get_leaderboard(aml, extra_columns='ALL')
+
+  # Print all rows (instead of default 10 rows)
+  lb.head(rows=lb.nrows)
+  ```
+
+  ## 3. H2O vs Manual ML
+
+  ## 4. Sparkling water
+
+  <div class="w3-center">
+    <img 
+      src="/static/images/posts/h2o_sparkling_water_architecture.png"
+      alt="h2o_sparkling_water_architecture"
+      class="w3-image w3-padding"
+      style="max-height: 500px;"
+    />
+  </div>
