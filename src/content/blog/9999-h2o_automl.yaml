@@ -156,70 +156,70 @@ content_markdown: |
       <th class="v-table-header">mean_per_class_error</th>
     </tr>
     <tr>
-      <td>StackedEnsemble_AllModels_AutoML_20191222_171149</td>
+      <td>StackedEnsemble_AllModels_AutoML</td>
       <td>0.786427</td>
       <td>0.555344</td>
       <td>0.803633</td>
       <td>0.319589</td>
     </tr>
     <tr>
-      <td>StackedEnsemble_BestOfFamily_AutoML_20191222_171149</td>
+      <td>StackedEnsemble_BestOfFamily_AutoML</td>
       <td>0.783762</td>
       <td>0.557932</td>
       <td>0.800806</td>
       <td>0.33061</td>
     </tr>
     <tr>
-      <td>GBM_5_AutoML_20191222_171149</td>
+      <td>GBM_5_AutoML</td>
       <td>0.780862</td>
       <td>0.559708</td>
       <td>0.79783</td>
       <td>0.325399</td>
     </tr>
     <tr>
-      <td>GBM_1_AutoML_20191222_171149</td>
+      <td>GBM_1_AutoML</td>
       <td>0.778997</td>
       <td>0.56159</td>
       <td>0.796523</td>
       <td>0.326697</td>
     </tr>
     <tr>
-      <td>GBM_grid__1_AutoML_20191222_171149_model_2</td>
+      <td>GBM_grid__1_AutoML_model_2</td>
       <td>0.778615</td>
       <td>0.591319</td>
       <td>0.795194</td>
       <td>0.34516</td>
     </tr>
     <tr>
-      <td>GBM_2_AutoML_20191222_171149</td>
+      <td>GBM_2_AutoML</td>
       <td>0.778338</td>
       <td>0.561527</td>
       <td>0.79632</td>
       <td>0.329805</td>
     </tr>
     <tr>
-      <td>GBM_3_AutoML_20191222_171149</td>
+      <td>GBM_3_AutoML</td>
       <td>0.776389</td>
       <td>0.563906</td>
       <td>0.793284</td>
       <td>0.328065</td>
     </tr>
     <tr>
-      <td>GBM_4_AutoML_20191222_171149</td>
+      <td>GBM_4_AutoML</td>
       <td>0.770758</td>
       <td>0.570912</td>
       <td>0.790371</td>
       <td>0.353743</td>
     </tr>
     <tr>
-      <td>DRF_1_AutoML_20191222_171149</td>
+      <td>DRF_1_AutoML</td>
       <td>0.765151</td>
       <td>0.580246</td>
       <td>0.783285</td>
       <td>0.340491</td>
     </tr>
     <tr>
-      <td>XRT_1_AutoML_20191222_171149</td>
+      <td>XRT_1_AutoML</td>
       <td>0.765134</td>
       <td>0.582172</td>
       <td>0.783059</td>
@@ -243,9 +243,14 @@ content_markdown: |
   * Prediction time
   * [AUC](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc)
 
-  Here you can see how all models perform
-  <canvas id="auc_training_time" style="width:100%;height:500px;"></canvas>
+  Here you can see how all models perform:
   <canvas id="auc_predict_time" style="width:100%;height:500px;"></canvas>
+
+  **AutoML** models are usally faster for predict and some of them perform better than the manual ones.
+
+  <canvas id="auc_train_time" style="width:100%;height:500px;"></canvas>
+
+  The training time with **AutoML** was lower than sklearn while having equal or better results.
 
   ## 4. Sparkling water
 
@@ -284,25 +289,39 @@ scripts: |
       }
     }]
 
+    var tooltips = {
+      callbacks: {
+        label: function(tooltipItem, data) {
+          var index = tooltipItem.index;
+          var datasetIndex = tooltipItem.datasetIndex;
+          
+          var dataset = data.datasets[datasetIndex];
+          var item = dataset.data[index];
+
+          return item.name + " (AUC: " + item.x + ", time: " + item.y + "s)";
+        }
+      }
+    }
+
     var data_auc_predict_time = {
       datasets: [
         {
           label: 'AutoML_2min',
           backgroundColor: "#2196F3", 
           data: [
-            {'x': 0.6867, 'y': 0.668, 'name': 'StackedEnsemble_AllModels_AutoML_20191222_105612'},
-            {'x': 0.6797, 'y': 0.4454, 'name': 'StackedEnsemble_BestOfFamily_AutoML_20191222_105612'},
-            {'x': 0.703, 'y': 0.0952, 'name': 'GBM_5_AutoML_20191222_105612'},
-            {'x': 0.7066, 'y': 0.084, 'name': 'GBM_1_AutoML_20191222_105612'},
-            {'x': 0.6981, 'y': 0.1359, 'name': 'GBM_grid__1_AutoML_20191222_105612_model_2'},
-            {'x': 0.7072, 'y': 0.0852, 'name': 'GBM_2_AutoML_20191222_105612'},
-            {'x': 0.7004, 'y': 0.0868, 'name': 'GBM_3_AutoML_20191222_105612'},
-            {'x': 0.7138, 'y': 0.089, 'name': 'GBM_4_AutoML_20191222_105612'},
-            {'x': 0.6349, 'y': 0.1039, 'name': 'DRF_1_AutoML_20191222_105612'},
-            {'x': 0.6328, 'y': 0.1095, 'name': 'XRT_1_AutoML_20191222_105612'},
-            {'x': 0.665, 'y': 0.0504, 'name': 'GBM_grid__1_AutoML_20191222_105612_model_3'},
-            {'x': 0.6512, 'y': 0.0547, 'name': 'DeepLearning_1_AutoML_20191222_105612'},
-            {'x': 0.6134, 'y': 0.0458, 'name': 'GLM_1_AutoML_20191222_105612'}
+            {'x': 0.6867, 'y': 0.668, 'name': 'StackedEnsemble_AllModels_AutoML'},
+            {'x': 0.6797, 'y': 0.4454, 'name': 'StackedEnsemble_BestOfFamily_AutoML'},
+            {'x': 0.703, 'y': 0.0952, 'name': 'GBM_5_AutoML'},
+            {'x': 0.7066, 'y': 0.084, 'name': 'GBM_1_AutoML'},
+            {'x': 0.6981, 'y': 0.1359, 'name': 'GBM_grid__1_AutoML_model_2'},
+            {'x': 0.7072, 'y': 0.0852, 'name': 'GBM_2_AutoML'},
+            {'x': 0.7004, 'y': 0.0868, 'name': 'GBM_3_AutoML'},
+            {'x': 0.7138, 'y': 0.089, 'name': 'GBM_4_AutoML'},
+            {'x': 0.6349, 'y': 0.1039, 'name': 'DRF_1_AutoML'},
+            {'x': 0.6328, 'y': 0.1095, 'name': 'XRT_1_AutoML'},
+            {'x': 0.665, 'y': 0.0504, 'name': 'GBM_grid__1_AutoML_model_3'},
+            {'x': 0.6512, 'y': 0.0547, 'name': 'DeepLearning_1_AutoML'},
+            {'x': 0.6134, 'y': 0.0458, 'name': 'GLM_1_AutoML'}
           ],
         },
         {
@@ -315,20 +334,6 @@ scripts: |
           ],
         },
       ]
-    }
-
-    var tooltips = {
-      callbacks: {
-        label: function(tooltipItem, data) {
-          var index = tooltipItem.index;
-          var datasetIndex = tooltipItem.datasetIndex;
-          
-          var dataset = data.datasets[datasetIndex];
-          var item = dataset.data[index];
-
-          return item.name + " (AUC: " + item.x + ", time: " + item.y + ")";
-        }
-      }
     }
 
     var auc_predict_time = new Chart("auc_predict_time", {
@@ -345,6 +350,60 @@ scripts: |
             scaleLabel: {
               display: true,
               labelString: 'Predict time [seconds]'
+            }
+          }]
+        },
+        tooltips: tooltips
+      }
+    });
+
+    var data_auc_train_time = {
+      datasets: [
+        {
+          label: 'AutoML_2min',
+          backgroundColor: "#2196F3", 
+          data: [
+            {'x': 0.6867, 'y': 1.393, 'name': 'StackedEnsemble_AllModels_AutoML'},
+            {'x': 0.6797, 'y': 0.743, 'name': 'StackedEnsemble_BestOfFamily_AutoML'},
+            {'x': 0.703, 'y': 1.092, 'name': 'GBM_5_AutoML'},
+            {'x': 0.7066, 'y': 0.804, 'name': 'GBM_1_AutoML'},
+            {'x': 0.6981, 'y': 2.936, 'name': 'GBM_grid__1_AutoML_model_2'},
+            {'x': 0.7072, 'y': 0.813, 'name': 'GBM_2_AutoML'},
+            {'x': 0.7004, 'y': 0.895, 'name': 'GBM_3_AutoML'},
+            {'x': 0.7138, 'y': 1.165, 'name': 'GBM_4_AutoML'},
+            {'x': 0.6349, 'y': 1.815, 'name': 'DRF_1_AutoML'},
+            {'x': 0.6328, 'y': 2.541, 'name': 'XRT_1_AutoML'},
+            {'x': 0.665, 'y': 0.166, 'name': 'GBM_grid__1_AutoML_model_3'},
+            {'x': 0.6512, 'y': 0.893, 'name': 'DeepLearning_1_AutoML'},
+            {'x': 0.6134, 'y': 0.235, 'name': 'GLM_1_AutoML'}
+          ],
+        },
+        {
+          label: 'sklearn',
+          backgroundColor: "#FF9800", 
+          data: [
+            {'x': 0.642, 'y': 5.1965, 'name': 'SVC_sklearn'},
+            {'x': 0.7015, 'y': 3.6673, 'name': 'RFC_sklearn'},
+            {'x': 0.7081, 'y': 60.3997, 'name': 'RFC_GS_sklearn'}
+          ],
+        },
+      ]
+    }
+
+    var auc_train_time = new Chart("auc_train_time", {
+      type: 'scatter',
+      data: data_auc_train_time,
+      options: {
+        title: {
+          display: true,
+          text: 'AUC vs training time [s]'
+        },
+        scales: {
+          xAxes: xAxes,
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Training time [seconds]'
             }
           }]
         },
