@@ -1,0 +1,258 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: pyspark_example
+title: PySpark example using parquets
+title_short: PySpark Example
+date: "2019-12-23"
+image: spark_example_square.png
+highlight: True
+
+tags:
+  - Python
+  - Spark
+
+tags_filter:
+  - Python
+  - Spark
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0028-pyspark_example
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  TODO
+
+# image_head:
+#   filename: spark.svg
+#   caption: spark
+
+use_chartjs: True
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 0. Overview
+
+  This post about pyspark will work with one example that should be too big to work with pandas.
+
+  Be sure to read [pyspark_intro](https://villoro.com/post/pyspark) before proceding with this post.
+
+  ## 1. Get data
+  
+  For this example we need to download a table that is really big.
+  We would use open data from [Catalunya](https://en.wikipedia.org/wiki/Catalonia).
+
+  > This dataset is quite big, it might take some hours to download.
+
+  It consits of 3 csvs:
+
+  * [Data](https://analisi.transparenciacatalunya.cat/Medi-Ambient/Dades-meteorol-giques-de-la-XEMA/nzvn-apee) (~22GB)
+  * [Variables](https://analisi.transparenciacatalunya.cat/d/4fb2-n3yi) (2 KB)
+  * [Stations](https://analisi.transparenciacatalunya.cat/d/yqwd-vj5e) (43 KB)
+
+  To download first click the `Exporta` button then `CSV per a Excel`.
+
+  <div class="w3-center">
+    <img
+      src="/static/images/posts/cat_weather_data.jpg"
+      alt="cat_weather_data"
+      class="w3-image w3-padding-16 w3-border"
+    />
+  </div>
+
+  ## 2. Work with pandas
+
+  Usually the first things is to read a chunk of data with:
+
+  ```python
+  pd.read_csv(c.URI_CSV, index_col=0, nrows=1_000_000)
+  ```
+
+  And in one second you can have data 1 million rows into memory.
+  But if you try to read the whole file you will probably run out of memory.
+
+  > Pandas developers suggest that you have between **5 to 10 times as RAM as the file size**.
+  Since the file is 22GB you should have more than **110 GB of RAM**.
+
+  But fear not, you can work with pyspark which way less memory.
+  I was able to everything in my computer with only 16 GB of RAM.
+
+  ## 2. Check data
+
+  You can read the whole table with spark and it will be really fast (only some seconds):
+
+  ```python
+  sdf = spark.read.csv("Dades_meteorol_giques_de_la_XEMA.csv", header=True)
+  ```
+
+  Remember that **spark is lazy**.
+  It won't do anything until you call an operation that requires to do calculations.
+  Some of those could be `sdf.show`, `sdf.toPandas` or writting a file.
+
+  Let's try to count the number of stations:
+
+  ```python
+  sdf.select("CODI_ESTACIO").distinct().count()
+  ```
+
+  This took around **6 minutes**. As you are probably thinking this is slow.
+  The problem is that we are reading from a `csv` which is a really ineficient file format.
+
+  Let's transform it to `parquet` which is way better.
+
+  ```python
+  # This took me 17 min with a Solid State Disk (SSD).
+  sdf.write.format("parquet").mode("overwrite").save("weather_data.parquet")
+  ```
+
+  > Remember to load the dataframe from the `parquet` file to see the performance improvement.
+
+  ## 3. Read data
+
+  Now is possible to do things like counting the rows or the number of unique stations without spending too much time.
+
+  <canvas id="count_time_by_format" style="width:100%;height:300px;"></canvas>
+
+  ### 3.1. Explore possible partitions
+
+  It is a good idea to store dataframe in parquet by partitions.
+  Usually they are partitioned by `date`.
+  But what is important is that you partition by a column that you will usually filter or aggregate.
+
+  > You should never choose a partition column that has a lot of unique values since it will mean a lot of files.
+
+  #### 3.1.1. Using station column
+
+  By counting the number of rows by station we can see that:
+
+  * there are 212 stations
+  * they are more or less equally distributed
+
+  So this is a good column to use for partitions
+
+  <canvas id="partition_station" style="width:100%;height:300px;"></canvas>
+
+  #### 3.1.2. Using variable column
+
+  This is another valid column for partition.
+  But since we are going to do analysis filtering by station it is better to partition by `station`.
+
+  #### 3.1.3 Using both station and variable column
+
+  In this case the results are worst.
+  The problem is that using to partitions is only useful if there are really a lot of rows.
+
+  In our case it ends up using **2 times the space disk** as the file partitioned by `station`.
+
+  <table class="v-table" align="center">
+    <tr>
+      <th class="v-table-header">partition</th>
+      <th class="v-table-header">unique partitions</th>
+      <th class="v-table-header">disk usage [GB]</th>
+      <th class="v-table-header">writting time [min]</th>
+    </tr>
+    <tr>
+      <td>station</td>
+      <td>212</td>
+      <td>2.56</td>
+      <td>30.28</td>
+    </tr>
+    <tr>
+      <td>variables</td>
+      <td>26</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>station + variables</td>
+      <td>2893</td>
+      <td>4.44</td>
+      <td>60.6</td>
+    </tr>
+  </table>
+
+  ## 4. Explore data
+
+  Now that we have the data properly stored let's do some exploration.
+  First remeber to load the data from the partitioned file.
+
+
+
+
+scripts: |
+  <script>
+
+    var count_scales = {
+      xAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: 'time [s]'
+        }
+      }],
+    }
+    var count_time_by_format = new Chart("count_time_by_format", {
+      type: 'horizontalBar',
+      data: {
+        labels: ["count", "unique_stations"],
+        datasets: [
+            {
+              label: 'csv',
+              backgroundColor: "#FFA726", 
+              data: [133.8, 382.2],
+            },
+            {
+              label: 'parquet',
+              backgroundColor: "#AED581",
+              data: [0.65, 44.33],
+            }
+          ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Time of some operations based on source format'
+        },
+        scales: count_scales,
+      }
+    });
+
+    var partition_scales = {
+      yAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: 'Number of rows'
+        }
+      }],
+    };
+    var partition_station = new Chart("partition_station", {
+      type: 'bar',
+      data: {
+        labels: ['U8', 'YL', 'YK', 'V9', 'KE', 'KX', 'YJ', 'MW', 'M6', 'UV', 'YH', 'Y7', 'YG', 'UD', 'YF', 'W2', 'VL', 'YE', 'DM', 'VJ', 'VF', 'W3', 'VR', 'KP', 'MQ', 'U5', 'MV', 'MS', 'VT', 'WF', 'YD', 'Z4', 'YC', 'Y4', 'XZ', 'YB', 'X2', 'YA', 'ZD', 'Y6', 'CA', 'XQ', 'XO', 'XW', 'VY', 'W1', 'Y5', 'UO', 'Y9', 'VZ', 'VN', 'UE', 'W8', 'WW', 'XB', 'WO', 'J5', 'XY', 'XX', 'MR', 'UL', 'VX', 'XV', 'UI', 'XU', 'UK', 'WE', 'XM', 'XR', 'XS', 'XN', 'V4', 'WJ', 'WK', 'VV', 'XP', 'DD', 'WC', 'ZC', 'WM', 'WA', 'WB', 'W6', 'WN', 'VM', 'WL', 'WI', 'WG', 'WR', 'W4', 'VH', 'WP', 'VU', 'WD', 'U9', 'WX', 'UQ', 'UN', 'UA', 'V3', 'WY', 'VA', 'U7', 'VB', 'VC', 'UF', 'X6', 'W5', 'W9', 'VD', 'VO', 'X7', 'UM', 'V8', 'UX', 'U1', 'US', 'VE', 'UG', 'U6', 'V1', 'UC', 'UB', 'XL', 'U3', 'XT', 'VP', 'UY', 'V5', 'UJ', 'UH', 'U4', 'XH', 'D2', 'CV', 'WV', 'WS', 'XK', 'WQ', 'WT', 'X3', 'XI', 'U2', 'DC', 'VK', 'X1', 'X4', 'X5', 'UW', 'UU', 'UP', 'X9', 'Z6', 'Z8', 'Z9', 'Z2', 'Z5', 'ZB', 'Z1', 'Z7', 'Z3', 'XJ', 'D1', 'CI', 'CR', 'CQ', 'C9', 'WU', 'WZ', 'XE', 'XG', 'XF', 'XC', 'H1', 'D6', 'X8', 'D4', 'XD', 'DL', 'DQ', 'XA', 'DK', 'CT', 'D7', 'DO', 'D5', 'R1', 'DI', 'DN', 'CL', 'CD', 'C8', 'D8', 'DF', 'DB', 'DJ', 'CE', 'D3', 'CG', 'D9', 'CP', 'CW', 'CY', 'CJ', 'CC', 'C7', 'C6', 'CU', 'VS', 'VQ', 'DG', 'DP'],
+        datasets: [
+            {
+              label: '# rows',
+              backgroundColor: "#03A9F4", 
+              data: [8302, 14047, 43971, 78980, 115589, 118233, 119533, 125088, 128309, 195359, 204755, 273114, 295876, 299588, 334524, 355640, 377320, 407040, 437913, 444312, 447332, 450006, 454911, 457343, 462987, 487176, 492222, 505583, 536542, 550395, 586163, 589895, 637879, 653367, 686326, 731001, 787169, 823711, 849075, 895686, 949247, 1004290, 1004537, 1016008, 1019955, 1027506, 1027986, 1028999, 1029211, 1029362, 1029682, 1032421, 1038452, 1040681, 1047203, 1048588, 1087079, 1094578, 1099234, 1201727, 1214299, 1264653, 1266921, 1274510, 1281242, 1287059, 1314390, 1316705, 1338188, 1348602, 1374343, 1413843, 1541054, 1545685, 1559402, 1651047, 1654652, 1660993, 1662653, 1663632, 1665905, 1666025, 1666732, 1668356, 1669600, 1670027, 1671830, 1671963, 1674015, 1674381, 1674601, 1674777, 1675598, 1678127, 1678331, 1679158, 1679403, 1679456, 1680665, 1680897, 1681273, 1681890, 1683243, 1687849, 1691179, 1691337, 1691354, 1691866, 1692330, 1692455, 1692720, 1692959, 1696619, 1696626, 1698052, 1698514, 1701241, 1702876, 1705894, 1714486, 1798935, 1799445, 1799633, 1809832, 1820546, 1859426, 1865536, 1878670, 1878970, 1902593, 1907416, 1929974, 1990661, 2001741, 2034221, 2045436, 2060231, 2060421, 2063041, 2063305, 2066215, 2072389, 2073736, 2078882, 2083687, 2084710, 2094423, 2194022, 2196493, 2197028, 2200255, 2204796, 2261006, 2265438, 2265966, 2272313, 2274539, 2275871, 2279777, 2286359, 2287839, 2371506, 2396727, 2632815, 2633255, 2700333, 2735978, 2752211, 2752983, 2785819, 2789858, 2805382, 2806840, 2807361, 2807618, 2807982, 2808071, 2808273, 2808598, 2809160, 2809512, 2809721, 2809769, 2809836, 2809860, 2810019, 2810397, 2810937, 2810971, 2811045, 2811265, 2811385, 2811391, 2811477, 2811494, 2811613, 2811634, 2811696, 2811836, 2811996, 2812046, 2812050, 2812120, 2812962, 2813041, 2813335, 2813885, 2871561, 2884218, 2933747, 2982555, 2987600],
+            },
+          ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Number of rows grouped by station'
+        },
+        scales: partition_scales
+      }
+    });
+  </script>  
