@@ -4,7 +4,7 @@
 code: databricks
 title: Using databricks Unified Analytics Platform
 title_short: Using databricks
-date: "2019-11-03"
+date: "2019-12-23"
 image: databricks_square.jpg
 highlight: True
 
@@ -192,6 +192,8 @@ content_markdown: |
 
   #### 1.4.3. Spark logs
 
+  This allows to access the `stdout` and `stderr` logs of each spark worker.
+
   <div class="w3-center">
     <img
       src="/static/images/posts/databricks_logs_spark_1.jpg"
@@ -264,10 +266,87 @@ content_markdown: |
 
   ### 2.2. Spark
 
-  One of 
+  One of the great things about **databricks** is that it comes with spark install, configured and already imported.
+  To use spark you can simply call `spark`.
+  For example you could run in python `spark.sql("SELECT * FROM my_table")`.
 
   ### 2.3. dbutils
 
-  ## 3. Storing data
+  **Databricks** comes with a class that has some utilities.
+  This have 3 main functionalities:
+
+  * Secrets (`dbutils.secrets`)
+  * File system (`dbutils.fs`)
+  * Widgets (`dbutils.widgets`)
+  * Package installer (`dbutils.library`)
+
+  #### 2.3.1. dbutils.secrets
+
+  This allows to interact with secrets.
+  In Azure you will connect it to a Key Vault so that you can retrive secrets from there.
+
+  #### 2.3.2. dbutils.fs
+
+  This allows to write and read files.
+  It is also used to mount external storage units such as a datalake or a blob.
+
+  #### 2.3.3. dbutils.widgets
+
+  You can create custom widgets that allow you to interact with the notebook.
+  For example you can create and dropdown that sets the value of one python variable.
+
+  #### 2.3.4. dbutils.library
+
+  This allow you to install packages.
+  I would advise to manage libraries with the `Libraries` section of the cluster configuration.
+
+  > If you are using a **conda** environment `dbutils.library` won't work.
+
+  ### 2.4. display and displayHTML
+
+  The `display` object is mainly used to show tables.
+  You can pass a **spark** or **pandas** dataframe and it will be nicely displayed.
+  It also allows to create plots based on the dataframe.
+
+  `displayHTML` as the name suggest allows to display HTML content.
+  It is the equivalent of an `iframe` in HTML.
+
+  ## 3. Storing and reading data
+
+  Databricks come with a folder where you can store data.
+  It is under the path `/dbfs/FileStore`.
+  Hower I suggest that you mount your own external unit and store the data there.
+
+  One important aspect for reading and writting data is the paths.
+  Imagine that you have a table stored in `/dbfs/mnt/blob/data.delta`.
+  To read that in different languages you should:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">language</th>
+      <th class="v-table-header">sentence</th>
+    </tr>
+    <tr>
+      <td>python</td>
+      <td>/dbfs/mnt/blob/data.delta</td>
+    </tr>
+    <tr>
+      <td>sh</td>
+      <td>/dbfs/mnt/blob/data.delta</td>
+    </tr>
+    <tr>
+      <td>spark</td>
+      <td>dbfs:/mnt/blob/data.delta</td>
+    </tr>
+    <tr>
+      <td>SQL</td>
+      <td>SELECT * FROM delta.`/mnt/blob/data.delta`</td>
+    </tr>
+  </table>
 
   ## 4. Scheduling jobs
+
+  You can schedule jobs with the section `Jobs`.
+  It works like the Linux **chron**.
+
+  Hower it should only be used for small tasks since **it is not an orchestrator** like **Airflow** or **Azure Data Factory (ADF)**.
