@@ -4,7 +4,7 @@
 code: pyspark_example
 title: PySpark example using parquets
 title_short: PySpark Example
-date: "2019-12-23"
+date: "2019-12-24"
 image: spark_example_square.png
 highlight: True
 
