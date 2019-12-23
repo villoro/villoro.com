@@ -65,7 +65,11 @@ content_markdown: |
   With this version you can configure more things.
 
   <div class="w3-center">
-    <img src="/static/images/posts/databricks_cluster_creation.png" alt="databricks_cluster_creation" class="w3-image w3-padding-16 w3-border"/>
+    <img
+      src="/static/images/posts/databricks_cluster_creation.png"
+      alt="databricks_cluster_creation"
+      class="w3-image w3-padding-16 w3-border"
+    />
   </div>
 
   ##### 1.1.1.1. Cluster mode
@@ -105,7 +109,11 @@ content_markdown: |
   You only need to write a cluster name and decide the databricks runtime version.
 
   <div class="w3-center">
-    <img src="/static/images/posts/databricks_cluster_creation_community_edition.png" alt="databricks_cluster_creation_community_edition" class="w3-image w3-padding-16 w3-border"/>
+    <img
+      src="/static/images/posts/databricks_cluster_creation_community_edition.png"
+      alt="databricks_cluster_creation_community_edition"
+      class="w3-image w3-padding-16 w3-border"
+    />
   </div>
 
   ### 1.2. Permissions
@@ -137,7 +145,11 @@ content_markdown: |
   You can see an example of the libraries installed on a cluster:
 
   <div class="w3-center">
-    <img src="/static/images/posts/databricks_clusters_libraries.png" alt="databricks_clusters_libraries" class="w3-image w3-padding-16 w3-border"/>
+    <img
+      src="/static/images/posts/databricks_clusters_libraries.png"
+      alt="databricks_clusters_libraries"
+      class="w3-image w3-padding-16 w3-border"
+    />
   </div>
 
   > It is not possible to install python `wheels`, use `eggs` instead.
@@ -147,13 +159,24 @@ content_markdown: |
 
   ### 1.4. Logs
 
-  There are some kinds of logs:
+  There are some kind of logs:
 
   * event logs
   * driver logs
-    * standard output
-    * standard error
-    * log4j output
+      * standard output
+      * standard error
+      * log4j output
+  * spark logs
+      * worker standard output
+      * worker standard error
+
+  <div class="w3-center">
+    <img
+      src="/static/images/posts/databricks_logs.jpg"
+      alt="databricks_logs"
+      class="w3-image w3-padding-16 w3-border"
+    />
+  </div>
 
   #### 1.4.1. Event logs
 
@@ -166,6 +189,25 @@ content_markdown: |
 
   The `standard output` and `standard error` are self explanatory.
   The `log4j output` is the output that **spark** uses.
+
+  #### 1.4.3. Spark logs
+
+  <div class="w3-center">
+    <img
+      src="/static/images/posts/databricks_logs_spark_1.jpg"
+      alt="databricks_logs_spark_1"
+      class="w3-image w3-padding-16 w3-border"
+      style="margin-bottom: 16px;"
+    />
+  </div>
+
+  <div class="w3-center">
+    <img
+      src="/static/images/posts/databricks_logs_spark_2.jpg"
+      alt="databricks_logs_spark_2"
+      class="w3-image w3-padding-16 w3-border"
+    />
+  </div>
 
   ## 2. Notebooks
 
