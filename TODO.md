@@ -45,10 +45,7 @@
 4. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
 
 * Pandas? See that example: https://realpython.com/fast-flexible-pandas/
-* Spark
-    * Spark gridsearch
-    * H2O
-    * Koalas
+* Koalas
 
 ## Cloud
 
