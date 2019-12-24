@@ -1,10 +1,10 @@
 # --------------------------------------------------------------------------------------------------
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
-code: pyspark
+code: pyspark_intro
 title: Pyspark intro
 date: "2019-12-21"
-image: spark_square.png
+image: spark_intro_square.png
 highlight: True
 
 tags:
@@ -20,7 +20,7 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 link: 
   text: Github
-  url: https://github.com/villoro/villoro_posts/tree/master/0025-pyspark
+  url: https://github.com/villoro/villoro_posts/tree/master/0025-pyspark_intro
 
 
 # --------------------------------------------------------------------------------------------------
