@@ -28,7 +28,8 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  TODO
+  H2O is a fully open source, distributed in-memory machine learning platform with linear scalability.
+  In this post you will see how to use AutoML to let h2o train multiple Machine Learning algorithms automatically.
 
 image_head:
   filename: h2o.png
