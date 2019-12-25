@@ -28,7 +28,9 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  TODO
+  This is an example of how to work with spark dataframes using as an example a CSV with 22 GB.
+  This should be an example that you probably won't be able to work with pandas.
+  It will give some best practices for working with data of this size.
 
 # image_head:
 #   filename: spark.svg

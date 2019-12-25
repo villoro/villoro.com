@@ -27,7 +27,8 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  TODO
+  Apache Spark is a very fast unified analytics engine for big data and machine learning.
+  This is a beginer tutorial of how to use spark to work with dataframes.
 
 image_head:
   filename: spark.svg
