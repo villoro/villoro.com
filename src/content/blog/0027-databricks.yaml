@@ -31,6 +31,7 @@ link:
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
   Databricks provides a Unified Analytics Platform that accelerates innovation by unifying data science, engineering and business.
+  Learn how to set databricks up and what it can offer you.
 
 image_head:
   filename: databricks.png
