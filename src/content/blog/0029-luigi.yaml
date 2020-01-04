@@ -4,7 +4,7 @@
 code: luigi
 title: Luigi task scheduler
 title_short: Luigi scheduler
-date: "2019-12-24"
+date: "2020-01-04"
 image: luigi_square.png
 highlight: True
 
@@ -19,9 +19,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: Github
-#   url: https://github.com/villoro/villoro_posts/tree/master/0028-pyspark_example
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0029-luigi
 
 
 # --------------------------------------------------------------------------------------------------
@@ -29,10 +29,6 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
   TODO
-
-# image_head:
-#   filename: spark.svg
-#   caption: spark
 
 content_markdown: |
 
