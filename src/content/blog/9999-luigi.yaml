@@ -45,18 +45,37 @@ content_markdown: |
   ## 2. Installation
 
 
-  ## 4. Runing airflow with supervisor
+  ## 4. Automatically run luigi
 
   If you want a process always runing and to be restarted on failure you should use **supervisor**.
+  You should you use it for `luigid`.
 
+  For runing the tasks itselfs **Luigi** does not have a scheduler but you can use **cron** instead.
 
-  pip3 install supervisor
+  ### 4.1. Install supervisor
 
+  First install it with:
+
+  ```sh
+  sudo apt install supervisor -y
+  ```
+
+  Then create some auxiliar folders that you will need:
+
+  ```sh
+  # For luigi logs
   sudo mkdir /var/log/luigi/
 
+  # This is to allow luigi to store the worker state
   sudo mkdir /var/lib/luigi-server/
+  ```
 
-  
+  And now declare the `luigid` service by creating the file `/etc/supervisor/conf.d/luigid.conf`
+
+  <div class="input">
+    /etc/supervisor/conf.d/luigid.conf
+  </div>
+  ```toml
   [program:luigid]
   command=/home/ubuntu/.local/bin/luigid
   stopsignal=QUIT
@@ -64,24 +83,60 @@ content_markdown: |
   stderr_logfile=/var/log/luigi/luigid.error.log
   autorestart=true
   user=ubuntu
+  ```
 
+  It is important to use the full path for the command that **supervisor** will run.
+  Be careful to set `user` to one that has visbility of the `luigid` file.
 
+  > Remember you can call `whereis luigid` to get the full path
+
+  Then start supervisor:
+
+  ```sh
+  sudo supervisorctl reread
+  sudo service supervisor restart
+
+  # Check the result
+  sudo supervisorctl status
+  ```
+
+  If there are no errors you can start using **Luigi**.
+
+  ### 4.2. Runing luigi tasks with cron
+
+  Te best way to run **Luigi** automatically is using cron.
+  The first step is to create the `run_luigi.sh` file with:
 
   <div class="input">
     ~/run_luigi.sh
   </div>
   ```sh
-  source /home/ubuntu/.bashrc
+  # Add ssh keys
+  eval `keychain --agents ssh --eval github_ssh`
 
+  # Run luigi
   cd /home/ubuntu/villoro_tasks/
   python3 src/master.py
   ```
+
+  This script is loading the **ssh** keys so that it can work with **GIT** and then running luigi on the correct path.
+  In order to run this you should give it executable permissions with:
 
   ```sh
   chmod +x /home/ubuntu/run_luigi.sh
   ```
 
+  Then you can set **cron** to run this script with:
+
+  ```sh
+  crontab -e
+  ```
+
+  Add this adding this line at the end:
+
   ```sh
   0 5 * * * /home/ubuntu/run_luigi.sh
   ```
 
+  In this example it will run each day at 05:00 am.
+  If you want to run at different moment you can use [crontab.guru](https://crontab.guru/) to check cron expressions.
