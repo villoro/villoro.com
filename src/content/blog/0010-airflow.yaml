@@ -342,7 +342,7 @@ content_markdown: |
   Add this line at the end:
 
   ```sh
-  * */5 * * * cd /home/ubuntu/airflow_tasks && git fetch && git checkout master && git pull origin master
+  0 5 * * * cd /home/ubuntu/airflow_tasks && git fetch && git checkout master && git pull origin master
   ```
 
   > I use `/home/ubuntu/airflow_tasks` for the repo path and the folder `src` for **DAG**s path. But you can use whatever you want.
