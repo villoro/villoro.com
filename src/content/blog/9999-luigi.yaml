@@ -225,6 +225,165 @@ content_markdown: |
 
   ## 3. Using task templates
 
+  The best way to orchestrate tasks in a fault tolerant way is by having a script (or package) for each task.
+  This is the same as the last example where there ware `report.py` and `register.py` scripts.
+
+  Then since not all tasks will output a file let's create a template for task that writes a `yaml` file with metadata about the execution.
+  This will include the `start_time`, `end_time` and `duration` among others.
+  If the task fails it will also show info about the failure.
+
+  When a task fails will output file with have a slightly different name so that if it is run another time it will try to repeat the task.
+
+  The full template would be:
+
+  <div class="input">
+    luigi_default.py
+  </div>
+  ```python
+  import os
+  import time
+  from datetime import date, datetime
+
+  import luigi
+  import oyaml as yaml
+
+
+  PATH_LUIGI_YAML = "runs/"
+
+
+  class StandardTask(luigi.Task):
+      """
+          Extends luigi task, instead of calling run, one must call run_std
+
+          Params:
+              mdate:          date of execution
+              t_data:         is a dictionary with instance data
+              worker_timeout: maximum time allowed for a task to run in seconds
+      """
+
+      mdate = luigi.DateParameter(default=date.today())
+      worker_timeout = 1 * 3600  # Default timeout is 1h per task
+      t_data = {}
+
+      # This is meant to be overwritten
+      module = "change_this_to_module_name"
+
+      def output_filename(self, success=True):
+          """ Get output filename """
+
+          # output will be a yaml file inside a folder with date
+          uri = f"{PATH_LUIGI_YAML}{self.mdate:%Y%m%d}/"
+
+          # make sure folder exists
+          os.makedirs(uri, exist_ok=True)
+
+          # add task name
+          uri += self.__class__.__name__
+
+          # If task fails write a file with different name
+          # This allows re-runs to retry the failed task while keeping info about fails
+          if not success:
+              uri += datetime.now().strftime("_fail_%Y%m%d_%H%M%S")
+
+          return f"{uri}.yaml"
+
+      def output(self, success=True):
+          return luigi.LocalTarget(self.output_filename())
+
+      def save_result(self, success=True, **kwa):
+          """ Stores result as a yaml file """
+
+          # Store basic execution info
+          self.t_data["end_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+          self.t_data["duration"] = time.time() - self.start_time
+          self.t_data["success"] = success
+
+          # Allow extra params like 'exception'
+          self.t_data.update(**kwa)
+
+          # Export them as an ordered yaml
+          with open(self.output_filename(success), "w") as stream:
+              yaml.dump(self.t_data, stream)
+
+      def on_failure(self, exception):
+
+          # If there is an error store it anyway
+          self.save_result(success=False, exception=repr(exception))
+          self.disabled = True
+
+          # If needed, do extra stuff (like log.error)
+
+          # End up raising the error to Luigi
+          super().on_failure(exception)
+
+      def run_std(self):
+          """
+              This is what the task will actually do.
+
+              If it is not overwritten it will 'import module' and then run:
+
+                  module.main(mdate)
+          """
+
+          # By default run the 'main' function of the asked module
+          module = __import__(self.module)
+          module.main(self.mdate.strftime("%Y_%m_%d"))
+
+      def run(self):
+          # Store start time and task name
+          self.t_data["name"] = self.__class__.__name__
+          self.start_time = time.time()
+          self.t_data["start_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+          # Run the task and store the resutls
+          self.run_std()
+          self.save_result()
+
+  ```
+
+  Then is easy to create a StandardTask. The two task from the example below would be:
+
+  <div class="input">
+    master.py
+  </div>
+  ```python
+  import luigi
+
+  from luigi_default import StandardTask, date
+
+
+  class RegisterTask(StandardTask):
+      module = "register"
+
+
+  class ReportTask(StandardTask):
+      module = "report"
+
+
+  class DoAllTask(luigi.WrapperTask):
+
+      mdate = luigi.DateParameter(default=date.today())
+
+      def requires(self):
+          return RegisterTask(self.mdate), ReportTask(self.mdate)
+
+
+  if __name__ == "__main__":
+      luigi.build([DoAllTask()])
+  ```
+
+  So it is only needed to say the name of the script/package as parameter called `module` of the `StandardTask` instance.
+  This script/package needs a function called `main` since is what would be run by default.
+
+  It is even possible to adapt the `StandardTask` to do something different by overwritting the `run_std` function.
+  For example:
+
+  ```python
+  class ReportTask(StandardTask):
+      def run_std():
+          with open(f"output.txt", "w") as stream:
+              stream.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+  ```
 
   ## 4. Automatically run luigi
 
