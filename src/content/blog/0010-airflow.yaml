@@ -278,12 +278,12 @@ content_markdown: |
   sudo mkdir /var/log/airflow/
   ```
 
-  And now declare the `airflow` services with by creating the file `/etc/supervisor/conf.d/airflow.conf`
+  And now declare the `airflow` services by creating the file `/etc/supervisor/conf.d/airflow.conf`
 
   <div class="input">
     /etc/supervisor/conf.d/airflow.conf
   </div>
-  ```
+  ```toml
   [program:airflow_webserver]
   command=airflow webserver -p 8080
   stopsignal=QUIT
