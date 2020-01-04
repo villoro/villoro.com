@@ -5,7 +5,7 @@ code: luigi
 title: Luigi task scheduler
 title_short: Luigi scheduler
 date: "2019-12-24"
-image: default.png
+image: luigi_square.png
 highlight: True
 
 tags:
@@ -40,9 +40,190 @@ content_markdown: |
 
   [TOC]
 
-  ## 1. Why Luigi?
+  ## 1. What is Luigi
 
-  ## 2. Installation
+  Luigi is a **Python** package that helps you build complex pipelines of batch jobs.
+  It handles dependency resolution, workflow management, visualization, handling failures, command line integration, and much more.
+
+  It is easy to set up and integrates well with python code.
+  This, for example, make it possible to call tasks directly from python and/or to set task dependencies dinamically.
+
+  You can install it directly with **pip**:
+
+  ```sh
+  pip install luigi
+  ```
+
+  ## 2. Usage
+  
+  ### 2.1. How it works
+
+  **Luigi** work with tasks that are defined with classes that extend the `luigi.Task` class.
+  The basic usage is to overwrite the `run` function (with what to do) and the `output` (with the file that will output).
+
+  > All **Luigi** tasks need to end with writting a file. This is how luigi tracks which tasks are completed.
+
+  For example a basic task would look like:
+
+  ```python
+  import luigi
+  from datetime import date, datetime
+
+  class ReportTask(luigi.Task):
+
+      def run(self):
+          with open(f"output.txt", "w") as stream:
+              stream.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+      def output(self):
+          return luigi.LocalTarget("output.txt")
+  ```
+
+  This task will write a file called `output.txt` with the execution datetime.
+
+  ### 2.2. Basic example
+
+  For a real example tasks should also have dependencies.
+
+  First of all, for this example let's create two python files (`register.py` and `report.py`) which run simple python task.
+  They both will accept a name as parameter so that it can be run for different days.
+  The first one will simply write a file with the execution time:
+
+  <div class="input">
+    register.py
+  </div>
+  ```python
+  from datetime import date, datetime
+
+  def main(filename):
+
+      uri = f"output/{filename}.txt"
+
+      with open(uri, "w") as stream:
+          stream.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+      print(f"File '{uri}' wrote")
+  ```
+
+  And the other will write the same as an html file:
+
+  <div class="input">
+    report.py
+  </div>
+  ```python
+  from datetime import date, datetime
+  from markdown import markdown
+
+
+  def main(filename):
+
+      uri = f"output/{filename}.html"
+
+      html = markdown(
+          f"""# Report
+          {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+          """
+      )
+
+      with open(uri, "w") as stream:
+          stream.write(html)
+
+      print(f"File '{uri}' wrote")
+  ```
+
+  With those files it is possible to create the associated luigi tasks:
+
+  ```python
+  from datetime import date, datetime
+  import luigi
+
+  class RegisterTask(luigi.Task):
+
+      mdate = luigi.DateParameter(default=date.today())
+
+      def run(self):
+          from register import main
+
+          main(self.mdate.strftime("%Y_%m_%d"))
+
+      def output(self):
+          return luigi.LocalTarget(self.mdate.strftime("output/%Y_%m_%d.txt"))
+
+
+  class ReportTask(luigi.Task):
+
+      mdate = luigi.DateParameter(default=date.today())
+
+      def run(self):
+          from report import main
+
+          main(self.mdate.strftime("%Y_%m_%d"))
+
+      def output(self):
+          return luigi.LocalTarget(self.mdate.strftime("output/%Y_%m_%d.html"))
+  ```
+
+  Both tasks have a parameter called `mdate` so that each day the task runs it will write a different file.
+
+  Finally let's add a dummy task that requires both `RegisterTask` and `ReportTask`.
+
+  ```python
+  class DoAllTask(luigi.WrapperTask):
+
+      mdate = luigi.DateParameter(default=date.today())
+
+      def requires(self):
+          return RegisterTask(self.mdate), ReportTask(self.mdate)
+  ```
+
+  > Since `DoAllTask` does not need to do anything it extends `luigi.WrapperTask`.
+
+  To run the example you first need to start the luigi server with:
+
+  ```sh
+  luigid
+  ```
+
+  And then you put the three tasks to a file called `master.py` and add:
+
+  ```python
+  if __name__ == "__main__":
+      luigi.build([DoAllTask()])
+  ```
+
+  You can run:
+
+  ```sh
+  python master.py
+  ```
+
+  And you should see how **Luigi** completes the 3 tasks.
+
+  ### 2.3. Luigi server
+
+  If you go to `localhost:8082` you can see luigi server.
+
+  <div class="w3-center">
+    <img src="/static/images/posts/luigi_server.jpg" alt="luigi_server" class="w3-image w3-padding-16"/>
+  </div>
+
+  It gives a summary of the tasks and their status.
+
+  If you select a task (for example `DoAllTask`) you can see the dependency tree.
+
+  <div class="w3-center">
+    <img src="/static/images/posts/luigi_pipeline_svg.jpg" alt="luigi_pipeline_svg" class="w3-image w3-padding-16"/>
+  </div>
+
+  > Remember to unmark the `Hide Done` button to see all task.
+
+  It is also possible view the dependency graph created with `D3`.
+
+  <div class="w3-center">
+    <img src="/static/images/posts/luigi_pipeline_d3.jpg" alt="luigi_pipeline_d3" class="w3-image w3-padding-16"/>
+  </div>
+
+  ## 3. Using task templates
 
 
   ## 4. Automatically run luigi
