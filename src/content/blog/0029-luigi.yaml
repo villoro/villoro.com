@@ -399,8 +399,14 @@ content_markdown: |
   Then create some auxiliar folders that you will need:
 
   ```sh
+  #!/bin/bash 
+  
   # For luigi logs
   sudo mkdir /var/log/luigi/
+
+  # For cron logs (and give writte permission)
+  sudo mkdir /var/log/cron/
+  sudo chmod 777 /var/log/cron/
 
   # This is to allow luigi to store the worker state
   sudo mkdir /var/lib/luigi-server/
@@ -450,12 +456,33 @@ content_markdown: |
   # Add ssh keys
   eval `keychain --agents ssh --eval github_ssh`
 
-  # Run luigi
+  # Go to desired path
   cd /home/ubuntu/villoro_tasks/
-  python3 src/master.py
+
+  # Activate virtual environment
+  source /home/ubuntu/venv/vtasks/bin/activate
+
+  # Git fetch and checkout
+  git fetch
+  git checkout master
+  git pull origin master
+
+  # Install requirements
+  pip install -r requirements.txt
+
+  # Run luigi
+  python src/master.py
   ```
 
-  This script is loading the **ssh** keys so that it can work with **GIT** and then running luigi on the correct path.
+  This script does some things:
+
+  1. Loading the **ssh** keys so that it can work with **GIT**.
+  2. Change the path to the repository
+  3. Activate the virtual environment
+  4. GIT fetch and checkout new changes in master
+  5. Install requirements
+  6. Run **Luigi**
+
   In order to run this you should give it executable permissions with:
 
   ```sh
@@ -471,8 +498,10 @@ content_markdown: |
   Add this adding this line at the end:
 
   ```sh
-  0 5 * * * /home/ubuntu/run_luigi.sh
+  0 4 * * * /home/ubuntu/run_luigi.sh >> /var/log/cron/luigi.log 2>&1
   ```
 
-  In this example it will run each day at 05:00 am.
+  In this example it will run each day at 04:00 am GMT.
   If you want to run at different moment you can use [crontab.guru](https://crontab.guru/) to check cron expressions.
+
+  It will also write the output as log file called `/var/log/cron/luigi.log`.
