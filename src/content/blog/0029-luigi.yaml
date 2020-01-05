@@ -4,7 +4,7 @@
 code: luigi
 title: Luigi task scheduler
 title_short: Luigi scheduler
-date: "2020-01-04"
+date: "2020-01-06"
 image: luigi_square.png
 highlight: True
 
@@ -444,15 +444,42 @@ content_markdown: |
 
   If there are no errors you can start using **Luigi**.
 
-  ### 4.2. Runing luigi tasks with cron
+  ### 4.2. Create a virtual environment
 
-  Te best way to run **Luigi** automatically is using cron.
-  The first step is to create the `run_luigi.sh` file with:
+  First install **virtualenv** with:
+
+  ```sh
+  pip3 install virtualenv
+  ```
+
+  Then create the virtual environment:
+
+  ```sh
+  # Make a folder for virtual environments
+  mkdir /home/ubuntu/venv/
+
+  # Create a virtualenv called vtasks
+  virtualenv -p /home/ubuntu/venv/ vtasks
+  ```
+
+  Then to activate the environment you can call:
+
+  ```sh
+  source /home/ubuntu/venv/vtasks/bin/activate
+  ```
+
+  And `deactivate` to deactivate the environment.
+
+  ### 4.3. Script file to run luigi
+
+  Let's create the `run_luigi.sh` file with:
 
   <div class="input">
     ~/run_luigi.sh
   </div>
-  ```sh
+  ```bash
+  #!/bin/bash 
+
   # Add ssh keys
   eval `keychain --agents ssh --eval github_ssh`
 
@@ -472,7 +499,11 @@ content_markdown: |
 
   # Run luigi
   python src/master.py
+
+  deactivate
   ```
+
+  > Do not forget the `#!/bin/bash` part. If you do, the `source` command won't work. 
 
   This script does some things:
 
@@ -489,7 +520,11 @@ content_markdown: |
   chmod +x /home/ubuntu/run_luigi.sh
   ```
 
-  Then you can set **cron** to run this script with:
+  ### 4.4. Runing luigi tasks with cron
+
+  Te best way to run **Luigi** automatically is using cron.
+
+  After doing all the previous steps you can set **cron** to run the script with:
 
   ```sh
   crontab -e
