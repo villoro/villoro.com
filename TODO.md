@@ -1,32 +1,4 @@
-# 1. Home
-* Add button to subscribe to the mailing list
-
-
-# 2. Blog
-* Lateral bar with list of posts
-* Lateral bar with navigation (https://codepen.io/clokey2k/pen/jgfFD)
-* Add button to subscribe to the mailing list
-
-
-# 3. About
-* Add a T with domains of knowledge
-
-
-# 4. Performance
-* Use [fontello](http://fontello.com/) with:
-    * fa-check
-    * fa-bars
-    * fa-github
-    * fa-linkedin
-    * fa-twitter
-    * fa-clock-o
-    * fa-angle-right
-* Get used colors from `material-colors.css` and drop this file
-* Improve SEO integratin with netlify ([info](https://www.codesections.com/blog/netlify/))
-* scripts with lazy loading
-
-
-# 5. Posts
+# Posts
 
 ## Python
 
@@ -83,9 +55,3 @@
 ## Other
 * ETL with APIs
     * Facebook
-
-
-# 6. Other
-
-* Set google_analytics at `develop.villoro.com`
-* Add tags to tables_format post

@@ -87,6 +87,8 @@ content_markdown: |
 
   ## 4. Check the SSH conection
 
+  The first thing you should do is to **restart** the terminal so that changes can be applied.
+
   Run the following command: 
 
   ```sh
