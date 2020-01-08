@@ -8,9 +8,6 @@
 3. Python performance: [falcon](https://falconframework.org/) / [vibora](https://github.com/vibora-io/vibora)
 4. Python performance: [cupy](https://github.com/cupy/cupy) / [cudf](https://github.com/rapidsai/cudf)
 
-* Pandas? See that example: https://realpython.com/fast-flexible-pandas/
-* Koalas
-
 ## Cloud
 
 ### AWS
