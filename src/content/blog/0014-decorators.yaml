@@ -225,12 +225,15 @@ content_markdown: |
   This is a decorator that takes one outputting function and outputs the execution time. By default it will use the `print` function.
 
   ```python
+  import functools
+
   def supertimeit(output_func=print):
       """ Allows to use custom output functions (like print, log.info...)"""
 
       def timeit_decorator(func):
           """ Timing decorator """
       
+          @functools.wraps(func)
           def timed_execution(*args):
               """ Outputs the execution time of a function """
               t0 = time()
@@ -242,6 +245,8 @@ content_markdown: |
       
       return timeit_decorator
   ```
+
+  > By adding `@functools.wraps(func)` the documentation of the original function will be preserved
 
   The default usage will be the same as the `timeit` decorator used before:
 
@@ -284,6 +289,7 @@ content_markdown: |
       def infallible_decorator(func):
           """ Timing decorator """
       
+          @functools.wraps(func)
           def infallible_execution(*args):
               """ Outputs the execution time of a function """
               
