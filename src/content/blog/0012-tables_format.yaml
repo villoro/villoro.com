@@ -511,6 +511,37 @@ scripts: |
         ...scales_MB
       }
     });
+
+    const xaxes_mb = {
+      xAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: 'File size [MB]'
+        }
+      }]
+    }
+    const scales_read = {      
+      scales: {
+        ...xaxes_mb,
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Read average time [s]'
+          }
+        }]
+      },
+    }
+    const scales_write = {      
+      scales: {
+        ...xaxes_mb,
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Write average time [s]'
+          }
+        }]
+      },
+    }
     var chart_s1_i5_scatter_read = new Chart("chart_s1_i5_scatter_read", {
       type: 'scatter',
       data: {
@@ -572,20 +603,7 @@ scripts: |
           display: true,
           text: 'Average reading time vs file size'
         },
-        scales: {
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'File size [MB]'
-            }
-          }],
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Read average time [s]'
-            }
-          }]
-        },
+        ...scales_read
       }
     });
     var chart_s1_i5_scatter_write = new Chart("chart_s1_i5_scatter_write", {
@@ -649,20 +667,7 @@ scripts: |
           display: true,
           text: 'Average writting time vs file size'
         },
-        scales: {
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'File size [MB]'
-            }
-          }],
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Write average time [s]'
-            }
-          }]
-        },
+        ...scales_write
       }
     });
 
@@ -707,20 +712,7 @@ scripts: |
           display: true,
           text: 'Average reading time vs file size'
         },
-        scales: {
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'File size [GB]'
-            }
-          }],
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Read average time [min]'
-            }
-          }]
-        },
+        ...scales_read
       }
     });
     var chart_s2_i1_scatter_write = new Chart("chart_s2_i1_scatter_write", {
@@ -764,20 +756,7 @@ scripts: |
           display: true,
           text: 'Average writting time vs file size'
         },
-        scales: {
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'File size [GB]'
-            }
-          }],
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Write average time [min]'
-            }
-          }]
-        },
+        ...scales_write
       }
     });
   </script>
