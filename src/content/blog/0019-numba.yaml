@@ -715,6 +715,23 @@ content_markdown: |
 
 scripts: |
   <script>
+    const scales = {
+      scales: {
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Time [s]',
+          },
+          type: 'logarithmic',
+        }],
+        xAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Number of rows'
+          },
+        }],
+      }
+    }
     var chart_sum = new Chart("chart_sum", {
       type: 'line',
       data: {
@@ -757,21 +774,7 @@ scripts: |
           display: true,
           text: 'Time of different sum functions'
         },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Time [s]'
-            },
-            type: 'logarithmic',
-          }],
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Size of the numpy array'
-            },
-          }],
-        }
+        ...scales
       }
     });
 
@@ -830,24 +833,7 @@ scripts: |
           display: true,
           text: 'Time of different fix_time functions'
         },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Time [s]',
-            },
-            ticks: {
-              min: 0.00002,
-            },
-            type: 'logarithmic',
-          }],
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Number of rows'
-            },
-          }],
-        }
+        ...scales
       }
     });
 
@@ -887,24 +873,7 @@ scripts: |
           display: true,
           text: 'Time of different fix_time functions with different machines'
         },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Time [s]',
-            },
-            ticks: {
-              min: 0.00002,
-            },
-            type: 'logarithmic',
-          }],
-          xAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Number of rows'
-            },
-          }],
-        }
+        ...scales
       }
     });
   </script>

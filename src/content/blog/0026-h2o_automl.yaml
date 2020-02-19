@@ -285,23 +285,27 @@ content_markdown: |
 
 scripts: |
   <script>
-    var xAxes = [{
-      scaleLabel: {
-        display: true,
-        labelString: 'AUC'
-      }
-    }]
+    const xaxes = {
+      xAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: 'AUC'
+        }
+      }]
+    }
 
-    var tooltips = {
-      callbacks: {
-        label: function(tooltipItem, data) {
-          var index = tooltipItem.index;
-          var datasetIndex = tooltipItem.datasetIndex;
-          
-          var dataset = data.datasets[datasetIndex];
-          var item = dataset.data[index];
+    const tooltips = {
+      tooltips: {
+        callbacks: {
+          label: function(tooltipItem, data) {
+            var index = tooltipItem.index;
+            var datasetIndex = tooltipItem.datasetIndex;
+            
+            var dataset = data.datasets[datasetIndex];
+            var item = dataset.data[index];
 
-          return item.name + " (AUC: " + item.x + ", time: " + item.y + "s)";
+            return item.name + " (AUC: " + item.x + ", time: " + item.y + "s)";
+          }
         }
       }
     }
@@ -410,7 +414,7 @@ scripts: |
           text: 'AUC vs predict time [s]'
         },
         scales: {
-          xAxes: xAxes,
+          ...xaxes,
           yAxes: [{
             scaleLabel: {
               display: true,
@@ -418,7 +422,7 @@ scripts: |
             }
           }]
         },
-        tooltips: tooltips
+        ...tooltips
       }
     });
 
@@ -526,7 +530,7 @@ scripts: |
           text: 'AUC vs training time [s]'
         },
         scales: {
-          xAxes: xAxes,
+          ...xaxes,
           yAxes: [{
             scaleLabel: {
               display: true,
@@ -534,7 +538,7 @@ scripts: |
             }
           }]
         },
-        tooltips: tooltips
+        ...tooltips
       }
     });
   </script>
