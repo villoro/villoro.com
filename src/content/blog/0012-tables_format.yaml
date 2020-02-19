@@ -358,10 +358,35 @@ content_markdown: |
 
 scripts: |
   <script>
+    const scale_seconds = {
+      scales: {
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Time [seconds]'
+          }
+        }]
+      }
+    }
+    const scales_MB = {
+      legend: {
+        display: false
+      },
+      scales: {
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'File size [MB]'
+          }
+        }]
+      }
+    }
+    const labels_basic = ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx']
+
     var chart_s0_i100_time = new Chart("chart_s0_i100_time", {
       type: 'bar',
       data: {
-        labels: ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx'],
+        labels: labels_basic,
         datasets: [
           {
             label: 'read',
@@ -380,21 +405,14 @@ scripts: |
           display: true,
           text: 'Read/write average time [s] with small dataframe (56 KB)'
         },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Time [seconds]'
-            }
-          }]
-        }
+        ...scale_seconds
       }
     });
 
     var chart_s1_i10_time = new Chart("chart_s1_i10_time", {
       type: 'bar',
       data: {
-        labels: ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx'],
+        labels: labels_basic,
         datasets: [
           {
             label: 'read',
@@ -413,20 +431,13 @@ scripts: |
           display: true,
           text: 'Read/write average time [s] with medium dataframe (233 MB)'
         },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Time [seconds]'
-            }
-          }]
-        }
+        ...scale_seconds
       }
     });
     var chart_s1_i10_size = new Chart("chart_s1_i10_size", {
       type: 'bar',
       data: {
-        labels: ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx'],
+        labels: labels_basic,
         datasets: [
           {
             label: 'file size',
@@ -440,30 +451,22 @@ scripts: |
           display: true,
           text: 'File size with medium dataframe (233 MB)'
         },
-        legend: {
-          display: false
-        },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'File size [MB]'
-            }
-          }]
-        }
+        ...scales_MB 
       }
     });
+
+    const labels_extended = [
+      'csv_None', 'csv_bz2', 'csv_gzip', 'csv_infer', 'csv_xz', 'csv_zip',
+      'feather', 'msgpack_None', 'msgpack_blosc', 'msgpack_zlib',
+      'parquet_None', 'parquet_brotli', 'parquet_gzip', 'parquet_snappy',
+      'pickle_None', 'pickle_bz2', 'pickle_gzip', 'pickle_infer', 'pickle_xz',
+      'pickle_zip'
+    ]
 
     var chart_s1_i5_time = new Chart("chart_s1_i5_time", {
       type: 'bar',
       data: {
-        labels: [
-          'csv_None', 'csv_bz2', 'csv_gzip', 'csv_infer', 'csv_xz', 'csv_zip',
-          'feather', 'msgpack_None', 'msgpack_blosc', 'msgpack_zlib',
-          'parquet_None', 'parquet_brotli', 'parquet_gzip', 'parquet_snappy',
-          'pickle_None', 'pickle_bz2', 'pickle_gzip', 'pickle_infer', 'pickle_xz',
-          'pickle_zip'
-        ],
+        labels: labels_extended,
         datasets: [
           {
             label: 'read',
@@ -482,26 +485,13 @@ scripts: |
           display: true,
           text: 'Read/write average time [s] with medium dataframe (233 MB)'
         },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'Time [seconds]'
-            }
-          }]
-        }
+        ...scale_seconds
       }
     });
     var chart_s1_i5_size = new Chart("chart_s1_i5_size", {
       type: 'bar',
       data: {
-        labels: [
-          'csv_None', 'csv_bz2', 'csv_gzip', 'csv_infer', 'csv_xz', 'csv_zip',
-          'feather', 'msgpack_None', 'msgpack_blosc', 'msgpack_zlib',
-          'parquet_None', 'parquet_brotli', 'parquet_gzip', 'parquet_snappy',
-          'pickle_None', 'pickle_bz2', 'pickle_gzip', 'pickle_infer', 'pickle_xz',
-          'pickle_zip'
-        ],
+        labels: labels_extended,
         datasets: [
           {
             label: 'file size',
@@ -518,14 +508,7 @@ scripts: |
         legend: {
           display: false
         },
-        scales: {
-          yAxes: [{
-            scaleLabel: {
-              display: true,
-              labelString: 'File size [MB]'
-            }
-          }]
-        }
+        ...scales_MB
       }
     });
     var chart_s1_i5_scatter_read = new Chart("chart_s1_i5_scatter_read", {
