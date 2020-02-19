@@ -522,6 +522,36 @@ scripts: |
         scaleLabel: {display: true, labelString: 'File size [GB]'}
       }]
     }
+    const tooltip_s_mb = {
+      tooltips: {
+        callbacks: {
+          label: function(tooltipItem, data) {
+            var index = tooltipItem.index;
+            var datasetIndex = tooltipItem.datasetIndex;
+            
+            var dataset = data.datasets[datasetIndex];
+            var item = dataset.data[index];
+
+            return item.name + " (Time: " + item.x + " s, File size: " + item.y + " MB)";
+          }
+        }
+      },
+    }
+    const tooltip_min_gb = {
+      tooltips: {
+        callbacks: {
+          label: function(tooltipItem, data) {
+            var index = tooltipItem.index;
+            var datasetIndex = tooltipItem.datasetIndex;
+            
+            var dataset = data.datasets[datasetIndex];
+            var item = dataset.data[index];
+
+            return item.name + " (Time: " + item.x + " min, File size: " + item.y + " GB)";
+          }
+        }
+      },
+    }
     var chart_s1_i5_scatter_read = new Chart("chart_s1_i5_scatter_read", {
       type: 'scatter',
       data: {
@@ -530,50 +560,50 @@ scripts: |
             label: 'csv',
             backgroundColor: "#4FC3F7", 
             data: [
-              {'x': 3.052051, 'y': 236.1},
-              {'x': 10.516266, 'y': 47.58},
-              {'x': 4.25702, 'y': 65.8},
-              {'x': 3.094328, 'y': 236.1},
-              {'x': 9.920079, 'y': 43.99},
-              {'x': 4.052968, 'y': 66.44},
+              {'x': 3.052051, 'y': 236.1, 'name': 'None'},
+              {'x': 10.516266, 'y': 47.58, 'name': 'bz2'},
+              {'x': 4.25702, 'y': 65.8, 'name': 'gzip'},
+              {'x': 3.094328, 'y': 236.1, 'name': 'infer'},
+              {'x': 9.920079, 'y': 43.99, 'name': 'xz'},
+              {'x': 4.052968, 'y': 66.44, 'name': 'zip'},
             ],
           },
           {
             label: 'feather',
             backgroundColor: "#EF5350", 
             data: [
-              {'x': 0.60659, 'y': 213.38},
+              {'x': 0.60659, 'y': 213.38, 'name': 'feather'},
             ],
           },
           {
             label: 'msgpack',
             backgroundColor: "#AED581", 
             data: [
-              {'x': 0.493087, 'y': 210.09},
-              {'x': 0.476919, 'y': 202.88},
-              {'x': 0.51484, 'y': 202.9},
+              {'x': 0.493087, 'y': 210.09, 'name': 'None'},
+              {'x': 0.476919, 'y': 202.88, 'name': 'blosc'},
+              {'x': 0.51484, 'y': 202.9, 'name': 'zlib'},
             ],
           },
           {
             label: 'parquet',
             backgroundColor: "#9575CD", 
             data: [
-              {'x': 0.766749, 'y': 209.58},
-              {'x': 0.98578, 'y': 50.82},
-              {'x': 0.996152, 'y': 56.75},
-              {'x': 0.809635, 'y': 96.37},
+              {'x': 0.766749, 'y': 209.58, 'name': 'None'},
+              {'x': 0.98578, 'y': 50.82, 'name': 'brotli'},
+              {'x': 0.996152, 'y': 56.75, 'name': 'gzip'},
+              {'x': 0.809635, 'y': 96.37, 'name': 'snappy'},
             ],
           },
           {
             label: 'pickle',
             backgroundColor: "#FFB74D", 
             data: [
-              {'x': 0.465547, 'y': 207.54},
-              {'x': 7.775791, 'y': 40.93},
-              {'x': 1.48881, 'y': 54.85},
-              {'x': 0.476745, 'y': 207.54},
-              {'x': 6.258862, 'y': 38.05},
-              {'x': 2.065088, 'y': 55.43}
+              {'x': 0.465547, 'y': 207.54, 'name': 'None'},
+              {'x': 7.775791, 'y': 40.93, 'name': 'bz2'},
+              {'x': 1.48881, 'y': 54.85, 'name': 'gzip'},
+              {'x': 0.476745, 'y': 207.54, 'name': 'infer'},
+              {'x': 6.258862, 'y': 38.05, 'name': 'xz'},
+              {'x': 2.065088, 'y': 55.43, 'name': 'zip'}
             ],
           },
         ],
@@ -591,7 +621,8 @@ scripts: |
               labelString: 'Read average time [s]'
             }
           }]
-        }
+        },
+        ...tooltip_s_mb
       }
     });
     var chart_s1_i5_scatter_write = new Chart("chart_s1_i5_scatter_write", {
@@ -602,50 +633,50 @@ scripts: |
             label: 'csv',
             backgroundColor: "#4FC3F7", 
             data: [
-              {'x': 5.898017, 'y': 236.1, 'label': 'None'},
-              {'x': 24.439828, 'y': 47.58, 'label': 'bz2'},
-              {'x': 49.018689, 'y': 65.8, 'label': 'gzip'},
-              {'x': 6.003964, 'y': 236.1, 'label': 'infer'},
-              {'x': 288.619755, 'y': 43.99, 'label': 'xz'},
-              {'x': 21.263131, 'y': 66.44, 'label': 'zip'},
+              {'x': 5.898017, 'y': 236.1, 'name': 'None'},
+              {'x': 24.439828, 'y': 47.58, 'name': 'bz2'},
+              {'x': 49.018689, 'y': 65.8, 'name': 'gzip'},
+              {'x': 6.003964, 'y': 236.1, 'name': 'infer'},
+              {'x': 288.619755, 'y': 43.99, 'name': 'xz'},
+              {'x': 21.263131, 'y': 66.44, 'name': 'zip'},
             ],
           },
           {
             label: 'feather',
             backgroundColor: "#EF5350", 
             data: [
-              {'x': 0.99833, 'y': 213.38},
+              {'x': 0.99833, 'y': 213.38, 'name': 'feather'},
             ],
           },
           {
             label: 'msgpack',
             backgroundColor: "#AED581", 
             data: [
-              {'x': 1.324669, 'y': 210.09},
-              {'x': 1.367148, 'y': 202.88},
-              {'x': 2.049314, 'y': 202.9},
+              {'x': 1.324669, 'y': 210.09, 'name': 'None'},
+              {'x': 1.367148, 'y': 202.88, 'name': 'blosc'},
+              {'x': 2.049314, 'y': 202.9, 'name': 'zlib'},
             ],
           },
           {
             label: 'parquet',
             backgroundColor: "#9575CD", 
             data: [
-              {'x': 1.411415, 'y': 209.58},
-              {'x': 27.043478, 'y': 50.82},
-              {'x': 18.282706, 'y': 56.75},
-              {'x': 1.868614, 'y': 96.37},
+              {'x': 1.411415, 'y': 209.58, 'name': 'None'},
+              {'x': 27.043478, 'y': 50.82, 'name': 'brotli'},
+              {'x': 18.282706, 'y': 56.75, 'name': 'gzip'},
+              {'x': 1.868614, 'y': 96.37, 'name': 'snappy'},
             ],
           },
           {
             label: 'pickle',
             backgroundColor: "#FFB74D", 
             data: [
-              {'x': 1.339422, 'y': 207.54},
-              {'x': 18.5083, 'y': 40.93},
-              {'x': 40.682403, 'y': 54.85},
-              {'x': 1.368525, 'y': 207.54},
-              {'x': 254.315614, 'y': 38.05},
-              {'x': 17.856649, 'y': 55.43}
+              {'x': 1.339422, 'y': 207.54, 'name': 'None'},
+              {'x': 18.5083, 'y': 40.93, 'name': 'bz2'},
+              {'x': 40.682403, 'y': 54.85, 'name': 'gzip'},
+              {'x': 1.368525, 'y': 207.54, 'name': 'infer'},
+              {'x': 254.315614, 'y': 38.05, 'name': 'xz'},
+              {'x': 17.856649, 'y': 55.43, 'name': 'zip'}
             ],
           },
         ],
@@ -663,7 +694,8 @@ scripts: |
               labelString: 'Write average time [s]'
             }
           }]
-        }
+        },
+        ...tooltip_s_mb
       }
     });
 
@@ -675,30 +707,30 @@ scripts: |
             label: 'msgpack',
             backgroundColor: "#AED581", 
             data: [
-              {'x': 5.861692, 'y': 7.21},
-              {'x': 5.454967, 'y': 6.5},
-              {'x': 5.486474, 'y': 6.5},
+              {'x': 5.861692, 'y': 7.21, 'name': 'None'},
+              {'x': 5.454967, 'y': 6.5, 'name': 'blosc'},
+              {'x': 5.486474, 'y': 6.5, 'name': 'zlib'},
             ],
           },
           {
             label: 'parquet',
             backgroundColor: "#9575CD", 
             data: [
-              {'x': 1.145516, 'y': 5.96},
-              {'x': 0.923015, 'y': 1.56},
-              {'x': 0.966764, 'y': 2.0},
-              {'x': 0.885568, 'y': 3.3},
+              {'x': 1.145516, 'y': 5.96, 'name': 'None'},
+              {'x': 0.923015, 'y': 1.56, 'name': 'brotli'},
+              {'x': 0.966764, 'y': 2.0, 'name': 'gzip'},
+              {'x': 0.885568, 'y': 3.3, 'name': 'snappy'},
             ],
           },
           {
             label: 'pickle',
             backgroundColor: "#FFB74D", 
             data: [
-              {'x': 1.377571, 'y': 6.25},
-              {'x': 5.153998, 'y': 1.24},
-              {'x': 1.88185, 'y': 1.81},
-              {'x': 1.455619, 'y': 6.25},
-              {'x': 3.45604, 'y': 0.97}
+              {'x': 1.377571, 'y': 6.25, 'name': 'None'},
+              {'x': 5.153998, 'y': 1.24, 'name': 'bz2'},
+              {'x': 1.88185, 'y': 1.81, 'name': 'gzip'},
+              {'x': 1.455619, 'y': 6.25, 'name': 'infer'},
+              {'x': 3.45604, 'y': 0.97, 'name': 'xz'}
             ],
           },
         ],
@@ -716,7 +748,8 @@ scripts: |
               labelString: 'Read average time [min]'
             }
           }]
-        }
+        },
+        ...tooltip_min_gb
       }
     });
     var chart_s2_i1_scatter_write = new Chart("chart_s2_i1_scatter_write", {
@@ -727,30 +760,30 @@ scripts: |
             label: 'msgpack',
             backgroundColor: "#AED581", 
             data: [
-              {'x': 6.323051, 'y': 7.21},
-              {'x': 5.013798, 'y': 6.5},
-              {'x': 5.549751, 'y': 6.5},
+              {'x': 6.323051, 'y': 7.21, 'name': 'None'},
+              {'x': 5.013798, 'y': 6.5, 'name': 'blosc'},
+              {'x': 5.549751, 'y': 6.5, 'name': 'zlib'},
             ],
           },
           {
             label: 'parquet',
             backgroundColor: "#9575CD", 
             data: [
-              {'x': 2.686822, 'y': 5.96},
-              {'x': 11.22296, 'y': 1.56},
-              {'x': 8.98146, 'y': 2.0},
-              {'x': 2.781936, 'y': 3.3},
+              {'x': 2.686822, 'y': 5.96, 'name': 'None'},
+              {'x': 11.22296, 'y': 1.56, 'name': 'brotli'},
+              {'x': 8.98146, 'y': 2.0, 'name': 'gzip'},
+              {'x': 2.781936, 'y': 3.3, 'name': 'snappy'},
             ],
           },
           {
             label: 'pickle',
             backgroundColor: "#FFB74D", 
             data: [
-              {'x': 7.46794, 'y': 6.25},
-              {'x': 17.46643, 'y': 1.24},
-              {'x': 20.762572, 'y': 1.81},
-              {'x': 5.799293, 'y': 6.25},
-              {'x': 97.62412, 'y': 0.97}
+              {'x': 7.46794, 'y': 6.25, 'name': 'None'},
+              {'x': 17.46643, 'y': 1.24, 'name': 'bz2'},
+              {'x': 20.762572, 'y': 1.81, 'name': 'gzip'},
+              {'x': 5.799293, 'y': 6.25, 'name': 'infer'},
+              {'x': 97.62412, 'y': 0.97, 'name': 'xz'}
             ],
           },
         ],
@@ -768,8 +801,9 @@ scripts: |
               labelString: 'Write average time [min]'
             }
           }]
-        }
-      }
+        },
+        ...tooltip_min_gb
+      },
     });
   </script>
   
