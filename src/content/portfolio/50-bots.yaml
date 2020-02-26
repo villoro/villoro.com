@@ -1,0 +1,98 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: bots
+title: Detecting bots traffic
+subtitle: Detecting bots for web traffic.
+image: bots.jpg
+image_square: bots_square.jpg
+
+main: True
+highlight: True
+
+tags:
+  - Python
+  - Pandas
+  - Scikit
+  - Machine Learning
+  - AI
+  - Numba
+
+tags_filter:
+  - AI
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: More info
+#   url: 
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  For this project I used a really powerful Azure machine to classify web traffic into human or non-human.
+
+  Even though there was a lot of data to process I worked with **pandas** because I had not a lot of time to work on that project.
+
+metrics:
+  - More than 2 TB of data
+  - 800 GB processed per month
+  - 10 h to predict one month
+
+motivation_markdown: |
+  While working with a client they had a lot of traffic from both the web and mobile apps.
+  They thought it would be useful for them to differentiate between human traffic and non human.
+
+  The idea was to use that data to detect users and connections made from bots so that they could be tracked and, if needed, handled or blocked.
+
+body_markdown: |
+  ## The problem
+
+  The main objective was to develop something that could get a high `F1-score` for classifing non-human traffic while investing low time developing it.
+
+  I was also given a really powerful virtual machine from Azure with the following specs:
+
+  ```yaml
+  type: M64
+  cores: 64 vCPUs
+  RAM: 1024 GB
+
+  storage: ~ 20 TB with SSD
+  cost: ~ 10 000 $ / month
+  ```
+
+  This allowed me to work with **pandas** which was one of the packages I was more comfortable with.
+  If I had to do it again I would do it with **pyspark** or **dask**.
+
+  ## Solution
+
+  So the idea was to rely on **pandas** for reading and processing the data and use [numba](https://villoro.com/post/numba) were it was possible to make it all faster.
+
+  Then I used **PCA** and **Random Forests** (RF) from **scikit** for the predictions itself.
+
+  The pipeline looks like this:
+
+  <div class="w3-center">
+    <img src="/static/images/portfolio/bots_pipeline.jpg" alt="bots pipeline" class="w3-image w3-padding-16"/>
+  </div>
+
+  This combination allowed for a relatively fast solution and a really fast development time.
+
+  Since the development time was an important constrain I tried to only extract simple data and avoid feature engineering.
+  Even with those constrains the `F1-score` was always **way above 90%**.
+
+  ### Deep Learning (DL)
+
+  I also trained a Direct Neural Network but the results were not really much better.
+  However the training and prediction time were way slower with DL compared to the RF.
+
+  ## Interesting facts discovered
+
+  The input data was a `csv` with around 650 - 800 million rows.
+  Using the powerful `Azure M64` pandas was able to read 10 million rows per minute of the csv.
+
+  And then to export the dataframe with 650 million rows it took 109 minutes to export a `csv` (and used 173 GB) and only 26 minutes to export a `parquet` (which used 42 GB).
+  This also shows how efficient `parquet` is for storing data. More info [here](https://villoro.com/post/tables_format).
