@@ -84,9 +84,19 @@ def get_content():
     # Use the first 4 posts
     out["blog_main"] = {i: data for i, data in list(out["blog"].items())[:4]}
 
-    # At home page there should be a multiple of 4 portfolio items (and at least 4 of them)
-    num_portfolio_main = len(out["portfolio_main"])
-    assert (num_portfolio_main % 4 == 0) and (num_portfolio_main > 0)
+    # Check num of main projects
+    num_main = len(out["portfolio_main"])
+    assert (num_main % 4 == 0) and (num_main > 0), (
+        "At home page there should be a multiple of 4 portfolio items (and at least 4 of them). "
+        + f"There are {num_main}"
+    )
+
+    # Check num of highlighted projects
+    num_highlight = len(out["portfolio_highlight"])
+    assert (num_highlight % 6 == 0) and (num_highlight > 0), (
+        "At the end of the project there should be a multiple of 6 portfolio items. "
+        + f"There are {num_highlight}"
+    )
 
     return out
 
