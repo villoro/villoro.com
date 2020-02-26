@@ -4,8 +4,8 @@
 code: personal_assistant
 title: Personal Assistant
 subtitle: Personal Assistant with Luigi and AWS.
-image: am_managers.jpg
-image_square: am_managers_square.jpg
+image: personal_assistant.jpg
+image_square: personal_assistant_square.jpg
 
 main: True
 highlight: True
