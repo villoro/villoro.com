@@ -8,7 +8,7 @@ image: simpsons.jpg
 image_square: simpsons_square.jpg
 
 main: False
-highlight: True
+highlight: False
 
 tags:
   - AI

@@ -7,7 +7,7 @@ subtitle: Dash app to visualize personal finance data.
 image: expensorpy.jpg
 image_square: expensorpy_square.jpg
 
-main: True
+main: False
 highlight: True
 
 tags:

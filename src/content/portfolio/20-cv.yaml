@@ -7,8 +7,8 @@ subtitle: Automating the creation of the resumes (CV).
 image: cv.jpg
 image_square: cv_square.jpg
 
-main: True
-highlight: True
+main: False
+highlight: False
 
 tags:
   - Automation
