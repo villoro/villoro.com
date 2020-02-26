@@ -1,0 +1,47 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: bots
+title: Detecting bots traffic
+subtitle: Detecting bots for web traffic.
+image: bots.jpg
+image_square: bots_square.jpg
+
+main: True
+highlight: True
+
+tags:
+  - Python
+  - Pandas
+  - Scikit
+  - Machine Learning
+  - AI
+  - Numba
+
+tags_filter:
+  - AI
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: More info
+#   url: 
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  brief
+
+metrics:
+  - More than 2 TB of data
+  - 800 GB processed per month
+  - 10 h to predict one month
+
+motivation_markdown: |
+  motivation
+
+body_markdown: |
+  ## Solution

@@ -1,0 +1,48 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: dataplatform
+title: Azure Data Platform
+subtitle: Creating a DataPlatform with Azure.
+image: dataplatform_parts.jpg
+image_square: dataplatform_square.jpg
+
+main: True
+highlight: True
+
+tags:
+  - Azure
+  - Python
+  - Pyspark
+  - DevOps
+  - Databricks
+
+tags_filter:
+  - AI
+  - Automation
+  - DevOps
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: More info
+#   url: 
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  brief
+
+# metrics:
+#   - 1
+#   - 2
+#   - 3
+
+motivation_markdown: |
+  motivation
+
+body_markdown: |
+  ## Solution

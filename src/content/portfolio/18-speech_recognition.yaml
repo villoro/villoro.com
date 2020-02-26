@@ -8,7 +8,7 @@ subtitle: Predict the transcription from raw audio.
 image: speech_recognition.jpg
 image_square: speech_recognition_square.png
 
-main: True
+main: False
 highlight: True
 
 tags:
