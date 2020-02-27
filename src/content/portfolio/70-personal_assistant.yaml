@@ -59,6 +59,15 @@ body_markdown: |
 
   So I switched to **Luigi** and a [created a method](https://villoro.com/post/luigi) that made really easy to integrate new tasks.
 
+  See how it works:
+
+  <div class="w3-center">
+    <video controls style="max-height:800px">
+      <source src="/static/images/portfolio/luigi.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
   ## The tasks
 
   ### 1. Expenses/Incomes Report
