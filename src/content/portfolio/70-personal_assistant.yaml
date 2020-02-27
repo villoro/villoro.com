@@ -5,7 +5,7 @@ code: personal_assistant
 title: Personal Assistant
 subtitle: How to automate tasks with Luigi and an AWS EC2 instance.
 image: personal_assistant.jpg
-image_square: personal_assistant_square.jpg
+image_square: luigi_square.gif
 
 main: True
 highlight: True
