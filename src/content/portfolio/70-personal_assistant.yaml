@@ -5,7 +5,7 @@ code: personal_assistant
 title: Personal Assistant
 subtitle: How to automate tasks with Luigi and an AWS EC2 instance.
 image: personal_assistant.jpg
-image_square: personal_assistant_square.jpg
+image_square: luigi_square.gif
 
 main: True
 highlight: True
@@ -65,12 +65,52 @@ body_markdown: |
 
   Since 2010 I have been recording all expenses and incomes. For the last years I have been using [Money Lover](https://moneylover.me/) to do so.
   This app has a way to export the data as an Excel file. But the problem is that it does not have the format I want.
-  So the first task is to process that data.
+  So the first task is to clean that data (`clean data`).
 
-  The second part was to create a Report from that data.
-  I created a custom html report using [W3css](https://www.w3schools.com/w3css/) and [Highcharts](https://www.highcharts.com/) and **Jinja2** for templating.
+  With the data cleaned the idea is to create a custom html report using **Jinja2** templates.
 
-  ### 2. Flights tracker
+  In order to make it more flexible there are two tasks:
+
+  1. `Extract info` that creates a `yaml` with the info
+  2. `Create Report` that creates the `html` report with the `yaml` data
+
+  With this approach is easy to modify the data or the template without needing to modify the other.
+
+  So the pipeline is as follows:
+
+  <div class="w3-center">
+    <img src="/static/images/portfolio/luigi_reports.png" alt="luigi reports" class="w3-image w3-padding-16" style="max-height: 500px;"/>
+  </div>
+
+  As you can see I use **dropbox** for storing all data this way is easy for me to access or modify it.
+
+  The report itself uses [W3css](https://www.w3schools.com/w3css/) for the layout and [Highcharts](https://www.highcharts.com/) for charts.
+
+  Here you can see some of the pages the report have:
+
+  <div class="w3-center w3-padding-16">
+    <img src="/static/images/portfolio/luigi_report_1_dashboard.png" alt="luigi report dashboard" class="w3-image w3-border" style="max-width: 800px;"/>
+  </div>
+  <div class="w3-center w3-padding-16">
+    <img src="/static/images/portfolio/luigi_report_3_comparison.png" alt="luigi report comparison" class="w3-image w3-border" style="max-width: 800px;"/>
+  </div>
+  <div class="w3-center w3-padding-16">
+    <img src="/static/images/portfolio/luigi_report_4_pies.png" alt="luigi report pies" class="w3-image w3-border" style="max-width: 800px;"/>
+  </div>
+  <div class="w3-center w3-padding-16">
+    <img src="/static/images/portfolio/luigi_report_5_liquid.png" alt="luigi report liquid" class="w3-image w3-border" style="max-width: 800px;"/>
+  </div>
+  <div class="w3-center w3-padding-16">
+    <img src="/static/images/portfolio/luigi_report_8_sankey.png" alt="luigi report sankey" class="w3-image w3-border" style="max-width: 800px;"/>
+  </div>
+
+  And of course the report is **responsive**:
+
+  <div class="w3-center w3-padding-16">
+    <img src="/static/images/portfolio/luigi_report_nexus_5X.png" alt="luigi report nexus 5X" class="w3-image" style="max-width: 800px;"/>
+  </div>
+
+  ### Flights tracker
 
   I regularly travel to Italy and I want to do it as cheap as possible.
   So I thought the best way to do it was to let the assistant track all the prices between the airports I wanted and store that data.
@@ -79,6 +119,18 @@ body_markdown: |
   To do so I used the **Rapid API** [Flight Search](https://rapidapi.com/skyscanner/api/skyscanner-flight-search) app.
   This API allowed me to query some pairs of airports daily for free.
   So right now the assistant is storing a year of data each day so that I can see prices changes and which company offers cheaper flights each day.
+
+  <div class="w3-center">
+    <img src="/static/images/portfolio/luigi_flights.png" alt="luigi flights" class="w3-image w3-padding-16" style="max-width: 800px;"/>
+  </div>
+
+  As you can see **Rapid API** is getting their data from **Skyscanner**.
+
+  A sample of the data:
+
+  <div class="w3-center">
+    <img src="/static/images/portfolio/luigi_flights_data.jpg" alt="luigi flights data" class="w3-image w3-padding-16" style="max-width: 800px;"/>
+  </div>
 
   ## Getting info
 
