@@ -187,3 +187,8 @@ a:hover {color:#FFCA28}
   border-top-left-radius:4px;
   border-top-right-radius:4px;
 }
+
+video {
+  width: 100%;
+  max-width: 1200px;
+}
