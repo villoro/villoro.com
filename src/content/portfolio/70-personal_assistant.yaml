@@ -88,26 +88,26 @@ body_markdown: |
 
   Here you can see some of the pages the report have:
 
-  <div class="w3-center w3-padding-16">
-    <img src="/static/images/portfolio/luigi_report_1_dashboard.png" alt="luigi report dashboard" class="w3-image w3-border" style="max-width: 800px;"/>
+  <div class="w3-center w3-padding-16" style="max-width: 800px;">
+      <img src="/static/images/portfolio/luigi_report_1_dashboard.png" alt="luigi report dashboard" class="w3-image w3-border"/>
   </div>
-  <div class="w3-center w3-padding-16">
-    <img src="/static/images/portfolio/luigi_report_3_comparison.png" alt="luigi report comparison" class="w3-image w3-border" style="max-width: 800px;"/>
+  <div class="w3-center w3-padding-16" style="max-width: 800px;">
+    <img src="/static/images/portfolio/luigi_report_3_comparison.png" alt="luigi report comparison" class="w3-image w3-border"/>
   </div>
-  <div class="w3-center w3-padding-16">
-    <img src="/static/images/portfolio/luigi_report_4_pies.png" alt="luigi report pies" class="w3-image w3-border" style="max-width: 800px;"/>
+  <div class="w3-center w3-padding-16" style="max-width: 800px;">
+    <img src="/static/images/portfolio/luigi_report_4_pies.png" alt="luigi report pies" class="w3-image w3-border"/>
   </div>
-  <div class="w3-center w3-padding-16">
-    <img src="/static/images/portfolio/luigi_report_5_liquid.png" alt="luigi report liquid" class="w3-image w3-border" style="max-width: 800px;"/>
+  <div class="w3-center w3-padding-16" style="max-width: 800px;">
+    <img src="/static/images/portfolio/luigi_report_5_liquid.png" alt="luigi report liquid" class="w3-image w3-border"/>
   </div>
-  <div class="w3-center w3-padding-16">
-    <img src="/static/images/portfolio/luigi_report_8_sankey.png" alt="luigi report sankey" class="w3-image w3-border" style="max-width: 800px;"/>
+  <div class="w3-center w3-padding-16" style="max-width: 800px;">
+    <img src="/static/images/portfolio/luigi_report_8_sankey.png" alt="luigi report sankey" class="w3-image w3-border"/>
   </div>
 
   And of course the report is **responsive**:
 
   <div class="w3-center w3-padding-16">
-    <img src="/static/images/portfolio/luigi_report_nexus_5X.png" alt="luigi report nexus 5X" class="w3-image" style="max-width: 800px;"/>
+    <img src="/static/images/portfolio/luigi_report_nexus_5X.png" alt="luigi report nexus 5X" class="w3-image" style="max-height: 550px;"/>
   </div>
 
   ### Flights tracker
@@ -121,7 +121,7 @@ body_markdown: |
   So right now the assistant is storing a year of data each day so that I can see prices changes and which company offers cheaper flights each day.
 
   <div class="w3-center">
-    <img src="/static/images/portfolio/luigi_flights.png" alt="luigi flights" class="w3-image w3-padding-16" style="max-width: 800px;"/>
+    <img src="/static/images/portfolio/luigi_flights.png" alt="luigi flights" class="w3-image w3-padding-16" style="max-height: 200px;"/>
   </div>
 
   As you can see **Rapid API** is getting their data from **Skyscanner**.
@@ -129,7 +129,7 @@ body_markdown: |
   A sample of the data:
 
   <div class="w3-center">
-    <img src="/static/images/portfolio/luigi_flights_data.jpg" alt="luigi flights data" class="w3-image w3-padding-16" style="max-width: 800px;"/>
+    <img src="/static/images/portfolio/luigi_flights_data.jpg" alt="luigi flights data" class="w3-image w3-padding-16" style="max-height: 300px;"/>
   </div>
 
   ## Getting info
