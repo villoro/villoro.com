@@ -4,8 +4,8 @@
 code: personal_assistant
 title: Personal Assistant
 subtitle: How to automate tasks with Luigi and an AWS EC2 instance.
-image: personal_assistant.jpg
-image_square: luigi_square.gif
+image: luigi.png
+image_square: luigi_square.jpg
 
 main: True
 highlight: True
@@ -13,8 +13,9 @@ highlight: True
 tags:
   - Python
   - Luigi
-  - Selenium
+  - AWS
   - Automation
+  - Dropbox
 
 tags_filter:
   - Automation
