@@ -8,7 +8,7 @@ image: am_managers.jpg
 image_square: am_managers_square.jpg
 
 main: True
-highlight: True
+highlight: False
 
 tags:
   - Python

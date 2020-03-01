@@ -1,0 +1,544 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: h2o_automl
+title: H2O AutoML
+date: "2019-12-22"
+image: h2o_autoML_square.jpg
+highlight: True
+
+tags:
+  - Python
+  - Spark
+  - H2O
+
+tags_filter:
+  - Python
+  - Spark
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0026-h2o_automl
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  H2O is a fully open source, distributed in-memory machine learning platform with linear scalability.
+  In this post you will see how to use AutoML to let h2o train multiple Machine Learning algorithms automatically.
+
+image_head:
+  filename: h2o.png
+  caption: h2o
+
+use_chartjs: True
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 1. What is H2O
+
+  According to their website, H2O is a fully open source, distributed in-memory machine learning platform with linear scalability.
+  H2O supports the most widely used statistical & machine learning algorithms including gradient boosted machines, generalized linear models, deep learning and more.
+
+  It uses MapReduce to break down tasks so that it can send tasts to workers on a cluster.
+
+  H2O also has an AutoML functionality that automatically runs through all the algorithms and their hyperparameters to produce a leaderboard of the best models.
+
+  ## 2. H2O AutoML
+
+  The best way to understand **AutoML** is by showing a practical case.
+  As an example we will use the [Higgs Challenge](https://www.kaggle.com/c/higgs-boson/data) data.
+  Since the preprocessing is out of the scope of this post we can directly use a copy of the preprocessed data:
+
+  <div class="w3-row w3-center" style="max-width:600px">
+    <div class="w3-col m2 w3-margin">
+      <a 
+        href="https://s3.amazonaws.com/erin-data/higgs/higgs_train_10k.csv"
+        class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber"
+      >
+        Train data
+      </a>
+    </div>
+
+    <div class="w3-col m2 w3-margin">
+      <a
+        href="https://s3.amazonaws.com/erin-data/higgs/higgs_test_5k.csv"
+        class="w3-button v-color-accent w3-round-xxlarge w3-hover-amber"
+      >
+        Test data
+      </a>
+    </div>
+  </div>
+
+  ### 2.1. Start H2O session
+
+  This is really straightforward:
+
+  ```python
+  import h2o
+  from h2o.automl import H2OAutoML, get_leaderboard
+
+  h2o.init()
+  ```
+
+  This code will init an H2O session.
+
+  ### 2.2. Get data
+
+  The first step is to load the data.
+  Then we will create a list with the names of all feature columns an another for the target.
+  The last step is to mark the target as a `factor`. This means setting it as a target.
+  All this can be done with:
+
+  ```python
+  # Import a sample binary outcome train/test set into H2O
+  train = h2o.import_file("https://s3.amazonaws.com/erin-data/higgs/higgs_train_10k.csv")
+  test = h2o.import_file("https://s3.amazonaws.com/erin-data/higgs/higgs_test_5k.csv")
+
+  # Identify predictors and response
+  x = train.columns
+  y = "response"
+  x.remove(y)
+
+  # For binary classification, response should be a factor
+  train[y] = train[y].asfactor()
+  test[y] = test[y].asfactor()
+  ```
+
+  > This creates an `H2O` dataframe. You can always transform it to **Pandas** with `x.as_data_frame()`
+
+  ### 2.3. Train
+
+  The first step is to create the `H2OAutoML` object.
+  Since we aim to get reproducibility of the example we will set a seed.
+  When you do so you also need to specify the maximum number of models to be trained.
+
+  ```python
+  aml = H2OAutoML(max_models=20, seed=1, max_runtime_secs=training_minutes*60)
+  ```
+
+  I also find it useful to limit the total amount of time that **AutoML** can spend on training.
+
+  Once the **AutoML** object is declared to train you only need to pass the `training_frame` and the names of both **features** and **targets**.
+
+  ```python
+  aml.train(x=x, y=y, training_frame=train)
+  ```
+
+  ### 2.3. Check results
+
+  You can see the results with `lb = aml.leaderboard`.
+  However it is more useful to see all possible information with:
+
+  ```python
+  # Optionally add extra model information to the leaderboard
+  lb = get_leaderboard(aml, extra_columns='ALL')
+
+  # Print all rows (instead of default 10 rows)
+  lb.head(rows=lb.nrows)
+  ```
+
+  The total training time (for all models) of the example was **limited to 2 minutes**. The results are:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">model_id</th>
+      <th class="v-table-header">auc</th>
+      <th class="v-table-header">logloss</th>
+      <th class="v-table-header">aucpr</th>
+      <th class="v-table-header">mean_per_class_error</th>
+    </tr>
+    <tr>
+      <td>StackedEnsemble_AllModels_AutoML</td>
+      <td>0.786427</td>
+      <td>0.555344</td>
+      <td>0.803633</td>
+      <td>0.319589</td>
+    </tr>
+    <tr>
+      <td>StackedEnsemble_BestOfFamily_AutoML</td>
+      <td>0.783762</td>
+      <td>0.557932</td>
+      <td>0.800806</td>
+      <td>0.33061</td>
+    </tr>
+    <tr>
+      <td>GBM_5_AutoML</td>
+      <td>0.780862</td>
+      <td>0.559708</td>
+      <td>0.79783</td>
+      <td>0.325399</td>
+    </tr>
+    <tr>
+      <td>GBM_1_AutoML</td>
+      <td>0.778997</td>
+      <td>0.56159</td>
+      <td>0.796523</td>
+      <td>0.326697</td>
+    </tr>
+    <tr>
+      <td>GBM_grid__1_AutoML_model_2</td>
+      <td>0.778615</td>
+      <td>0.591319</td>
+      <td>0.795194</td>
+      <td>0.34516</td>
+    </tr>
+    <tr>
+      <td>GBM_2_AutoML</td>
+      <td>0.778338</td>
+      <td>0.561527</td>
+      <td>0.79632</td>
+      <td>0.329805</td>
+    </tr>
+    <tr>
+      <td>GBM_3_AutoML</td>
+      <td>0.776389</td>
+      <td>0.563906</td>
+      <td>0.793284</td>
+      <td>0.328065</td>
+    </tr>
+    <tr>
+      <td>GBM_4_AutoML</td>
+      <td>0.770758</td>
+      <td>0.570912</td>
+      <td>0.790371</td>
+      <td>0.353743</td>
+    </tr>
+    <tr>
+      <td>DRF_1_AutoML</td>
+      <td>0.765151</td>
+      <td>0.580246</td>
+      <td>0.783285</td>
+      <td>0.340491</td>
+    </tr>
+    <tr>
+      <td>XRT_1_AutoML</td>
+      <td>0.765134</td>
+      <td>0.582172</td>
+      <td>0.783059</td>
+      <td>0.349171</td>
+    </tr>
+  </table>
+
+  ## 3. H2O vs Manual ML
+
+  In order to compare the results of **H2O AutoML** I trained a Support Vector Classifier (SVC) and a Random Forest Classifier (RFC).
+  Then I also did a GridSearchCV with the RandomForest to get some numbers.
+
+  The parameters for the GridSearchCV are:
+  ```yaml
+  {'n_estimators': [50, 100, 150, 200], 'max_features': ['auto', 'sqrt', 'log2']}
+  ```
+
+  And the 3 metrics analized are:
+
+  * Training time
+  * Prediction time
+  * [AUC](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc)
+
+  In order to see if results could be improved I did another train with **AutoML** but limited to 2 hours instead of 2 minutes.
+
+  Here you can see how all models perform:
+  <canvas id="auc_predict_time" style="width:100%;height:500px;"></canvas>
+
+  **AutoML** models are usally faster for predict and some of them perform better than the manual ones.
+
+  <canvas id="auc_train_time" style="width:100%;height:500px;"></canvas>
+
+  The training time with **AutoML** was lower than sklearn while having equal or better results.
+
+  ## 4. Sparkling water
+
+  Even though **H2O** uses MapReduce it might be useful to integrate it with spark.
+  To do so you only need to use **Sparkling water**.
+  This will help distribute tasks to workers using **Spark**.
+
+  <div class="w3-center">
+    <img 
+      src="/static/images/posts/h2o_sparkling_water_architecture.png"
+      alt="h2o_sparkling_water_architecture"
+      class="w3-image w3-padding"
+      style="max-height: 500px;"
+    />
+  </div>
+
+  To install it read the official documentation.
+
+  Once it is installed you only need to replace the **H2O** initalization (`h2o.init()`) for:
+
+  ```python
+  from pyspark.sql import SparkSession
+  from pysparkling import H2OContext
+
+  spark = SparkSession.builder.appName("h2o_auto_ml").getOrCreate()
+  hc = H2OContext.getOrCreate(spark)
+  ```
+
+
+scripts: |
+  <script>
+    const xaxes = {
+      xAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: 'AUC'
+        }
+      }]
+    }
+
+    const tooltips = {
+      tooltips: {
+        callbacks: {
+          label: function(tooltipItem, data) {
+            var index = tooltipItem.index;
+            var datasetIndex = tooltipItem.datasetIndex;
+            
+            var dataset = data.datasets[datasetIndex];
+            var item = dataset.data[index];
+
+            return item.name + " (AUC: " + item.x + ", time: " + item.y + "s)";
+          }
+        }
+      }
+    }
+
+    var data_auc_predict_time = {
+      datasets: [
+        {
+          label: 'sklearn',
+          backgroundColor: "#FF9800", 
+          data: [
+            {'x': 0.642, 'y': 1.5882, 'name': 'SVC_sklearn'},
+            {'x': 0.7015, 'y': 0.0974, 'name': 'RFC_sklearn'},
+            {'x': 0.7081, 'y': 0.203, 'name': 'RFC_GS_sklearn'}
+          ],
+        },
+        {
+          label: 'AutoML_2min',
+          backgroundColor: "#2196F3", 
+          data: [
+            {'x': 0.6867, 'y': 0.668, 'name': 'StackedEnsemble_AllModels_AutoML'},
+            {'x': 0.6797, 'y': 0.4454, 'name': 'StackedEnsemble_BestOfFamily_AutoML'},
+            {'x': 0.703, 'y': 0.0952, 'name': 'GBM_5_AutoML'},
+            {'x': 0.7066, 'y': 0.084, 'name': 'GBM_1_AutoML'},
+            {'x': 0.6981, 'y': 0.1359, 'name': 'GBM_grid__1_AutoML_model_2'},
+            {'x': 0.7072, 'y': 0.0852, 'name': 'GBM_2_AutoML'},
+            {'x': 0.7004, 'y': 0.0868, 'name': 'GBM_3_AutoML'},
+            {'x': 0.7138, 'y': 0.089, 'name': 'GBM_4_AutoML'},
+            {'x': 0.6349, 'y': 0.1039, 'name': 'DRF_1_AutoML'},
+            {'x': 0.6328, 'y': 0.1095, 'name': 'XRT_1_AutoML'},
+            {'x': 0.665, 'y': 0.0504, 'name': 'GBM_grid__1_AutoML_model_3'},
+            {'x': 0.6512, 'y': 0.0547, 'name': 'DeepLearning_1_AutoML'},
+            {'x': 0.6134, 'y': 0.0458, 'name': 'GLM_1_AutoML'}
+          ],
+        },
+        {
+          label: 'AutoML_120min',
+          backgroundColor: "#AED581", 
+          data: [
+            {'x': 0.7153, 'y': 0.2199, 'name': 'XGBoost_grid__1_AutoML_model_5'},
+            {'x': 0.7139, 'y': 0.2218, 'name': 'XGBoost_grid__1_AutoML_model_1'},
+            {'x': 0.712, 'y': 0.2189, 'name': 'XGBoost_1_AutoML'},
+            {'x': 0.7119, 'y': 0.2273, 'name': 'XGBoost_2_AutoML'},
+            {'x': 0.7101, 'y': 0.2188, 'name': 'XGBoost_grid__1_AutoML_model_2'},
+            {'x': 0.708, 'y': 0.2184, 'name': 'GBM_4_AutoML'},
+            {'x': 0.7075, 'y': 0.218, 'name': 'XGBoost_grid__1_AutoML_model_6'},
+            {'x': 0.7048, 'y': 0.2264, 'name': 'XGBoost_grid__1_AutoML_model_7'},
+            {'x': 0.7046, 'y': 0.2191, 'name': 'GBM_5_AutoML'},
+            {'x': 0.7031, 'y': 0.2182, 'name': 'XGBoost_grid__1_AutoML_model_3'},
+            {'x': 0.7022, 'y': 0.2192, 'name': 'GBM_3_AutoML'},
+            {'x': 0.7011, 'y': 2.1576, 'name': 'StackedEnsemble_AllModels_AutoML'},
+            {'x': 0.7011, 'y': 0.2189, 'name': 'GBM_2_AutoML'},
+            {'x': 0.7002, 'y': 0.2271, 'name': 'XGBoost_grid__1_AutoML_model_8'},
+            {'x': 0.7002, 'y': 0.2187, 'name': 'GBM_1_AutoML'},
+            {'x': 0.6966, 'y': 0.218, 'name': 'GBM_grid__1_AutoML_model_6'},
+            {'x': 0.6948, 'y': 0.2293, 'name': 'GBM_grid__1_AutoML_model_4'},
+            {'x': 0.6942, 'y': 0.2183, 'name': 'GBM_grid__1_AutoML_model_9'},
+            {'x': 0.6937, 'y': 0.2183, 'name': 'GBM_grid__1_AutoML_model_5'},
+            {'x': 0.6911, 'y': 0.2198, 'name': 'XGBoost_3_AutoML'},
+            {'x': 0.6883, 'y': 0.2189, 'name': 'GBM_grid__1_AutoML_model_7'},
+            {'x': 0.6879, 'y': 0.2178, 'name': 'GBM_grid__1_AutoML_model_11'},
+            {'x': 0.6839, 'y': 0.2191, 'name': 'DeepLearning_grid__1_AutoML_model_1'},
+            {'x': 0.6838, 'y': 0.2196, 'name': 'GBM_grid__1_AutoML_model_10'},
+            {'x': 0.6822, 'y': 0.2183, 'name': 'GBM_grid__1_AutoML_model_2'},
+            {'x': 0.6789, 'y': 0.2184, 'name': 'DeepLearning_grid__3_AutoML_model_3'},
+            {'x': 0.6773, 'y': 0.218, 'name': 'XGBoost_grid__1_AutoML_model_4'},
+            {'x': 0.6733, 'y': 0.2193, 'name': 'DeepLearning_grid__1_AutoML_model_2'},
+            {'x': 0.6712, 'y': 0.2191, 'name': 'DeepLearning_grid__2_AutoML_model_8'},
+            {'x': 0.6711, 'y': 0.2193, 'name': 'StackedEnsemble_BestOfFamily_AutoML'},
+            {'x': 0.6709, 'y': 0.2186, 'name': 'GBM_grid__1_AutoML_model_8'},
+            {'x': 0.6683, 'y': 0.2194, 'name': 'DeepLearning_grid__1_AutoML_model_6'},
+            {'x': 0.6652, 'y': 0.2183, 'name': 'DeepLearning_grid__2_AutoML_model_1'},
+            {'x': 0.6649, 'y': 0.222, 'name': 'DeepLearning_grid__3_AutoML_model_4'},
+            {'x': 0.6645, 'y': 0.2197, 'name': 'DeepLearning_grid__1_AutoML_model_8'},
+            {'x': 0.6641, 'y': 0.219, 'name': 'DeepLearning_grid__3_AutoML_model_2'},
+            {'x': 0.6638, 'y': 0.2211, 'name': 'DeepLearning_grid__1_AutoML_model_9'},
+            {'x': 0.6633, 'y': 0.2202, 'name': 'DRF_1_AutoML'},
+            {'x': 0.6628, 'y': 0.2197, 'name': 'DeepLearning_grid__2_AutoML_model_3'},
+            {'x': 0.6607, 'y': 0.2197, 'name': 'DeepLearning_grid__2_AutoML_model_4'},
+            {'x': 0.6588, 'y': 0.2185, 'name': 'DeepLearning_grid__1_AutoML_model_5'},
+            {'x': 0.6585, 'y': 0.0217, 'name': 'DeepLearning_grid__2_AutoML_model_9'},
+            {'x': 0.654, 'y': 0.2331, 'name': 'GBM_grid__1_AutoML_model_3'},
+            {'x': 0.6534, 'y': 0.4215, 'name': 'DeepLearning_grid__3_AutoML_model_5'},
+            {'x': 0.6478, 'y': 0.2225, 'name': 'DeepLearning_1_AutoML'},
+            {'x': 0.6468, 'y': 0.2192, 'name': 'DeepLearning_grid__1_AutoML_model_4'},
+            {'x': 0.6402, 'y': 0.2185, 'name': 'DeepLearning_grid__2_AutoML_model_6'},
+            {'x': 0.6382, 'y': 0.218, 'name': 'DeepLearning_grid__1_AutoML_model_3'},
+            {'x': 0.6332, 'y': 0.2176, 'name': 'XRT_1_AutoML'},
+            {'x': 0.6319, 'y': 0.2183, 'name': 'DeepLearning_grid__2_AutoML_model_5'},
+            {'x': 0.6313, 'y': 0.2185, 'name': 'DeepLearning_grid__3_AutoML_model_1'},
+            {'x': 0.631, 'y': 0.2315, 'name': 'DeepLearning_grid__2_AutoML_model_2'},
+            {'x': 0.6258, 'y': 0.2249, 'name': 'DeepLearning_grid__2_AutoML_model_7'},
+            {'x': 0.6245, 'y': 0.2192, 'name': 'DeepLearning_grid__1_AutoML_model_7'},
+            {'x': 0.6134, 'y': 0.0135, 'name': 'GLM_1_AutoML'},
+            {'x': 0.6018, 'y': 0.2188, 'name': 'GBM_grid__1_AutoML_model_1'}
+          ],
+        },
+      ]
+    }
+
+    var auc_predict_time = new Chart("auc_predict_time", {
+      type: 'scatter',
+      data: data_auc_predict_time,
+      options: {
+        title: {
+          display: true,
+          text: 'AUC vs predict time [s]'
+        },
+        scales: {
+          ...xaxes,
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Predict time [seconds]'
+            }
+          }]
+        },
+        ...tooltips
+      }
+    });
+
+    var data_auc_train_time = {
+      datasets: [
+        {
+          label: 'sklearn',
+          backgroundColor: "#FF9800", 
+          data: [
+            {'x': 0.642, 'y': 5.1965, 'name': 'SVC_sklearn'},
+            {'x': 0.7015, 'y': 3.6673, 'name': 'RFC_sklearn'},
+            {'x': 0.7081, 'y': 60.3997, 'name': 'RFC_GS_sklearn'}
+          ],
+        },
+        {
+          label: 'AutoML_2min',
+          backgroundColor: "#2196F3", 
+          data: [
+            {'x': 0.6867, 'y': 1.393, 'name': 'StackedEnsemble_AllModels_AutoML'},
+            {'x': 0.6797, 'y': 0.743, 'name': 'StackedEnsemble_BestOfFamily_AutoML'},
+            {'x': 0.703, 'y': 1.092, 'name': 'GBM_5_AutoML'},
+            {'x': 0.7066, 'y': 0.804, 'name': 'GBM_1_AutoML'},
+            {'x': 0.6981, 'y': 2.936, 'name': 'GBM_grid__1_AutoML_model_2'},
+            {'x': 0.7072, 'y': 0.813, 'name': 'GBM_2_AutoML'},
+            {'x': 0.7004, 'y': 0.895, 'name': 'GBM_3_AutoML'},
+            {'x': 0.7138, 'y': 1.165, 'name': 'GBM_4_AutoML'},
+            {'x': 0.6349, 'y': 1.815, 'name': 'DRF_1_AutoML'},
+            {'x': 0.6328, 'y': 2.541, 'name': 'XRT_1_AutoML'},
+            {'x': 0.665, 'y': 0.166, 'name': 'GBM_grid__1_AutoML_model_3'},
+            {'x': 0.6512, 'y': 0.893, 'name': 'DeepLearning_1_AutoML'},
+            {'x': 0.6134, 'y': 0.235, 'name': 'GLM_1_AutoML'}
+          ],
+        },
+        {
+          label: 'AutoML_120min',
+          backgroundColor: "#AED581", 
+          data: [
+            {'x': 0.7153, 'y': 4.779, 'name': 'XGBoost_grid__1_AutoML_model_5'},
+            {'x': 0.7139, 'y': 8.805, 'name': 'XGBoost_grid__1_AutoML_model_1'},
+            {'x': 0.712, 'y': 3.72, 'name': 'XGBoost_1_AutoML'},
+            {'x': 0.7119, 'y': 3.96, 'name': 'XGBoost_2_AutoML'},
+            {'x': 0.7101, 'y': 4.295, 'name': 'XGBoost_grid__1_AutoML_model_2'},
+            {'x': 0.708, 'y': 1.017, 'name': 'GBM_4_AutoML'},
+            {'x': 0.7075, 'y': 6.963, 'name': 'XGBoost_grid__1_AutoML_model_6'},
+            {'x': 0.7048, 'y': 2.96, 'name': 'XGBoost_grid__1_AutoML_model_7'},
+            {'x': 0.7046, 'y': 0.965, 'name': 'GBM_5_AutoML'},
+            {'x': 0.7031, 'y': 6.051, 'name': 'XGBoost_grid__1_AutoML_model_3'},
+            {'x': 0.7022, 'y': 0.797, 'name': 'GBM_3_AutoML'},
+            {'x': 0.7011, 'y': 4.287, 'name': 'StackedEnsemble_AllModels_AutoML'},
+            {'x': 0.7011, 'y': 0.759, 'name': 'GBM_2_AutoML'},
+            {'x': 0.7002, 'y': 5.605, 'name': 'XGBoost_grid__1_AutoML_model_8'},
+            {'x': 0.7002, 'y': 0.699, 'name': 'GBM_1_AutoML'},
+            {'x': 0.6966, 'y': 15.856, 'name': 'GBM_grid__1_AutoML_model_6'},
+            {'x': 0.6948, 'y': 0.669, 'name': 'GBM_grid__1_AutoML_model_4'},
+            {'x': 0.6942, 'y': 0.865, 'name': 'GBM_grid__1_AutoML_model_9'},
+            {'x': 0.6937, 'y': 0.666, 'name': 'GBM_grid__1_AutoML_model_5'},
+            {'x': 0.6911, 'y': 2.562, 'name': 'XGBoost_3_AutoML'},
+            {'x': 0.6883, 'y': 0.754, 'name': 'GBM_grid__1_AutoML_model_7'},
+            {'x': 0.6879, 'y': 0.596, 'name': 'GBM_grid__1_AutoML_model_11'},
+            {'x': 0.6839, 'y': 32.089, 'name': 'DeepLearning_grid__1_AutoML_model_1'},
+            {'x': 0.6838, 'y': 0.939, 'name': 'GBM_grid__1_AutoML_model_10'},
+            {'x': 0.6822, 'y': 1.293, 'name': 'GBM_grid__1_AutoML_model_2'},
+            {'x': 0.6789, 'y': 63.112, 'name': 'DeepLearning_grid__3_AutoML_model_3'},
+            {'x': 0.6773, 'y': 10.173, 'name': 'XGBoost_grid__1_AutoML_model_4'},
+            {'x': 0.6733, 'y': 50.833, 'name': 'DeepLearning_grid__1_AutoML_model_2'},
+            {'x': 0.6712, 'y': 49.496, 'name': 'DeepLearning_grid__2_AutoML_model_8'},
+            {'x': 0.6711, 'y': 0.509, 'name': 'StackedEnsemble_BestOfFamily_AutoML'},
+            {'x': 0.6709, 'y': 0.244, 'name': 'GBM_grid__1_AutoML_model_8'},
+            {'x': 0.6683, 'y': 37.454, 'name': 'DeepLearning_grid__1_AutoML_model_6'},
+            {'x': 0.6652, 'y': 37.206, 'name': 'DeepLearning_grid__2_AutoML_model_1'},
+            {'x': 0.6649, 'y': 88.002, 'name': 'DeepLearning_grid__3_AutoML_model_4'},
+            {'x': 0.6645, 'y': 35.047, 'name': 'DeepLearning_grid__1_AutoML_model_8'},
+            {'x': 0.6641, 'y': 41.749, 'name': 'DeepLearning_grid__3_AutoML_model_2'},
+            {'x': 0.6638, 'y': 25.755, 'name': 'DeepLearning_grid__1_AutoML_model_9'},
+            {'x': 0.6633, 'y': 1.635, 'name': 'DRF_1_AutoML'},
+            {'x': 0.6628, 'y': 37.858, 'name': 'DeepLearning_grid__2_AutoML_model_3'},
+            {'x': 0.6607, 'y': 42.04, 'name': 'DeepLearning_grid__2_AutoML_model_4'},
+            {'x': 0.6588, 'y': 30.614, 'name': 'DeepLearning_grid__1_AutoML_model_5'},
+            {'x': 0.6585, 'y': 4.938, 'name': 'DeepLearning_grid__2_AutoML_model_9'},
+            {'x': 0.654, 'y': 3.276, 'name': 'GBM_grid__1_AutoML_model_3'},
+            {'x': 0.6534, 'y': 97.24, 'name': 'DeepLearning_grid__3_AutoML_model_5'},
+            {'x': 0.6478, 'y': 0.502, 'name': 'DeepLearning_1_AutoML'},
+            {'x': 0.6468, 'y': 32.494, 'name': 'DeepLearning_grid__1_AutoML_model_4'},
+            {'x': 0.6402, 'y': 35.467, 'name': 'DeepLearning_grid__2_AutoML_model_6'},
+            {'x': 0.6382, 'y': 35.494, 'name': 'DeepLearning_grid__1_AutoML_model_3'},
+            {'x': 0.6332, 'y': 1.838, 'name': 'XRT_1_AutoML'},
+            {'x': 0.6319, 'y': 39.215, 'name': 'DeepLearning_grid__2_AutoML_model_5'},
+            {'x': 0.6313, 'y': 41.801, 'name': 'DeepLearning_grid__3_AutoML_model_1'},
+            {'x': 0.631, 'y': 45.112, 'name': 'DeepLearning_grid__2_AutoML_model_2'},
+            {'x': 0.6258, 'y': 32.514, 'name': 'DeepLearning_grid__2_AutoML_model_7'},
+            {'x': 0.6245, 'y': 44.494, 'name': 'DeepLearning_grid__1_AutoML_model_7'},
+            {'x': 0.6134, 'y': 0.165, 'name': 'GLM_1_AutoML'},
+            {'x': 0.6018, 'y': 0.202, 'name': 'GBM_grid__1_AutoML_model_1'}
+          ],
+        },
+      ]
+    }
+
+    var auc_train_time = new Chart("auc_train_time", {
+      type: 'scatter',
+      data: data_auc_train_time,
+      options: {
+        title: {
+          display: true,
+          text: 'AUC vs training time [s]'
+        },
+        scales: {
+          ...xaxes,
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Training time [seconds]'
+            }
+          }]
+        },
+        ...tooltips
+      }
+    });
+  </script>
