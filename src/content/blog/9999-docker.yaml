@@ -1,0 +1,68 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: docker
+title: Docker
+date: "2019-02-29"
+image: docker_square.png
+highlight: True
+
+tags:
+  - Tools
+
+tags_filter:
+  - Tools
+
+image_head:
+  filename: docker.jpg
+  caption: docker
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Cmder
+  url: https://cmder.net/
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  Cmder is a really good terminal for windows that can replace the default one.
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 0. Overview
+
+  Start a container
+
+      # container name is optional
+      # --detach or -d to run it in the background
+      docker container run --publish 80:80 --detach --name webhost nginx -e ENV_VAR=value
+
+      docker ps
+
+  See runing process for a container
+
+      docker top xx
+
+  List containers
+  
+      docker container ls -a
+
+  Remove a container
+
+      docker container rm xx
+
+  See logs of container
+
+      docker container logs xx
+
+  Access current process inside a container
+
+      docker run -it --rm --privileged --pid=host justincormack/nsenter1
