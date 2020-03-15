@@ -41,18 +41,21 @@ content_markdown: |
 
   Start a container
 
-      # container name is optional
-      # --detach or -d to run it in the background
-      docker container run --publish 80:80 --detach --name webhost nginx -e ENV_VAR=value
+  ```sh
+  # container name is optional
+  # --detach or -d to run it in the background
+  docker container run -d -p 8080:80 --name webhost nginx -e ENV_VAR=value
 
-      docker ps
+  # -it for interactive shell
+  ```
 
-  See runing process for a container
+  See running process for a container
 
       docker top xx
 
   List containers
   
+      docker ps
       docker container ls -a
 
   Remove a container
@@ -66,3 +69,39 @@ content_markdown: |
   Access current process inside a container
 
       docker run -it --rm --privileged --pid=host justincormack/nsenter1
+
+  Info about a container
+
+      docker container inspect xx
+
+  Usage
+
+      docker container stats
+
+  Start a previously created container
+
+      docker start -ai xx
+
+  Run a command in a running container
+
+      docker exec -it xx bash
+
+  ## Network
+
+  List networks
+
+      docker network ls
+
+  Info about a network
+
+      docker network inspect xx
+
+  New network
+
+      docker network create xx
+
+  Connect or disconnect
+
+      docker network connect my_net my_container
+      docker network disconnect my_net my_container
+
