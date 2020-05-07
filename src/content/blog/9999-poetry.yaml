@@ -8,7 +8,7 @@ image: poetry_square.png
 highlight: True
 
 tags:
-  - Tootls
+  - Tools
 
 tags_filter:
   - Tools
@@ -38,4 +38,65 @@ content_markdown: |
   [TOC]
 
   ## 0. Overview
+
+  # Init a new project
+
+  ```sh
+  poetry new projectname
+  # Replace projectname for the name you want
+  ```
+
+  # Install update dependencies
+
+  ```sh
+  poetry install
+  poetry update
+  ```
+
+
+  # Add/remove packages
+
+  ```sh
+  poetry add pandas
+  poetry remove pandas
+  ```
+
+
+
+  # Run code
+
+  ```sh
+  poetry shell
+
+  poetry run xx
+  ```
+
+  # Create packages
   
+  ```sh
+  poetry build
+  ```
+
+  ```sh
+  poetry publish
+  ```
+
+  # See dependencies
+
+  ```sh
+  # Show all dependencies
+  poetry show --tree
+
+  # Show production dependencies (no development)
+  poetry show -t --no-dev
+  ```
+
+  # Create requirements.txt file
+
+  ```sh
+  poetry export -f requirements.txt > requirements.txt
+  ```
+
+  ```sh
+  poetry check
+  ```
