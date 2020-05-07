@@ -96,7 +96,7 @@ def post(item):
 def page_not_found():
     """ Page not found error """
 
-    return render_template("404.html")
+    return render_template("404.html", page_title="Villoro 404: Not found")
 
 
 if __name__ == "__main__":
