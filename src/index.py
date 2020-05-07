@@ -17,9 +17,10 @@ def home():
 
     return render_template(
         "home.html",
+        html_tab_title="Villoro",
         portfolio=content["portfolio_main"],
         blog=content["blog_main"],
-        **u.get_page("home")
+        **u.get_page("home"),
     )
 
 
@@ -27,7 +28,7 @@ def home():
 def about():
     """ about me page """
 
-    return render_template("about.html", **u.get_page("about"))
+    return render_template("about.html", html_tab_title="Villoro - About", **u.get_page("about"))
 
 
 @APP.route("/portfolio.html")
@@ -40,7 +41,11 @@ def portfolio():
     tags = u.extract_tags(content.values())
 
     return render_template(
-        "portfolio.html", portfolio=content, tags=tags, **u.get_page("portfolio")
+        "portfolio.html",
+        html_tab_title="Villoro - Portfolio",
+        portfolio=content,
+        tags=tags,
+        **u.get_page("portfolio"),
     )
 
 
@@ -53,7 +58,9 @@ def blog():
     # Get all possible filtering tags
     tags = u.extract_tags(content.values())
 
-    return render_template("blog.html", blog=content, tags=tags, **u.get_page("blog"))
+    return render_template(
+        "blog.html", html_tab_title="Villoro - Blog", blog=content, tags=tags, **u.get_page("blog")
+    )
 
 
 @APP.route("/project/<item>")
@@ -66,8 +73,9 @@ def portfolio_item(item):
 
     return render_template(
         "portfolio_item.html",
+        html_tab_title=f"Villoro - {item}".replace(".html", ""),
         portfolio=content["portfolio_highlight"],
-        **content["portfolio"][name]
+        **content["portfolio"][name],
     )
 
 
@@ -76,7 +84,11 @@ def post(item):
     """ blog item """
 
     name = item.split(".")[0]  # No extension
-    return render_template("post.html", **u.get_content()["blog"][name])
+    return render_template(
+        "post.html",
+        html_tab_title=f"Villoro - {item}".replace(".html", ""),
+        **u.get_content()["blog"][name],
+    )
 
 
 @APP.errorhandler(404)
@@ -84,7 +96,7 @@ def post(item):
 def page_not_found():
     """ Page not found error """
 
-    return render_template("404.html")
+    return render_template("404.html", html_tab_title="Villoro 404: Not found")
 
 
 if __name__ == "__main__":
