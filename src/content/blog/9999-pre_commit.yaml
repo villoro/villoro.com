@@ -1,0 +1,84 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: pre_commit
+title: Pre commit
+date: "2019-05-14"
+image: pre_commit_square.png
+highlight: True
+
+tags:
+  - Tools
+
+tags_filter:
+  - Tools
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+link: 
+  text: Pre-commit
+  url: https://pre-commit.com//
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  TODO
+
+image_head:
+  filename: pre_commit.png
+  caption: pre_commit
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 0. Overview
+
+
+  ```sh
+  pip install pre-commit
+  ```
+
+  ```sh
+  pre-commit install
+  ```
+
+  ```sh
+  pre-commit run --all-files
+  ```
+
+  ```sh
+  pre-commit run --from-ref origin.HEAD --to-ref HEAD
+  ```
+
+  ```sh
+  pre-commit autoupdate
+  ```
+
+  ```yaml
+  repos:
+  -   repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v2.3.0
+      hooks:
+      -   id: check-yaml
+      -   id: end-of-file-fixer
+      -   id: trailing-whitespace
+  -   repo: https://github.com/psf/black
+      rev: 19.3b0
+      hooks:
+      -   id: black
+  ```
+
+  avaiable [hooks](https://github.com/pre-commit/pre-commit-hooks)
+
+  * check-merge-conflict
+  * check-json
+  * check-toml
+  * check-yaml
+  * no-commit-to-branch
+  
