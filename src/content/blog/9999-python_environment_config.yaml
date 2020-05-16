@@ -5,7 +5,7 @@ code: python_environment_config
 title: Setting up a Python environment
 title_short: Setting up Python 
 date: "2019-05-16"
-image: default.png
+image: python_config.png
 highlight: True
 
 tags:
@@ -42,6 +42,12 @@ content_markdown: |
 
   Setting up github
   Protecting branches
+
+  <div class="w3-padding w3-border w3-round ">
+    POST: <a href="https://villoro.com/post/gitflow">
+      Using gitflow for code control
+    </a>
+  </div>
 
   ## 2. Install a custom terminal
 
