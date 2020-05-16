@@ -1,0 +1,96 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: python_environment_config
+title: Setting up a Python environment
+title_short: Setting up Python 
+date: "2019-05-16"
+image: default.png
+highlight: True
+
+tags:
+  - Tools
+
+tags_filter:
+  - Tools
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text:
+#   url:
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  TODO
+
+# image_head:
+#   filename: pre_commit.png
+#   caption: pre_commit
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 1. Using a git provider
+
+  Setting up github
+  Protecting branches
+
+  ## 2. Install a custom terminal
+
+  <div class="w3-padding w3-border w3-round ">
+    POST: <a href="https://villoro.com/post/cmder">
+      Cmder terminal for windows
+    </a>
+  </div>
+
+  cmder
+
+  custom alias
+
+  ## 3. Connect to git provider
+
+  Using ssh
+
+  <div class="w3-padding w3-border w3-round ">
+    POST: <a href="https://villoro.com/post/git_ssh">
+      Using git with SSH
+    </a>
+  </div>
+
+  Sublime merge
+
+  ## 4. Installing an IDE
+
+  Sublime
+  sublack
+
+  <div class="w3-padding w3-border w3-round ">
+    POST: <a href="https://villoro.com/post/black">
+      Black for code formatting
+    </a>
+  </div>
+
+  ## 5. Create package with poetry
+
+  ## 6. Pre-commit
+
+  <div class="w3-padding w3-border w3-round ">
+    POST: <a href="https://villoro.com/post/pre_commit">
+      Using Pre-commit to automate tasks
+    </a>
+  </div>
+
+  black
+  flake8
+
+  ## 7. CI Integration
+
+  ## 8. Deploying
