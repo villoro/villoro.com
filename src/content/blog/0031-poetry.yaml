@@ -218,7 +218,22 @@ content_markdown: |
 
   With `poetry shell` you can have a shell using the environment created with poetry.
 
-  And `poetry run xxxx` will allow you to run the command you want using the environment. This replaces `python xxxx`.
+  And `poetry run xxxx` will allow you to run the command you want using the environment.
+  As an example instead of running:
+
+  ```python
+  luigid
+
+  python src/master.py
+  ```
+
+  You should do:
+
+  ```sh
+  poetry run luigid
+
+  poetry run python src/master.py
+  ```
 
   ## 5. Create and publish packages
 
