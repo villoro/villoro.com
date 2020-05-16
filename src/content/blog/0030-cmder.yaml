@@ -41,12 +41,12 @@ content_markdown: |
   ## 1. Instalation
 
   You can download from the [webpage](https://cmder.net/).
-  If you already have git for windows yo can download the mini version.
+  I advise you install the version with git.
 
   After downloading it extract the data and copy it to `C:\cmder_mini`.
-  Then open the `.exe` file (`C:\cmder_mini\Cmder.exe`) to start using it.
-
   I suggest you put it directly on `c:\` to avoid permission problems.
+
+  Then open the `.exe` file (`C:\cmder_mini\Cmder.exe`) to start using it.
 
   > You can right click the `.exe` file and pin it to the task bar.
 
