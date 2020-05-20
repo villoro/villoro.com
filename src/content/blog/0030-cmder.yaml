@@ -2,7 +2,8 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: cmder
-title: Cmder terminal
+title: Cmder terminal for windows
+title_short: Cmder terminal
 date: "2019-02-29"
 image: cmder_square.png
 highlight: True
