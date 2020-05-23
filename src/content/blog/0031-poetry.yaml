@@ -25,7 +25,9 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  TODO
+  Poetry is a python packaging and dependency manager.
+  It makes it really easy to manage packages while using environments under the hood.
+  It also allows build and publishing packages to PyPI (or other sites).
 
 image_head:
   filename: poetry.png
