@@ -53,7 +53,7 @@ content_markdown: |
 
   ## 2. Setting it as the default terminal
 
-  Open the **cmder** settings wiht `WIN` + `ALT` + `P`.
+  Open the **cmder** settings with `WIN` + `ALT` + `P`.
   Then go to `Integration` / `Default term` and mark `Force conEmu as default terminal for console applications`.
 
   <div class="w3-center">
