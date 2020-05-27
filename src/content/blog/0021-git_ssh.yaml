@@ -46,6 +46,8 @@ content_markdown: |
 
   ## 2. Use keychain
 
+  > If you are using **Windows** you don't need to do that step.
+
   The **SSH key** you just created has a passphrase and you probably don't want to write it every time you open a new terminal.
 
   You can use **keychain** to remember the passphrase.
