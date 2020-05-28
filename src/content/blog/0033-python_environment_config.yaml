@@ -26,7 +26,7 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  TODO
+  Learn how to properly set up a python development environment with all the useful tools you can use as well as some good tips to work as a pro.
 
 # image_head:
 #   filename: pre_commit.png
