@@ -47,7 +47,7 @@ content_markdown: |
 
   In this post I will show to do it while giving some advices based on problems I had.
 
-  ## 1. Conect to a SQL database
+  ## 1. Connect to a SQL database
 
   In order to connect to a SQL database you will need to create an engine. The best way is to use the functions `create_engine` and `engine.url.URL`. For example:
 
