@@ -46,14 +46,14 @@ content_markdown: |
   ## 1. Intro to AWS Lambdas
   AWS Lambda is a compute service that lets you run code without provisioning or managing servers. AWS Lambda executes your code only when needed and scales automatically, from a few requests per day to thousands per second.
 
-  AWS lambdas should be used for small and light functions. For more complicate or time expensive functions is better to use and `EC2` instance which can be turned on/off when needed to keep costs low.
+  AWS lambdas should be used for small and light functions. For more complicated or time expensive functions it is better to use and `EC2` instance which can be turned on/off when needed to keep costs low.
 
 
   ## 2. Creating a lambda to start/stop instances
 
-  The idea is to create a lambda that can start a system (both an `EC2` and `RDS`) using and API.
+  The idea is to create a lambda that can start a system (both an `EC2` and `RDS`) using an API.
 
-  This lambda allow users to start or stop instances through html requests. There is an URL and users can specify in **queryStringParameters** which system they want to act uppon and what action they want (`start/stop/status`). For security reasons it is also needed to include a **token** in the headers.
+  This lambda allow users to start or stop instances through html requests. There is an URL and users can specify in **queryStringParameters** which system they want to act upon and what action they want (`start/stop/status`). For security reasons it is also needed to include a **token** in the headers.
 
   And example of the data used would be:
   ```python
@@ -91,7 +91,7 @@ content_markdown: |
 
   #### 2.1.2. lambda_handler.py
 
-  There is a dictionary with the infos of the instances that the lambdas can act uppon. The idea is that users can only use the name of the system (```magento/vtiger```) and the dictionary will give the instance id.
+  There is a dictionary with the infos of the instances that the lambdas can act upon. The idea is that users can only use the name of the system (```magento/vtiger```) and the dictionary will give the instance id.
 
   Example of dictionary:
 
