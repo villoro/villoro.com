@@ -27,11 +27,11 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  There a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
+  There are a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 
 content_markdown: |
 
-  There a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
+  There are a lot of ways to work with strings in python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 
   ## Table of Contents
 
@@ -41,7 +41,7 @@ content_markdown: |
 
   ### 1.1. Raw strings with `r" "`
 
-  This allows to have a literal string without scaping characters or special ones.
+  This allows you to have a literal string without escaping characters or special ones.
 
   <b style="color:limegreen;">Do</b>
 
@@ -143,7 +143,7 @@ content_markdown: |
 
   ### 2.2. Concat a lot of strings
 
-  To concatenate strings you should work with lists and join them at the end. Its faster and cleaner.
+  To concatenate strings you should work with lists and join them at the end. It's faster and cleaner.
 
   <b style="color:limegreen;">Do</b>
 

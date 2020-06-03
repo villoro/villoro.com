@@ -44,7 +44,7 @@ content_markdown: |
 
   ## 1. Create an EC2 instance
 
-  First of all go to [AWS console](https://aws.amazon.com/) and log in. From there is important to select the **Region** where you want your services. You should select somewhere that is close to the locations that will receive most traffic. In my case I will use `UE (London)` since is close to where I live.
+  First of all go to [AWS console](https://aws.amazon.com/) and log in. From there it is important to select the **Region** where you want your services. You should select somewhere that is close to the locations that will receive most traffic. In my case I will use `UE (London)` since is close to where I live.
 
   Using the AWS navigation go to `EC2` and press `Launch Instance`. I would suggest you start with a `Ubuntu Server 18.04 LTS`.
 
