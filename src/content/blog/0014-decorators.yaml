@@ -81,7 +81,7 @@ content_markdown: |
     <b>Out:</b> &lt;h1>hello John&lt;/h1>
   </div>
 
-  Right now be have 'decorated' the `hello_person` function and save as the new function `hello_person_h1`. By calling `hello_person_h1("John")` the output is `<h1>hello John</h1>`.
+  Right now we have 'decorated' the `hello_person` function and save as the new function `hello_person_h1`. By calling `hello_person_h1("John")` the output is `<h1>hello John</h1>`.
 
   We can see another example that will time the execution and the function and print with that time after the function is completed.
 
