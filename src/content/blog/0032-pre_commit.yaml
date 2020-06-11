@@ -4,7 +4,7 @@
 code: pre_commit
 title: Using Pre-commit to automate tasks
 title_short: Pre-commit
-date: "2019-05-14"
+date: "2020-05-14"
 image: pre_commit_square.png
 highlight: True
 
