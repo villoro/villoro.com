@@ -43,10 +43,23 @@ content_markdown: |
 
   ## 0. Problem
 
-  We want to use `h3`.
+  When using **spark** it's always advised to use the spark functions.
+  However sometimes we need to use more advanced functions or we need external libraries.
 
+  As an example we might want to use [Uber H3](https://github.com/uber/h3) library to work with geospatial data.
+
+  The library is implemented in multiple languages:
+
+  * https://github.com/uber/h3
+  * https://github.com/uber/h3-py
+  * https://github.com/uber/h3-java
+
+  In this post we will explore different options for using this function with spark.
 
   ## 1. Creating a python UDF
+
+  The first option is to create a python **UDF** using the **h3** python library.
+  Before creating the UDF we can try the library with:
 
   ```python
   import h3
@@ -56,9 +69,13 @@ content_markdown: |
     <b>Out:</b> '88754e6499fffff'
   </div>
 
-  UDF
+  To create the **UDF** we only need to use the `udf` decorator and specify the output type.
+  It's also a good idea to handle cases where `latitude` or `longitude` might be `null`/`None`.
 
   ```python
+  import pyspark.sql.functions as F
+  import pyspark.sql.types as T
+
   @F.udf(T.StringType())
   def geo_to_h3_py(latitude, longitude, resolution):
       if latitude is None or longitude is None:
@@ -67,10 +84,26 @@ content_markdown: |
       return h3.geo_to_h3(latitude, longitude, resolution)
   ```
 
+  Once it's defined it can be called with:
+
+  ```python
+  (
+      sdf
+      .withColumn("h8", geo_to_h3_py("latitude", "longitude", F.lit(8)))
+      .show()
+  )
+  ```
 
   ## 2. Use a Java function with spark
 
   ### 2.1. Use H3 directly
+
+  The first thing needed to work with the **Java H3** library is to download the `jar`.
+  It can be downloaded from [maven/h3](https://mvnrepository.com/artifact/com.uber/h3).
+
+  Once you have the `jar` file you need to add it to `$JAVA_HOME/jars` folder so that **spark** can use it without extra configuration.
+
+  Then you can directly access the java code and create the `h3` instance and then call the `geoToH3Address` function.
 
   ```python
   h3 = spark.sparkContext._jvm.com.uber.h3core.H3Core.newInstance()
@@ -80,7 +113,17 @@ content_markdown: |
     <b>Out:</b> '88754e6499fffff'
   </div>
 
+  However it is not possible to create a **UDF** using the java instance.
+  The problem is that it's a java object so it can't be pickled.
+
   ### 2.2. Create a java callable function
+
+  Let's create a simple **java** `static` function that we can use without needing to create an instance.
+
+  We can create the file `SimpleH3.java` inside the path `/com/villoro/` (so that it's better organized).
+  Remember to define the `package` so that it matches the path.
+
+  #### 2.2.1 Create the java file
 
   <div class="input">
     /com/villoro/SimpleH3.java
@@ -118,12 +161,62 @@ content_markdown: |
   } 
   ```
 
+  The only different thing from the **python** implementation is that we are doing a **lazy instantiation**.
+  That means that the first time the function is run it will create the `h3` instance.
+  But the next times it will reuse the same instance.
+
+  > **Lazy instantiation** will make the code faster.
+
+  #### 2.2.2. Compile the code
+
+  Once we have our `java` code we need to compile it.
+
+  Since we are importing things from `com.uber.h3core.H3Core` we need that `jar`.
+  You can copy the `jar` you downloaded and save it as `jars/h3.jar`.
+
+  Then you can compile the code with:
+
+  ```sh
+  javac -cp "jars/h3.jar" com\villoro\*.java
+  ```
+
+  #### 2.2.3. Create the jar
+
+  To create the `jar` we can simple specify that we want to create the `SimpleH3.jar` with all `.class` files from `com\villoro\` with:
+
+  ```sh
+  jar cvf SimpleH3.jar com\villoro\*.class
+  ```
+
+  Once you created the `jar`, remeber to copy it to `$JAVA_HOME/jars`.
+
+  #### 2.2.4. Call the static java function with spark
+
+  We can do something similar to call the new static function:
+
   ```python
   # Using our static function
   spark.sparkContext._jvm.com.villoro.SimpleH3.toH3Address(0.0, 0.0, 8)
   ```
 
+  However this can't still be pickled since it's a java class.
+  So we can't create a **UDF** with python.
+
   ## 3. Create a Java UDF
+
+  The solution will be to create the **UDF** with **java**.
+
+  The first thing you will need is to get the `spark-sql.jar` from `$JAVA_HOME/jars` and copy it to `com\villoro\`.
+  Without this `jar` you won't be able to compile the **UDF** with **java**.
+
+  ### 3.1. Create the java function
+
+  Then to create the **UDF** you need to implement one of the `UDFX` class.
+  Since it will have three imputs we will use `UDF3`.
+  We will need to declare all the input types (`Double`, `Double` and `Integer`) as well as the ouput (`String`).
+  So it will extend `UDF3<Double, Double, Integer, String>`.
+
+  The rest of the code it's really similar to the previous function.
 
   <div class="input">
     /com/villoro/toH3AddressUDF.java
@@ -163,35 +256,25 @@ content_markdown: |
   }
   ```
 
+  ### 3.2. Compile the code
+
+  The command is really similar to the one we used before:
+
+  ```sh
+  javac -cp "jars/h3.jar;jars/spark-sql.jar" com\villoro\*.java
+  ```
+
+  > Make sure the name of the `jars` you are importing match.
+
+  #### 2.2.3. Create the jar
+
+  We can use exactly the same command as before:
+
+  ```sh
+  jar cvf SimpleH3.jar com\villoro\*.class
+  ```
+
+  Once you created the `jar`, remeber to overwrite it in `$JAVA_HOME/jars`.
+
   ## 4. Performance results
 
-
-
-
-  ## 1. Using a git provider
-
-  # Compile
-  Single file:
-
-  ```sh
-  javac -cp "jars/h3.jar;jars/spark-sql.jar" SimpleH3.java
-  ```
-
-  Folder:
-
-  ```sh
-  javac -cp "jars/h3.jar;jars/spark-sql.jar" com\villoro\simpleH3\*.java
-  ```
-
-  # Jar
-  Single file
-
-  ```sh
-  jar cvf SimpleH3.jar SimpleH3.class
-  ```
-
-  Folder
-
-  ```sh
-  jar cvf SimpleH3.jar com\villoro\simpleH3\*.class
-  ```
