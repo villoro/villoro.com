@@ -19,9 +19,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text:
-#   url:
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0034-pyspark_java_udf
 
 
 # --------------------------------------------------------------------------------------------------
@@ -33,6 +33,8 @@ brief_markdown: |
 # image_head:
 #   filename: pre_commit.png
 #   caption: pre_commit
+
+use_chartjs: True
 
 content_markdown: |
 
@@ -266,7 +268,7 @@ content_markdown: |
 
   > Make sure the name of the `jars` you are importing match.
 
-  #### 2.2.3. Create the jar
+  ### 3.3. Create the jar
 
   We can use exactly the same command as before:
 
@@ -278,3 +280,102 @@ content_markdown: |
 
   ## 4. Performance results
 
+  In order to test it I created 6 datasets with different sizes.
+  The total execution times for the `python udf` and `java udf` are:
+
+  <table class="v-table v-table-right" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">num_rows</th>
+      <th class="v-table-header">python [s]</th>
+      <th class="v-table-header">java [s]</th>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^3</td>
+      <td>2.348551</td>
+      <td>0.492574</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^4</td>
+      <td>3.140185</td>
+      <td>0.579370</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^5</td>
+      <td>3.876405</td>
+      <td>0.795821</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^6</td>
+      <td>5.552880</td>
+      <td>1.958956</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^7</td>
+      <td>24.151182</td>
+      <td>11.507726</td>
+    </tr>
+    <tr>
+      <td class="v-table-center">10^8</td>
+      <td>195.032587</td>
+      <td>88.875919</td>
+    </tr>
+  </table>
+
+  As we expected the `java_udf` is faster than the `python_udf`.
+
+  <canvas id="chart_times" style="width:100%;height:600px;"></canvas>
+
+  If we take a closer look at the values we can see that creating the `python_udf` has a cost.
+  That is why the results are so bad for the small datasets.
+  Once the dataset is bigger that cost is no longer visible but there is a cost of moving the information from `python` to `java`.
+  That is why the `pandas_udf` is around 2 times slower.
+
+
+scripts: |
+  <script>
+    const scales = {
+      scales: {
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Time [s]',
+          },
+          type: 'logarithmic',
+        }],
+        xAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Number of rows'
+          },
+        }],
+      }
+    }
+    var chart_times = new Chart("chart_times", {
+      type: 'line',
+      data: {
+        labels: ['10^3', '10^4', '10^5', '10^6', '10^7', '10^8'],
+        datasets: [
+          {
+            label: 'python_udf',
+            borderColor: "#FFA726", 
+            data: [2.348551, 3.140185, 3.876405, 5.552880, 24.151182, 195.032587],
+            fill: false
+          },
+          {
+            label: 'java_udf',
+            borderColor: "#AED581", 
+            data: [0.492574, 0.579370, 0.795821, 1.958956, 11.507726, 88.875919],
+            fill: false
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Time with different UDFs'
+        },
+        ...scales
+      }
+    });
+  </script>
+  
