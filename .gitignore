@@ -8,32 +8,25 @@ sublime.sublime-workspace
 
 # Python temporal files
 *.pyc
-__pycache__
-*/__pycache__
+**/__pycache__
 
 # Jupyter temporal files
-/.ipynb_checkpoints
-*/.ipynb_checkpoints
+**/.ipynb_checkpoints
 
 # Coverage info
-.coverage
-/cover
-*/.coverage
-*/cover
-coverage.xml
-*/coverage.xml
+*.coverage
+**/cover
+**/coverage.xml
 
 # Unit test report
-nosetests.xml
-*/nosetests.xml
+**/nosetests.xml
 
 # Pylint ouput
-pylint.xml
-*/pylint.xml
+**/pylint.xml
 
 # Package files
-build/
-dist/
+**/build/
+**/dist/
 *.egg-info
 
 # Executables
@@ -42,18 +35,13 @@ dist/
 
 # --------------------- PERSONAL EXCLUSIONS -----------------------------------
 # Data folders
-/data
-*/data
+**/data
 
 
 # --------------------- PROJECT EXCLUSIONS ------------------------------------
-# Forzen-flask build
-src/build/
-
 # Playground notebooks
 */test.ipynb
 
 # Temp files
-*/temp.md
-*/*/temp.md
-*/temp.ipynb
+**/temp.md
+**/temp.ipynb
