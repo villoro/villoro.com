@@ -1,0 +1,197 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: pyspark_java_udf
+title: Java UDF with pyspark
+title_short: Pyspark Java UDF
+date: "2020-11-03"
+image: default.png
+highlight: True
+
+tags:
+  - Python
+  - Spark
+
+tags_filter:
+  - Python
+  - Spark
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text:
+#   url:
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  xx
+
+# image_head:
+#   filename: pre_commit.png
+#   caption: pre_commit
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+
+  ## 0. Problem
+
+  We want to use `h3`.
+
+
+  ## 1. Creating a python UDF
+
+  ```python
+  import h3
+  h3.geo_to_h3(0, 0, 8)
+  ```
+  <div class="output">
+    <b>Out:</b> '88754e6499fffff'
+  </div>
+
+  UDF
+
+  ```python
+  @F.udf(T.StringType())
+  def geo_to_h3_py(latitude, longitude, resolution):
+      if latitude is None or longitude is None:
+          return None
+
+      return h3.geo_to_h3(latitude, longitude, resolution)
+  ```
+
+
+  ## 2. Use a Java function with spark
+
+  ### 2.1. Use H3 directly
+
+  ```python
+  h3 = spark.sparkContext._jvm.com.uber.h3core.H3Core.newInstance()
+  h3.geoToH3Address(0.0, 0.0, 8)
+  ```
+  <div class="output">
+    <b>Out:</b> '88754e6499fffff'
+  </div>
+
+  ### 2.2. Create a java callable function
+
+  <div class="input">
+    /com/villoro/SimpleH3.java
+  </div>
+  ```java
+  package com.villoro;
+
+  import java.io.IOException;
+  import com.uber.h3core.H3Core;
+
+  class SimpleH3
+  { 
+
+      private static H3Core h3;
+
+      public static String toH3Address(Double longitude, Double latitude, int resolution){
+          
+          // Lazy instantiation
+          if (h3 == null) {
+              try {
+                  h3 = H3Core.newInstance();
+              }
+              catch(IOException e) {
+                  return null;
+              }
+          }
+
+          // Check that coordinates are
+          if (longitude == null || latitude == null) {
+              return null;
+          } else {
+              return h3.geoToH3Address(longitude, latitude, resolution);
+          }
+      }
+  } 
+  ```
+
+  ```python
+  # Using our static function
+  spark.sparkContext._jvm.com.villoro.SimpleH3.toH3Address(0.0, 0.0, 8)
+  ```
+
+  ## 3. Create a Java UDF
+
+  <div class="input">
+    /com/villoro/toH3AddressUDF.java
+  </div>
+  ```java
+  package com.villoro;
+
+  import java.io.IOException;
+  import com.uber.h3core.H3Core;
+  import org.apache.spark.sql.api.java.UDF3;
+
+  public class toH3AddressUDF implements UDF3<Double, Double, Integer, String> {
+
+      private H3Core h3;
+
+      @Override
+      public String call(Double longitude, Double latitude, Integer resolution) throws Exception {
+
+          // Lazy instantiation
+          if (h3 == null) {
+              try {
+                  h3 = H3Core.newInstance();
+              }
+              catch(IOException e) {
+                  return null;
+              }
+          }
+
+          // Check that coordinates are
+          if (longitude == null || latitude == null) {
+              return null;
+          } else {
+              return h3.geoToH3Address(longitude, latitude, resolution);
+          }
+
+      }
+  }
+  ```
+
+  ## 4. Performance results
+
+
+
+
+  ## 1. Using a git provider
+
+  # Compile
+  Single file:
+
+  ```sh
+  javac -cp "jars/h3.jar;jars/spark-sql.jar" SimpleH3.java
+  ```
+
+  Folder:
+
+  ```sh
+  javac -cp "jars/h3.jar;jars/spark-sql.jar" com\villoro\simpleH3\*.java
+  ```
+
+  # Jar
+  Single file
+
+  ```sh
+  jar cvf SimpleH3.jar SimpleH3.class
+  ```
+
+  Folder
+
+  ```sh
+  jar cvf SimpleH3.jar com\villoro\simpleH3\*.class
+  ```
