@@ -278,6 +278,34 @@ content_markdown: |
 
   Once you created the `jar`, remeber to overwrite it in `$JAVA_HOME/jars`.
 
+  ### 3.4. Call the java UDF with spark
+
+  Before calling the function we need to register it with:
+
+  ```python
+  spark.udf.registerJavaFunction("geo_to_h3", "com.villoro.toH3AddressUDF", T.StringType())
+  ```
+
+  Then we can call it using `F.expr`:
+
+  ```python
+  (
+      sdf
+      .withColumn("h8", F.expr("geo_to_h3(latitude, longitude, 8)"))
+      .show()
+  )
+  ```
+
+  And we can also use it with SQL:
+
+  ```
+  spark.sql("""
+      SELECT
+          latitude, longitude, geo_to_h3(latitude, longitude, 8)
+      FROM my_table
+  """).show()
+  ```
+
   ## 4. Performance results
 
   In order to test it I created 6 datasets with different sizes.
