@@ -1,0 +1,80 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: etl_heroku
+title: Scheduling and ETL with Heroku for free
+title_short: ETL with Heroku
+date: "2020-11-13"
+image: default.png
+highlight: True
+
+tags:
+  - Python
+  - ETL
+  - Heroku
+
+tags_filter:
+  - Python
+  - Spark
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: https://github.com/villoro/villoro_posts/tree/master/0034-pyspark_java_udf
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  xx
+
+# image_head:
+#   filename: pre_commit.png
+#   caption: pre_commit
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+
+  ## 0. Problem
+
+  
+  # Webpacks heroku (poetry)
+
+      https://github.com/moneymeets/python-poetry-buildpack.git
+
+      heroku/python
+
+  > Order matters!
+
+  # Flask login
+  
+  # Prefect
+
+  # Secrets
+
+  # Run https://cron-job.org/
+
+  # Integration tests
+
+
+  ```python
+  import gevent
+  from time import sleep
+  from gevent import monkey; monkey.patch_all()
+
+  def my_func():
+      print(1)
+      sleep(1)
+      print(2)
+
+  greenlet = gevent.spawn( my_func )
+  print("x")
+  ```
+  x, 1, 2
