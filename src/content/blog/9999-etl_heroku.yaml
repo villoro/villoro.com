@@ -45,11 +45,6 @@ content_markdown: |
   ## 0. Problem
 
   
-  # Webpacks heroku (poetry)
-
-      https://github.com/moneymeets/python-poetry-buildpack.git
-
-      heroku/python
 
   > Order matters!
 
@@ -78,3 +73,33 @@ content_markdown: |
   print("x")
   ```
   x, 1, 2
+
+
+  # 1. Connect github
+  # 2. Webpacks heroku (poetry)
+
+      https://github.com/moneymeets/python-poetry-buildpack.git
+
+      heroku/python
+
+  # 3. Automatic deploy / Manual deploy
+
+  > `Wait for CI to pass before deploy`
+
+  # 4. Config Vars
+
+  # 5. Resources / Add-ons
+
+  Not free:
+
+  * https://elements.heroku.com/addons/temporize
+  * https://elements.heroku.com/addons/crontogo
+  * https://elements.heroku.com/addons/advanced-scheduler
+
+  Free:
+
+  * https://elements.heroku.com/addons/process-scheduler
+  * https://elements.heroku.com/addons/scheduler
+
+  > Set up worker dyno
+
