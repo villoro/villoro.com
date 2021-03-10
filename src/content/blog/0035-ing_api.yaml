@@ -182,7 +182,7 @@ content_markdown: |
   After that you need to append some information.
   All of that can be done with:
 
-  ```
+  ```python
   def get_signature(method, endpoint, mdate, digest, req_id):
 
       text = [
