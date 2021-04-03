@@ -1,0 +1,94 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: regex
+title: Using regexs with python
+title_short: Regexs with python
+date: "2020-04-03"
+image: default.png
+highlight: True
+
+tags:
+  - Python
+  - regex
+
+tags_filter:
+  - Python
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: https://github.com/villoro/villoro_posts/tree/master/0035-ing_api
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  xx
+
+# image_head:
+#   filename: pre_commit.png
+#   caption: pre_commit
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 1. Regex basics
+
+
+  `hello`
+  `ip.d`
+  `ip[ao]d`
+
+
+  `^`: Start 
+  `$`: End
+
+  `\d`: digit
+  `\D`: non-digit
+
+  `\w`: alphanumeric + `_`
+  `\W`: non alphanumeric
+
+  `\s`: matches whitespace (` `)
+  `\S`: non whitespace
+
+  `.`: anything
+
+
+  `a*`: `a` zero times or more
+  `a+`: `a` one time or more
+  `a?`: optional `a` (zero or one time)
+  `a{2}`: `a` exactly 2 times
+  `a{2,5}`: `a` between 2 and 5 times (inclusive)
+
+
+  `(regex)`: capturing group
+  `(?regex)`: disabled capturing group
+  `(?P<name>regex)`: named capturing group
+  `(a|b):` or operator in groups
+
+  `[abc]`: `a`, `b` or `c`
+  `[a-c]`: `a`, `b` or `c`
+  `[^a-c]`: anything but `a`, `b` or `c`
+  `[0-9a-fA-F]`: any number or any letter between `a` and `f` or between `A` and `F`. This represents hexadecimal
+
+
+  `(?i)`: case insensitive
+
+  `<.+>`
+  `<.+?>`
+  `<[^<>]+>`
+
+  `\b`: boundary
+  `\B`: no boundary
+
+
+
+ 
