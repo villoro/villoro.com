@@ -41,53 +41,89 @@ content_markdown: |
 
   ## 1. Regex basics
 
+  A regular expression, or **regex** for short, is a pattern describing a certain amount of text.
+  On this website, regular expressions are highlighted in red as regex. This is actually a perfectly valid regex.
+  It is the most basic pattern, simply matching the literal text regex. Matches are highlighted in blue on this site.
 
-  `hello`
-  `ip.d`
-  `ip[ao]d`
-
-
-  `^`: Start 
-  `$`: End
-
-  `\d`: digit
-  `\D`: non-digit
-
-  `\w`: alphanumeric + `_`
-  `\W`: non alphanumeric
-
-  `\s`: matches whitespace (` `)
-  `\S`: non whitespace
-
-  `.`: anything
+  Characters with special meanings in regular expressions are highlighted in various different colors. The regex (?x)([Rr]egexp?)\? shows meta tokens in purple, grouping in green, character classes in orange, quantifiers and other special tokens in blue, and escaped characters in gray.
 
 
-  `a*`: `a` zero times or more
-  `a+`: `a` one time or more
-  `a?`: optional `a` (zero or one time)
-  `a{2}`: `a` exactly 2 times
-  `a{2,5}`: `a` between 2 and 5 times (inclusive)
+  * `hello`
+  * `ip.d`
+  * `ip[ao]d`
+  
+  * `.`: anything (except line break)
 
 
-  `(regex)`: capturing group
-  `(?regex)`: disabled capturing group
-  `(?P<name>regex)`: named capturing group
-  `(a|b):` or operator in groups
+  ### 1.1. Brackets `[]`
 
-  `[abc]`: `a`, `b` or `c`
-  `[a-c]`: `a`, `b` or `c`
-  `[^a-c]`: anything but `a`, `b` or `c`
-  `[0-9a-fA-F]`: any number or any letter between `a` and `f` or between `A` and `F`. This represents hexadecimal
+  * `[abc]`: `a`, `b` or `c`
+  * `[a-c]`: `a`, `b` or `c`
+  * `[^a-c]`: anything but `a`, `b` or `c`
+  * `[0-9a-fA-F]`: any number or any letter between `a` and `f` or between `A` and `F`. This represents hexadecimal
 
+  ### 1.1. Position
 
-  `(?i)`: case insensitive
+  * `^`: Start 
+  * `$`: End
 
-  `<.+>`
-  `<.+?>`
-  `<[^<>]+>`
+  ### 1.2. Classes
 
-  `\b`: boundary
-  `\B`: no boundary
+  * `\d`: digit
+  * `\w`: alphanumeric + `_`
+  * `\s`: matches whitespaces including tabs and line breaks
+  * `\D`: non-digit
+  * `\W`: non alphanumeric nor `_`
+  * `\S`: non whitespace
+
+  ### 1.3. Quantifiers
+
+  * `a*`: `a` zero times or more
+  * `a+`: `a` one time or more
+  * `a?`: optional `a` (zero or one time)
+  * `a{2}`: `a` exactly 2 times
+  * `a{2,5}`: `a` between 2 and 5 times (inclusive)
+
+  ### 1.4. Groups
+
+  * `(regex)`: capturing group
+  * `(?regex)`: disabled capturing group
+  * `(?P<name>regex)`: named capturing group
+  * `(a|b):` or operator in groups
+
+  ### 1.5. Boundaries
+
+  * `\b`: boundary
+  * `\B`: no boundary
+
+  ### 1.6. Flags
+
+  * `(?i)`: case insensitive
+  * `(?s)`: single line
+  * `(?m)`: multi line
+
+  ### 1.7. Greedy vs lazy
+
+  * `<.+>`
+  * `<.+?>`
+  * `<[^<>]+>`
+
+  ### 1.8. Table summary
+
+  <table class="v-table v-table-right" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">regex</th>
+      <th class="v-table-header">description</th>
+      <th class="v-table-header">example</th>
+      <th class="v-table-header">inverse</th>
+    </tr>
+    <tr>
+      <td>10^3</td>
+      <td>2.348551</td>
+      <td>0.492574</td>
+      <td>0.492574</td>
+    </tr>
+  </table>
 
 
 
