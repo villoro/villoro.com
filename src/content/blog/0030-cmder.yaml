@@ -91,20 +91,24 @@ content_markdown: |
       <td>list files with details and human readable sizes</td>
     </tr>
     <tr>
-      <td>alias jn=cd c:/PYTHON $t jupyter notebook</td>
-      <td>go to the python path and open jupyter notebook</td>
-    </tr>
-    <tr>
-      <td>alias jl=cd c:/PYTHON $t jupyter lab</td>
-      <td>go to the python path and open jupyter lab</td>
-    </tr>
-    <tr>
       <td>alias cdp=cd c:/PYTHON</td>
       <td>go to the python path</td>
     </tr>
     <tr>
+      <td>alias jn=cd c:/PYTHON && jupyter notebook</td>
+      <td>go to the python path and open jupyter notebook</td>
+    </tr>
+    <tr>
+      <td>alias jl=cd c:/PYTHON && jupyter lab</td>
+      <td>go to the python path and open jupyter lab</td>
+    </tr>
+    <tr>
       <td>alias rf=python src/index.py</td>
       <td>open a flask app</td>
+    </tr>
+    <tr>
+      <td>alias vtasks=cd c:/GIT/vtasks && poetry run python src/master.py</td>
+      <td>go to vtasks folder and run it with poetry</td>
     </tr>
   </table>
 
