@@ -237,6 +237,138 @@ content_markdown: |
 
   ## 2. Regex with python
 
+  ### 2.1. `re` package
+
+  To use regex in **python** you first need to import the `re` package with
+
+  ```
+  import re
+  ```
+
+  Then to check if there is a match in a text with one regex using `out = re.match(regex, text)`:
+
+  ```python
+  out = re.match(r"hello", "hello world")
+
+  # out is a class if we only want to know if there is a match we can use `bool(out)`
+  ```
+
+  > When declaring regexs in python it is a good practise to declare them as **raw** strings with `r"regex"`
+
+  ### 2.2. `match` vs `search`
+
+  We have use `re.match` since it's faster. However this only looks at the begining of the string.
+  To do a more in deep search we can use `re.search`.
+
+  Let's compare them by doing checking different regexs against the following text:
+
+  ```python
+  text = """hello world
+  bye world"""
+  ```
+
+  The results would be:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">regex</th>
+      <th class="v-table-header">re.match</th>
+      <th class="v-table-header">re.search</th>
+    </tr>
+    <tr>
+      <td><code>r"hello"</code></td>
+      <td class="v-table-center">✔️</td>
+      <td class="v-table-center">✔️</td>
+    </tr>
+    <tr>
+      <td><code>r"world"</code></td>
+      <td class="v-table-center">❌</td>
+      <td class="v-table-center">✔️</td>
+    </tr>
+    <tr>
+      <td><code>r"bye"</code></td>
+      <td class="v-table-center">❌</td>
+      <td class="v-table-center">✔️</td>
+    </tr>
+  </table>
+
+  ### 2.3. `re.compile`
+
+  If we plan to reuse the same regex we can compile it with `regex = re.compile(regex)`:
+
+  ```python
+  regex = re.compile(r"hello")
+  ```
+
+  And then we can use both `match` and/or `search` with:
+
+  ```python
+  regex.match("hello world")
+
+  regex.search("hello world")
+  ```
+
+  The advantage is that a **compiled regex is faster** than a non-compiled one.
+
+  ### 2.4. Working with groups
+
+  Imagine that we have the following file names:
+
+  ```python
+  filenames = [
+      "Informe mensual Indexa Capital - AABBCCDD - 2020-01.pdf",
+      "Informe mensual Indexa Capital - XXYYZZWW - 2020-01.pdf",
+      "Informe mensual Indexa Capital - AABBCCDD - 2021-03.pdf",
+      "Informe mensual Indexa Capital - XXYYZZWW - 2020-12.pdf",
+  ]
+  ```
+
+  #### 2.4.1. Unnamed groups
+
+  It looks more or less clear that we can extract some data from those names:
+
+  ```python
+  regex = re.compile(r"Informe mensual Indexa Capital - (\w{8}) - (\d{4})-(\d{2}).pdf")
+
+  out = regex.match(filenames[0])
+  out.groups()
+  ```
+  <div class="output">
+    <b>Out:</b> ('AABBCCDD', '2020', '01')
+  </div>
+
+  #### 2.4.2. Named groups
+
+  We can use named groups to better extract the data
+
+  ```python
+  regex = re.compile(r"Informe mensual Indexa Capital - (?P<account>\w{8}) - (?P<year>\d{4})-(?P<month>\d{2}).pdf")
+
+  out = regex.match(filenames[1])
+  out.groupdict()
+  ```
+  <div class="output">
+    <b>Out:</b> {'account': 'XXYYZZWW', 'year': '2020', 'month': '01'}
+  </div>
+
+  Clearly we can use that to rename the files doing something like:
+
+  ```python
+  out_pattern = "{year}_{month} Indexa capital {account}.pdf"
+
+  for filename in filenames:
+      groups = regex.match(filename).groupdict()
+      new_name = out_pattern.format(**groups)
+    
+      print(new_name)
+  ```
+  <div class="output">
+    <p>2020_01 Indexa capital AABBCCDD.pdf</p>
+    <p>2020_01 Indexa capital XXYYZZWW.pdf</p>
+    <p>2021_03 Indexa capital AABBCCDD.pdf</p>
+    <p>2020_12 Indexa capital XXYYZZWW.pdf</p>
+  </div>
+
   ## 3. Regex with pandas
 
   ## 4. Regex with pyspark
