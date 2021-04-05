@@ -4,7 +4,7 @@
 code: regex
 title: Using regexs with python
 title_short: Regexs with python
-date: "2020-04-03"
+date: "2020-04-05"
 image: default.png
 highlight: True
 
@@ -18,9 +18,9 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # Extra info. This will add a button with href to the url
 # --------------------------------------------------------------------------------------------------
-# link: 
-#   text: Github
-#   url: https://github.com/villoro/villoro_posts/tree/master/0035-ing_api
+link: 
+  text: Github
+  url: https://github.com/villoro/villoro_posts/tree/master/0036-regex
 
 
 # --------------------------------------------------------------------------------------------------
