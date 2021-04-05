@@ -373,6 +373,39 @@ content_markdown: |
 
   ## 4. Regex with pyspark
 
-  ## 5. Regex with redshift
+  ## 4. Regex with redshift
 
+  In **redshift** there are 4 string functions that work with regular expressions (regex).
+  They are:
 
+  <table class="v-table">
+    <tr class="v-table-center">
+      <th class="v-table-header">Function</th>
+      <th class="v-table-header">Description</th>
+    </tr>
+    <tr>
+      <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_COUNT.html">REGEXP_COUNT</a></td>
+      <td>Returns an integer that indicates the number of times the pattern occurs in the string. If no match is found, then the function returns 0.</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_INSTR.html">REGEXP_INSTR</a></td>
+      <td>Returns an integer that indicates the beginning position or ending position of the matched substring. If no match is found, then the function returns 0.</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_REPLACE.html">REGEXP_REPLACE</a></td>
+      <td>Replaces every occurrence of the pattern with the specified string.</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_SUBSTR.html">REGEXP_SUBSTR</a></td>
+      <td>Returns the characters extracted from a string by searching for a regular expression pattern.</td>
+    </tr>
+  </table>
+
+  There is also the `SIMILAR` operator for using **regexs** inside `WHERE` statements. For example:
+
+  ```sql
+  SELECT count(*) FROM event WHERE eventname SIMILAR TO '%(Ring|Die)%';
+
+  -- It is the same as:
+  SELECT count(*) FROM event where eventname LIKE '%Ring%' OR eventname LIKE '%Die%';
+  ```
