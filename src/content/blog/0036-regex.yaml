@@ -5,7 +5,7 @@ code: regex
 title: Using regexs with python
 title_short: Regexs with python
 date: "2020-04-05"
-image: default.png
+image: regex_square.jpg
 highlight: True
 
 tags:
@@ -29,9 +29,9 @@ link:
 brief_markdown: |
   xx
 
-# image_head:
-#   filename: pre_commit.png
-#   caption: pre_commit
+image_head:
+  filename: regex.jpg
+  caption: regex
 
 content_markdown: |
 
