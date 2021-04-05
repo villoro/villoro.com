@@ -121,7 +121,7 @@ content_markdown: |
       <td><a href="https://regex101.com/r/ob5aYo/1">example_ab*</a></td>
     </tr>
     <tr>
-      <td><code>ab*</code></td>
+      <td><code>ab+</code></td>
       <td><code>a</code> + <code>b</code> one time or more</td>
       <td><a href="https://regex101.com/r/b0o38q/1">example_ab+</a></td>
     </tr>
@@ -154,22 +154,86 @@ content_markdown: |
 
   ### 1.5. Boundaries
 
-  * `\b`: boundary
-  * `\B`: no boundary
+  It is possible to declare a boundary with `\b` (with the inverse `\B`).
+  A boundary means that is surrounded with a non word type character.
+  It is similar to the **start** (`^`) and **end** (`$`).
+
+  It is easier to understand it with some examples:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">regex</th>
+      <th class="v-table-header">text: <span style="background-color:white;"><code>Impossible to do</code></span></th>
+      <th class="v-table-header">text: <span style="background-color:white;"><code>I'm possible :)</code></span></th>
+      <th class="v-table-header">text: <span style="background-color:white;"><code>possibler</code></span></th>
+      <th class="v-table-header">example</th>
+    </tr>
+    <tr>
+      <td><code>possible</code></td>
+      <td>Im<span style="background-color:yellow;">possible</span> to do</td>
+      <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
+      <td><span style="background-color:yellow;">possible</span>r</td>
+      <td><a href="https://regex101.com/r/Ygl8wW/1">boundaries_1</a></td>
+    </tr>
+    <tr>
+      <td><code>\bpossible</code></td>
+      <td>Impossible to do</td>
+      <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
+      <td><span style="background-color:yellow;">possible</span>r</td>
+      <td><a href="https://regex101.com/r/WT2kd5/1">boundaries_2</a></td>
+    </tr>
+    <tr>
+      <td><code>\bpossible\b</code></td>
+      <td>Impossible to do</td>
+      <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
+      <td>possibler</td>
+      <td><a href="https://regex101.com/r/2qDt77/1">boundaries_3</a></td>
+    </tr>
+    <tr>
+      <td><code>possible\B</code></td>
+      <td>Impossible to do</td>
+      <td>I'm possible :)</td>
+      <td><span style="background-color:yellow;">possible</span>r</td>
+      <td><a href="https://regex101.com/r/jL4Lkv/1">boundaries_4</a></td>
+    </tr>
+    <tr>
+      <td><code>\Bpossible</code></td>
+      <td>Im<span style="background-color:yellow;">possible</span> to do</td>
+      <td>I'm possible :)</td>
+      <td>possibler</td>
+      <td><a href="https://regex101.com/r/bnTUnx/1">boundaries_5</a></td>
+    </tr>
+  </table>
 
   ### 1.6. Flags
 
-  * `(?i)`: case insensitive
-  * `(?s)`: single line
-  * `(?m)`: multi line
+  It is possible to change the behaviour of the regex with some flags:
+
+  * `(?i)`: **case insensitive**. For example `(?i)hello` will match `HELLO` ([demo](https://regex101.com/r/jr3Zrq/1))
+  * `(?m)`: **multi line**. When this is active the anchor `^` will be start of line instead of start of text ([demo](https://regex101.com/r/Ol3N99/1))
+  * `(?s)`: **single line**.
 
   ### 1.7. Greedy vs lazy
 
-  * `<.+>`
-  * `<.+?>`
-  * `<[^<>]+>`
+  Imagine that we have the following text:
 
-  ### 1.8. Table summary
+  ```html
+  <h1> Title </h1>
+  <p> Hello </p>
+  ```
+
+  If we want to capture the start of an html tag (`<h1>` and `<p>` in this case) one might be tempted to use something like `<\w+>`.
+  However that will match the whole line (for both lines) since we are specifying `<` followed by any text and ended with `>` ([demo](https://regex101.com/r/ZoRRT1/1)).
+  If we want to stop it at the first appearence of `>` we can use the non greedy regex `<.+?>` ([demo](https://regex101.com/r/j2OnQv/1)).
+
+  Some better alternatives are `<\w+>` or `<[^<>]+>`.
+
+  To sum up:
+
+  * `<.+>`: greedy
+  * `<.+?>`: non greedy
+
+  > It can also be used with other quantifiers that are not the `+`.
 
   ## 2. Regex with python
 
