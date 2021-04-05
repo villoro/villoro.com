@@ -149,8 +149,9 @@ content_markdown: |
   We can use any regex inside the group. For example if we want to math `hello`:
 
   * `(hello)`: capturing group ([Demo](https://regex101.com/r/8W86e1/1)) 
+  * `(?:hello)`: non-capturing group
   * `(?P<name>hello)`: same but giving the group a name (`name` in this case)
-  * `(a|b):` **or** operator in groups. It is the same as `([ab])`
+  * `(hello|bye):` **or** operator in groups.
 
   ### 1.5. Boundaries
 
@@ -234,6 +235,8 @@ content_markdown: |
   * `<.+?>`: non greedy
 
   > It can also be used with other quantifiers that are not the `+`.
+
+
 
   ## 2. Regex with python
 
@@ -363,15 +366,181 @@ content_markdown: |
       print(new_name)
   ```
   <div class="output">
-    <p>2020_01 Indexa capital AABBCCDD.pdf</p>
-    <p>2020_01 Indexa capital XXYYZZWW.pdf</p>
-    <p>2021_03 Indexa capital AABBCCDD.pdf</p>
-    <p>2020_12 Indexa capital XXYYZZWW.pdf</p>
+    <li>2020_01 Indexa capital AABBCCDD.pdf</li>
+    <li>2020_01 Indexa capital XXYYZZWW.pdf</li>
+    <li>2021_03 Indexa capital AABBCCDD.pdf</li>
+    <li>2020_12 Indexa capital XXYYZZWW.pdf</li>
   </div>
+
+
 
   ## 3. Regex with pandas
 
-  ## 4. Regex with pyspark
+  There are multiple functions in **pandas** that can be used with **regex**. They are:
+
+  1. `count`: count occurrences that match a regex
+  2. `replace`: replace based on a regex
+  3. `match`: same as `re.match`
+  4. `contains`: same as `re.search`
+  5. `findall`: same as `re.findall`
+  6. `split` / `rsplit`: splits text based on a regex
+  7. `extract`: extract groups using a regex
+
+  In order to explain them let's create a really dummy dataframe with:
+
+  ```python
+  import pandas as pd
+
+  queries = [
+      "select *  FROM  users",
+      "SELECT count(id) AS cnt FROM public.users",
+      "SELECT * FROM orders",
+      "SELECT city, count(1) FROM orders GROUP BY 1",
+  ]
+  df = pd.DataFrame(queries, columns=["query"])
+  ```
+
+  ### 3.1. `series.str.count`
+
+  In this case we want to `count` the number of queries that come from the `users` table.
+  It doesn't matter if the schema is specified or not. It can be done with:
+
+  ```python
+  df["query"].str.count(r"\s+FROM\s+(\w+\.)?users\b")
+  ```
+  <div class="output">
+    <b>Out:</b>
+    <li>1</li>
+    <li>1</li>
+    <li>0</li>
+    <li>0</li>
+  </div>  
+
+  ### 3.2. `series.str.replace`
+
+  We can use this for deleting the renamings (like ` AS cnt`):
+
+  ```python
+  df["query"].str.replace(r"\s+AS\s+\w+\b", "", regex=True)
+  ```
+  <div class="output">
+    <b>Out:</b>
+    <li><code>select *  FROM  users</code></li>
+    <li><code>SELECT count(id) FROM public.users</code></li>
+    <li><code>SELECT * FROM orders</code></li>
+    <li><code>SELECT city, count(1) FROM orders GROUP BY 1</code></li>
+  </div>  
+
+  ### 3.3. `series.str.match`
+
+  In this case we can look which queries are selecting all columns (`SELECT * FROM`):
+
+  ```python
+  df["query"].str.match(r"(?i)(SELECT)\s+\*\s+(?i)(FROM)")
+  ```
+  <div class="output">
+    <b>Out:</b>
+    <li>True</li>
+    <li>False</li>
+    <li>True</li>
+    <li>False</li>
+  </div>  
+
+  ### 3.4. `series.str.contains`
+
+  Similar to the `replace` example, let's get the queries that have a rename `AS x`:
+
+  ```python
+  df["query"].str.contains(r"\s+AS\s+\w+")
+  ```
+  <div class="output">
+    <b>Out:</b>
+    <li>False</li>
+    <li>True</li>
+    <li>False</li>
+    <li>False</li>
+  </div>  
+
+  ### 3.5. `series.str.findall`
+
+  We can use this for getting a list with all words that have between 5 and 8 letters:
+
+  ```python
+  df["query"].str.findall("\w{5,8}")
+  ```
+  <div class="output">
+    <b>Out:</b>
+    <li>[<code>select</code>, <code>users</code>]</li>
+    <li>[<code>SELECT</code>, <code>count</code>, <code>public</code>, <code>users</code>]</li>
+    <li>[<code>SELECT</code>, <code>orders</code>]</li>
+    <li>[<code>SELECT</code>, <code>count</code>, <code>orders</code>, <code>GROUP</code>]</li>
+  </div>  
+
+  > Note that the output is one list per row.
+
+  ### 3.6. `series.str.split` / `series.str.rsplit`
+
+  In this case let's split the query in 2 parts, all before the `FROM` and all after it:
+
+  ```python
+  df["query"].str.split("\s+(?i)from\s+")
+  ```
+  <div class="output">
+    <b>Out:</b>
+    <li>[<code>select *</code>, <code>users</code>]</li>
+    <li>[<code>SELECT count(id) AS cnt</code>, <code>public.users</code>]</li>
+    <li>[<code>SELECT *</code>, <code>orders</code>]</li>
+    <li>[<code>SELECT city, count(1)</code>, <code>orders GROUP BY 1</code>]</li>
+  </div>  
+
+  ### 3.7. `series.str.extract`
+
+  With this function we can extract data from groups.
+  The output of this function is a **DataFrame** where each group is a column.
+
+  ```python
+  regex = r"(?i)SELECT\s+(?:.+)\s+(?i)FROM\s+(?P<schema>\w+\.)?(?P<table>\w+)\b"
+  df["query"].str.extract(regex)
+  ```
+
+  The output in this case is:
+
+  <table class="v-table" align="center">
+    <tr class="v-table-center">
+      <th class="v-table-header">schema</th>
+      <th class="v-table-header">table</th>
+    </tr>
+    <tr>
+      <td>Nan</td>
+      <td>users</td>
+    </tr>
+    <tr>
+      <td>public.</td>
+      <td>users</td>
+    </tr>
+    <tr>
+      <td>Nan</td>
+      <td>orders</td>
+    </tr>
+    <tr>
+      <td>Nan</td>
+      <td>orders</td>
+    </tr>
+  </table>
+
+  The regex used in this example might be a little bit complex, let's analyze it by parts:
+
+  * `(?i)SELECT`: `SELECT` statement case insensitive
+  * `\s+`: one or more spaces
+  * `(?:.+)`: any number of characters in a non-capturing group (so that it does not appear as column in the output)
+  * `\s+`: one or more spaces
+  * `(?i)FROM`: `FROM` statement case insensitive
+  * `\s+`: one or more spaces
+  * `(?:(?P<schema>\w+)\.)?`: Optional non-capturing group composed with:
+      * `(?P<schema>\w+)`: Capturing group named `schema` made only with words
+      * `\.`: a dot (`.`)
+  * `(?P<table>\w+)\b`: Capturing group named `table` made only with words and that has a right boundary
+
 
   ## 4. Regex with redshift
 
@@ -404,8 +573,8 @@ content_markdown: |
   There is also the `SIMILAR` operator for using **regexs** inside `WHERE` statements. For example:
 
   ```sql
-  SELECT count(*) FROM event WHERE eventname SIMILAR TO '%(Ring|Die)%';
+  SELECT count(*) FROM event WHERE name SIMILAR TO '%(Ring|Die)%';
 
   -- It is the same as:
-  SELECT count(*) FROM event where eventname LIKE '%Ring%' OR eventname LIKE '%Die%';
+  SELECT count(*) FROM event where name LIKE '%Ring%' OR name LIKE '%Die%';
   ```
