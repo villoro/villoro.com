@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------------------------
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
-code: pyarrow
+code: reading_from_redshift
 title: Efficently reading from redshift large volumes of data with pyarrow
 title_short: Reading from redshift
 date: "2021-06-08"
@@ -43,7 +43,7 @@ content_markdown: |
 
   ## 1. xx
 
-  <canvas id="dataset_0" style="width:100%;height:400px;"></canvas>
+  <canvas id="dataset_0" style="width:100%;height:300px;"></canvas>
 
   # Partition by
 
@@ -82,7 +82,8 @@ scripts: |
           {
             label: 'no_filter',
             backgroundColor: "#EF5350",
-            data: [8.856600, 7.468612, 7.463320, 9.433437],
+            data: [8.856600, 7.468612, 7.463320, 9.433437, 0],
+              /* Adding an extra 0 for setting the min axis to 0 */
           },
         ],
       },
@@ -118,7 +119,7 @@ scripts: |
       options: {
         title: {
           display: true,
-          text: 'Reading time for dataset 1 (One parquet by day)'
+          text: 'Reading time for dataset 2 (Multiple parquets by day)'
         },
         ...scale_seconds
       }
@@ -163,14 +164,15 @@ scripts: |
           {
             label: 'pyarrow_parquet_ds_read',
             backgroundColor: "#9575CD",
-            data: [0.394429, 0.739624],
+            data: [0.394429, 0.739624, 0],
+              /* Adding an extra 0 for setting the min axis to 0 */
           },
         ],
       },
       options: {
         title: {
           display: true,
-          text: 'Reading time for dataset 1 (One parquet by day)'
+          text: 'Comparison between best reading options'
         },
         ...scale_seconds
       }
@@ -189,14 +191,15 @@ scripts: |
           {
             label: 'pyarrow_parquet_ds_read',
             backgroundColor: "#7E57C2",
-            data: [1.254674, 2.003886],
+            data: [1.254674, 2.003886, 0],
+              /* Adding an extra 0 for setting the min axis to 0 */
           },
         ],
       },
       options: {
         title: {
           display: true,
-          text: 'Reading time for dataset 1 (One parquet by day)'
+          text: 'Reading time when using row group filtering'
         },
         ...scale_seconds
       }
