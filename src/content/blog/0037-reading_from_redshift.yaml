@@ -43,16 +43,158 @@ content_markdown: |
 
   ## 0. The problem
 
+  One of the best ways to start analyzing bussiness data is by using a **datawarehouse** (dwh).
+  For companies using AWS stack **redshift** is the default option for a dwh.
+
+  In the early stages of the company the dwh is going to be very useful and perform really good.
+  But as the size of data and the number of users increase the performance will decrease.
+  This will be specially important if there are bots consuming data from **redshift** on a periodic basis.
+
+  We all know that the best alternative here is to switch to other technologies (datalake, prestoDB, cassandra...) but it's not possible to switch instantly.
+  It will take some time until all data and transformation logic is migrated from redshift.
+
+  And the key question here is:
+
+  > How can we consume redshift data efficently?
+
+  In this post we will focus on how to consume data efficently as **pandas** dataframes.
+  This is because in our case a lot of bots are doing this.
+  The biggest example here might be jobs that are running Machine Learning (ML) pipelines.
+
   ## 1. Using direct queries
 
+  The most basic option for reading data from redshift is to directly connect to the database.
+  As an example this can be done with **SQL alchemy**:
+
+  <div class="w3-padding w3-border w3-round ">
+    POST: <a href="https://villoro.com/post/sql_alchemy">
+      Using gitflow for code control
+    </a>
+  </div>
+
+  For other processing tools (like **spark**) it is possible to consume data with direct queries (by using `jdbc`).
+
+  The problem with such options is that some pressure is put into **redshift** since it needs to:
+
+  * handle the queue of queries (which could become quite big)
+  * do the query and deliver the data 
+
   ## 2. Unloading to parquets
+
+  One alternative to doing direct queries is to **unload data from redshift**.
+  This is done by passing a query to the `UNLOAD` command so that redshift can export the result to **S3**.
+  More info in [unload offical AWS doc](https://docs.aws.amazon.com/redshift/latest/dg/r_UNLOAD.html).
+
+  As usual, the suggestion is to use **parquet** for storing columnar data. More info here:
+
+  <div class="w3-padding w3-border w3-round ">
+    POST: <a href="https://villoro.com/post/tables_format">
+      Using gitflow for code control
+    </a>
+  </div>
+
+  By default the **unload** will produce multipe files so that different **redshift** workers can do the job in parallel.
+  It might be tempting to do the unload to only one file in order to simplify the reading.
+  But by doing that the export will be slower and more computationally costly for redshift.
+
+  So, if we end up with multipe parquet files, how should we read them?
 
   ## 3. Reading parquets as pandas dataframes
 
   ### 3.1. Using pandas read parquet (`pandas_read`)
-  ### 3.2. Using pyarrow dataset (`pyarrow_ds_read`)
+
+  The first option is to simply use `pandas.read_parquet` function and read all files in a loop.
+  This can be done with:
+
+  ```python
+  import pandas as pd
+
+  # 1. Create a list with all files called 'files'
+  files = os.listdir(path)
+
+  # 2. Read all files as a pandas dataframe
+  dfs = [pd.read_parquet(file) for file in files]
+
+  # 3. Concatenate all dataframes
+  df = pd.concat(dfs)
+  ```
+
+  > The list of files can be created with different options.
+  > We suggest using `os.listdir` if all files are in the same folder and `os.walk` if there are subfolder with files.
+
+  If we need to filter based on a column with this option we would do it after creating the pandas dataframe.
+
+  ### 3.2. Using pyarrow read table (`pyarrow_single_read`)
+
+  Another option is to read each file with **pyarrow** instead.
+  This would by done by:
+
+  ```python
+  import pandas as pd
+
+  # 1. Create a list with all files called 'files'
+  files = os.listdir(path)
+
+  # 2. Read all files as a pandas dataframe
+  dfs = [pq.read_table(file).to_pandas() for file in files]
+
+  # 3. Concatenate all dataframes
+  df = pd.concat(dfs)
+  ```
+
+  > The performance should be similar since **pandas** usually use `pyarrow` under the hood.
+
+  If we need to filter based on a column with this option we would do it after creating the pandas dataframe.
+
   ### 3.3. Using pyarrow parquet dataset (`pyarrow_parquet_ds_read`)
-  ### 3.4. Using pyarrow read table (`pyarrow_single_read`)
+
+  Another option is to use the `ParquetDataset` from **pyarrow**.
+  With this we only need to specify the folder were the parquets are and **pyarrow** will pick all the files.
+
+  ```python
+  import pyarrow.parquet as pq
+
+  # Create a dataset with all parquet files
+  dataset = pq.ParquetDataset(path, validate_schema=False)
+  
+  # Read everything as one pandas dataframe
+  df = dataset.read_pandas().to_pandas()
+  ```
+
+  In this case we can filter before while reading.
+  As an example this can be done with:
+
+  ```python
+  mfilters = [
+      ("p_creation_date"", ">=", "2021-04-29"),
+      # More filters can be added
+      # We are passing tuples with the conditions as strings
+  ]
+
+  dataset = pq.ParquetDataset(path, validate_schema=False, filter=mfilters)
+  ```
+
+  ### 3.4. Using pyarrow dataset (`pyarrow_ds_read`)
+
+  ```python
+  import pyarrow.dataset as ds
+
+  # Create a dataset with all parquet files
+  dataset = ds.dataset(path, format="parquet", partitioning="hive")
+
+  # Create a table using the dataset
+  table = dataset.to_table()
+  
+  # Transform it to a pandas dataframe
+  df = table.to_pandas(use_threads=True)
+  ```
+
+  In this case we can also filter before while reading.
+  As an example this can be done with:
+
+  ```python
+  table = dataset.to_table(filter=ds.field("p_creation_date") >= "2021-04-29")
+  ```
 
   ## 4. Datasets for testing
 
