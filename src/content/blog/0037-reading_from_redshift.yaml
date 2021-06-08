@@ -287,8 +287,23 @@ content_markdown: |
 
   ### 5.4. Reading using row groups
 
+  In this case we want to do another test where we do 2 filters at the same time:
+
+  * filter by the partition column (`p_creation_month`)
+  * filter by the state (`state`)
+
+  > We are using the same column we used for splitting the `dataset_2` as the second filter
+
   <canvas id="row_group" style="width:100%;height:400px;"></canvas>
 
+  In this case we see how the new `pyarrow.dataset` introduced in **pyarrow 3.0.0** performs way better.
+
+  What is happening is that pyarrow is able to push down the filter and take advantage of how parquet files are actually written.
+  That means that **pyarrow** is only retriving some `row_groups` so that less data needs to be read.
+
+  You can find more info about how parquet files are written in this post:
+
+  * [How Parquet Files are Written](http://cloudsqale.com/2020/05/29/how-parquet-files-are-written-row-groups-pages-required-memory-and-flush-operations/)
   ## 6. Conclusions
 
 scripts: |
