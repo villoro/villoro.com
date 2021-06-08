@@ -176,6 +176,11 @@ content_markdown: |
 
   ### 3.4. Using pyarrow dataset (`pyarrow_ds_read`)
 
+  With the release of [pyarrow 3.0.0](https://arrow.apache.org/release/3.0.0.html) (released on 2021-01-26) a new way of reading parquets was introduced.
+  The idea is to use the new `pyarrow.dataset` to then create a table which can be transformed to a **pandas** dataframe.
+
+  This can be done with:
+
   ```python
   import pyarrow.dataset as ds
 
@@ -198,27 +203,87 @@ content_markdown: |
 
   ## 4. Datasets for testing
 
-  ### 4.1. Dataset 0
+  For testing the different options we are going to use [US accidents dataset](https://www.kaggle.com/sobhanmoosavi/us-accidents) from kaggle.
+  This is a 1 GB dataset (stored as `csv`).
 
-  ### 4.2. Dataset 1
+  In order to test different set ups we are going to store this dataset in 3 different ways:
 
-  ### 4.3. Dataset 2
+  0. Single parquet file
+  1. One parquet by month
+  2. Multiple parquets by month
+
+  ### 4.1. Dataset 0 (single parquet)
+
+  This first dataset is done by exporting all the data as **one sigle parquet file**.
+  This is the kind of dataset we would have if we were to do only one export with all the data we want to consume.
+
+  ### 4.2. Dataset 1 (One parquet by month)
+
+  This dataset contains only one parquet per each month.
+  Those parquets are store in subfolder following the **hive** partitioning:
+
+  ```
+  - /dataset_1
+      ├── /p_creation_month=p_creation_month=2016-02
+      │   └── 0001.parquet
+      ├── /p_creation_month=p_creation_month=2016-03
+      │   └── 0001.parquet
+      │   ...
+      └── /p_creation_month=p_creation_month=2020-12
+          └── 0001.parquet
+  ```
+
+  This represents a partitioned dataset that don't have a lot of files.
+  This is what we would have if we were doing periodical unloads into each subfolder and then later combining the output into fewer files.
+
+  ### 4.3. Dataset 2 (Multiple parquets by month)
+
+  This last dataset is similar to the previous one but with multipe files per partition.
+  We used the `state` column to easily create around 50 files per partition.
+
+  This represents a dataset with a lot of files.
+  This is what we would have if we were doing periodical unloads into each subfolder
 
   ## 5. Testing all options
 
   ### 5.1. Reading from a single parquet (dataset 0)
 
+  The first test is to compare the reading of one single file.
+
   <canvas id="dataset_0" style="width:100%;height:300px;"></canvas>
+
+  We see that the the **pyarrow** datasets options perform a little bit better.
 
   ### 5.2. Reading from data paritioned (datasets 1 and 2)
 
+  In this case we are comparing what would happen if we were reading partitioned data.
+  There are 2 different readings that we are testing:
+
+  * **no filter:** reading all data
+  * **filter:** reading only a subset of the months
+
   <canvas id="dataset_2" style="width:100%;height:400px;"></canvas>
+
+  For `pandas_read` and `pyarrow_single_read` we see that filtering it's slower.
+  This happens because we are first reading and then filtering.
+  So more operations implies more time.
+
+  The important part here is that for the **pyarrow** datasets options when we are filtering the reading is a lot faster.
+  This happens because **pyarrow** can push down those filters and avoid reading unnecessary files.
+
+  If we repeat the same test but with `dataset_1` (one file per partition) we see the same pattern.
+  Here the differences are bigger.
 
   <canvas id="dataset_1" style="width:100%;height:400px;"></canvas>
 
   ### 5.3. Comparing best options
 
+  Let's zoom in and compare the best options (`pyarrow_ds_read` and `pyarrow_parquet_ds_read`) and compared both partitioned datasets.
+
   <canvas id="pyarrow_best" style="width:100%;height:400px;"></canvas>
+
+  Here it seems like the new `pyarrow.dataset` only performance better with a dataset with a lot of files.
+  If we have a small number of files it performs slightly worse.
 
   ### 5.4. Reading using row groups
 
@@ -286,7 +351,7 @@ scripts: |
       options: {
         title: {
           display: true,
-          text: 'Reading time for dataset 2 (Multiple parquets by day)'
+          text: 'Reading time for dataset 2 (Multiple parquets by month)'
         },
         ...scale_seconds
       }
@@ -312,7 +377,7 @@ scripts: |
       options: {
         title: {
           display: true,
-          text: 'Reading time for dataset 1 (One parquet by day)'
+          text: 'Reading time for dataset 1 (One parquet by month)'
         },
         ...scale_seconds
       }
