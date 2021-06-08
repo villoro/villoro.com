@@ -28,7 +28,10 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  xx
+  ING has an open API that you can use for retriving information and/or create other apps.
+
+  This post shows how you can connect to it using python.
+  Be aware that right now individuals can't access anything using this, until ING adds more functionality it's almost useless (I didn't know this before starting).
 
 # image_head:
 #   filename: pre_commit.png

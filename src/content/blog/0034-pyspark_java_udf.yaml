@@ -28,7 +28,9 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  xx
+  User created UDFs with pyspark don't always perform as good as native spark functions.
+
+  In this post I explain how you can create your pyspark functions with java and later used them with python.
 
 # image_head:
 #   filename: pre_commit.png
