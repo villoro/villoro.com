@@ -304,7 +304,18 @@ content_markdown: |
   You can find more info about how parquet files are written in this post:
 
   * [How Parquet Files are Written](http://cloudsqale.com/2020/05/29/how-parquet-files-are-written-row-groups-pages-required-memory-and-flush-operations/)
+
   ## 6. Conclusions
+
+  To sum it up it doing unloads it is a more efficent way of consuming large quantities of data from redshift.
+
+  There are are different ways of doing to `unload`.
+  If the table we are consuming is not changing past data we suggest only `unloading` the last day/month (or other time windows) to reduce the performance cost.
+
+  If reading data partitioned by the time window is slow, we suggest running a job that compacts the `parquets` into each partition into less files.
+  This can be done after doing the unload.
+
+  Finally the best way of reading parquets into **pandas** dataframes is by using the new `pyarrow.dataset` introduced in **pyarrow 3.0.0**
 
 scripts: |
   <script>
