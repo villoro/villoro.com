@@ -41,23 +41,48 @@ content_markdown: |
 
   [TOC]
 
-  ## 1. xx
+  ## 0. The problem
+
+  ## 1. Using direct queries
+
+  ## 2. Unloading to parquets
+
+  ## 3. Reading parquets as pandas dataframes
+
+  ### 3.1. Using pandas read parquet (`pandas_read`)
+  ### 3.2. Using pyarrow dataset (`pyarrow_ds_read`)
+  ### 3.3. Using pyarrow parquet dataset (`pyarrow_parquet_ds_read`)
+  ### 3.4. Using pyarrow read table (`pyarrow_single_read`)
+
+  ## 4. Datasets for testing
+
+  ### 4.1. Dataset 0
+
+  ### 4.2. Dataset 1
+
+  ### 4.3. Dataset 2
+
+  ## 5. Testing all options
+
+  ### 5.1. Reading from a single parquet (dataset 0)
 
   <canvas id="dataset_0" style="width:100%;height:300px;"></canvas>
 
-  # Partition by
+  ### 5.2. Reading from data paritioned (datasets 1 and 2)
 
   <canvas id="dataset_2" style="width:100%;height:400px;"></canvas>
 
   <canvas id="dataset_1" style="width:100%;height:400px;"></canvas>
 
-  # Best functions
+  ### 5.3. Comparing best options
 
   <canvas id="pyarrow_best" style="width:100%;height:400px;"></canvas>
 
-  # Row group
+  ### 5.4. Reading using row groups
 
   <canvas id="row_group" style="width:100%;height:400px;"></canvas>
+
+  ## 6. Conclusions
 
 scripts: |
   <script>
