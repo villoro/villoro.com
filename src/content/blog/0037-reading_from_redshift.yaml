@@ -50,11 +50,11 @@ content_markdown: |
   One of the best ways to start analyzing bussiness data is by using a **datawarehouse** (dwh).
   For companies using AWS stack **redshift** is the default option for a dwh.
 
-  In the early stages of the company the dwh is going to be very useful and perform really good.
+  In the early stages of the company the dwh is going to be very useful and it will perform really well.
   But as the size of data and the number of users increase the performance will decrease.
   This will be specially important if there are bots consuming data from **redshift** on a periodic basis.
 
-  We all know that the best alternative here is to switch to other technologies (datalake, prestoDB, cassandra...) but it's not possible to switch instantly.
+  We all know that the best alternative here is to switch to other technologies (datalake, prestoDB, cassandra...) for the rawest data but it's not possible to switch instantly.
   It will take some time until all data and transformation logic is migrated from redshift.
 
   And the key question here is:
@@ -76,7 +76,7 @@ content_markdown: |
     </a>
   </div>
 
-  For other processing tools (like **spark**) it is possible to consume data with direct queries (by using `jdbc`).
+  For other processing tools (like **spark**) it is possible to consume data with direct queries (by using `jdbc` or other connectors).
 
   The problem with such options is that some pressure is put into **redshift** since it needs to:
 
@@ -276,7 +276,7 @@ content_markdown: |
   This happens because **pyarrow** can push down those filters and avoid reading unnecessary files.
 
   If we repeat the same test but with `dataset_1` (one file per partition) we see the same pattern.
-  Here the differences are bigger.
+  Here the differences are even bigger.
 
   <canvas id="dataset_1" style="width:100%;height:400px;"></canvas>
 
