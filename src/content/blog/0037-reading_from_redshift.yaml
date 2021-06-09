@@ -2,7 +2,7 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: reading_from_redshift
-title: Efficently reading from redshift large volumes of data with pyarrow
+title: Efficiently reading from redshift large volumes of data with pyarrow
 title_short: Reading from redshift
 date: "2021-06-08"
 image: reading_from_redshift_square.png
@@ -72,7 +72,7 @@ content_markdown: |
 
   <div class="w3-padding w3-border w3-round ">
     POST: <a href="https://villoro.com/post/sql_alchemy">
-      Using gitflow for code control
+      SQL Alchemy with python
     </a>
   </div>
 
@@ -93,7 +93,7 @@ content_markdown: |
 
   <div class="w3-padding w3-border w3-round ">
     POST: <a href="https://villoro.com/post/tables_format">
-      Using gitflow for code control
+      Storing tables efficiently
     </a>
   </div>
 
