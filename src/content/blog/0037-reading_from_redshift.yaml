@@ -5,7 +5,7 @@ code: reading_from_redshift
 title: Efficently reading from redshift large volumes of data with pyarrow
 title_short: Reading from redshift
 date: "2021-06-08"
-image: default.jpg
+image: reading_from_redshift_square.png
 highlight: True
 
 tags:
@@ -32,6 +32,10 @@ link:
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
   xx
+
+image_head:
+  filename: reading_from_redshift.png
+  caption: reading from redshift with pyarrow
 
 use_chartjs: True
 
