@@ -47,7 +47,7 @@ content_markdown: |
 
   ## 0. The problem
 
-  One of the best ways to start analyzing bussiness data is by using a **datawarehouse** (dwh).
+  One of the best ways to start analyzing business data is by using a **datawarehouse** (dwh).
   For companies using AWS stack **redshift** is the default option for a dwh.
 
   In the early stages of the company the dwh is going to be very useful and it will perform really well.
@@ -59,9 +59,9 @@ content_markdown: |
 
   And the key question here is:
 
-  > How can we consume redshift data efficently?
+  > How can we consume redshift data efficiently?
 
-  In this post we will focus on how to consume data efficently as **pandas** dataframes.
+  In this post we will focus on how to consume data efficiently as **pandas** dataframes.
   This is because in our case a lot of bots are doing this.
   The biggest example here might be jobs that are running Machine Learning (ML) pipelines.
 
@@ -87,7 +87,7 @@ content_markdown: |
 
   One alternative to doing direct queries is to **unload data from redshift**.
   This is done by passing a query to the `UNLOAD` command so that redshift can export the result to **S3**.
-  More info in [unload offical AWS doc](https://docs.aws.amazon.com/redshift/latest/dg/r_UNLOAD.html).
+  More info in [unload official AWS doc](https://docs.aws.amazon.com/redshift/latest/dg/r_UNLOAD.html).
 
   As usual, the suggestion is to use **parquet** for storing columnar data. More info here:
 
@@ -97,11 +97,11 @@ content_markdown: |
     </a>
   </div>
 
-  By default the **unload** will produce multipe files so that different **redshift** workers can do the job in parallel.
+  By default the **unload** will produce multiple files so that different **redshift** workers can do the job in parallel.
   It might be tempting to do the unload to only one file in order to simplify the reading.
   But by doing that the export will be slower and more computationally costly for redshift.
 
-  So, if we end up with multipe parquet files, how should we read them?
+  So, if we end up with multiple parquet files, how should we read them?
 
   ## 3. Reading parquets as pandas dataframes
 
@@ -242,7 +242,7 @@ content_markdown: |
 
   ### 4.3. Dataset 2 (Multiple parquets by month)
 
-  This last dataset is similar to the previous one but with multipe files per partition.
+  This last dataset is similar to the previous one but with multiple files per partition.
   We used the `state` column to easily create around 50 files per partition.
 
   This represents a dataset with a lot of files.
