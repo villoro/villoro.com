@@ -2,7 +2,7 @@
 # Basic metadata
 # --------------------------------------------------------------------------------------------------
 code: reading_from_redshift
-title: Efficiently reading from redshift large volumes of data with pyarrow
+title: Efficiently reading large volumes of data from redshift with pyarrow
 title_short: Reading from redshift
 date: "2021-06-08"
 image: reading_from_redshift_square.png
@@ -48,11 +48,11 @@ content_markdown: |
   ## 0. The problem
 
   One of the best ways to start analyzing business data is by using a **datawarehouse** (dwh).
-  For companies using AWS stack **redshift** is the default option for a dwh.
+  For companies using the AWS stack **redshift** is the default option for a dwh.
 
   In the early stages of the company the dwh is going to be very useful and it will perform really well.
   But as the size of data and the number of users increase the performance will decrease.
-  This will be specially important if there are bots consuming data from **redshift** on a periodic basis.
+  This will be especially important if there are bots consuming data from **redshift** on a periodic basis.
 
   We all know that the best alternative here is to switch to other technologies (datalake, prestoDB, cassandra...) for the rawest data but it's not possible to switch instantly.
   It will take some time until all data and transformation logic is migrated from redshift.
@@ -67,7 +67,7 @@ content_markdown: |
 
   ## 1. Using direct queries
 
-  The most basic option for reading data from redshift is to directly connect to the database.
+  The most basic option for reading data from redshift is to connect directly to the database.
   As an example this can be done with **SQL alchemy**:
 
   <div class="w3-padding w3-border w3-round ">
@@ -78,10 +78,10 @@ content_markdown: |
 
   For other processing tools (like **spark**) it is possible to consume data with direct queries (by using `jdbc` or other connectors).
 
-  The problem with such options is that some pressure is put into **redshift** since it needs to:
+  The problem with such options is that it puts some pressure on **redshift** since it needs to:
 
   * handle the queue of queries (which could become quite big)
-  * do the query and deliver the data 
+  * execute the query and deliver the data
 
   ## 2. Unloading to parquets
 
@@ -153,7 +153,7 @@ content_markdown: |
   ### 3.3. Using pyarrow parquet dataset (`pyarrow_parquet_ds_read`)
 
   Another option is to use the `ParquetDataset` from **pyarrow**.
-  With this we only need to specify the folder were the parquets are and **pyarrow** will pick all the files.
+  With this we only need to specify the folder where the parquets are stored and **pyarrow** will pick all the files.
 
   ```python
   import pyarrow.parquet as pq
@@ -181,7 +181,7 @@ content_markdown: |
   ### 3.4. Using pyarrow dataset (`pyarrow_ds_read`)
 
   With the release of [pyarrow 3.0.0](https://arrow.apache.org/release/3.0.0.html) (released on 2021-01-26) a new way of reading parquets was introduced.
-  The idea is to use the new `pyarrow.dataset` to then create a table which can be transformed to a **pandas** dataframe.
+  The idea is to use the new `pyarrow.dataset` to create a table which can then be transformed into a **pandas** dataframe.
 
   This can be done with:
 
@@ -194,11 +194,11 @@ content_markdown: |
   # Create a table using the dataset
   table = dataset.to_table()
   
-  # Transform it to a pandas dataframe
+  # Transform it into a pandas dataframe
   df = table.to_pandas(use_threads=True)
   ```
 
-  In this case we can also filter before while reading.
+  In this case we can also filter the table while reading.
   As an example this can be done with:
 
   ```python
@@ -218,13 +218,13 @@ content_markdown: |
 
   ### 4.1. Dataset 0 (single parquet)
 
-  This first dataset is done by exporting all the data as **one sigle parquet file**.
+  This first dataset is created by exporting all the data as **one single parquet file**.
   This is the kind of dataset we would have if we were to do only one export with all the data we want to consume.
 
   ### 4.2. Dataset 1 (One parquet by month)
 
-  This dataset contains only one parquet per each month.
-  Those parquets are store in subfolder following the **hive** partitioning:
+  This dataset contains only one parquet per month.
+  Those parquets are stored in subfolders following the **hive** partitioning:
 
   ```
   - /dataset_1
@@ -237,7 +237,7 @@ content_markdown: |
           └── 0001.parquet
   ```
 
-  This represents a partitioned dataset that don't have a lot of files.
+  This represents a partitioned dataset that doesn't have a lot of files.
   This is what we would have if we were doing periodical unloads into each subfolder and then later combining the output into fewer files.
 
   ### 4.3. Dataset 2 (Multiple parquets by month)
@@ -252,11 +252,11 @@ content_markdown: |
 
   ### 5.1. Reading from a single parquet (dataset 0)
 
-  The first test is to compare the reading of one single file.
+  The first test is to compare the reading of one single file using the different methods.
 
   <canvas id="dataset_0" style="width:100%;height:300px;"></canvas>
 
-  We see that the the **pyarrow** datasets options perform a little bit better.
+  We see that the the **pyarrow** datasets option performs a little bit better.
 
   ### 5.2. Reading from data paritioned (datasets 1 and 2)
 
@@ -268,11 +268,10 @@ content_markdown: |
 
   <canvas id="dataset_2" style="width:100%;height:400px;"></canvas>
 
-  For `pandas_read` and `pyarrow_single_read` we see that filtering it's slower.
-  This happens because we are first reading and then filtering.
-  So more operations implies more time.
+  For `pandas_read` and `pyarrow_single_read` we see that including filtering is slower.
+  This happens because we are first reading and then filtering, and thus adding more operations means an increase in the time taken.
 
-  The important part here is that for the **pyarrow** datasets options when we are filtering the reading is a lot faster.
+  The important part here is that for the **pyarrow** datasets option the reading is a lot faster when we are also filtering.
   This happens because **pyarrow** can push down those filters and avoid reading unnecessary files.
 
   If we repeat the same test but with `dataset_1` (one file per partition) we see the same pattern.
@@ -282,16 +281,16 @@ content_markdown: |
 
   ### 5.3. Comparing best options
 
-  Let's zoom in and compare the best options (`pyarrow_ds_read` and `pyarrow_parquet_ds_read`) and compared both partitioned datasets.
+  Let's zoom in and compare the best options (`pyarrow_ds_read` and `pyarrow_parquet_ds_read`) and compare both partitioned datasets.
 
   <canvas id="pyarrow_best" style="width:100%;height:400px;"></canvas>
 
-  Here it seems like the new `pyarrow.dataset` only performance better with a dataset with a lot of files.
+  Here it seems like the new `pyarrow.dataset` only performs better with a dataset with a lot of files.
   If we have a small number of files it performs slightly worse.
 
   ### 5.4. Reading using row groups
 
-  In this case we want to do another test where we do 2 filters at the same time:
+  In this case we want to do another test where we apply 2 filters at the same time:
 
   * filter by the partition column (`p_creation_month`)
   * filter by the state (`state`)
@@ -303,7 +302,7 @@ content_markdown: |
   In this case we see how the new `pyarrow.dataset` introduced in **pyarrow 3.0.0** performs way better.
 
   What is happening is that pyarrow is able to push down the filter and take advantage of how parquet files are actually written.
-  That means that **pyarrow** is only retriving some `row_groups` so that less data needs to be read.
+  That means that **pyarrow** is only retriving some `row_groups` and therefore less data needs to be read.
 
   You can find more info about how parquet files are written in this post:
 
@@ -311,9 +310,9 @@ content_markdown: |
 
   ## 6. Conclusions
 
-  To sum it up it doing unloads it is a more efficent way of consuming large quantities of data from redshift.
+  To sum it up doing unloads is a more efficent way of consuming large quantities of data from redshift.
 
-  There are are different ways of doing to `unload`.
+  There are are different ways of `unloading`.
   If the table we are consuming is not changing past data we suggest only `unloading` the last day/month (or other time windows) to reduce the performance cost.
 
   If reading data partitioned by the time window is slow, we suggest running a job that compacts the `parquets` into each partition into less files.
