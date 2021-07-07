@@ -256,7 +256,7 @@ content_markdown: |
 
   <canvas id="dataset_0" style="width:100%;height:300px;"></canvas>
 
-  We see that the the **pyarrow** datasets option performs a little bit better.
+  We see that the the **pyarrow** datasets options performs a little bit better.
 
   ### 5.2. Reading from data paritioned (datasets 1 and 2)
 
@@ -271,7 +271,7 @@ content_markdown: |
   For `pandas_read` and `pyarrow_single_read` we see that including filtering is slower.
   This happens because we are first reading and then filtering, and thus adding more operations means an increase in the time taken.
 
-  The important part here is that for the **pyarrow** datasets option the reading is a lot faster when we are also filtering.
+  The important part here is that for the **pyarrow** datasets options the reading is a lot faster when we are also filtering.
   This happens because **pyarrow** can push down those filters and avoid reading unnecessary files.
 
   If we repeat the same test but with `dataset_1` (one file per partition) we see the same pattern.
