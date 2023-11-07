@@ -41,11 +41,11 @@ content_markdown: |
   ## 0. The problem
 
   Handling project version numbers is painful and can be tedious if not automated.
-  To make matters worse we often need to update the version in multiple files.
+  To make matters worse, we often need to update the version in multiple files.
 
   This post will explain how to simplify this process and how to automate it.
   It only focuses on how to manage it using `poetry` since it's the tool I recommend for handling virtual environments.
-  If you need to set up a **Poetry** see:
+  If you need to set up **Poetry**, see:
 
   <div class="w3-padding w3-border w3-round ">
     POST: <a href="https://villoro.com/post/poetry">
@@ -55,7 +55,7 @@ content_markdown: |
 
   ## 1. `poetry-bumpversion`
 
-  With [poetry-bumpversion](https://pypi.org/project/poetry-bumpversion/) we can easily update the package version.
+  With [poetry-bumpversion](https://pypi.org/project/poetry-bumpversion/), we can easily update the package version.
 
   It assumes you follow [semver](https://semver.org/) for the versioning of the project.
 
@@ -72,7 +72,7 @@ content_markdown: |
   You can do it with:
 
   ```bash
-  # If you don't have poetry isntalled, first do:
+  # If you don't have Poetry installed, first do:
   pip install poetry
 
   # Add poetry-bumpversion
@@ -95,9 +95,9 @@ content_markdown: |
   ### 1.3. Updating other files
   
   Frequently you will have other files that declare the version.
-  For example you could have `dbt_project.yml` if you are using `DBT`.
+  For example, you could have `dbt_project.yml` if you are using `DBT`.
 
-  In that case you will need to declare in `pyproject.toml` the files you want to update alogn with the format it should look for.
+  In that case, you will need to declare in `pyproject.toml` the files you want to update along with the format it should look for.
 
   As an example for DBT:
 
@@ -115,11 +115,11 @@ content_markdown: |
 
   ## 2. Automatically update version
 
-  The idea is to create a github action that automatically updates the version.
-  It should be smart enough to only do it if you haven't update it.
-  This way you can decide if you want to increase the `major`, `minor` or `patch` digit.
+  The idea is to create a GitHub action that automatically updates the version.
+  It should be smart enough to only do it if you haven't updated it.
+  This way you can decide if you want to increase the `major`, `minor`, or `patch` digit.
 
-  > In this example if the version is not manually updated, it will increase the `minor` version.
+  > In this example, if the version is not manually updated, it will increase the `minor` version.
 
   The first thing you need is a simple script that reads the package version from `pyproject.toml`:
 
@@ -150,7 +150,7 @@ content_markdown: |
       get_version()
   ```
 
-  This scripts uses `set_output` function to export the version as an environment variable in github action.
+  This scripts uses the `set_output`  function to export the version as an environment variable in GitHub action.
   Since this is used in another `python` script, it is declared in a `utils.py` file:
 
   <div class="input">
@@ -170,7 +170,7 @@ content_markdown: |
 
   ```
 
-  > For more details about using `environment variables` in `github actions` see `section 4`
+  > For more details about using `environment variables` in `Github actions` see `section 4`
 
   Then you will need a script that checks if the version needs to be updated.
   It will compare the version from `main` to the one in the current PR.
@@ -208,7 +208,7 @@ content_markdown: |
       compare_versions()
   ```
 
-  And the last step is to create a github action that updates the version:
+  And the last step is to create a GitHub action that updates the version:
 
   <div class="input">
     /.github/workflow/fix_version.yaml
@@ -222,13 +222,13 @@ content_markdown: |
       paths:
         - dbt_northius/**
         - poetry.lock
-        - pyproject.toml 
+        - pyproject.toml
 
   jobs:
     fix:
       runs-on: ubuntu-latest
       steps:
-        - name: Set up python
+        - name: Set up Python
           uses: actions/setup-python@v4
 
         # Install requirements. Should match Dockerfile versions
@@ -243,7 +243,7 @@ content_markdown: |
         - name: Get main version
           run: python .github/scripts/get_version.py --name=main
 
-        # Get version from current branch
+        # Get version from the current branch
         - name: Checkout current branch
           uses: actions/checkout@v3
           with:
@@ -262,7 +262,7 @@ content_markdown: |
           if: env.NEEDS_UPDATE == 'true'
           run: poetry version minor
 
-        # Commit changes and froce github_status to be updated
+        # Commit changes and force GitHub_status to be updated
         - name: Commit new version
           if: env.NEEDS_UPDATE == 'true'
           uses: EndBug/add-and-commit@v9
@@ -280,8 +280,8 @@ content_markdown: |
 
   ## 3. Automatically tag versions
 
-  In order to keep better tracking of the package version we will be tagging all commits to `main` with their version.
-  We can do that with the following github action: 
+  In order to keep better tracking of the package version, we will be tagging all commits to `main` with their version.
+  We can do that with the following GitHub action:
 
   <div class="input">
     /.github/workflow/tag_commits_on_main.yaml
@@ -301,7 +301,7 @@ content_markdown: |
     tag_with_version:
       runs-on: ubuntu-latest
       steps:
-        - name: Set up python
+        - name: Set up Python
           uses: actions/setup-python@v4
 
         - name: Install requirements
@@ -327,7 +327,7 @@ content_markdown: |
 
   ## 4. Environment variables in github actions
 
-  One of the ways of passing information from one step in a github action to another is by using environment variables.
+  One of the ways of passing information from one step in a GitHub action to another is by using environment variables.
 
   ### 4.1. Storing data in an environment variable
 
@@ -355,14 +355,14 @@ content_markdown: |
 
   ### 4.2. Retrevient data from an environment variable
 
-  To retrieve the environment variable simply use `$ENV_VAR_NAME` like:
+  To retrieve the environment variable, simply use `$ENV_VAR_NAME` like:
 
   ```yaml
   - name: Check if version needs to be updated
     run: python .github/scripts/check_if_update_needed.py --version_current=$VERSION_CURRENT --version_main=$VERSION_MAIN
   ```
 
-  Notice that in the `tag_commits_on_main.yaml` github action we are using the value directly within a string.
+  Notice that in the `tag_commits_on_main.yaml` GitHub action, we are using the value directly within a string.
   This is done with:
 
   ```
