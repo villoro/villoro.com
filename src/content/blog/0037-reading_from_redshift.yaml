@@ -173,7 +173,7 @@ content_markdown: |
 
   ```python
   mfilters = [
-      ("p_creation_date"", ">=", "2021-04-29"),
+      ("p_creation_date", ">=", "2021-04-29"),
       # More filters can be added
       # We are passing tuples with the conditions as strings
   ]

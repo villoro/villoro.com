@@ -1,0 +1,268 @@
+# --------------------------------------------------------------------------------------------------
+# Basic metadata
+# --------------------------------------------------------------------------------------------------
+code: poetry_versioning
+title: Automating package versions with Poetry
+title_short: Poetry versioning
+date: "2023-11-07"
+image: poetry_2_square.png
+highlight: True
+
+tags:
+  - Tools
+
+tags_filter:
+  - Tools
+
+# --------------------------------------------------------------------------------------------------
+# Extra info. This will add a button with href to the url
+# --------------------------------------------------------------------------------------------------
+# link: 
+#   text: Github
+#   url: https://github.com/villoro/villoro_posts/tree/master/0037-pyarrow
+
+
+# --------------------------------------------------------------------------------------------------
+# Content
+# --------------------------------------------------------------------------------------------------
+brief_markdown: |
+  xx
+
+# image_head:
+#   filename: name.png
+#   caption: caption
+
+content_markdown: |
+
+  ## Table of Contents
+
+  [TOC]
+
+  ## 0. The problem
+
+
+
+  ## 1. `poetry-bumpversion`
+
+  ```bash
+  pip install poetry==1.6.1
+  poetry self add poetry-bumpversion
+
+  # This will install the dependencies in this project
+  poetry install
+  ```
+  
+  https://pypi.org/project/poetry-bumpversion/
+
+  <div class="input">
+    /pyproject.toml
+  </div>
+
+
+  ```toml
+  [[tool.poetry_bumpversion.replacements]]
+  files = ["dbt_project.yml"]
+  search = "version: '{current_version}'"
+  replace = "version: '{new_version}'"
+  ```
+
+  #### Updating project version
+
+  We follow [semver](https://semver.org/) for the versioning of the project.
+  In short it follows the version consists of three numbers (`M.m.p`) where:
+
+  * `M`: major version. Represents breaking changes
+  * `m`: minor version. Represents relevant changes
+  * `p`: patch version. For fixes without new functionallity
+
+  You can update those by running:
+  ```bash
+  poetry version major
+  poetry version minor
+  poetry version patch
+  ```
+
+  ## 2. Automatically update version
+
+  ## 3. Automatically tag versions
+
+
+  <div class="input">
+    /.github/scripts/get_version.py
+  </div>
+
+  ```python
+  import click
+  import toml
+  from loguru import logger as log
+
+  from utils import set_output
+
+  PYPROJECT_FILE = "pyproject.toml"
+
+
+  @click.command()
+  @click.option("--name")
+  def get_version(name):
+      version = toml.load(PYPROJECT_FILE)["tool"]["poetry"]["version"]
+      log.info(f"'{name}' branch {version=}")
+
+      set_output(f"VERSION_{name.upper()}", version)
+
+
+  if __name__ == "__main__":
+      get_version()
+  ```
+
+  <div class="input">
+    /.github/scripts/check_if_update_needed.py
+  </div>
+
+  ```python
+  import click
+
+  from packaging import version
+  from loguru import logger as log
+
+  from utils import set_output
+
+
+  @click.command()
+  @click.option("--version_current")
+  @click.option("--version_main")
+  def compare_versions(version_current, version_main):
+      log.info(f"Running with {version_current=}, {version_main=}")
+
+      version_current = version.parse(version_current)
+      version_main = version.parse(version_main)
+
+      needs_update = version_current <= version_main
+
+      log.info(f"Outcome {needs_update}")
+
+      set_output("NEEDS_UPDATE", str(needs_update).lower())
+
+
+  if __name__ == "__main__":
+      compare_versions()
+  ```
+
+  <div class="input">
+    /.github/scripts/utils.py
+  </div>
+
+  ```python
+  import os
+
+  from loguru import logger as log
+
+
+  def set_output(name, value):
+      log.info(f"Setting {name=} {value=}")
+      with open(os.environ["GITHUB_ENV"], "a") as fh:
+          print(f"{name}={value}", file=fh)
+
+  ```
+
+  <div class="input">
+    /.github/workflow/fix_version.yaml
+  </div>
+
+  ```yaml
+  name: Fix Version
+
+  on:
+    pull_request:
+      paths:
+        - dbt_northius/**
+        - poetry.lock
+        - pyproject.toml 
+
+  jobs:
+    fix:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Set up python
+          uses: actions/setup-python@v4
+
+        # Install requirements. Should match Dockerfile versions
+        - name: Install requirements
+          run: pip install poetry==1.6.1 poetry-bumpversion==0.3.1 toml loguru click
+
+        # Get version from main
+        - name: Checkout main
+          uses: actions/checkout@v3
+          with:
+            ref: main
+        - name: Get main version
+          run: python .github/scripts/get_version.py --name=main
+
+        # Get version from current branch
+        - name: Checkout current branch
+          uses: actions/checkout@v3
+          with:
+            # Those are needed because of https://github.com/EndBug/add-and-commit#working-with-prs
+            repository: ${{ github.event.pull_request.head.repo.full_name }}
+            ref: ${{ github.event.pull_request.head.ref }}
+        - name: Get current version
+          run: python .github/scripts/get_version.py --name=current
+
+        # Checks if version needs updating
+        - name: Check if version needs to be updated
+          run: python .github/scripts/check_if_update_needed.py --version_current=$VERSION_CURRENT --version_main=$VERSION_MAIN
+
+        # Update only when needed
+        - name: Update version
+          if: env.NEEDS_UPDATE == 'true'
+          run: poetry version minor
+
+        # Commit changes and froce github_status to be updated
+        - name: Commit new version
+          if: env.NEEDS_UPDATE == 'true'
+          uses: EndBug/add-and-commit@v9
+          with:
+            default_author: github_actions
+            message: "Poetry minor version update"
+  ```
+
+  <div class="input">
+    /.github/workflow/tag_commits_on_main.yaml
+  </div>
+
+  ```yaml
+  name: Tag
+
+  on:
+    push:
+      branches:
+        - main
+      paths:
+        - pyproject.toml
+
+  jobs:
+    tag_with_version:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Set up python
+          uses: actions/setup-python@v4
+
+        - name: Install requirements
+          run: pip install toml loguru click
+
+        - name: Checkout current branch
+          uses: actions/checkout@v3
+
+        - name: Get current version
+          run: python .github/scripts/get_version.py --name=current
+
+        - name: Tag commit with current version
+          uses: actions/github-script@v5
+          with:
+            script: |
+              github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${{env.VERSION_CURRENT}}`,
+                sha: context.sha
+              })
+  ```
