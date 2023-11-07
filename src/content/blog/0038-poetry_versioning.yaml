@@ -19,7 +19,7 @@ tags_filter:
 # --------------------------------------------------------------------------------------------------
 # link: 
 #   text: Github
-#   url: https://github.com/villoro/villoro_posts/tree/master/0037-pyarrow
+#   url: https://github.com/villoro/villoro_posts/tree/master/xx
 
 
 # --------------------------------------------------------------------------------------------------
@@ -40,19 +40,66 @@ content_markdown: |
 
   ## 0. The problem
 
+  Handling project version numbers is painful and can be tedious if not automated.
+  To make matters worse we often need to update the version in multiple files.
 
+  This post will explain how to simplify this process and how to automate it.
+  It only focuses on how to manage it using `poetry` since it's the tool I recommend for handling virtual environments.
+  If you need to set up a **Poetry** see:
+
+  <div class="w3-padding w3-border w3-round ">
+    POST: <a href="https://villoro.com/post/poetry">
+      Poetry package manager
+    </a>
+  </div>
 
   ## 1. `poetry-bumpversion`
 
+  With [poetry-bumpversion](https://pypi.org/project/poetry-bumpversion/) we can easily update the package version.
+
+  It assumes you follow [semver](https://semver.org/) for the versioning of the project.
+
+  > If you are not following [semver](https://semver.org/), you probably should since it's the standard.
+
+  In short with `semver` the version consists of three numbers (`M.m.p`) where:
+
+  * `M`: major version. Represents breaking changes
+  * `m`: minor version. Represents relevant changes
+  * `p`: patch version. For fixes without new functionallity
+
+  ### 1.1. Installing `poetry-bumpversion`
+
+  You can do it with:
+
   ```bash
-  pip install poetry==1.6.1
+  # If you don't have poetry isntalled, first do:
+  pip install poetry
+
+  # Add poetry-bumpversion
   poetry self add poetry-bumpversion
 
-  # This will install the dependencies in this project
+  # Make sure to install the poetry dependencies again with:
   poetry install
   ```
+
+  ### 1.2. Updating the version in `pyproject.toml`
   
-  https://pypi.org/project/poetry-bumpversion/
+  You can do it by running:
+
+  ```bash
+  poetry version major
+  poetry version minor
+  poetry version patch
+  ```
+
+  ### 1.3. Updating other files
+  
+  Frequently you will have other files that declare the version.
+  For example you could have `dbt_project.yml` if you are using `DBT`.
+
+  In that case you will need to declare in `pyproject.toml` the files you want to update alogn with the format it should look for.
+
+  As an example for DBT:
 
   <div class="input">
     /pyproject.toml
@@ -66,26 +113,15 @@ content_markdown: |
   replace = "version: '{new_version}'"
   ```
 
-  #### Updating project version
-
-  We follow [semver](https://semver.org/) for the versioning of the project.
-  In short it follows the version consists of three numbers (`M.m.p`) where:
-
-  * `M`: major version. Represents breaking changes
-  * `m`: minor version. Represents relevant changes
-  * `p`: patch version. For fixes without new functionallity
-
-  You can update those by running:
-  ```bash
-  poetry version major
-  poetry version minor
-  poetry version patch
-  ```
-
   ## 2. Automatically update version
 
-  ## 3. Automatically tag versions
+  The idea is to create a github action that automatically updates the version.
+  It should be smart enough to only do it if you haven't update it.
+  This way you can decide if you want to increase the `major`, `minor` or `patch` digit.
 
+  > In this example if the version is not manually updated, it will increase the `minor` version.
+
+  The first thing you need is a simple script that reads the package version from `pyproject.toml`:
 
   <div class="input">
     /.github/scripts/get_version.py
@@ -113,6 +149,31 @@ content_markdown: |
   if __name__ == "__main__":
       get_version()
   ```
+
+  This scripts uses `set_output` function to export the version as an environment variable in github action.
+  Since this is used in another `python` script, it is declared in a `utils.py` file:
+
+  <div class="input">
+    /.github/scripts/utils.py
+  </div>
+
+  ```python
+  import os
+
+  from loguru import logger as log
+
+
+  def set_output(name, value):
+      log.info(f"Setting {name=} {value=}")
+      with open(os.environ["GITHUB_ENV"], "a") as fh:
+          print(f"{name}={value}", file=fh)
+
+  ```
+
+  > For more details about using `environment variables` in `github actions` see `section 4`
+
+  Then you will need a script that checks if the version needs to be updated.
+  It will compare the version from `main` to the one in the current PR.
 
   <div class="input">
     /.github/scripts/check_if_update_needed.py
@@ -147,22 +208,7 @@ content_markdown: |
       compare_versions()
   ```
 
-  <div class="input">
-    /.github/scripts/utils.py
-  </div>
-
-  ```python
-  import os
-
-  from loguru import logger as log
-
-
-  def set_output(name, value):
-      log.info(f"Setting {name=} {value=}")
-      with open(os.environ["GITHUB_ENV"], "a") as fh:
-          print(f"{name}={value}", file=fh)
-
-  ```
+  And the last step is to create a github action that updates the version:
 
   <div class="input">
     /.github/workflow/fix_version.yaml
@@ -225,6 +271,18 @@ content_markdown: |
             message: "Poetry minor version update"
   ```
 
+  The way this works is by:
+
+  1. Extracting the version in `main` branch
+  2. Extracting the version from the current branch in the pull request
+  3. If `current_version <= main_version`, then update
+  4. The update will be done as a `minor` version increase and committed
+
+  ## 3. Automatically tag versions
+
+  In order to keep better tracking of the package version we will be tagging all commits to `main` with their version.
+  We can do that with the following github action: 
+
   <div class="input">
     /.github/workflow/tag_commits_on_main.yaml
   </div>
@@ -265,4 +323,63 @@ content_markdown: |
                 ref: `refs/tags/${{env.VERSION_CURRENT}}`,
                 sha: context.sha
               })
+  ```
+
+  ## 4. Environment variables in github actions
+
+  One of the ways of passing information from one step in a github action to another is by using environment variables.
+
+  ### 4.1. Storing data in an environment variable
+
+  There is a couple of ways of storing data in an environment variable.
+  This first one would be with an `echo` like:
+
+  ```yaml
+  - name: Get main version
+    run: echo "VERSION_CURRENT=$(python scripts/get_version.py)" >> $GITHUB_ENV
+  ```
+
+  In this example you would need `scripts/get_version.py` to output the version.
+
+  The second option is to do it directly with python with:
+  
+  ```python
+  def set_output(name, value):
+      """
+      Args:
+          name:  name of the environment variable
+          value: value to store in the environment variable
+      with open(os.environ["GITHUB_ENV"], "a") as fh:
+          print(f"{name}={value}", file=fh)
+  ```
+
+  ### 4.2. Retrevient data from an environment variable
+
+  To retrieve the environment variable simply use `$ENV_VAR_NAME` like:
+
+  ```yaml
+  - name: Check if version needs to be updated
+    run: python .github/scripts/check_if_update_needed.py --version_current=$VERSION_CURRENT --version_main=$VERSION_MAIN
+  ```
+
+  Notice that in the `tag_commits_on_main.yaml` github action we are using the value directly within a string.
+  This is done with:
+
+  ```
+  `text ${{env.ENV_VAR_NAME}}`
+  ```
+
+  Like we saw in the previous snippet:
+
+  ```yaml
+  - name: Tag commit with current version
+    uses: actions/github-script@v5
+    with:
+      script: |
+        github.rest.git.createRef({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          ref: `refs/tags/${{env.VERSION_CURRENT}}`,
+          sha: context.sha
+        })
   ```
