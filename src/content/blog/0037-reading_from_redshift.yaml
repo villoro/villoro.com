@@ -31,7 +31,10 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  xx
+  This post discusses efficient ways to consume data from Amazon Redshift as pandas dataframes.
+  It outlines the challenges of scaling Redshift performance, especially with bots consuming data, and provides solutions for more efficient data access.
+  The recommended approach is unloading data to Parquet files, and the post explains various methods for reading Parquet files into pandas dataframes using pandas, pyarrow, and pyarrow.dataset.
+  The performance comparisons demonstrate the advantages of the new pyarrow.dataset introduced in pyarrow 3.0.0 for handling partitioned data efficiently.
 
 image_head:
   filename: reading_from_redshift.png
