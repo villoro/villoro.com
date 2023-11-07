@@ -26,7 +26,10 @@ tags_filter:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  xx
+  This post explains how to automate project version management using Poetry and poetry-bumpversion.
+  It follows semantic versioning and recommends tools for updating versions.
+  GitHub actions are set up to automatically update the version, commit changes when necessary, and tag commits on the main branch.
+  This process relies on using environment variables for data exchange within the actions.
 
 # image_head:
 #   filename: name.png
