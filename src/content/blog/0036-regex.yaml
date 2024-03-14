@@ -27,7 +27,9 @@ link:
 # Content
 # --------------------------------------------------------------------------------------------------
 brief_markdown: |
-  xx
+  This post provides a detailed guide on regular expressions (regex), covering their basics, character classes, quantifiers, groups, boundaries, flags, and more.
+  It also explains how to use regex in Python, Pandas, and Amazon Redshift, offering practical examples and functions for working with text data.
+  This comprehensive resource helps users understand and apply regex in various programming contexts.
 
 image_head:
   filename: regex.jpg
