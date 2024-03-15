@@ -1,0 +1,42 @@
+---
+import Base from "@/layouts/Base.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import { getEntry } from "astro:content";
+
+const about = await getEntry("about", "-index");
+const { Content } = await about.render();
+const { title, description, meta_title, imageAlt } = about.data;
+
+import { Image } from 'astro:assets';
+import aboutImage from '../images/planols.jpg';
+---
+
+<Base
+  title={title}
+  meta_title={meta_title}
+  description={description}
+>
+  <Image
+    src={aboutImage}
+    alt={imageAlt}
+    widths={[360, 720, 1200, 1600, 2160, aboutImage.width]}
+    sizes={`(max-width: 360px) 360px, (max-width: 720px) 720px, (max-width: 1200px) 1200px, (max-width: 1600px) 1600px, (max-width: 2160px) 2160px, ${aboutImage.width}px`}
+    loading="eager"
+  />
+
+  <section class="section pt-14 pb-14">
+    <div class="container">
+      <div class="row justify-center">
+        <div class="text-center md:col-10 lg:col-7">
+
+          <h2 set:html={markdownify(title)} class="h3 mb-6" />
+          
+          <div class="content">
+            <Content />
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>

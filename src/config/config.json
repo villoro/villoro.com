@@ -1,0 +1,48 @@
+{
+  "site": {
+    "title": "Villoro",
+    "base_url": "https://villoro.com",
+    "base_path": "/",
+    "trailing_slash": false,
+    "favicon": "/images/favicon.png",
+    "logo": "/images/logo.png",
+    "logo_darkmode": "/images/logo-darkmode.png",
+    "logo_width": "184",
+    "logo_height": "30",
+    "logo_text": "Villoro"
+  },
+
+  "settings": {
+    "search": true,
+    "sticky_header": true,
+    "theme_switcher": true,
+    "default_theme": "system",
+    "pagination": 12,
+    "similar_items_length": 3,
+    "blog_folder": "blog",
+    "projects_folder": "projectes",
+    "page_name": "pagina"
+  },
+
+  "params": {
+    "contact_form_action": "#"
+  },
+
+  "disqus": {
+    "enable": true,
+    "shortname": "themefisher-template",
+    "settings": {}
+  },
+
+  "metadata": {
+    "meta_author": "Arnau Villoro",
+    "meta_image": "/images/home/me_thinking.jpg",
+    "meta_description": "Villoro's personal website"
+  },
+
+  "footer": {
+    "owner": "Villoro",
+    "email": "arnau@villoro.com",
+    "phone": "TODO"
+  }
+}

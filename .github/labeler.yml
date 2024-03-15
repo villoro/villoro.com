@@ -1,0 +1,31 @@
+docs:
+- README.md
+- LICENSE
+
+CI-CD:
+- .github/**
+- .pre-commit-config.yaml
+
+config:
+- astro.config.mjs
+- postcss.config.js
+- tailwind.config.js
+- tsconfig.json
+- src/config/**
+- src/content/config.ts
+- src/hooks/hooks/**
+
+content/general:
+- src/content/about/**
+- src/content/contact/**
+- src/content/homepage/**
+- src/content/sections/**
+
+content/blog:
+- src/content/blog/**
+
+layout:
+- src/layouts/**
+
+styles:
+- src/styles/**

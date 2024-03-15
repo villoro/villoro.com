@@ -1,0 +1,65 @@
+---
+import config from "@/config/config.json";
+import ProjectCard from "@/components/ProjectCard.astro";
+import Share from "@/components/Share.astro";
+import Disqus from "@/helpers/Disqus";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import dateFormat from "@/lib/utils/dateFormat";
+import { humanize, markdownify, slugify } from "@/lib/utils/textConverter";
+import { FaRegClock, FaRegFolder, FaRegUserCircle } from "react-icons/fa";
+
+import Youtube from '@/shortcodes/Youtube';
+
+const { projects_folder } = config.settings;
+const { project } = Astro.props;
+
+const projects = await getSinglePage(projects_folder);
+const { Content } = await project.render();
+const { title, date, youtube_id, description } = project.data;
+---
+
+<section class="section pt-7">
+  <div class="container">
+    <div class="row justify-center">
+      <article class="lg:col-10">
+        <h1 set:html={markdownify(title)} class="h2 mb-4" />
+
+        <ul class="mb-4">
+          <li class="mr-8 inline-block">
+            <FaRegClock className={"mr-1 -mt-1 inline-block"} />
+            {dateFormat(date)}
+          </li>
+        </ul>
+
+        <div class="content mb-10">
+          <Youtube
+            id={youtube_id}
+            title={title}
+            client:load
+          />
+        </div>
+
+        <div class="content mb-10">
+          <Content />
+        </div>
+
+        <div class="row items-center justify-center">
+          <div class="lg:col-4">
+            <div class="flex items-center justify-center">
+              <h5 class="mr-3">Share :</h5>
+              <Share
+                className="social-icons"
+                title={title}
+                description={description}
+                slug={project.slug}
+              />
+            </div>
+          </div>
+        </div>
+
+        <Disqus className="mt-20" client:load />
+      </article>
+    </div>
+
+  </div>
+</section>
