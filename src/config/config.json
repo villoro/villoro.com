@@ -7,7 +7,7 @@
     "favicon": "/images/favicon.png",
     "logo": "/images/logo.png",
     "logo_darkmode": "/images/logo-darkmode.png",
-    "logo_width": "184",
+    "logo_width": "124",
     "logo_height": "30",
     "logo_text": "Villoro"
   },
@@ -20,12 +20,7 @@
     "pagination": 12,
     "similar_items_length": 3,
     "blog_folder": "blog",
-    "projects_folder": "projectes",
-    "page_name": "pagina"
-  },
-
-  "params": {
-    "contact_form_action": "#"
+    "page_name": "page"
   },
 
   "disqus": {
@@ -41,8 +36,6 @@
   },
 
   "footer": {
-    "owner": "Villoro",
-    "email": "arnau@villoro.com",
-    "phone": "TODO"
+    "email": "arnau@villoro.com"
   }
 }
