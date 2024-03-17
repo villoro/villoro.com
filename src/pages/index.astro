@@ -1,0 +1,88 @@
+---
+import Base from "@/layouts/Base.astro";
+import { markdownify } from "@/lib/utils/textConverter";
+import { getEntry } from "astro:content";
+import { FaCheck, FaLightbulb } from "react-icons/fa";
+
+const homepage = await getEntry("homepage", "-index");
+const { banner, slogan, services } = homepage.data;
+
+import { Image } from 'astro:assets';
+import bannerImage from '../images/home/me_thinking.jpg';
+import servicesImage from '../images/me.png';
+---
+
+<Base>
+  <!-- Banner -->
+  <section class="pt-14">
+    <div class="container pb-6">
+      <div class="row justify-center">
+        <div class="text-center md:col-10 lg:col-7">
+          <h1
+            set:html={markdownify(banner.title)}
+            class="mb-4 text-h3 lg:text-h1"
+          />
+          <p set:html={markdownify(banner.content)} class="mb-8" />
+        </div>
+      </div>
+    </div>
+
+    <Image
+      src={bannerImage}
+      alt={banner.imageAlt}
+      widths={[360, 720, 1200, 1600, 2160, banner.width]}
+    sizes={`(max-width: 360px) 360px, (max-width: 720px) 720px, (max-width: 1200px) 1200px, (max-width: 1600px) 1600px, (max-width: 2160px) 2160px, ${banner.width}px`}
+      loading="eager"
+    />
+  </section>
+
+  <!-- Slogan -->
+  <section class="section p-6 lg:p-14 bg-primary dark:bg-darkmode-primary">
+    <div class="container">
+      <div class="row text-center">
+        <h1 class="text-h3 lg:text-h1 text-white dark:text-black flex items-center justify-center">
+          <FaLightbulb className="mr-6" />
+          {markdownify(slogan.title)}
+        </h1>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="section-sm bg-gradient">
+    <div class="container">
+      <div class="row items-center justify-between">
+        <div class="mb-6 md:col-7 lg:col-6 md:order-2">
+          <h2 set:html={markdownify(services.title)} class="mb-4" />
+          <p set:html={markdownify(services.content)} class="mb-8 text-lg" />
+          <ul>
+            {services.bulletpoints.map((bullet: string) => (
+              <li class="relative mb-4 pl-6">
+                <FaCheck className={"absolute left-0 top-1.5"} />
+                <span set:html={markdownify(bullet)} />
+              </li>
+            ))}
+          </ul>
+          {services.button.enable && (
+            <div class="flex justify-center md:justify-start">
+              <a class="btn btn-primary lg:mt-5" href={services.button.link}>
+                {services.button.label}
+              </a>
+            </div>
+          )}
+        </div>
+        <div class="mb:md-0 mb-6 md:col-5 md:order-1">
+          <Image
+            src={servicesImage}
+            alt={services.imageAlt}
+            widths={[180, 360, 600, 800, servicesImage.width]}
+            sizes={`(max-width: 360px) 180px, (max-width: 720px) 360px, (max-width: 1200px) 600px, (max-width: 1600px) 800px, ${servicesImage.width}px`}
+            loading="lazy"
+            class="rounded"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+</Base>
