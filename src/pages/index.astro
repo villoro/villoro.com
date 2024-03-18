@@ -10,6 +10,8 @@ const { banner, slogan, services } = homepage.data;
 import { Image } from 'astro:assets';
 import bannerImage from '../images/home/me_thinking.jpg';
 import servicesImage from '../images/me.png';
+
+const images = import.meta.glob('../images/companies/*.png');
 ---
 
 <Base>
@@ -31,7 +33,7 @@ import servicesImage from '../images/me.png';
       src={bannerImage}
       alt={banner.imageAlt}
       widths={[360, 720, 1200, 1600, 2160, banner.width]}
-    sizes={`(max-width: 360px) 360px, (max-width: 720px) 720px, (max-width: 1200px) 1200px, (max-width: 1600px) 1600px, (max-width: 2160px) 2160px, ${banner.width}px`}
+      sizes={`(max-width: 360px) 360px, (max-width: 720px) 720px, (max-width: 1200px) 1200px, (max-width: 1600px) 1600px, (max-width: 2160px) 2160px, ${banner.width}px`}
       loading="eager"
     />
   </section>
@@ -44,6 +46,28 @@ import servicesImage from '../images/me.png';
           <FaLightbulb className="mr-6" />
           {markdownify(slogan.title)}
         </h1>
+      </div>
+    </div>
+  </section>
+
+  <!-- Companies -->
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {Object.entries(images).map(([path, imageFn]) => {
+          const imageName = path.replace('../images/companies/', '').replace('.png', '');
+          const imagePath = imageFn();
+          return (
+            <Image
+              src={imagePath}
+              alt={imageName}
+              key={imageName}
+              widths={[180, 360, 600, 800]}
+              sizes="(max-width: 640px) 180px, (max-width: 768px) 360px, (max-width: 1024px) 600px, 800px"
+              loading="lazy"
+            />
+          );
+        })}
       </div>
     </div>
   </section>
