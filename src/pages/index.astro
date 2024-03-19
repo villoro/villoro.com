@@ -8,7 +8,7 @@ const homepage = await getEntry("homepage", "-index");
 const { banner, slogan, services, companies } = homepage.data;
 
 import { Image } from 'astro:assets';
-import bannerImage from '../images/home/me_thinking.jpg';
+const bannerImage = "/images/me_thinking.jpg";
 import servicesImage from '../images/me.png';
 
 const importImage = async (imageName, darkMode = false) => {
@@ -29,27 +29,15 @@ const importImage = async (imageName, darkMode = false) => {
 
 <Base>
   <!-- Banner -->
-  <section class="pt-14">
-    <div class="container pb-6">
-      <div class="row justify-center">
-        <div class="text-center md:col-10 lg:col-7">
-          <h1
-            set:html={markdownify(banner.title)}
-            class="mb-4 text-h3 lg:text-h1"
-          />
-          <p set:html={markdownify(banner.content)} class="mb-8" />
-        </div>
-      </div>
+  <div class="parallax bg-cover bg-center min-h-screen flex items-center justify-center" style={`background-image: url(${bannerImage})`}>
+    <div class="text-center md:col-10 lg:col-7">
+      <h1
+        set:html={markdownify(banner.title)}
+        class="text-white mb-4 text-h3 lg:text-h1"
+      />
+      <p set:html={markdownify(banner.content)} class="text-white mb-8" />
     </div>
-
-    <Image
-      src={bannerImage}
-      alt={banner.imageAlt}
-      widths={[360, 720, 1200, 1600, 2160, banner.width]}
-      sizes={`(max-width: 360px) 360px, (max-width: 720px) 720px, (max-width: 1200px) 1200px, (max-width: 1600px) 1600px, (max-width: 2160px) 2160px, ${banner.width}px`}
-      loading="eager"
-    />
-  </section>
+  </div>
 
   <!-- Slogan -->
   <section class="section p-6 lg:p-14 bg-primary dark:bg-darkmode-primary">
@@ -146,3 +134,19 @@ const importImage = async (imageName, darkMode = false) => {
   </section>
 
 </Base>
+
+<style>
+  /* Parallax effect */
+  .parallax {
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  @media (max-width: 768px) {
+    .parallax {
+      background-attachment: scroll;
+      min-height: 400px; /* Adjust as needed */
+    }
+  }
+</style>
