@@ -6,9 +6,10 @@ import { getEntry } from "astro:content";
 
 const about = await getEntry("about", "-index");
 const { Content } = await about.render();
-const { title, description, meta_title, imageAlt } = about.data;
+const { title, description, meta_title, info } = about.data;
 
 import { Image } from 'astro:assets';
+import meImage from '../images/me.png';
 const aboutImage = "/images/me_cnn.jpg";
 ---
 
@@ -23,14 +24,27 @@ const aboutImage = "/images/me_cnn.jpg";
     <h1 class="text-white dark:text-darkmode-primary text-center text-4xl md:text-6xl">{markdownify(title)}</h1>
   </Parallax>
 
-  <section class="section pt-14 pb-14">
+  <!-- Info -->
+  <section class="section-sm bg-gradient">
     <div class="container">
-      <div class="row justify-center">
-        <div class="text-center md:col-10 lg:col-7">
-          <h2 set:html={markdownify(title)} class="h3 mb-6" />
-          
+      <div class="row items-center justify-between">
+        <div class="mb-8 md:mb-0 md:col-7 lg:col-6 md:order-2">
+          <h2 set:html={markdownify(info.title)} class="mb-4" />
+
           <div class="content">
             <Content />
+          </div>
+        </div>
+
+        <div class="flex justify-center mb:md-0 md:col-5 md:order-1">
+          <div class="mx-16 md:mx-8">
+            <Image
+              src={meImage}
+              alt={info.imageAlt}
+              widths={[180, 360, 600, 800, meImage.width]}
+              sizes={`(max-width: 360px) 180px, (max-width: 720px) 360px, (max-width: 1200px) 600px, (max-width: 1600px) 800px, ${meImage.width}px`}
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
