@@ -13,9 +13,17 @@ const { parallaxImage } = Astro.props;
     background-size: cover;
     background-repeat: no-repeat;
     background-position: top; /* Center the background image */
+    background-size: 120% auto;
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 340px) {
+    .parallax {
+      background-size: 150% auto;
+      min-height: 100px;
+    }
+  }
+
+  @media (min-width: 320px) and (max-width: 640px) {
     .parallax {
       background-size: 150% auto;
       min-height: 250px;
@@ -24,28 +32,24 @@ const { parallaxImage } = Astro.props;
 
   @media (min-width: 640px) and (max-width: 768px) {
     .parallax {
-      background-size: 120% auto;
       min-height: 350px;
     }
   }
 
   @media (min-width: 768px) and (max-width: 1024px) {
     .parallax {
-      background-size: 120% auto;
       min-height: 500px;
     }
   }
 
   @media (min-width: 1024px) and (max-width: 1280px) {
     .parallax {
-      background-size: 120% auto;
       min-height: 600px;
     }
   }
 
   @media (min-width: 1280px) and (max-width: 1536px) {
     .parallax {
-      background-size: 120% auto;
       min-height: 700px;
     }
   }
