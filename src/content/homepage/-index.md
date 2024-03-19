@@ -7,31 +7,19 @@ banner:
 slogan:
   title: Crafting Solutions, Delivering Efficiency
 
-# Features
-services:
-  title: cc
-  imageAlt: c
-  content: xxx
-  bulletpoints:
-    - xxx
-  button:
-    enable: true
-    label: ccc
-    link: /blog
-
 companies:
   title: "I'm proud to have collaborated with some awesome companies:"  
   logos:
     - name: Glovo
       image: glovo
-    - name: Basetis
-      image: basetis
+    - name: Northius
+      image: northius
     - name: Scytl
       image: scytl
     - name: SEAT
       image: seat
-    - name: Northius
-      image: northius
+    - name: Basetis
+      image: basetis
     - name: AQU
       image: aqu
     - name: GSMA
