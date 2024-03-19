@@ -1,49 +1,100 @@
 ---
 import Base from "@/layouts/Base.astro";
+import Parallax from "@/components/Parallax.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import { getEntry } from "astro:content";
-import { FaCheck, FaLightbulb } from "react-icons/fa";
+import { FaCheck } from "react-icons/fa";
+import { FaGear } from "react-icons/fa6";
 
 const homepage = await getEntry("homepage", "-index");
-const { banner, slogan, services } = homepage.data;
+const { banner, slogan, services, companies } = homepage.data;
 
 import { Image } from 'astro:assets';
-import bannerImage from '../images/home/me_thinking.jpg';
+const bannerImage = "/images/me_thinking.jpg";
 import servicesImage from '../images/me.png';
+
+const importImage = async (imageName, darkMode = false) => {
+  if (darkMode) {
+    const darkModeImageName = `${imageName}_dark`; // Add "_dark" suffix for dark mode image
+    try {
+      // Try importing dark mode image
+      const { default: darkModeImage } = await import(`../images/companies/${darkModeImageName}.png`);
+      return darkModeImage;
+    } catch (error) {}
+  }
+  
+  // If dark mode is false or dark mode image not found, import original image
+  const { default: originalImage } = await import(`../images/companies/${imageName}.png`);
+  return originalImage;
+};
 ---
 
 <Base>
-  <!-- Banner -->
-  <section class="pt-14">
-    <div class="container pb-6">
-      <div class="row justify-center">
-        <div class="text-center md:col-10 lg:col-7">
-          <h1
-            set:html={markdownify(banner.title)}
-            class="mb-4 text-h3 lg:text-h1"
-          />
-          <p set:html={markdownify(banner.content)} class="mb-8" />
-        </div>
-      </div>
+  <Parallax 
+    parallaxImage={bannerImage}
+  >
+    <div class="text-center md:col-10 lg:col-7">
+      <h1
+        set:html={markdownify(banner.title)}
+        class="mb-4 text-white dark:text-darkmode-primary text-h3 lg:text-h1"
+      />
+      <p set:html={markdownify(banner.content)} class="mb-8" />
     </div>
-
-    <Image
-      src={bannerImage}
-      alt={banner.imageAlt}
-      widths={[360, 720, 1200, 1600, 2160, banner.width]}
-    sizes={`(max-width: 360px) 360px, (max-width: 720px) 720px, (max-width: 1200px) 1200px, (max-width: 1600px) 1600px, (max-width: 2160px) 2160px, ${banner.width}px`}
-      loading="eager"
-    />
-  </section>
+  </Parallax>
 
   <!-- Slogan -->
   <section class="section p-6 lg:p-14 bg-primary dark:bg-darkmode-primary">
     <div class="container">
       <div class="row text-center">
         <h1 class="text-h3 lg:text-h1 text-white dark:text-black flex items-center justify-center">
-          <FaLightbulb className="mr-6" />
+          <FaGear className="mr-6" />
           {markdownify(slogan.title)}
         </h1>
+      </div>
+    </div>
+  </section>
+
+  <!-- Companies -->
+  <section class="section">
+    <div class="container">
+      <div class="text-center">
+        <h1
+          set:html={markdownify(companies.title)}
+          class="mb-16 text-h4 lg:text-h2"
+        />
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 lg:gap-8">
+        {companies.logos.map(async company => {
+          const { name, image } = company;
+          // Dynamically import the image based on the company's name and dark mode setting
+          const lightImage = await importImage(image);
+          const darkImage = await importImage(image, true);
+
+          return (
+            <div key={name}>
+              <Image
+                src={lightImage}
+                alt={name}
+                key={name}
+                className="inline-block dark:hidden"
+                widths={[180, 360, 600, 800]}
+                sizes="(max-width: 640px) 180px, (max-width: 768px) 360px, (max-width: 1024px) 600px, 800px"
+                loading="lazy"
+              />
+              {darkImage && (
+                <Image
+                  src={darkImage}
+                  alt={`${name} (Dark Mode)`}
+                  key={`${name}-dark`}
+                  className="hidden dark:inline-block"
+                  widths={[180, 360, 600, 800]}
+                  sizes="(max-width: 640px) 180px, (max-width: 768px) 360px, (max-width: 1024px) 600px, 800px"
+                  loading="lazy"
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   </section>
@@ -84,5 +135,4 @@ import servicesImage from '../images/me.png';
       </div>
     </div>
   </section>
-
 </Base>
