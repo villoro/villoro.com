@@ -6,7 +6,7 @@ banner:
   imageAlt: Me thinking
     
 slogan:
-  title: cc
+  title: Crafting Solutions, Delivering Efficiency
 
 # Features
 services:
