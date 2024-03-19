@@ -11,9 +11,19 @@ import { Image } from 'astro:assets';
 import bannerImage from '../images/home/me_thinking.jpg';
 import servicesImage from '../images/me.png';
 
-const importImage = async (imageName) => {
-  const { default: image } = await import(`../images/companies/${imageName}.png`);
-  return image;
+const importImage = async (imageName, darkMode = false) => {
+  if (darkMode) {
+    const darkModeImageName = `${imageName}_dark`; // Add "_dark" suffix for dark mode image
+    try {
+      // Try importing dark mode image
+      const { default: darkModeImage } = await import(`../images/companies/${darkModeImageName}.png`);
+      return darkModeImage;
+    } catch (error) {}
+  }
+  
+  // If dark mode is false or dark mode image not found, import original image
+  const { default: originalImage } = await import(`../images/companies/${imageName}.png`);
+  return originalImage;
 };
 ---
 
@@ -60,7 +70,7 @@ const importImage = async (imageName) => {
         {companies.map(async company => {
           const { name, image } = company;
           // Dynamically import the image based on the company's name
-          const companyImage = await importImage(image);
+          const companyImage = await importImage(image, true);
           return (
             <div key={name}>
               <Image
