@@ -1,5 +1,6 @@
 ---
 import Base from "@/layouts/Base.astro";
+import Parallax from "@/components/Parallax.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import { getEntry } from "astro:content";
 
@@ -16,9 +17,11 @@ const aboutImage = "/images/me_cnn.jpg";
   meta_title={meta_title}
   description={description}
 >
-  <div class="parallax bg-cover bg-center min-h-screen flex items-center justify-center" style={`background-image: url(${aboutImage})`}>
+  <Parallax 
+    parallaxImage={aboutImage}
+  >
     <h1 class="text-white text-center text-4xl md:text-6xl">{markdownify(title)}</h1>
-  </div>
+  </Parallax>
 
   <section class="section pt-14 pb-14">
     <div class="container">
@@ -34,19 +37,3 @@ const aboutImage = "/images/me_cnn.jpg";
     </div>
   </section>
 </Base>
-
-<style>
-  /* Parallax effect */
-  .parallax {
-    background-attachment: fixed;
-    background-size: cover;
-    background-repeat: no-repeat;
-  }
-
-  @media (max-width: 768px) {
-    .parallax {
-      background-attachment: scroll;
-      min-height: 400px; /* Adjust as needed */
-    }
-  }
-</style>

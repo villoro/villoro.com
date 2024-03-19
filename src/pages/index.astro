@@ -1,5 +1,6 @@
 ---
 import Base from "@/layouts/Base.astro";
+import Parallax from "@/components/Parallax.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import { getEntry } from "astro:content";
 import { FaCheck, FaLightbulb } from "react-icons/fa";
@@ -28,8 +29,9 @@ const importImage = async (imageName, darkMode = false) => {
 ---
 
 <Base>
-  <!-- Banner -->
-  <div class="parallax bg-cover bg-center min-h-screen flex items-center justify-center" style={`background-image: url(${bannerImage})`}>
+  <Parallax 
+    parallaxImage={bannerImage}
+  >
     <div class="text-center md:col-10 lg:col-7">
       <h1
         set:html={markdownify(banner.title)}
@@ -37,7 +39,7 @@ const importImage = async (imageName, darkMode = false) => {
       />
       <p set:html={markdownify(banner.content)} class="text-white mb-8" />
     </div>
-  </div>
+  </Parallax>
 
   <!-- Slogan -->
   <section class="section p-6 lg:p-14 bg-primary dark:bg-darkmode-primary">
@@ -132,21 +134,4 @@ const importImage = async (imageName, darkMode = false) => {
       </div>
     </div>
   </section>
-
 </Base>
-
-<style>
-  /* Parallax effect */
-  .parallax {
-    background-attachment: fixed;
-    background-size: cover;
-    background-repeat: no-repeat;
-  }
-
-  @media (max-width: 768px) {
-    .parallax {
-      background-attachment: scroll;
-      min-height: 400px; /* Adjust as needed */
-    }
-  }
-</style>

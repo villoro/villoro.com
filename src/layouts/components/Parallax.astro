@@ -1,0 +1,23 @@
+---
+const { parallaxImage } = Astro.props;
+---
+
+<div class="parallax bg-cover bg-center min-h-screen flex items-center justify-center" style={`background-image: url(${parallaxImage})`}>
+  <slot />
+</div>
+
+<style>
+  /* Parallax effect */
+  .parallax {
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  @media (max-width: 768px) {
+    .parallax {
+      background-attachment: scroll;
+      min-height: 400px; /* Adjust as needed */
+    }
+  }
+</style>
