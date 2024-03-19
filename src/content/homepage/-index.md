@@ -3,7 +3,6 @@
 banner:
   title: Hi, I am Arnau Villoro
   content: Trust me, I'm an engineer :)
-  imageAlt: Me thinking
     
 slogan:
   title: Crafting Solutions, Delivering Efficiency
