@@ -66,21 +66,41 @@ const importImage = async (imageName, darkMode = false) => {
   <!-- Companies -->
   <section class="section">
     <div class="container">
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {companies.map(async company => {
+      <div class="text-center">
+        <h1
+          set:html={markdownify(companies.title)}
+          class="mb-16 text-h4 lg:text-h2"
+        />
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 lg:gap-8">
+        {companies.logos.map(async company => {
           const { name, image } = company;
-          // Dynamically import the image based on the company's name
-          const companyImage = await importImage(image, true);
+          // Dynamically import the image based on the company's name and dark mode setting
+          const lightImage = await importImage(image);
+          const darkImage = await importImage(image, true);
+
           return (
             <div key={name}>
               <Image
-                src={companyImage}
+                src={lightImage}
                 alt={name}
                 key={name}
+                className="inline-block dark:hidden"
                 widths={[180, 360, 600, 800]}
                 sizes="(max-width: 640px) 180px, (max-width: 768px) 360px, (max-width: 1024px) 600px, 800px"
                 loading="lazy"
               />
+              {darkImage && (
+                <Image
+                  src={darkImage}
+                  alt={`${name} (Dark Mode)`}
+                  key={`${name}-dark`}
+                  className="hidden dark:inline-block"
+                  widths={[180, 360, 600, 800]}
+                  sizes="(max-width: 640px) 180px, (max-width: 768px) 360px, (max-width: 1024px) 600px, 800px"
+                  loading="lazy"
+                />
+              )}
             </div>
           );
         })}
