@@ -2,7 +2,7 @@
 const { parallaxImage } = Astro.props;
 ---
 
-<div class="parallax bg-cover bg-center min-h-screen flex items-center justify-center" style={`background-image: url(${parallaxImage})`}>
+<div class="parallax bg-cover bg-center min-h-screen flex items-center justify-center text-white dark:text-darkmode-primary" style={`background-image: url(${parallaxImage})`}>
   <slot />
 </div>
 
@@ -12,12 +12,48 @@ const { parallaxImage } = Astro.props;
     background-attachment: fixed;
     background-size: cover;
     background-repeat: no-repeat;
+    background-position: top; /* Center the background image */
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 640px) {
     .parallax {
-      background-attachment: scroll;
-      min-height: 400px; /* Adjust as needed */
+      background-size: 150% auto;
+      min-height: 250px;
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 768px) {
+    .parallax {
+      background-size: 120% auto;
+      min-height: 350px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .parallax {
+      background-size: 120% auto;
+      min-height: 500px;
+    }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1280px) {
+    .parallax {
+      background-size: 120% auto;
+      min-height: 600px;
+    }
+  }
+
+  @media (min-width: 1280px) and (max-width: 1536px) {
+    .parallax {
+      background-size: 120% auto;
+      min-height: 700px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .parallax {
+      background-size: 100% auto;
+      min-height: 800px;
     }
   }
 </style>

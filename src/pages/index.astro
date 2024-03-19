@@ -35,9 +35,9 @@ const importImage = async (imageName, darkMode = false) => {
     <div class="text-center md:col-10 lg:col-7">
       <h1
         set:html={markdownify(banner.title)}
-        class="text-white mb-4 text-h3 lg:text-h1"
+        class="mb-4 text-white dark:text-darkmode-primary text-h3 lg:text-h1"
       />
-      <p set:html={markdownify(banner.content)} class="text-white mb-8" />
+      <p set:html={markdownify(banner.content)} class="mb-8" />
     </div>
   </Parallax>
 
