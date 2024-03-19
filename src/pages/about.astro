@@ -30,8 +30,12 @@ const aboutImage = "/images/me_cnn.jpg";
       <div class="row items-center justify-between">
         <div class="mb-8 md:mb-0 md:col-7 lg:col-6 md:order-2">
           <h2 set:html={markdownify(info.title)} class="mb-4" />
-          <p set:html={markdownify(info.content)} class="text-lg" />
+
+          <div class="content">
+            <Content />
+          </div>
         </div>
+
         <div class="flex justify-center mb:md-0 md:col-5 md:order-1">
           <div class="mx-16 md:mx-8">
             <Image
@@ -46,6 +50,4 @@ const aboutImage = "/images/me_cnn.jpg";
       </div>
     </div>
   </section>
-
-  <Content />
 </Base>
