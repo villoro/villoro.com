@@ -28,19 +28,20 @@ const aboutImage = "/images/me_cnn.jpg";
   <section class="section-sm bg-gradient">
     <div class="container">
       <div class="row items-center justify-between">
-        <div class="mb-6 md:col-7 lg:col-6 md:order-2">
+        <div class="mb-8 md:mb-0 md:col-7 lg:col-6 md:order-2">
           <h2 set:html={markdownify(info.title)} class="mb-4" />
-          <p set:html={markdownify(info.content)} class="mb-8 text-lg" />
+          <p set:html={markdownify(info.content)} class="text-lg" />
         </div>
-        <div class="mb:md-0 mb-6 md:col-5 md:order-1">
-          <Image
-            src={meImage}
-            alt={info.imageAlt}
-            widths={[180, 360, 600, 800, meImage.width]}
-            sizes={`(max-width: 360px) 180px, (max-width: 720px) 360px, (max-width: 1200px) 600px, (max-width: 1600px) 800px, ${meImage.width}px`}
-            loading="lazy"
-            class="rounded"
-          />
+        <div class="flex justify-center mb:md-0 md:col-5 md:order-1">
+          <div class="mx-16 md:mx-8">
+            <Image
+              src={meImage}
+              alt={info.imageAlt}
+              widths={[180, 360, 600, 800, meImage.width]}
+              sizes={`(max-width: 360px) 180px, (max-width: 720px) 360px, (max-width: 1200px) 600px, (max-width: 1600px) 800px, ${meImage.width}px`}
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
     </div>
