@@ -1,9 +1,9 @@
 ---
 # Banner
 banner:
-  title: ccc
-  content: ccc
-  imageAlt: cc
+  title: Hi, I am Arnau Villoro
+  content: Trust me, I'm an engineer :)
+  imageAlt: Me thinking
     
 slogan:
   title: cc

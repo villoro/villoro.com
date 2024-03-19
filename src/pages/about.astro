@@ -8,8 +8,6 @@ const { Content } = await about.render();
 const { title, description, meta_title, imageAlt } = about.data;
 
 import { Image } from 'astro:assets';
-
-// Use the online image URL for debugging
 const aboutImage = "/images/me_cnn.jpg";
 ---
 
@@ -19,7 +17,7 @@ const aboutImage = "/images/me_cnn.jpg";
   description={description}
 >
   <div class="parallax bg-cover bg-center min-h-screen flex items-center justify-center" style={`background-image: url(${aboutImage})`}>
-    <h1 class="text-white text-center text-4xl md:text-6xl">{{ title }}</h1>
+    <h1 class="text-white text-center text-4xl md:text-6xl">{markdownify(title)}</h1>
   </div>
 
   <section class="section pt-14 pb-14">
