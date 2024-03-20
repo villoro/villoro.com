@@ -36,41 +36,32 @@
 
 // notice
 .notice {
-  @apply mb-6 rounded-lg border px-8 py-6;
-  &-head {
-    @apply flex items-center;
-    svg {
-      @apply mr-3;
-    }
-    p {
-      @apply font-secondary text-xl font-semibold text-dark dark:text-darkmode-light;
-    }
-  }
-  .notice-body {
-    @apply mt-3;
-    p {
-      @apply my-0;
-    }
-  }
-
-  &.note {
-    @apply text-[#1B83E2];
-    @apply border-current;
-  }
-
-  &.tip {
-    @apply text-[#40D294];
-    @apply border-current;
-  }
+  @apply mb-6 rounded-lg border p-4;
+  display: flex;
+  align-items: center;
 
   &.info {
-    @apply text-[#E3A72C];
-    @apply border-current;
+    @apply bg-blue-100;
+    @apply text-blue-900;
+    @apply border-blue-900;
+  }
+
+  &.success {
+    @apply bg-green-100;
+    @apply text-green-900;
+    @apply border-green-900;
   }
 
   &.warning {
-    @apply text-[#DB2C23];
-    @apply border-current;
+    @apply bg-yellow-100;
+    @apply text-yellow-900;
+    @apply border-yellow-900;
+  }
+
+  &.error, &.danger {
+    @apply bg-red-100;
+    @apply text-red-900;
+    @apply border-red-900;
   }
 }
 
