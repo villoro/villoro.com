@@ -1,7 +1,7 @@
 ---
 slug: personal-webpage
 title: Personal webpage
-meta_title: ""
+meta_title: Personal webpage
 description: I used to have a personal webpage made with wordpress. Since I have been working as a developer for some years I decided that I could create something that better suited my needs.
 date: 2018-12-27
 image: "/images/blog/0001-personal_web.jpg"

@@ -1,7 +1,7 @@
 ---
 slug: black-code-formatting
 title: Black for code formatting
-meta_title: ""
+meta_title: Black code formatting
 description: |
   Black is the uncompromising Python code formatter.
   By using it, you agree to cede control over minutiae of hand-formatting.
