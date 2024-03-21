@@ -32,6 +32,7 @@ export default defineConfig({
         "@/shortcodes/Video",
         "@/shortcodes/Youtube",
         "@/shortcodes/Tabs",
+        "@/shortcodes/TerminalOutput",
         "@/shortcodes/Tab",
       ],
     }),
