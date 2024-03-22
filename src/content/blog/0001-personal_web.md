@@ -23,6 +23,6 @@ For the html part I decided to go with [w3css](https://www.w3schools.com/w3css/d
 
 Some screenshoots:
 
-![Home page](../../images/posts/2018/villoro_mockup_1.jpg)
+![Home page](../../images/posts/2018/0001-villoro_mockup_1.jpg)
 
-![About page](../../images/posts/2018/villoro_mockup_2.jpg)
+![About page](../../images/posts/2018/0001-villoro_mockup_2.jpg)
