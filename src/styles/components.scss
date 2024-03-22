@@ -40,6 +40,10 @@
   display: flex;
   align-items: center;
 
+  p {
+    @apply my-0
+  }
+
   &.info {
     @apply bg-blue-100;
     @apply text-blue-900;
@@ -168,6 +172,6 @@
   }
 
   pre {
-    @apply py-0 m-0 bg-yellow-100 dark:bg-yellow-900
+    @apply py-0 m-0
   }
 }

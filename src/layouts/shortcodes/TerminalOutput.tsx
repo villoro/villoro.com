@@ -1,9 +1,16 @@
 import React from "react";
 
-function TerminalOutput({ children }: { children: React.ReactNode }) {
+interface TerminalOutputProps {
+  children: React.ReactNode;
+  className?: string;
+  color?: string;
+}
+
+const TerminalOutput: React.FC<TerminalOutputProps> = ({ children, className, color }) => {
+  color = color || "yellow"; // Use "yellow" if no color is provided
   return (
-    <div className="terminal-output">
-      <pre>{children}</pre>
+    <div className={`terminal-output ${className}`}>
+      <pre className={`bg-${color}-100 dark:bg-${color}-900`}>{children}</pre>
     </div>
   );
 }
