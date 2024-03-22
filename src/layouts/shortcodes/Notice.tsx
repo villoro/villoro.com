@@ -74,7 +74,7 @@ function Notice({
           />
         </svg>
       )}
-      <div class="ml-4">{children}</div>
+      <div className="ml-4">{children}</div>
     </div>
   );
 }
