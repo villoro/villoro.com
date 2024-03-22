@@ -36,41 +36,36 @@
 
 // notice
 .notice {
-  @apply mb-6 rounded-lg border px-8 py-6;
-  &-head {
-    @apply flex items-center;
-    svg {
-      @apply mr-3;
-    }
-    p {
-      @apply font-secondary text-xl font-semibold text-dark dark:text-darkmode-light;
-    }
-  }
-  .notice-body {
-    @apply mt-3;
-    p {
-      @apply my-0;
-    }
-  }
+  @apply mb-6 rounded-lg border p-4;
+  display: flex;
+  align-items: center;
 
-  &.note {
-    @apply text-[#1B83E2];
-    @apply border-current;
-  }
-
-  &.tip {
-    @apply text-[#40D294];
-    @apply border-current;
+  p {
+    @apply my-0
   }
 
   &.info {
-    @apply text-[#E3A72C];
-    @apply border-current;
+    @apply bg-blue-100;
+    @apply text-blue-900;
+    @apply border-blue-900;
+  }
+
+  &.success {
+    @apply bg-green-100;
+    @apply text-green-900;
+    @apply border-green-900;
   }
 
   &.warning {
-    @apply text-[#DB2C23];
-    @apply border-current;
+    @apply bg-yellow-100;
+    @apply text-yellow-900;
+    @apply border-yellow-900;
+  }
+
+  &.error, &.danger {
+    @apply bg-red-100;
+    @apply text-red-900;
+    @apply border-red-900;
   }
 }
 
@@ -152,7 +147,7 @@
   @apply prose-hr:border-border prose-hr:dark:border-darkmode-border;
   @apply prose-p:text-base prose-p:text-text prose-p:dark:text-darkmode-text;
   @apply prose-blockquote:border prose-blockquote:border-l-[10px] prose-blockquote:border-primary prose-blockquote:bg-theme-light prose-blockquote:px-8 prose-blockquote:font-secondary prose-blockquote:text-2xl prose-blockquote:not-italic prose-blockquote:text-dark prose-blockquote:dark:border-darkmode-primary prose-blockquote:dark:bg-darkmode-theme-light prose-blockquote:dark:text-darkmode-light;
-  @apply prose-pre:rounded-lg prose-pre:bg-theme-light prose-pre:dark:bg-darkmode-theme-light;
+  @apply prose-pre:bg-theme-light prose-pre:dark:bg-darkmode-theme-light;
   @apply prose-code:px-1 prose-code:text-primary prose-code:dark:text-darkmode-primary;
   @apply prose-strong:text-dark prose-strong:dark:text-darkmode-text;
   @apply prose-a:text-text prose-a:underline hover:prose-a:text-primary prose-a:dark:text-darkmode-text hover:prose-a:dark:text-darkmode-primary;
@@ -162,4 +157,17 @@
   @apply prose-th:relative prose-th:z-10 prose-th:px-4 prose-th:py-[18px] prose-th:text-dark prose-th:dark:text-darkmode-text;
   @apply prose-tr:border-border prose-tr:dark:border-darkmode-border;
   @apply prose-td:relative prose-td:z-10 prose-td:px-3 prose-td:py-[18px] prose-td:dark:text-darkmode-text;
+
+  pre {
+    @apply my-0
+  }
+}
+
+.terminal-output {
+  // Use Tailwind CSS utility classes to style the component
+  @apply overflow-x-auto whitespace-pre-wrap;
+
+  p {
+    @apply my-2 text-black dark:text-white
+  }
 }

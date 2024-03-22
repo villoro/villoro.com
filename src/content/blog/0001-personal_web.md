@@ -1,0 +1,28 @@
+---
+slug: personal-webpage
+title: Personal webpage
+meta_title: Personal webpage
+description: I used to have a personal webpage made with wordpress. Since I have been working as a developer for some years I decided that I could create something that better suited my needs.
+date: 2018-12-27
+image: "/images/blog/0001-personal_web.jpg"
+categories: ["HTML", "Flask", "Python"]
+draft: false
+---
+
+I used to have a personal webpage made with wordpress. Since I have been working as a developer for some years I decided that I could create something that better suited my needs.
+
+I knew I wanted to create something that was:
+
+* really fast
+* easy to mantain (by a developer)
+* made from scratch (since it would help me learn)
+
+And I ended up creating a webpage with [flask](http://flask.pocoo.org/) and making it a static webpage with [frozen flask](https://frozen-flask.readthedocs.io/en/latest/). I also used the power of [jinja2](http://jinja.pocoo.org/docs/2.10/) templates.
+
+For the html part I decided to go with [w3css](https://www.w3schools.com/w3css/default.asp) since it was an easy way to create a responsive webpage.
+
+Some screenshoots:
+
+![Home page](../../images/posts/2018/0001-villoro_mockup_1.jpg)
+
+![About page](../../images/posts/2018/0001-villoro_mockup_2.jpg)
