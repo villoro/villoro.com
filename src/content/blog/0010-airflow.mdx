@@ -1,349 +1,329 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: airflow
-title: Airflow Task Scheduler
-date: "2019-03-19"
-image: airflow_square.png
-highlight: False
-
-tags:
-  - Python
-  - Automation
-
-tags_filter:
-  - Python
-  - Automation
-
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Airflow
-  url: https://airflow.apache.org/
-
-
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  How to set up Apache Airflow, the platform to programmatically author, schedule and monitor workflows.
-
-image_head:
-  filename: airflow.svg
-  caption: airflow
-
-content_markdown: |
-  Apache Airflow is a platform to programmatically author, schedule and monitor workflows. The airflow scheduler executes your tasks on an array of workers following the specified dependencies.
-
-  ## Table of Contents
-
-  [TOC]
-
-  ## 1. Why Airflow?
-  People usually need to execute some tasks periodically. One common solution is to use [cron](https://es.wikipedia.org/wiki/Cron_(Unix)) wich is a good solution for simple tasks. But the more tasks you need to schedule the more problems I will have, specially if there are dependencies between one another.
-
-  Airflow allows to define workflows of tasks and you can define them as code making ig more maintainable, versionable, testable and collaborative. Check out the [Airflow documentation](https://airflow.apache.org/) for more information.
-
-
-  ## 2. Installation
-  First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance. You can see [here](https://villoro.com/post/aws_ec2.html) how to create one.
-
-  Then you can download airflow:
-  ```sh
-  sudo AIRFLOW_GPL_UNIDECODE=yes pip3 install apache-airflow
-  ```
-
-  When it is installed you can initialize the database (it will be SQLite by default):
-  ```sh
-  airflow initdb
-  ```
-
-  ### 2.1 Test Airflow
-  We will test airflow with an example from [airflow documentation](https://airflow.apache.org/tutorial.html). You will need to create the file `tutorial.py`:
-
-  ```sh
-  cd airflow
-  mkdir dags
-  cd airflow
-  nano tutorial.py
-  ```
-
-  And then paste the example and save the file:
-
-  <div class="input">
-    ~/airflow/dags/tutorial.py
-  </div>
-  ```python
-  """
-  Code that goes along with the Airflow tutorial located at:
-  https://github.com/apache/airflow/blob/master/airflow/example_dags/tutorial.py
-  """
-  from airflow import DAG
-  from airflow.operators.bash_operator import BashOperator
-  from datetime import datetime, timedelta
-
-
-  default_args = {
-      'owner': 'airflow',
-      'depends_on_past': False,
-      'start_date': datetime(2015, 6, 1),
-      'email': ['airflow@example.com'],
-      'email_on_failure': False,
-      'email_on_retry': False,
-      'retries': 1,
-      'retry_delay': timedelta(minutes=5),
-  }
-
-  dag = DAG(
-      'tutorial', default_args=default_args, schedule_interval=timedelta(days=1))
+---
+slug: setting-up-airflow
+title: Setting up Airflow
+meta_title: Setting up Airflow
+description: How to set up Apache Airflow, the platform to programmatically author, schedule and monitor workflows.
+date: 2019-03-19
+image: "/images/blog/0010-airflow.svg"
+categories: ["Orchestration"]
+draft: false
+---
+
+Apache Airflow is a platform to programmatically author, schedule and monitor workflows. The airflow scheduler executes your tasks on an array of workers following the specified dependencies.
+
+## Table of Contents
+
+[TOC]
+
+## 1. Why Airflow?
+People usually need to execute some tasks periodically. One common solution is to use [cron](https://es.wikipedia.org/wiki/Cron_(Unix)) wich is a good solution for simple tasks. But the more tasks you need to schedule the more problems I will have, specially if there are dependencies between one another.
+
+Airflow allows to define workflows of tasks and you can define them as code making ig more maintainable, versionable, testable and collaborative. Check out the [Airflow documentation](https://airflow.apache.org/) for more information.
+
+
+## 2. Installation
+First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance. You can see [here](https://villoro.com/post/aws_ec2.html) how to create one.
+
+Then you can download airflow:
+```sh
+sudo AIRFLOW_GPL_UNIDECODE=yes pip3 install apache-airflow
+```
+
+When it is installed you can initialize the database (it will be SQLite by default):
+```sh
+airflow initdb
+```
+
+### 2.1 Test Airflow
+We will test airflow with an example from [airflow documentation](https://airflow.apache.org/tutorial.html). You will need to create the file `tutorial.py`:
+
+```sh
+cd airflow
+mkdir dags
+cd airflow
+nano tutorial.py
+```
+
+And then paste the example and save the file:
+
+<TerminalOutput color="stone">
+  `~/airflow/dags/tutorial.py`
+</TerminalOutput>
+```python
+"""
+Code that goes along with the Airflow tutorial located at:
+https://github.com/apache/airflow/blob/master/airflow/example_dags/tutorial.py
+"""
+from airflow import DAG
+from airflow.operators.bash_operator import BashOperator
+from datetime import datetime, timedelta
+
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2015, 6, 1),
+    'email': ['airflow@example.com'],
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
 
-  # t1, t2 and t3 are examples of tasks created by instantiating operators
-  t1 = BashOperator(
-      task_id='print_date',
-      bash_command='date',
-      dag=dag)
+dag = DAG(
+    'tutorial', default_args=default_args, schedule_interval=timedelta(days=1))
 
-  t2 = BashOperator(
-      task_id='sleep',
-      bash_command='sleep 5',
-      retries=3,
-      dag=dag)
+# t1, t2 and t3 are examples of tasks created by instantiating operators
+t1 = BashOperator(
+    task_id='print_date',
+    bash_command='date',
+    dag=dag)
 
-  templated_command = """
-      {% for i in range(5) %}
-          echo "{{ ds }}"
-          echo "{{ macros.ds_add(ds, 7)}}"
-          echo "{{ params.my_param }}"
-      {% endfor %}
-  """
+t2 = BashOperator(
+    task_id='sleep',
+    bash_command='sleep 5',
+    retries=3,
+    dag=dag)
 
-  t3 = BashOperator(
-      task_id='templated',
-      bash_command=templated_command,
-      params={'my_param': 'Parameter I passed in'},
-      dag=dag)
+templated_command = """
+    {% for i in range(5) %}
+        echo "{{ ds }}"
+        echo "{{ macros.ds_add(ds, 7)}}"
+        echo "{{ params.my_param }}"
+    {% endfor %}
+"""
 
-  t2.set_upstream(t1)
-  t3.set_upstream(t1)
-  ```
-
-  You can test that things are going as expected if the following command does not raise any exception:
-
-  ```sh
-  python3 ~/airflow/dags/tutorial.py
-  ```
+t3 = BashOperator(
+    task_id='templated',
+    bash_command=templated_command,
+    params={'my_param': 'Parameter I passed in'},
+    dag=dag)
+
+t2.set_upstream(t1)
+t3.set_upstream(t1)
+```
 
-  #### 2.1.1. Validate metadata
-  You can chech that the tutorial dag has been properly created with:
+You can test that things are going as expected if the following command does not raise any exception:
 
-  ```sh
-  # print the list of active DAGs
-  airflow list_dags
+```sh
+python3 ~/airflow/dags/tutorial.py
+```
 
-  # prints the list of tasks the "tutorial" dag_id
-  airflow list_tasks tutorial
+#### 2.1.1. Validate metadata
+You can chech that the tutorial dag has been properly created with:
 
-  # prints the hierarchy of tasks in the tutorial DAG
-  airflow list_tasks tutorial --tree
-  ```
+```sh
+# print the list of active DAGs
+airflow list_dags
 
-  #### 2.1.2 Run the test
-  You can launch tasks with the following commands:
+# prints the list of tasks the "tutorial" dag_id
+airflow list_tasks tutorial
 
-  ```sh
-  # command layout: command subcommand dag_id task_id date
+# prints the hierarchy of tasks in the tutorial DAG
+airflow list_tasks tutorial --tree
+```
 
-  # testing print_date
-  airflow test tutorial print_date 2015-06-01
+#### 2.1.2 Run the test
+You can launch tasks with the following commands:
 
-  # testing sleep
-  airflow test tutorial sleep 2015-06-01
+```sh
+# command layout: command subcommand dag_id task_id date
 
-  # testing templated
-  airflow test tutorial templated 2015-06-01
-  ```
+# testing print_date
+airflow test tutorial print_date 2015-06-01
 
-  ## 3. Use Airflow UI
+# testing sleep
+airflow test tutorial sleep 2015-06-01
 
-  Of the great things about airflow is the [UI](https://airflow.apache.org/ui.html).
+# testing templated
+airflow test tutorial templated 2015-06-01
+```
 
-  <div class="w3-center">
-    <img src="/static/images/posts/airflow.gif" alt="airflow_ui" class="w3-image w3-padding-16" style="max-height: 500px;"/>
-  </div>
+## 3. Use Airflow UI
 
-  ### 3.1. Open EC2 ports (optional)
-  If you are using and **AWS EC2** you will probably have only the 22 port open to connect through SSH.
+Of the great things about airflow is the [UI](https://airflow.apache.org/ui.html).
 
-  1. Go to AWS console and then to the EC2 page. Use the sidebar to go to `NETWORK & SECURITY/Security Groups`.
-  2. Find the security group of your EC2 instance and edit the **Inbound** rules.
-  3. Add `Custom TCP Rule` with port `8080`.
+![Airflow UI](../../images/posts/2019/0010-airflow.gif)
 
-  ### 3.2. Start Airflow
-  You can start airflow with:
+### 3.1. Open EC2 ports (optional)
+If you are using and **AWS EC2** you will probably have only the 22 port open to connect through SSH.
 
-  ```sh
-  airflow webserver -p 8080 # or simply use 'airflow webserver'
-  ```
+1. Go to AWS console and then to the EC2 page. Use the sidebar to go to `NETWORK & SECURITY/Security Groups`.
+2. Find the security group of your EC2 instance and edit the **Inbound** rules.
+3. Add `Custom TCP Rule` with port `8080`.
 
-  You can now view Airflow at XX.XXX.XXX.XXX:8080 (Use your EC2 IP).
+### 3.2. Start Airflow
+You can start airflow with:
 
-  ### 3.3. Secure Airflow UI
-  First we will edit the airflow configuration.
+```sh
+airflow webserver -p 8080 # or simply use 'airflow webserver'
+```
 
-  ```sh
-  nano ~/airflow/airflow.cfg
-  ```
+You can now view Airflow at XX.XXX.XXX.XXX:8080 (Use your EC2 IP).
 
-  Inside the section `[webserver]` find the line `authenticate=X` and replace it with:
+### 3.3. Secure Airflow UI
+First we will edit the airflow configuration.
 
-  <div class="input">
-    ~/airflow/airflow.cfg
-  </div>
-  ```cfg
-  authenticate = True
-  auth_backend = airflow.contrib.auth.backends.password_auth
-  ```
+```sh
+nano ~/airflow/airflow.cfg
+```
 
-  Install `flask_bcrypt` and start python:
+Inside the section `[webserver]` find the line `authenticate=X` and replace it with:
 
-  ```sh
-  pip3 install flask-bcrypt
+<TerminalOutput color="stone">
+  `~/airflow/airflow.cfg`
+</TerminalOutput>
+```cfg
+authenticate = True
+auth_backend = airflow.contrib.auth.backends.password_auth
+```
 
-  # start python
-  python3
-  ```
+Install `flask_bcrypt` and start python:
 
-  And add a new user with:
+```sh
+pip3 install flask-bcrypt
 
-  ```python
-  import airflow
-  from airflow import models, settings
-  from airflow.contrib.auth.backends.password_auth import PasswordUser
-  user = PasswordUser(models.User())
-  user.username = 'new_user_name'
-  user.email = 'new_user_email@example.com'
-  user.password = 'set_the_password'
-  session = settings.Session()
-  session.add(user)
-  session.commit()
-  session.close()
-  exit()
-  ```
+# start python
+python3
+```
 
-  ## 4. Runing airflow with supervisor
+And add a new user with:
 
-  If you want a process always runing and to be restarted on failure you should use **supervisor**.
+```python
+import airflow
+from airflow import models, settings
+from airflow.contrib.auth.backends.password_auth import PasswordUser
+user = PasswordUser(models.User())
+user.username = 'new_user_name'
+user.email = 'new_user_email@example.com'
+user.password = 'set_the_password'
+session = settings.Session()
+session.add(user)
+session.commit()
+session.close()
+exit()
+```
 
-  ### 4.1. Clean examples and other tests
+## 4. Runing airflow with supervisor
 
-  Edit the `airflow.cfg` to disable the examples by editing `load_examples = True` to:
+If you want a process always runing and to be restarted on failure you should use **supervisor**.
 
-  <div class="input">
-  ~/airflow/airflow.cfg
-  </div>
-  ```
-  load_examples = False
-  ```
+### 4.1. Clean examples and other tests
 
-  If you still have examples runing you can reset the database:
+Edit the `airflow.cfg` to disable the examples by editing `load_examples = True` to:
 
-  ```sh
-  airflow resetdb -y
-  ```
+<TerminalOutput color="stone">
+  `~/airflow/airflow.cfg`
+</TerminalOutput>
+```
+load_examples = False
+```
 
-  > This will **delete all data** be careful.
+If you still have examples runing you can reset the database:
 
-  If you can't delete the previous example try deleting `~/airflow/dags/tutorial.py` first.
+```sh
+airflow resetdb -y
+```
+<Notice type="danger">
+  This will **delete all data** be careful.
+</Notice>
 
-  After cleaning all examples you should stop all `airflow` processes with:
+If you can't delete the previous example try deleting `~/airflow/dags/tutorial.py` first.
 
-  ```sh
-  pkill -f airflow
-  ```
+After cleaning all examples you should stop all `airflow` processes with:
 
-  > This will delete the current **DAG** information
+```sh
+pkill -f airflow
+```
+<Notice type="warning">
+  This will delete the current **DAG** information
+</Notice>
 
-  ### 4.2. Runing supervisor
+### 4.2. Runing supervisor
 
-  First install it with:
+First install it with:
 
-  ```sh
-  sudo apt install supervisor -y
-  ```
+```sh
+sudo apt install supervisor -y
+```
 
-  Then create a folder for the airflow logs:
+Then create a folder for the airflow logs:
 
-  ```sh
-  sudo mkdir /var/log/airflow/
-  ```
+```sh
+sudo mkdir /var/log/airflow/
+```
 
-  And now declare the `airflow` services by creating the file `/etc/supervisor/conf.d/airflow.conf`
+And now declare the `airflow` services by creating the file `/etc/supervisor/conf.d/airflow.conf`
 
-  <div class="input">
-    /etc/supervisor/conf.d/airflow.conf
-  </div>
-  ```toml
-  [program:airflow_webserver]
-  command=airflow webserver -p 8080
-  stopsignal=QUIT
-  stopasgroup=true
-  stdout_logfile=/var/log/airflow/airflow_webserver.log
-  stderr_logfile=/var/log/airflow/airflow_webserver.error.log
-  autorestart=true
-  user=ubuntu
+<TerminalOutput color="stone">
+  `/etc/supervisor/conf.d/airflow.conf`
+</TerminalOutput>
+```toml
+[program:airflow_webserver]
+command=airflow webserver -p 8080
+stopsignal=QUIT
+stopasgroup=true
+stdout_logfile=/var/log/airflow/airflow_webserver.log
+stderr_logfile=/var/log/airflow/airflow_webserver.error.log
+autorestart=true
+user=ubuntu
 
-  [program:airflow_scheduler]
-  command=airflow scheduler
-  stopsignal=QUIT
-  stopasgroup=true
-  stdout_logfile=/var/log/airflow/airflow_scheduler.log
-  stderr_logfile=/var/log/airflow/airflow_scheduler.error.log
-  autorestart=true
-  user=ubuntu
-  ```
+[program:airflow_scheduler]
+command=airflow scheduler
+stopsignal=QUIT
+stopasgroup=true
+stdout_logfile=/var/log/airflow/airflow_scheduler.log
+stderr_logfile=/var/log/airflow/airflow_scheduler.error.log
+autorestart=true
+user=ubuntu
+```
 
-  > We are runing **airflow** with `ubuntu` user since by default it gets installed to `~/airflow`. You can change the default path and use another user.
+<Notice type="info">
+  We are runing **airflow** with `ubuntu` user since by default it gets installed to `~/airflow`. You can change the default path and use another user.
+</Notice>
 
-  Then start supervisor:
+Then start supervisor:
 
-  ```sh
-  sudo supervisorctl reread
-  sudo service supervisor restart
+```sh
+sudo supervisorctl reread
+sudo service supervisor restart
 
-  # Check the result
-  sudo supervisorctl status
-  ```
+# Check the result
+sudo supervisorctl status
+```
 
-  And that's it. You can now start using airflow.
+And that's it. You can now start using airflow.
 
-  ## 5. Next steps
+## 5. Next steps
 
-  You can add **DAG**s in the folder `~/airflow/dags` and they should be automatically loaded. 
+You can add **DAG**s in the folder `~/airflow/dags` and they should be automatically loaded. 
 
-  > It is advised to run airflow with at least a `t2.medium` **AWS instance**. You can run it with a smaller one (I use a `t2.micro` since it is in the free tier) but you can easily get your instance at 100% CPU usage while runing tasks.
+<Notice type="info">
+  It is advised to run airflow with at least a `t2.medium` **AWS instance**. You can run it with a smaller one (I use a `t2.micro` since it is in the free tier) but you can easily get your instance at 100% CPU usage while runing tasks.
+</Notice>
 
-  ### 5.1. Using git
-  You can even change that path to a folder that is tracked with git to keep control of the **DAG**s by editing the `airflow.cfg`:
+### 5.1. Using git
+You can even change that path to a folder that is tracked with git to keep control of the **DAG**s by editing the `airflow.cfg`:
 
-  <div class="input">
-    ~/airflow/airflow.cfg
-  </div>
-  ```cfg
-  dags_folder = "home/ubuntu/airflow_tasks/src"
-  ```
+<TerminalOutput color="stone">
+  `~/airflow/airflow.cfg`
+</TerminalOutput>
+```cfg
+dags_folder = "home/ubuntu/airflow_tasks/src"
+```
 
-  To keep the code sync with the origin you could create an airflow task but it will fill the logs with unuseful information. This time ironically is better to use crontab to fetch the code. You can do it with:
+To keep the code sync with the origin you could create an airflow task but it will fill the logs with unuseful information. This time ironically is better to use crontab to fetch the code. You can do it with:
 
-  ```sh
-  crontab -e
-  ```
+```sh
+crontab -e
+```
 
-  Add this line at the end:
+Add this line at the end:
 
-  ```sh
-  0 5 * * * cd /home/ubuntu/airflow_tasks && git fetch && git checkout master && git pull origin master
-  ```
+```sh
+0 5 * * * cd /home/ubuntu/airflow_tasks && git fetch && git checkout master && git pull origin master
+```
 
-  > I use `/home/ubuntu/airflow_tasks` for the repo path and the folder `src` for **DAG**s path. But you can use whatever you want.
-  
+<Notice type="info">
+  I use `/home/ubuntu/airflow_tasks` for the repo path and the folder `src` for **DAG**s path. But you can use whatever you want.
+</Notice>

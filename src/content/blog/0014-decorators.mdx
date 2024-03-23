@@ -1,348 +1,338 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: decorators
+---
+slug: python-decorators
 title: Python decorators
-date: "2019-04-16"
-image: decorators_square.jpg
-highlight: True
-
-tags:
-  - Python
-
-tags_filter:
-  - Python
-
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Github
-  url: https://github.com/villoro/villoro_posts/tree/master/0014-decorators
-
-
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  Decorators are a really useful tool for python development but not a lot of people know what they are and how they work. In this post you are going to master them so that you can use them and create your own.
-
-
-content_markdown: |
-
-  Decorators are a really useful tool for python development but not a lot of people know what they are and how they work. In this post you are going to master them so that you can use them and create your own.
-
-  ## Table of Contents
-
-  [TOC]
-
-  ## 1. Understanding functions
-
-  Before starting with decorators it is important to understand how functions works in python. Functions have **parameters** for example:
-
-  ```python
-  def hello_person(name):
-      """ Says hello to someone """
-      return "hello {}".format(name)
-  ```
-
-  This takes `name` as a parameter. It is even possible to define functions inside functions and children function would be able to use their parent parameters.
-
-  ```python
-  def message_to_person(message, name):
-      def send_message():
-          """ Sends message """
-          return message
-      
-      return "{} {}".format(send_message(), name)
-  ```
-
-  > We can pass **any** object as a parameter to a function. We can even pass a **function** as a parameter.
-
-  ## 2. Decorators basics
-
-  The idea behind **decorators** is to modify a function so that some things happen 'around' that function. This means before or after the function (or both).
-
-  For example let's create a function that will create and `html` title by addind `<h1>` and `</h1>` around:
-
-  ```python
-  def decorate_h1(func):
-      """ Decorates a function in order to add <h1> tags """
-      
-      def make_h1(text):
-          return "<h1>{}</h1>".format(func(text))
-      
-      return make_h1
-      
-  hello_person_h1 = decorate_h1(hello_person)
-  hello_person_h1("John")
-  ```
-  <div class="output">
-    <b>Out:</b> &lt;h1>hello John&lt;/h1>
-  </div>
-
-  Right now we have 'decorated' the `hello_person` function and save as the new function `hello_person_h1`. By calling `hello_person_h1("John")` the output is `<h1>hello John</h1>`.
-
-  We can see another example that will time the execution and the function and print with that time after the function is completed.
-
-  ```python
-  from time import time, sleep
-
-  def timeit(func):
-      """ Timing decorator """
-      
-      def timed(*args):
-          """ Prints the execution time of a function """
-          t0 = time()
-          result = func(*args)
-          print("Done in {:.2f} seconds".format(time() - t0))    
-          return result
-      
-      return timed
-
-  def wait_3_seconds():
-      sleep(3)
-
-  wait_3_seconds_and_print = timeit(wait_3_seconds)
-  wait_3_seconds_and_print()
-  ```
-  <div class="output">
-    Done in 3.00 seconds
-  </div>
-  
-  > The `*args` parameter used at `timed` and `func` is a trick to preserve whatever parameter is passed to the original function.
-
-  Now we have the `timeit` decorator, the `wait_3_seconds` and the `wait_3_seconds_and_print` functions. Those both will wait 3 seconds but the second one will print the execution time.
-
-  ## 3. Using real decorators
-
-  Now that we understand the idea behind decorators, we can rewrite the examples using real decorators. The behavior will be exactly the same.
-
-  ```python
-  @decorate_h1
-  def hello_person_with_h1(name):
-      """ Says hello to someone """
-
-      return "hello {}".format(name)
-  ```
-
-  This is exactly the same as the function `hello_person_h1` from the other example
-
-  ```python
-  @timeit
-  def wait_3_seconds_with_print():
-      sleep(3)
-  ```
-
-  And the same with the wait function. And the cool thing is that we can use both decorators at the same time.
-
-  ```python
-  @timeit
-  @decorate_h1
-  def wait_and_say_hello(name):
-      """ Says hello to someone """
-      sleep(3)
-      return "hello {}".format(name)
-
-  wait_and_say_hello("Turtle")
-  ```
-  <div class="output">
-    <div>Done in 3.00 seconds</div>
-    <b>Out:</b> &lt;h1>hello Turtle&lt;/h1>
-  </div>
-
-  This will prints `Done in 3.00 seconds` and the output is `<h1>hello Turtle</h1>`
-
-  To sum up decorators allow to do things before or after (or both) a function:
-
-  ```python
-  def printer(func):
-      """ Printer decorator """
-      
-      def prints():
-          """ Prints some things """
-          print("Before function")
-          result = func()
-          print("After function")    
-          return result
-      
-      return prints
-
-  @printer
-  def hello():
-      print("hello world")
-
-  hello()
-  ```
-  <div class="output">
-    <div>Before function</div>
-    <div>hello world</div>
-    <div>After function</div>
-  </div>
-
-  ## 4. Passing arguments to decorators
-
-  It is possible to pass arguments to `decorators`. The idea is to create another wrapper that will take the parameters. For example:
-
-  ```python
-  def printer_with_params(before="Before function", after="After function"):
-      """ Wrapper around decorator """
-      
-      def printer(func):
-          """ Printer decorator """
-
-          def prints():
-              """ Prints some things """
-              print(before)
-              result = func()
-              print(after)    
-              return result
-
-          return prints
-      
-      return printer
-
-  @printer_with_params(before="Argh!")
-  def hello_argh():
-      print("hello world")
-
-  hello_argh()
-  ```
-  <div class="output">
-    <div>Argh!</div>
-    <div>hello world</div>
-    <div>After function</div>
-  </div>
-
-  > This decorator allows the user to decide what to print before the main function.
-
-  ## 5. Some cool examples
-
-  Now that we understand how decorators work, let's see some useful examples of what decorators can offer.
-
-  ### 5.1. supertimeit decorator
-
-  This is a decorator that takes one outputting function and outputs the execution time. By default it will use the `print` function.
-
-  ```python
-  import functools
-
-  def supertimeit(output_func=print):
-      """ Allows to use custom output functions (like print, log.info...)"""
-
-      def timeit_decorator(func):
-          """ Timing decorator """
-      
-          @functools.wraps(func)
-          def timed_execution(*args):
-              """ Outputs the execution time of a function """
-              t0 = time()
-              result = func(*args)
-              output_func("Done in {:.2f} seconds".format(time() - t0))    
-              return result
-
-          return timed_execution
-      
-      return timeit_decorator
-  ```
-
-  > By adding `@functools.wraps(func)` the documentation of the original function will be preserved
-
-  The default usage will be the same as the `timeit` decorator used before:
-
-  ```python
-  @supertimeit() # Since it can take params, we need the '()'
-  def wait_2_seconds_and_print():
-      sleep(2)
-
-  wait_2_seconds_and_print()
-  ```
-  <div class="output">
-    Done in 2.00 seconds
-  </div>
-
-  The intersting part is that we can use other outputting functions instead of `print`, for example some `logging`:
-
-  ```python
-  import logging
-
-  @supertimeit(logging.warning)
-  def wait_2_seconds_and_log():
-      sleep(2)
-
-  wait_2_seconds_and_log()
-  ```
-  <div class="output output-red">
-    WARNING:root:Done in 2.00 seconds
-  </div>
-
-  Now the function logs the time.
-
-  ### 5.2. infallible decorator
-
-  This decorator will prevent any function from crashing and it will show the details of any `Exception` occurred.
-
-  ```python
-  def infallible(output_func=print):
-      """ Allows to use custom output functions (like print, log.info...)"""
-
-      def infallible_decorator(func):
-          """ Timing decorator """
-      
-          @functools.wraps(func)
-          def infallible_execution(*args):
-              """ Outputs the execution time of a function """
-              
-              try:
-                  return func(*args)
-              except Exception as e:
-                  output_func("Error in '{}': {}".format(func.__name__, e))
-
-          return infallible_execution
-      
-      return infallible_decorator
-  ```
-
-  > `func.__name__` is a way to get the function name as a string
-
-  To see how it works let's create a function that crashes:
-
-  ```python
-  @infallible()
-  def wrong_math(x):
-      """ This divides a number by 0 """
-      return x/0
-
-  wrong_math(1)
-  ```
-  <div class="output">
-    Error in 'wrong_math': division by zero
-  </div>
-
-  > Now we see a message when it crashes
-
-  ### 5.3. Using them both
-
-  And the best part is that we can use `supertimeit` and `infallible` decorators together.
-
-  ```python
-  @supertimeit()
-  @infallible(logging.error)
-  def unuseful_function(x):
-      """ It will wait some time and then it will divide a number by 0 """
-
-      sleep(2)
-      return x/0
-
-  unuseful_function(10)
-  ```
-  <div class="output output-red">
-    ERROR:root:Error in 'unuseful_function': division by zero
-  </div>
-  <div class="output">
-    Done in 2.00 seconds
-  </div>
-
-  This logs `ERROR:root:Error in 'unuseful_function': division by zero` and print `Done in 2.00 seconds`.
-
-  After that post you should now understand python **decorators** and be able to create your own. If you have a really good idea for a decorator writte it down in the comments!
+meta_title: Python decorators
+description: Decorators are a really useful tool for python development but not a lot of people know what they are and how they work. In this post you are going to master them so that you can use them and create your own.
+date: 2019-04-16
+image: "/images/blog/0014-decorators.jpg"
+categories: ["Python"]
+draft: false
+---
+
+Decorators are a really useful tool for python development but not a lot of people know what they are and how they work. In this post you are going to master them so that you can use them and create your own.
+
+## Table of Contents
+
+[TOC]
+
+## 1. Understanding functions
+
+Before starting with decorators it is important to understand how functions works in python. Functions have **parameters** for example:
+
+```python
+def hello_person(name):
+    """ Says hello to someone """
+    return "hello {}".format(name)
+```
+
+This takes `name` as a parameter. It is even possible to define functions inside functions and children function would be able to use their parent parameters.
+
+```python
+def message_to_person(message, name):
+    def send_message():
+        """ Sends message """
+        return message
+    
+    return "{} {}".format(send_message(), name)
+```
+<Notice type="info">
+  We can pass **any** object as a parameter to a function. We can even pass a **function** as a parameter.
+</Notice>
+
+## 2. Decorators basics
+
+The idea behind **decorators** is to modify a function so that some things happen 'around' that function. This means before or after the function (or both).
+
+For example let's create a function that will create and `html` title by addind `<h1>` and `</h1>` around:
+
+```python
+def decorate_h1(func):
+    """ Decorates a function in order to add <h1> tags """
+    
+    def make_h1(text):
+        return "<h1>{}</h1>".format(func(text))
+    
+    return make_h1
+    
+hello_person_h1 = decorate_h1(hello_person)
+hello_person_h1("John")
+```
+<TerminalOutput>
+  \> &lt;h1>hello John&lt;/h1>
+</TerminalOutput>
+
+Right now we have 'decorated' the `hello_person` function and save as the new function `hello_person_h1`. By calling `hello_person_h1("John")` the output is `<h1>hello John</h1>`.
+
+We can see another example that will time the execution and the function and print with that time after the function is completed.
+
+```python
+from time import time, sleep
+
+def timeit(func):
+    """ Timing decorator """
+    
+    def timed(*args):
+        """ Prints the execution time of a function """
+        t0 = time()
+        result = func(*args)
+        print("Done in {:.2f} seconds".format(time() - t0))    
+        return result
+    
+    return timed
+
+def wait_3_seconds():
+    sleep(3)
+
+wait_3_seconds_and_print = timeit(wait_3_seconds)
+wait_3_seconds_and_print()
+```
+<TerminalOutput>
+  Done in 3.00 seconds
+</TerminalOutput>
+
+<Notice type="info">
+  The `*args` parameter used at `timed` and `func` is a trick to preserve whatever parameter is passed to the original function.
+</Notice>
+
+Now we have the `timeit` decorator, the `wait_3_seconds` and the `wait_3_seconds_and_print` functions. Those both will wait 3 seconds but the second one will print the execution time.
+
+## 3. Using real decorators
+
+Now that we understand the idea behind decorators, we can rewrite the examples using real decorators. The behavior will be exactly the same.
+
+```python
+@decorate_h1
+def hello_person_with_h1(name):
+    """ Says hello to someone """
+
+    return "hello {}".format(name)
+```
+
+This is exactly the same as the function `hello_person_h1` from the other example
+
+```python
+@timeit
+def wait_3_seconds_with_print():
+    sleep(3)
+```
+
+And the same with the wait function. And the cool thing is that we can use both decorators at the same time.
+
+```python
+@timeit
+@decorate_h1
+def wait_and_say_hello(name):
+    """ Says hello to someone """
+    sleep(3)
+    return "hello {}".format(name)
+
+wait_and_say_hello("Turtle")
+```
+<TerminalOutput>
+  Done in 3.00 seconds
+  \> &lt;h1>hello Turtle&lt;/h1>
+</TerminalOutput>
+
+This will prints `Done in 3.00 seconds` and the output is `<h1>hello Turtle</h1>`
+
+To sum up decorators allow to do things before or after (or both) a function:
+
+```python
+def printer(func):
+    """ Printer decorator """
+    
+    def prints():
+        """ Prints some things """
+        print("Before function")
+        result = func()
+        print("After function")    
+        return result
+    
+    return prints
+
+@printer
+def hello():
+    print("hello world")
+
+hello()
+```
+<TerminalOutput>
+  Before function
+  hello world
+  After function
+</TerminalOutput>
+
+## 4. Passing arguments to decorators
+
+It is possible to pass arguments to `decorators`. The idea is to create another wrapper that will take the parameters. For example:
+
+```python
+def printer_with_params(before="Before function", after="After function"):
+    """ Wrapper around decorator """
+    
+    def printer(func):
+        """ Printer decorator """
+
+        def prints():
+            """ Prints some things """
+            print(before)
+            result = func()
+            print(after)    
+            return result
+
+        return prints
+    
+    return printer
+
+@printer_with_params(before="Argh!")
+def hello_argh():
+    print("hello world")
+
+hello_argh()
+```
+<TerminalOutput>
+  Argh!
+  hello world
+  After function
+</TerminalOutput>
+
+<Notice type="info">
+  This decorator allows the user to decide what to print before the main function.
+</Notice>
+
+## 5. Some cool examples
+
+Now that we understand how decorators work, let's see some useful examples of what decorators can offer.
+
+### 5.1. supertimeit decorator
+
+This is a decorator that takes one outputting function and outputs the execution time. By default it will use the `print` function.
+
+```python
+import functools
+
+def supertimeit(output_func=print):
+    """ Allows to use custom output functions (like print, log.info...)"""
+
+    def timeit_decorator(func):
+        """ Timing decorator """
+    
+        @functools.wraps(func)
+        def timed_execution(*args):
+            """ Outputs the execution time of a function """
+            t0 = time()
+            result = func(*args)
+            output_func("Done in {:.2f} seconds".format(time() - t0))    
+            return result
+
+        return timed_execution
+    
+    return timeit_decorator
+```
+
+<Notice type="info">
+  By adding `@functools.wraps(func)` the documentation of the original function will be preserved
+</Notice>
+
+The default usage will be the same as the `timeit` decorator used before:
+
+```python
+@supertimeit() # Since it can take params, we need the '()'
+def wait_2_seconds_and_print():
+    sleep(2)
+
+wait_2_seconds_and_print()
+```
+<TerminalOutput>
+  Done in 2.00 seconds
+</TerminalOutput>
+
+The intersting part is that we can use other outputting functions instead of `print`, for example some `logging`:
+
+```python
+import logging
+
+@supertimeit(logging.warning)
+def wait_2_seconds_and_log():
+    sleep(2)
+
+wait_2_seconds_and_log()
+```
+<TerminalOutput color="red">
+  **WARNING:root:** Done in 2.00 seconds
+</TerminalOutput>
+
+Now the function logs the time.
+
+### 5.2. infallible decorator
+
+This decorator will prevent any function from crashing and it will show the details of any `Exception` occurred.
+
+```python
+def infallible(output_func=print):
+    """ Allows to use custom output functions (like print, log.info...)"""
+
+    def infallible_decorator(func):
+        """ Timing decorator """
+    
+        @functools.wraps(func)
+        def infallible_execution(*args):
+            """ Outputs the execution time of a function """
+            
+            try:
+                return func(*args)
+            except Exception as e:
+                output_func("Error in '{}': {}".format(func.__name__, e))
+
+        return infallible_execution
+    
+    return infallible_decorator
+```
+
+<Notice type="info">
+  `func.__name__` is a way to get the function name as a string
+</Notice>
+
+To see how it works let's create a function that crashes:
+
+```python
+@infallible()
+def wrong_math(x):
+    """ This divides a number by 0 """
+    return x/0
+
+wrong_math(1)
+```
+<TerminalOutput>
+  Error in 'wrong_math': division by zero
+</TerminalOutput>
+
+<Notice type="success">
+  Now we see a message when it crashes
+</Notice>
+
+### 5.3. Using them both
+
+And the best part is that we can use `supertimeit` and `infallible` decorators together.
+
+```python
+@supertimeit()
+@infallible(logging.error)
+def unuseful_function(x):
+    """ It will wait some time and then it will divide a number by 0 """
+
+    sleep(2)
+    return x/0
+
+unuseful_function(10)
+```
+<TerminalOutput color="red">
+  **ERROR:root:** Error in 'unuseful_function': division by zero
+</TerminalOutput>
+<TerminalOutput>
+  Done in 2.00 seconds
+</TerminalOutput>
+
+This logs `ERROR:root:Error in 'unuseful_function': division by zero` and print `Done in 2.00 seconds`.
+
+After that post you should now understand python **decorators** and be able to create your own. If you have a really good idea for a decorator writte it down in the comments!

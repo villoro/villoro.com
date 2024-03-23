@@ -1,880 +1,693 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: numba
-title: Python performance I - numba
-title_short: Numba - performance
-date: "2019-05-21"
-image: numba_square.png
-highlight: True
+---
+slug: improve-python-performance-with-numba
+title: Improving python performance with Numba
+meta_title: Improving python performance with Numba
+description: Numba translates Python functions to optimized machine code at runtime. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN.
+date: 2019-05-21
+image: "/images/blog/0019-numba.png"
+categories: ["Python", "Benchmark"]
+draft: false
+---
 
-tags:
-  - Python
-  - Performance
+<script type="module" src="/js/posts/0019-plots-numba.js"></script>
 
-tags_filter:
-  - Python
-  - Performance
+This is the first post about python performance.
+This post will be of how to make python code go faster.
 
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Github
-  url: https://github.com/villoro/villoro_posts/tree/master/0019-numba
+## Table of Contents
 
+[TOC]
 
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  Numba translates Python functions to optimized machine code at runtime. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN.
+## 1. Exploring python compilers
+The first way to improve the python performance is by using different compilers. The most famous ones are:
 
-image_head:
-  filename: numba.svg
-  caption: numba
+* [cython](https://cython.org/)
+* [pypy](https://pypy.org/)
+* [numba](http://numba.pydata.org/)
 
-use_chartjs: True
+**Numba** and **cython** are similar in terms of speed and **pypy** is a little bit slower. You can read more at [this quora question](https://www.quora.com/How-do-Cython-Numba-and-PyPy-compare-in-terms-of-performance-ease-of-use-and-restrictions).
 
-content_markdown: |
-  This is the first post about python performance.
-  This post will be of how to make python code go faster.
+### 1.1. Cython overview
+**Cython** is an optimising static compiler for both the Python programming language and the extended Cython programming language (based on Pyrex).
 
-  ## Table of Contents
+When using cython you will need to specify variables classes so the code will look slightly different. For example:
 
-  [TOC]
+```c
+cdef int a = 0
+for i in range(10):
+    a += i
+print(a)
+```
 
-  ## 1. Exploring python compilers
-  The first way to improve the python performance is by using different compilers. The most famous ones are:
+You can also cythonize python code. So for example you can create a file to compute Fibonacci series:
 
-  * [cython](https://cython.org/)
-  * [pypy](https://pypy.org/)
-  * [numba](http://numba.pydata.org/)
+<TerminalOutput color="stone">
+  fib.pyx
+</TerminalOutput>
+```python
+def fib(n):
+    """Print the Fibonacci series up to n."""
+    a, b = 0, 1
+    while b < n:
+        print(b, end=' ')
+        a, b = b, a + b
 
-  **Numba** and **cython** are similar in terms of speed and **pypy** is a little bit slower. You can read more at [this quora question](https://www.quora.com/How-do-Cython-Numba-and-PyPy-compare-in-terms-of-performance-ease-of-use-and-restrictions).
+    print()
+```
 
-  ### 1.1. Cython overview
-  **Cython** is an optimising static compiler for both the Python programming language and the extended Cython programming language (based on Pyrex).
+And then transform it to **cython**:
 
-  When using cython you will need to specify variables classes so the code will look slightly different. For example:
+```python
+from distutils.core import setup
+from Cython.Build import cythonize
 
-  ```cython
-  cdef int a = 0
-  for i in range(10):
-      a += i
-  print(a)
-  ```
+setup(
+    ext_modules=cythonize("fib.pyx"),
+)
+```
 
-  You can also cythonize python code. So for example you can create a file to compute Fibonacci series:
+Even though cython is fast I don't like having to change the code to adapt it to cython.
 
-  <div class="input">
-    fib.pyx
-  </div>
-  ```python
-  def fib(n):
-      """Print the Fibonacci series up to n."""
-      a, b = 0, 1
-      while b < n:
-          print(b, end=' ')
-          a, b = b, a + b
+### 1.2. Pypy overview
 
-      print()
-  ```
+**PyPy** is a fast, compliant alternative implementation of the Python language (2.7.13 and 3.5.3, 3.6). It has several advantages and distinct features:
 
-  And then transform it to **cython**:
+* **Speed:** thanks to its Just-in-Time compiler, Python programs often run faster on PyPy. (What is a JIT compiler?)
+* **Memory usage:** memory-hungry Python programs (several hundreds of MBs or more) might end up taking less space than they do in CPython.
+* **Compatibility:** PyPy is highly compatible with existing python code. It supports cffi and can run popular python libraries like twisted and django.
+* **Stackless:** PyPy comes by default with support for stackless mode, providing micro-threads for massive concurrency.
 
-  ```python
-  from distutils.core import setup
-  from Cython.Build import cythonize
+When using **pypy** you can write regular python code. The main disadvantage of pypy is that you can't use other libraries out of the box. So if for example you wan to use **pandas** you will need a **pypy** implementation of it. This makes using pypy along common python packages unconvinient. 
 
-  setup(
-      ext_modules=cythonize("fib.pyx"),
-  )
-  ```
-  
-  Even though cython is fast I don't like having to change the code to adapt it to cython.
+### 1.3. Numba overview
 
-  ### 1.2. Pypy overview
+**Numba** translates Python functions to optimized machine code at runtime using the industry-standard LLVM compiler library. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN.
 
-  **PyPy** is a fast, compliant alternative implementation of the Python language (2.7.13 and 3.5.3, 3.6). It has several advantages and distinct features:
+You don't need to replace the Python interpreter, run a separate compilation step, or even have a C/C++ compiler installed. Just apply one of the Numba decorators to your Python function, and Numba does the rest.
 
-  * **Speed:** thanks to its Just-in-Time compiler, Python programs often run faster on PyPy. (What is a JIT compiler?)
-  * **Memory usage:** memory-hungry Python programs (several hundreds of MBs or more) might end up taking less space than they do in CPython.
-  * **Compatibility:** PyPy is highly compatible with existing python code. It supports cffi and can run popular python libraries like twisted and django.
-  * **Stackless:** PyPy comes by default with support for stackless mode, providing micro-threads for massive concurrency.
+So you can use python code without modifications and you won't have compatibility problems with other packages when using numba. This is the reason I preffer **numba** over **cython** and **pypy** and it is also one of the faster of the three.
 
-  When using **pypy** you can write regular python code. The main disadvantage of pypy is that you can't use other libraries out of the box. So if for example you wan to use **pandas** you will need a **pypy** implementation of it. This makes using pypy along common python packages unconvinient. 
+## 2. Using numba
 
-  ### 1.3. Numba overview
+**Numba** provides some decorators that will transform functions to `C`. This way the execution times will be faster.
 
-  **Numba** translates Python functions to optimized machine code at runtime using the industry-standard LLVM compiler library. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN.
+By adding the `jit` decorator to a function **numba** will transform it to `C`. For example:
 
-  You don't need to replace the Python interpreter, run a separate compilation step, or even have a C/C++ compiler installed. Just apply one of the Numba decorators to your Python function, and Numba does the rest.
+```python
+from numba import jit, njit
 
-  So you can use python code without modifications and you won't have compatibility problems with other packages when using numba. This is the reason I preffer **numba** over **cython** and **pypy** and it is also one of the faster of the three.
+@jit
+def m_sum(data):
+    out = 0
+    for x in data:
+        out += x
 
-  ## 2. Using numba
+    return out
 
-  **Numba** provides some decorators that will transform functions to `C`. This way the execution times will be faster.
+m_sum([1, 2, 3])
+```
+<TerminalOutput>
+  \> 6
+</TerminalOutput>
 
-  By adding the `jit` decorator to a function **numba** will transform it to `C`. For example:
+### 2.1. `jit` vs `njit` decorators
 
-  ```python
-  from numba import jit, njit
+The default **numba** decorator is `jit`. It is possible to pass use nopython mode with `@jit(nopython=True)` or with the decorator `njit` which is equivalent.
+`njit` decorator is faster than `jit` but supports less features than jit.
 
-  @jit
-  def m_sum(data):
-      out = 0
-      for x in data:
-          out += x
+For example you can't cast to string (with for example `str(10)`) inside a `njit` decorated function.
+So you should try to use `njit` decorator if possible specialy for numerical calculations.
 
-      return out
-
-  m_sum([1, 2, 3])
-  ```
-  <div class="output">
-    <b>Out:</b> 6
-  </div>
-
-  ### 2.1. `jit` vs `njit` decorators
-
-  The default **numba** decorator is `jit`. It is possible to pass use nopython mode with `@jit(nopython=True)` or with the decorator `njit` which is equivalent.
-  `njit` decorator is faster than `jit` but supports less features than jit.
-
-  For example you can't cast to string (with for example `str(10)`) inside a `njit` decorated function.
-  So you should try to use `njit` decorator if possible specialy for numerical calculations.
-
-  ### 2.2. `vectorize` decorator
-
-  Using the `vectorize` decorator, you write your function as operating over input scalars, rather than arrays. **Numba** will generate the surrounding loop (or kernel) allowing efficient iteration over the actual inputs.
-
-  So for example given a `np.array` we can calculat the square with the follwing function.
-
-  ```python
-  from numba import vectorize
-
-  mlist = np.array(range(10))
-
-  @vectorize
-  def square(x):
-      return x**2
-
-  square(mlist)
-  ```
-  <div class="output">
-    <b>Out:</b> array([ 0,  1,  4,  9, 16, 25, 36, 49, 64, 81], dtype=int64)
-  </div>
-
-  To increase the speed you can specify the inputs and output dtypes using `int8` since in this example is enough for storing `81` which is the max value.
-  You can check the [numpy documentation](https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html) to see the different `dtypes`.
-
-  ```python
-  from numba import vectorize, int8
-
-  mlist = np.array(range(10))
-
-  @vectorize([int8(int8)])
-  def square(x):
-      return x**2
-
-  square(mlist)
-  ```
-  <div class="output">
-    <b>Out:</b> array([ 0,  1,  4,  9, 16, 25, 36, 49, 64, 81], dtype=int8)
-  </div>
-
-  The format for declaring the `dtypes` is `[output(input1, input2, ...)]`.
-
-  ## 3. Test numba performance
-
-  ### 3.1. Test `sum` function
-
-  First we will time the execution of different `sum` functions. The first option will be a for loop in python:
-
-  <div class="input">
-    iter_and_sum
-  </div>
-  ```python
-  def iter_and_sum(data):
-      """ Sums each element in an iterable """
-      out = 0
-      for x in data:
-          out += x
-
-      return out
-  ```
-
-  And we will test both `jit` and `njit` **numba** decorators. As an example this is how the `jit` version would be defined:
-
-  <div class="input">
-    jit
-  </div>
-  ```python
-  @jit
-  def jit_iter_and_sum(data):
-      """ Sums each element in an iterable """
-      out = 0
-      for x in data:
-          out += x
-
-      return out
-
-  # Or equivalent:
-  jit(iter_and_sum)
-  ```
-
-  The other options is to use the `sum()` python function and the `numpy.sum()`.
-
-  For the tests we will try different array lenghts.
-
-  <table class="v-table v-table-right" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">numpy size</th>
-      <th class="v-table-header">iter_and_sum</th>
-      <th class="v-table-header">jit</th>
-      <th class="v-table-header">njit</th>
-      <th class="v-table-header">np.sum</th>
-      <th class="v-table-header">sum</th>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^4</td>
-      <td>0.000926</td>
-      <td>0.000001</td>
-      <td>0.000001</td>
-      <td>0.000008</td>
-      <td>0.000750</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^5</td>
-      <td>0.009162</td>
-      <td>0.000009</td>
-      <td>0.000010</td>
-      <td>0.000042</td>
-      <td>0.007408</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^6</td>
-      <td>0.092395</td>
-      <td>0.000106</td>
-      <td>0.000120</td>
-      <td>0.000408</td>
-      <td>0.075894</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^7</td>
-      <td>0.936200</td>
-      <td>0.002313</td>
-      <td>0.002345</td>
-      <td>0.004393</td>
-      <td>0.766890</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^8</td>
-      <td>9.335412</td>
-      <td>0.021232</td>
-      <td>0.020506</td>
-      <td>0.042701</td>
-      <td>7.549756</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^9</td>
-      <td>96.134125</td>
-      <td>0.238718</td>
-      <td>0.225308</td>
-      <td>0.433185</td>
-      <td>76.537118</td>
-    </tr>
-  </table>
-
-  > First time result has been excluded to avoid computing the time of compilation before calculating the mean.
-
-  It is important to mention that the results would be different using python lists instead of `numpy` arrays.
-
-  <canvas id="chart_sum" style="width:100%;height:600px;"></canvas>
-
-  For small arrays `numpy.sum` is the best option but **for large arrays both `jit` and `njit` perform really well**.
-
-  In general is a really good idea to use numpy functions since they use `cython` under the hood.
-  In all cases using the raw loop `iter_and_sum` or the default python `sum` gives poor results.
-
-  > **numba** can be **400x** better than a python loop
-
-  ### 3.2. Test fix time
-
-  At one of the projects I was working at my company I found an intersting problem.
-  I had a huge dataframe (650 milion rows) and among other columns there was one for the `date` and one for `time`.
-
-  The `date` column followed the format `YYYY-MM-DD` like 2019-05-15. The problem was with the `time` column.
-  The original format was `hhmmsscc` (`c` for centiseconds) and instead of being a string it was presented as an **integer**. So for example you could find the following values:
-
-  <table class="v-table v-table-right" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">value</th>
-      <th class="v-table-header">represents</th>
-    </tr>
-    <tr>
-      <td>23411210</td>
-      <td>23:41:12.10</td>
-    </tr>
-    <tr>
-      <td>9051137</td>
-      <td>09:05:11.37</td>
-    </tr>
-    <tr>
-      <td>712</td>
-      <td>00:00:07.12</td>
-    </tr>
-  </table>
-
-  #### 3.2.1. The functions
-
-  So to fix that I transformed the values to string, then added 0 until I had 8 chars and finally split and add `:` and `.` so that then it could be transformed.
-
-  Let's use this problem for testing **numba**. First let's see all different options I came up.
-
-  ##### 3.2.1.1. zfill
-
-  This was my first approach which was good enough. The idea is to transform the `time` column to string and then apply `zfill(8)`. After that I created a string with the appropiate format and transform the whole `datetime` with `pd.to_datetime`.
-
-  ```python
-  def zfill(df):
-      """
-          1. Transform time to str
-          2. zfill
-          3. split time as string lists
-          4. pd.to_datetime
-      """
-
-      aux = df["time"].apply(str).apply(lambda x: x.zfill(8)).str
-      return pd.to_datetime(df["date"] + " " + aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:])
-  ```
-
-  ##### 3.2.1.2. fix_time_individual
-
-  The idea in this option is to create a function decorated with `jit` that transform one element of the `time` column and apply the function to the column.
-
-  Insted of using `pd.to_datetime` I use `.astype(np.datetime64)` since is faster.
-
-  ```python
-  def fix_time_individual(df):
-      """
-          1. pandas.apply a jit function to add 0 to time
-          2. concat date + time
-          3. change to np.datetime64
-      """
-      
-      @jit
-      def _fix_time(x):
-          aux = "0"*(8 - len(str(x))) + str(x)
-          return aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
-      
-      return (df["date"] + " " + df["time"].apply(_fix_time)).astype(np.datetime64)
-  ```
-
-  ##### 3.2.1.3. fix_time_np_string
-
-  With this solution I created and empty `numpy` array and filled with a loop inside the `jit` decorated function.
-
-  ```python
-  def fix_time_np_string(df):
-      """
-          1. Use a jit function to add 0 to each time
-          2. concat date + time
-          3. change to np.datetime64
-      """
-
-      @jit
-      def _fix_time(mlist):
-      
-          out = np.empty(mlist.shape, dtype=np.object)
-
-          for i in range(len(mlist)):
-
-              elem = str(mlist[i])
-              aux = "0"*(8 - len(elem)) + elem
-
-              out[i] = aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
-
-          return out
-      
-      return (df["date"].values + " " + _fix_time(df["time"].values)).astype(np.datetime64)
-  ```
-
-  ##### 3.2.1.4. fix_time_np_datetime
-
-  In this case the I also create an empty `numpy` array but with `datetime64[s]` dtype. This way I can iterate over both `time` and `date` at the same time.
-
-  ```python
-  def fix_time_np_datetime(df):
-      """
-          1. Iterate time and date with jit function
-          2. Transform each element to string and add 0s
-          3. Split the string
-          4. Cast each element to np.datetime64
-      """
-      
-      @jit
-      def _fix_date(mdate, mtime):
-
-          out = np.empty(mtime.shape, dtype="datetime64[s]")
-
-          for i in range(len(mtime)):
-
-              elem = str(mtime[i])
-              aux = "0"*(8 - len(elem)) + elem
-
-              aux = mdate[i] + " " + aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
-
-              out[i] = np.datetime64(aux)
-
-          return out
-      
-      return _fix_date(df["date"].values, df["time"].values)
-  ```
-
-  ##### 3.2.1.5. np_divmod_jit
-
-  In this solution I process the `time` column as number and with the `np.divmod` function I create a value that represents a **timedelta**. After transforming the `time` column I change the dtype to `timedelta64[ms]` and sum it to the `date` column as a `datetime64`.
-
-  ```python
-  def np_divmod_jit(df):
-      """
-          1. Iterate time and date with jit function
-          2. Use np.divmod to transfom HHMMSSCC to miliseconds integer
-          3. Cast date as np.datetime and time to timedelta
-          4. Sum date and time
-      """
-          
-      @jit
-      def _fix_date(mdate, mtime):
-
-          time_out = np.empty(mtime.shape[0], dtype=np.int32)
-
-          for i in range(mtime.shape[0]):
-              aux, cent = np.divmod(mtime[i], 100)
-              aux, seconds = np.divmod(aux, 100)
-              hours, minutes = np.divmod(aux, 100)
-
-              time_out[i] = 10*(cent + 100*(seconds + 60*(minutes + 60*hours)))
-
-          return mdate.astype(np.datetime64) + time_out.astype("timedelta64[ms]")
-      
-      return _fix_date(df["date"].values, df["time"].values)
-  ```
-
-  ##### 3.2.1.6. divmod_njit
-
-  It is the same as the previous example but after changing `np.divmod` to the python `divmod` function I can use the `njit` decorator for the first time.
-
-  ```python
-  def divmod_njit(df):
-      """
-          1. Iterate time with njit function
-          2. Use divmod to transfom HHMMSSCC to miliseconds integer
-          3. Outside the njit function cast date as np.datetime and time to timedelta
-          4. Sum date and time
-      """
-
-      @njit
-      def _fix_time(mtime):
-
-          time_out = np.empty(mtime.shape)
-
-          for i in range(mtime.shape[0]):
-              aux, cent = divmod(mtime[i], 100)
-              aux, seconds = divmod(aux, 100)
-              hours, minutes = divmod(aux, 100)
-
-              time_out[i] = 10 * (cent + 100 * (seconds + 60 * (minutes + 60 * hours)))
-
-          return time_out
-
-      return df["date"].values.astype(np.datetime64) + _fix_time(
-          df["time"].values.astype(np.int32)
-      ).astype("timedelta64[ms]")
-  ```
-
-  ##### 3.2.1.7. divmod_vectorize
-
-  This case is exactly the same as the previous one but instead of doing the `for` loop I use the **numba** `vectorize` decorator.
-
-  ```python
-  def divmod_vectorize(df):
-      """
-          1. Use divmod to transfom HHMMSSCC to miliseconds integer with vectorize
-          2. Outside the njit function cast date as np.datetime and time to timedelta
-          3. Sum date and time
-      """
-
-      @vectorize([int32(int32)])
-      def _fix_time(mtime):
-
-          aux, cent = divmod(mtime, 100)
-          aux, seconds = divmod(aux, 100)
-          hours, minutes = divmod(aux, 100)
-
-          return 10 * (cent + 100 * (seconds + 60 * (minutes + 60 * hours)))
-
-      return df["date"].values.astype(np.datetime64) + _fix_time(
-          df["time"].values.astype(np.int32)
-      ).astype("timedelta64[ms]")
-  ```
-
-  #### 3.2.2. The results
-
-  <table class="v-table v-table-center" align="center">
-    <tr>
-      <th class="v-table-header">size</th>
-      <th class="v-table-header">zfill</th>
-      <th class="v-table-header">fix_time_individual</th>
-      <th class="v-table-header">fix_time_np_string</th>
-      <th class="v-table-header">fix_time_np_datetime</th>
-      <th class="v-table-header">np_divmod_jit</th>
-      <th class="v-table-header">divmod_njit</th>
-      <th class="v-table-header">divmod_vectorize</th>
-    </tr>
-    <tr>
-      <td>10^2</td>
-      <td>0.004388</td>
-      <td>0.213377</td>
-      <td>0.434647</td>
-      <td>0.535352</td>
-      <td>0.428438</td>
-      <td>0.132344</td>
-      <td>0.088566</td>
-    </tr>
-    <tr>
-      <td>10^3</td>
-      <td>0.007160</td>
-      <td>0.223842</td>
-      <td>0.443458</td>
-      <td>0.518424</td>
-      <td>0.437135</td>
-      <td>0.131134</td>
-      <td>0.090028</td>
-    </tr>
-    <tr>
-      <td>10^4</td>
-      <td>0.030412</td>
-      <td>0.265528</td>
-      <td>0.483543</td>
-      <td>0.558784</td>
-      <td>0.536995</td>
-      <td>0.142893</td>
-      <td>0.101280</td>
-    </tr>
-    <tr>
-      <td>10^5</td>
-      <td>0.295480</td>
-      <td>0.711711</td>
-      <td>0.735900</td>
-      <td>0.838042</td>
-      <td>1.435995</td>
-      <td>0.168305</td>
-      <td>0.127379</td>
-    </tr>
-    <tr>
-      <td>10^6</td>
-      <td>3.424938</td>
-      <td>5.112963</td>
-      <td>3.425526</td>
-      <td>3.527455</td>
-      <td>10.157285</td>
-      <td>0.419848</td>
-      <td>0.384422</td>
-    </tr>
-    <tr>
-      <td>10^7</td>
-      <td>37.434941</td>
-      <td>50.304211</td>
-      <td>30.280986</td>
-      <td>32.378085</td>
-      <td>97.415906</td>
-      <td>2.916234</td>
-      <td>2.804018</td>
-    </tr>
-    <tr>
-      <td>10^8</td>
-      <td>721.881598</td>
-      <td>508.880023</td>
-      <td>310.148904</td>
-      <td>326.442289</td>
-      <td>973.317809</td>
-      <td>31.491899</td>
-      <td>31.602522</td>
-    </tr>
-  </table>
-
-  Both `divmod_njit` and `divmod_vectorize` performs really well compared to the other options. Is intersting that my first approach (`zfill`) is the best for small dataframes but it starts to underperform at 10^5.
-
-  <canvas id="chart_fix_time" style="width:100%;height:600px;"></canvas>
-
-  > Working with numbers in numba is really fast.
-
-  #### 3.2.3. Speed with different machines
-
-  I did this test with up to `10^7` elements with my computer. I was not able to increase the number of elements due to an **out of memory error** (not enough RAM).
-
-  Then I repeated everything with an `M64` **azure** machine.
-
-  The specs of each machine are:
-
-  <table class="v-table v-table-center" align="center">
-    <tr>
-      <th class="v-table-header">feature</th>
-      <th class="v-table-header">my computer</th>
-      <th class="v-table-header">azure M64</th>
-    </tr>
-    <tr>
-      <td>processor</td>
-      <td>Intel Core i5-6500 3.2Ghz</td>
-      <td>Intel Xeon E7-8890 v3 2.5GHz (Haswell)<br></td>
-    </tr>
-    <tr>
-      <td>cores</td>
-      <td>4</td>
-      <td>64</td>
-    </tr>
-    <tr>
-      <td>RAM</td>
-      <td>16 GB</td>
-      <td>1 TB</td>
-    </tr>
-  </table>
-
-  Let's compare the results of two functions.
-
-  <table class="v-table v-table-center" align="center">
-    <tr>
-      <th class="v-table-header" rowspan="2">size</th>
-      <th class="v-table-header" colspan="2">zfill</th>
-      <th class="v-table-header" colspan="2">divmod_vectorize</th>
-    </tr>
-    <tr>
-      <td class="v-table-header2">i5</td>
-      <td class="v-table-header2">azure</td>
-      <td class="v-table-header2">i5</td>
-      <td class="v-table-header2">azure</td>
-    </tr>
-    <tr>
-      <td>10^2</td>
-      <td>0.004002</td>
-      <td>0.004388</td>
-      <td>0.090219</td>
-      <td>0.088566</td>
-    </tr>
-    <tr>
-      <td>10^3</td>
-      <td>0.005410</td>
-      <td>0.007160</td>
-      <td>0.091660</td>
-      <td>0.090028</td>
-    </tr>
-    <tr>
-      <td>10^4</td>
-      <td>0.031415</td>
-      <td>0.030412</td>
-      <td>0.100109</td>
-      <td>0.101280</td>
-    </tr>
-    <tr>
-      <td>10^5</td>
-      <td>0.291654</td>
-      <td>0.295480</td>
-      <td>0.191021</td>
-      <td>0.127379</td>
-    </tr>
-    <tr>
-      <td>10^6</td>
-      <td>3.143935</td>
-      <td>3.424938</td>
-      <td>1.051343</td>
-      <td>0.384422</td>
-    </tr>
-    <tr>
-      <td>10^7</td>
-      <td>32.780381</td>
-      <td>37.434941</td>
-      <td>9.711320</td>
-      <td>2.804018</td>
-    </tr>
-  </table>
-
-  If we take a look at the results we can see that they both perform similar. 
-  
-  <canvas id="chart_fix_time_comparison" style="width:100%;height:600px;"></canvas>
-
-  It is important to remember that **pandas only work with one core** so I am not using the full potential of the machines. **Having more RAM allows to work with more data** but it does not increase the speed. With the **numba** vectorize the azure machine performs better as the size increases.
-
-  ## 4. More info
-
-  You can read the [numba documentation](http://numba.pydata.org/numba-doc/latest/index.html). Some examples of **numba** form their web page at [numba examples](http://numba.pydata.org/numba-doc/0.21.0/user/examples.html).
-
-  I also suggest you read this post from Jake VanderPlas about [code optimization with numba](https://jakevdp.github.io/blog/2015/02/24/optimizing-python-with-numpy-and-numba/).
-
-
-scripts: |
-  <script>
-    const scales = {
-      scales: {
-        yAxes: [{
-          scaleLabel: {
-            display: true,
-            labelString: 'Time [s]',
-          },
-          type: 'logarithmic',
-        }],
-        xAxes: [{
-          scaleLabel: {
-            display: true,
-            labelString: 'Number of rows'
-          },
-        }],
-      }
-    }
-    var chart_sum = new Chart("chart_sum", {
-      type: 'line',
-      data: {
-        labels: ['10^4', '10^5', '10^6', '10^7', '10^8', '10^9'],
-        datasets: [
-          {
-            label: 'iter_and_sum',
-            borderColor: "#F44336", 
-            data: [0.000926, 0.009162, 0.092395, 0.9362, 9.335412, 96.134125],
-            fill: false
-          },
-          {
-            label: 'sum',
-            borderColor: "#FF9800", 
-            data: [0.00075, 0.007408, 0.075894, 0.76689, 7.549756, 76.537118],
-            fill: false
-          },
-          {
-            label: 'np.sum',
-            borderColor: "#03A9F4", 
-            data: [0.000008, 0.000042, 0.000408, 0.004393, 0.042701, 0.433185],
-            fill: false
-          },
-          {
-            label: 'jit',
-            borderColor: "#8BC34A", 
-            data: [0.000001, 0.000009, 0.000106, 0.002313, 0.021232, 0.238718],
-            fill: false
-          },
-          {
-            label: 'njit',
-            borderColor: "#4CAF50", 
-            data: [0.000001, 0.000010, 0.00012, 0.002345, 0.020506, 0.225308],
-            fill: false
-          },
-        ],
-      },
-      options: {
-        title: {
-          display: true,
-          text: 'Time of different sum functions'
-        },
-        ...scales
-      }
-    });
-
-
-    var chart_fix_time = new Chart("chart_fix_time", {
-      type: 'line',
-      data: {
-        labels: ['10^2', '10^3', '10^4', '10^5', '10^6', '10^7', '10^8'],
-        datasets: [
-          {
-            label: 'zfill',
-            borderColor: "#616161", 
-            data: [0.004388, 0.00716, 0.030412, 0.29548, 3.424938, 37.434941, 721.881598],
-            fill: false
-          },
-          {
-            label: 'fix_time_individual',
-            borderColor: "#FF9800", 
-            data: [0.213377, 0.223842, 0.265528, 0.711711, 5.112963, 50.304211, 508.880023],
-            fill: false
-          },
-          {
-            label: 'fix_time_np_string',
-            borderColor: "#2196F3", 
-            data: [0.434647, 0.443458, 0.483543, 0.7359, 3.425526, 30.280986, 310.148904],
-            fill: false
-          },
-          {
-            label: 'fix_time_np_datetime',
-            borderColor: "#9C27B0", 
-            data: [0.535352, 0.518424, 0.558784, 0.838042, 3.527455, 32.378085, 326.442289],
-            fill: false
-          },
-          {
-            label: 'np_divmod_jit',
-            borderColor: "#F44336", 
-            data: [0.428438, 0.437135, 0.536995, 1.435995, 10.157285, 97.415906, 973.317809],
-            fill: false
-          },
-          {
-            label: 'divmod_njit',
-            borderColor: "#8BC34A", 
-            data: [0.132344, 0.131134, 0.142893, 0.168305, 0.419848, 2.916234, 31.491899],
-            fill: false
-          },
-          {
-            label: 'divmod_vectorize',
-            borderColor: "#4CAF50", 
-            data: [0.088566, 0.090028, 0.10128, 0.127379, 0.384422, 2.804018, 31.602522],
-            fill: false
-          },
-        ],
-      },
-      options: {
-        title: {
-          display: true,
-          text: 'Time of different fix_time functions'
-        },
-        ...scales
-      }
-    });
-
-    var chart_fix_time_comparison = new Chart("chart_fix_time_comparison", {
-      type: 'line',
-      data: {
-        labels: ['10^2', '10^3', '10^4', '10^5', '10^6', '10^7'],
-        datasets: [
-          {
-            label: 'zfill azure',
-            borderColor: "#616161", 
-            data: [0.004388, 0.00716, 0.030412, 0.29548, 3.424938, 37.434941],
-            fill: false
-          },
-          {
-            label: 'divmod_vectorize azure',
-            borderColor: "#4CAF50", 
-            data: [0.088566, 0.090028, 0.10128, 0.127379, 0.384422, 2.804018],
-            fill: false
-          },
-          {
-            label: 'zfill i5',
-            borderColor: "#BDBDBD", 
-            data: [0.00289, 0.00744, 0.036504, 0.304326, 3.294064, 35.19163],
-            fill: false
-          },
-          {
-            label: 'divmod_vectorize i5',
-            borderColor: "#A5D6A7", 
-            data: [0.090219, 0.09166, 0.100109, 0.191021, 1.051343, 9.71132],
-            fill: false
-          },
-        ],
-      },
-      options: {
-        title: {
-          display: true,
-          text: 'Time of different fix_time functions with different machines'
-        },
-        ...scales
-      }
-    });
-  </script>
-  
+### 2.2. `vectorize` decorator
+
+Using the `vectorize` decorator, you write your function as operating over input scalars, rather than arrays. **Numba** will generate the surrounding loop (or kernel) allowing efficient iteration over the actual inputs.
+
+So for example given a `np.array` we can calculat the square with the follwing function.
+
+```python
+from numba import vectorize
+
+mlist = np.array(range(10))
+
+@vectorize
+def square(x):
+    return x**2
+
+square(mlist)
+```
+<TerminalOutput>
+  \> array([ 0,  1,  4,  9, 16, 25, 36, 49, 64, 81], dtype=int64)
+</TerminalOutput>
+
+To increase the speed you can specify the inputs and output dtypes using `int8` since in this example is enough for storing `81` which is the max value.
+You can check the [numpy documentation](https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html) to see the different `dtypes`.
+
+```python
+from numba import vectorize, int8
+
+mlist = np.array(range(10))
+
+@vectorize([int8(int8)])
+def square(x):
+    return x**2
+
+square(mlist)
+```
+<TerminalOutput>
+  \> array([ 0,  1,  4,  9, 16, 25, 36, 49, 64, 81], dtype=int8)
+</TerminalOutput>
+
+The format for declaring the `dtypes` is `[output(input1, input2, ...)]`.
+
+## 3. Test numba performance
+
+### 3.1. Test `sum` function
+
+First we will time the execution of different `sum` functions. The first option will be a for loop in python:
+
+<TerminalOutput color="stone">
+  iter_and_sum
+</TerminalOutput>
+```python
+def iter_and_sum(data):
+    """ Sums each element in an iterable """
+    out = 0
+    for x in data:
+        out += x
+
+    return out
+```
+
+And we will test both `jit` and `njit` **numba** decorators. As an example this is how the `jit` version would be defined:
+
+<TerminalOutput color="stone">
+  jit
+</TerminalOutput>
+```python
+@jit
+def jit_iter_and_sum(data):
+    """ Sums each element in an iterable """
+    out = 0
+    for x in data:
+        out += x
+
+    return out
+
+# Or equivalent:
+jit(iter_and_sum)
+```
+
+The other options is to use the `sum()` python function and the `numpy.sum()`.
+
+For the tests we will try different array lenghts.
+
+<table class="v-table v-table-right" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">numpy size</th>
+    <th class="v-table-header">iter_and_sum</th>
+    <th class="v-table-header">jit</th>
+    <th class="v-table-header">njit</th>
+    <th class="v-table-header">np.sum</th>
+    <th class="v-table-header">sum</th>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^4</td>
+    <td>0.000926</td>
+    <td>0.000001</td>
+    <td>0.000001</td>
+    <td>0.000008</td>
+    <td>0.000750</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^5</td>
+    <td>0.009162</td>
+    <td>0.000009</td>
+    <td>0.000010</td>
+    <td>0.000042</td>
+    <td>0.007408</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^6</td>
+    <td>0.092395</td>
+    <td>0.000106</td>
+    <td>0.000120</td>
+    <td>0.000408</td>
+    <td>0.075894</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^7</td>
+    <td>0.936200</td>
+    <td>0.002313</td>
+    <td>0.002345</td>
+    <td>0.004393</td>
+    <td>0.766890</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^8</td>
+    <td>9.335412</td>
+    <td>0.021232</td>
+    <td>0.020506</td>
+    <td>0.042701</td>
+    <td>7.549756</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^9</td>
+    <td>96.134125</td>
+    <td>0.238718</td>
+    <td>0.225308</td>
+    <td>0.433185</td>
+    <td>76.537118</td>
+  </tr>
+</table>
+
+<Notice type="warning">
+  First time result has been excluded to avoid computing the time of compilation before calculating the mean.
+</Notice>
+
+It is important to mention that the results would be different using python lists instead of `numpy` arrays.
+
+<canvas id="chart_sum" style="width:100%;height:600px;"></canvas>
+
+For small arrays `numpy.sum` is the best option but **for large arrays both `jit` and `njit` perform really well**.
+
+In general is a really good idea to use numpy functions since they use `cython` under the hood.
+In all cases using the raw loop `iter_and_sum` or the default python `sum` gives poor results.
+
+<Notice type="success">
+  **numba** can be **400x** better than a python loop
+</Notice>
+
+### 3.2. Test fix time
+
+At one of the projects I was working at my company I found an intersting problem.
+I had a huge dataframe (650 milion rows) and among other columns there was one for the `date` and one for `time`.
+
+The `date` column followed the format `YYYY-MM-DD` like 2019-05-15. The problem was with the `time` column.
+The original format was `hhmmsscc` (`c` for centiseconds) and instead of being a string it was presented as an **integer**. So for example you could find the following values:
+
+<table class="v-table v-table-right" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">value</th>
+    <th class="v-table-header">represents</th>
+  </tr>
+  <tr>
+    <td>23411210</td>
+    <td>23:41:12.10</td>
+  </tr>
+  <tr>
+    <td>9051137</td>
+    <td>09:05:11.37</td>
+  </tr>
+  <tr>
+    <td>712</td>
+    <td>00:00:07.12</td>
+  </tr>
+</table>
+
+#### 3.2.1. The functions
+
+So to fix that I transformed the values to string, then added 0 until I had 8 chars and finally split and add `:` and `.` so that then it could be transformed.
+
+Let's use this problem for testing **numba**. First let's see all different options I came up.
+
+##### 3.2.1.1. zfill
+
+This was my first approach which was good enough. The idea is to transform the `time` column to string and then apply `zfill(8)`. After that I created a string with the appropiate format and transform the whole `datetime` with `pd.to_datetime`.
+
+```python
+def zfill(df):
+    """
+        1. Transform time to str
+        2. zfill
+        3. split time as string lists
+        4. pd.to_datetime
+    """
+
+    aux = df["time"].apply(str).apply(lambda x: x.zfill(8)).str
+    return pd.to_datetime(df["date"] + " " + aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:])
+```
+
+##### 3.2.1.2. fix_time_individual
+
+The idea in this option is to create a function decorated with `jit` that transform one element of the `time` column and apply the function to the column.
+
+Insted of using `pd.to_datetime` I use `.astype(np.datetime64)` since is faster.
+
+```python
+def fix_time_individual(df):
+    """
+        1. pandas.apply a jit function to add 0 to time
+        2. concat date + time
+        3. change to np.datetime64
+    """
+    
+    @jit
+    def _fix_time(x):
+        aux = "0"*(8 - len(str(x))) + str(x)
+        return aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
+    
+    return (df["date"] + " " + df["time"].apply(_fix_time)).astype(np.datetime64)
+```
+
+##### 3.2.1.3. fix_time_np_string
+
+With this solution I created and empty `numpy` array and filled with a loop inside the `jit` decorated function.
+
+```python
+def fix_time_np_string(df):
+    """
+        1. Use a jit function to add 0 to each time
+        2. concat date + time
+        3. change to np.datetime64
+    """
+
+    @jit
+    def _fix_time(mlist):
+    
+        out = np.empty(mlist.shape, dtype=np.object)
+
+        for i in range(len(mlist)):
+
+            elem = str(mlist[i])
+            aux = "0"*(8 - len(elem)) + elem
+
+            out[i] = aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
+
+        return out
+    
+    return (df["date"].values + " " + _fix_time(df["time"].values)).astype(np.datetime64)
+```
+
+##### 3.2.1.4. fix_time_np_datetime
+
+In this case the I also create an empty `numpy` array but with `datetime64[s]` dtype. This way I can iterate over both `time` and `date` at the same time.
+
+```python
+def fix_time_np_datetime(df):
+    """
+        1. Iterate time and date with jit function
+        2. Transform each element to string and add 0s
+        3. Split the string
+        4. Cast each element to np.datetime64
+    """
+    
+    @jit
+    def _fix_date(mdate, mtime):
+
+        out = np.empty(mtime.shape, dtype="datetime64[s]")
+
+        for i in range(len(mtime)):
+
+            elem = str(mtime[i])
+            aux = "0"*(8 - len(elem)) + elem
+
+            aux = mdate[i] + " " + aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:]
+
+            out[i] = np.datetime64(aux)
+
+        return out
+    
+    return _fix_date(df["date"].values, df["time"].values)
+```
+
+##### 3.2.1.5. np_divmod_jit
+
+In this solution I process the `time` column as number and with the `np.divmod` function I create a value that represents a **timedelta**. After transforming the `time` column I change the dtype to `timedelta64[ms]` and sum it to the `date` column as a `datetime64`.
+
+```python
+def np_divmod_jit(df):
+    """
+        1. Iterate time and date with jit function
+        2. Use np.divmod to transfom HHMMSSCC to miliseconds integer
+        3. Cast date as np.datetime and time to timedelta
+        4. Sum date and time
+    """
+        
+    @jit
+    def _fix_date(mdate, mtime):
+
+        time_out = np.empty(mtime.shape[0], dtype=np.int32)
+
+        for i in range(mtime.shape[0]):
+            aux, cent = np.divmod(mtime[i], 100)
+            aux, seconds = np.divmod(aux, 100)
+            hours, minutes = np.divmod(aux, 100)
+
+            time_out[i] = 10*(cent + 100*(seconds + 60*(minutes + 60*hours)))
+
+        return mdate.astype(np.datetime64) + time_out.astype("timedelta64[ms]")
+    
+    return _fix_date(df["date"].values, df["time"].values)
+```
+
+##### 3.2.1.6. divmod_njit
+
+It is the same as the previous example but after changing `np.divmod` to the python `divmod` function I can use the `njit` decorator for the first time.
+
+```python
+def divmod_njit(df):
+    """
+        1. Iterate time with njit function
+        2. Use divmod to transfom HHMMSSCC to miliseconds integer
+        3. Outside the njit function cast date as np.datetime and time to timedelta
+        4. Sum date and time
+    """
+
+    @njit
+    def _fix_time(mtime):
+
+        time_out = np.empty(mtime.shape)
+
+        for i in range(mtime.shape[0]):
+            aux, cent = divmod(mtime[i], 100)
+            aux, seconds = divmod(aux, 100)
+            hours, minutes = divmod(aux, 100)
+
+            time_out[i] = 10 * (cent + 100 * (seconds + 60 * (minutes + 60 * hours)))
+
+        return time_out
+
+    return df["date"].values.astype(np.datetime64) + _fix_time(
+        df["time"].values.astype(np.int32)
+    ).astype("timedelta64[ms]")
+```
+
+##### 3.2.1.7. divmod_vectorize
+
+This case is exactly the same as the previous one but instead of doing the `for` loop I use the **numba** `vectorize` decorator.
+
+```python
+def divmod_vectorize(df):
+    """
+        1. Use divmod to transfom HHMMSSCC to miliseconds integer with vectorize
+        2. Outside the njit function cast date as np.datetime and time to timedelta
+        3. Sum date and time
+    """
+
+    @vectorize([int32(int32)])
+    def _fix_time(mtime):
+
+        aux, cent = divmod(mtime, 100)
+        aux, seconds = divmod(aux, 100)
+        hours, minutes = divmod(aux, 100)
+
+        return 10 * (cent + 100 * (seconds + 60 * (minutes + 60 * hours)))
+
+    return df["date"].values.astype(np.datetime64) + _fix_time(
+        df["time"].values.astype(np.int32)
+    ).astype("timedelta64[ms]")
+```
+
+#### 3.2.2. The results
+
+<table class="v-table v-table-center" align="center">
+  <tr>
+    <th class="v-table-header">size</th>
+    <th class="v-table-header">zfill</th>
+    <th class="v-table-header">fix_time_individual</th>
+    <th class="v-table-header">fix_time_np_string</th>
+    <th class="v-table-header">fix_time_np_datetime</th>
+    <th class="v-table-header">np_divmod_jit</th>
+    <th class="v-table-header">divmod_njit</th>
+    <th class="v-table-header">divmod_vectorize</th>
+  </tr>
+  <tr>
+    <td>10^2</td>
+    <td>0.004388</td>
+    <td>0.213377</td>
+    <td>0.434647</td>
+    <td>0.535352</td>
+    <td>0.428438</td>
+    <td>0.132344</td>
+    <td>0.088566</td>
+  </tr>
+  <tr>
+    <td>10^3</td>
+    <td>0.007160</td>
+    <td>0.223842</td>
+    <td>0.443458</td>
+    <td>0.518424</td>
+    <td>0.437135</td>
+    <td>0.131134</td>
+    <td>0.090028</td>
+  </tr>
+  <tr>
+    <td>10^4</td>
+    <td>0.030412</td>
+    <td>0.265528</td>
+    <td>0.483543</td>
+    <td>0.558784</td>
+    <td>0.536995</td>
+    <td>0.142893</td>
+    <td>0.101280</td>
+  </tr>
+  <tr>
+    <td>10^5</td>
+    <td>0.295480</td>
+    <td>0.711711</td>
+    <td>0.735900</td>
+    <td>0.838042</td>
+    <td>1.435995</td>
+    <td>0.168305</td>
+    <td>0.127379</td>
+  </tr>
+  <tr>
+    <td>10^6</td>
+    <td>3.424938</td>
+    <td>5.112963</td>
+    <td>3.425526</td>
+    <td>3.527455</td>
+    <td>10.157285</td>
+    <td>0.419848</td>
+    <td>0.384422</td>
+  </tr>
+  <tr>
+    <td>10^7</td>
+    <td>37.434941</td>
+    <td>50.304211</td>
+    <td>30.280986</td>
+    <td>32.378085</td>
+    <td>97.415906</td>
+    <td>2.916234</td>
+    <td>2.804018</td>
+  </tr>
+  <tr>
+    <td>10^8</td>
+    <td>721.881598</td>
+    <td>508.880023</td>
+    <td>310.148904</td>
+    <td>326.442289</td>
+    <td>973.317809</td>
+    <td>31.491899</td>
+    <td>31.602522</td>
+  </tr>
+</table>
+
+Both `divmod_njit` and `divmod_vectorize` performs really well compared to the other options. Is intersting that my first approach (`zfill`) is the best for small dataframes but it starts to underperform at 10^5.
+
+<canvas id="chart_fix_time" style="width:100%;height:600px;"></canvas>
+
+<Notice type="success">
+  Working with numbers in numba is really fast.
+</Notice>
+
+#### 3.2.3. Speed with different machines
+
+I did this test with up to `10^7` elements with my computer. I was not able to increase the number of elements due to an **out of memory error** (not enough RAM).
+
+Then I repeated everything with an `M64` **azure** machine.
+
+The specs of each machine are:
+
+<table class="v-table v-table-center" align="center">
+  <tr>
+    <th class="v-table-header">feature</th>
+    <th class="v-table-header">my computer</th>
+    <th class="v-table-header">azure M64</th>
+  </tr>
+  <tr>
+    <td>processor</td>
+    <td>Intel Core i5-6500 3.2Ghz</td>
+    <td>Intel Xeon E7-8890 v3 2.5GHz (Haswell)</td>
+  </tr>
+  <tr>
+    <td>cores</td>
+    <td>4</td>
+    <td>64</td>
+  </tr>
+  <tr>
+    <td>RAM</td>
+    <td>16 GB</td>
+    <td>1 TB</td>
+  </tr>
+</table>
+
+Let's compare the results of two functions.
+
+<table class="v-table v-table-center" align="center">
+  <tr>
+    <th class="v-table-header" rowspan="2">size</th>
+    <th class="v-table-header" colspan="2">zfill</th>
+    <th class="v-table-header" colspan="2">divmod_vectorize</th>
+  </tr>
+  <tr>
+    <td class="v-table-header2">i5</td>
+    <td class="v-table-header2">azure</td>
+    <td class="v-table-header2">i5</td>
+    <td class="v-table-header2">azure</td>
+  </tr>
+  <tr>
+    <td>10^2</td>
+    <td>0.004002</td>
+    <td>0.004388</td>
+    <td>0.090219</td>
+    <td>0.088566</td>
+  </tr>
+  <tr>
+    <td>10^3</td>
+    <td>0.005410</td>
+    <td>0.007160</td>
+    <td>0.091660</td>
+    <td>0.090028</td>
+  </tr>
+  <tr>
+    <td>10^4</td>
+    <td>0.031415</td>
+    <td>0.030412</td>
+    <td>0.100109</td>
+    <td>0.101280</td>
+  </tr>
+  <tr>
+    <td>10^5</td>
+    <td>0.291654</td>
+    <td>0.295480</td>
+    <td>0.191021</td>
+    <td>0.127379</td>
+  </tr>
+  <tr>
+    <td>10^6</td>
+    <td>3.143935</td>
+    <td>3.424938</td>
+    <td>1.051343</td>
+    <td>0.384422</td>
+  </tr>
+  <tr>
+    <td>10^7</td>
+    <td>32.780381</td>
+    <td>37.434941</td>
+    <td>9.711320</td>
+    <td>2.804018</td>
+  </tr>
+</table>
+
+If we take a look at the results we can see that they both perform similar. 
+
+<canvas id="chart_fix_time_comparison" style="width:100%;height:600px;"></canvas>
+
+It is important to remember that **pandas only work with one core** so I am not using the full potential of the machines. **Having more RAM allows to work with more data** but it does not increase the speed. With the **numba** vectorize the azure machine performs better as the size increases.
+
+## 4. More info
+
+You can read the [numba documentation](http://numba.pydata.org/numba-doc/latest/index.html). Some examples of **numba** form their web page at [numba examples](http://numba.pydata.org/numba-doc/0.21.0/user/examples.html).
+
+I also suggest you read this post from Jake VanderPlas about [code optimization with numba](https://jakevdp.github.io/blog/2015/02/24/optimizing-python-with-numpy-and-numba/).
