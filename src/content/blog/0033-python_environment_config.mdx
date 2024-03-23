@@ -1,190 +1,165 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: python_environment_config
+---
+slug: python-environmint-configuration
 title: Setting up a Python environment
-title_short: Setting up Python 
-date: "2020-05-20"
-image: python_config.png
-highlight: True
+meta_title: Setting up a Python environment
+description: Learn how to properly set up a python development environment with all the useful tools you can use as well as some good tips to work as a pro.
+date: 2020-05-20
+image: "/images/blog/0033-python_config.png"
+categories: ["Tools"]
+draft: false
+---
 
-tags:
-  - Tools
+## Table of Contents
 
-tags_filter:
-  - Tools
+[TOC]
 
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-# link: 
-#   text:
-#   url:
+## 1. Using a git provider
 
+The first thing to do is select a **GIT** hosting service. The most popular are:
 
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  Learn how to properly set up a python development environment with all the useful tools you can use as well as some good tips to work as a pro.
+* [Github](https://github.com/)
+* [Bitbucket](https://bitbucket.org/)
+* [Gitlab](https://about.gitlab.com/)
+* [Azure DevOps](https://azure.microsoft.com/services/devops/)
 
-# image_head:
-#   filename: pre_commit.png
-#   caption: pre_commit
+Those services host your **GIT** repository and allow you to interact with your team.
+There are some methodologies that you can follow when working with **GIT**, my suggestion is that you use **gitflow**:
 
-content_markdown: |
+<div class="w3-padding w3-border w3-round ">
+  POST: <a href="https://villoro.com/post/gitflow">
+    Using gitflow for code control
+  </a>
+</div>
 
-  ## Table of Contents
+### 1.1. Protecting branches
 
-  [TOC]
+As I suggested it is a good practice to use pull request to integrate changes to the `develop` and/or `master` branches.
+Since people can do mistakes you should set some branch protection.
 
-  ## 1. Using a git provider
+As an example this is how you prevent the `master` branch to be deleted or to have direct changes (all changes should come from a pull request).
 
-  The first thing to do is select a **GIT** hosting service. The most popular are:
+<div class="w3-center w3-border w3-round">
+  <img src="/static/images/posts/github_branch_protection.png" alt="github_branch_protection" class="w3-image" style="max-height: 600px;"/>
+</div>
 
-  * [Github](https://github.com/)
-  * [Bitbucket](https://bitbucket.org/)
-  * [Gitlab](https://about.gitlab.com/)
-  * [Azure DevOps](https://azure.microsoft.com/services/devops/)
+## 2. Install a custom terminal
 
-  Those services host your **GIT** repository and allow you to interact with your team.
-  There are some methodologies that you can follow when working with **GIT**, my suggestion is that you use **gitflow**:
+If you are developing you almost certainly will also be using a terminal.
+If you are a **Windows** the default terminal lacks a lot of nice features so I you can install a custom terminal.
 
-  <div class="w3-padding w3-border w3-round ">
-    POST: <a href="https://villoro.com/post/gitflow">
-      Using gitflow for code control
-    </a>
-  </div>
+My personal favorite is **cmder**:
 
-  ### 1.1. Protecting branches
+<div class="w3-padding w3-border w3-round ">
+  POST: <a href="https://villoro.com/post/cmder">
+    Cmder terminal for windows
+  </a>
+</div>
 
-  As I suggested it is a good practice to use pull request to integrate changes to the `develop` and/or `master` branches.
-  Since people can do mistakes you should set some branch protection.
+With **cmder** you can define your own **alias**.
+Here you have an example of the ones I am using:
 
-  As an example this is how you prevent the `master` branch to be deleted or to have direct changes (all changes should come from a pull request).
+<div class="input">
+  C:\cmder\config\user_aliases.cmd
+</div>
+```
+ll=ls -lah  
+cdp=cd c:/GIT  # This is my default folder for GIT projects
+jn=cd C:/GIT $t jupyter notebook  
+jl=cd c:/GIT $t jupyter lab  
+rf=python src/index.py 
+```
 
-  <div class="w3-center w3-border w3-round">
-    <img src="/static/images/posts/github_branch_protection.png" alt="github_branch_protection" class="w3-image" style="max-height: 600px;"/>
-  </div>
+> You should append that to the end of the `user_aliases.cmd` file. **Do not remove the existing content**.
 
-  ## 2. Install a custom terminal
+## 3. Connect to your GIT hosting service
 
-  If you are developing you almost certainly will also be using a terminal.
-  If you are a **Windows** the default terminal lacks a lot of nice features so I you can install a custom terminal.
+There are different ways to connect to the GIT hosting service.
+The more secure one is by setting up a **SSH** key:
 
-  My personal favorite is **cmder**:
+<div class="w3-padding w3-border w3-round ">
+  POST: <a href="https://villoro.com/post/git_ssh">
+    Using git with SSH
+  </a>
+</div>
 
-  <div class="w3-padding w3-border w3-round ">
-    POST: <a href="https://villoro.com/post/cmder">
-      Cmder terminal for windows
-    </a>
-  </div>
+### 3.1. GIT Client
 
-  With **cmder** you can define your own **alias**.
-  Here you have an example of the ones I am using:
+You can work with **GIT** with your terminal or by using a program.
+In my case I like using [Sublime Merge](https://www.sublimemerge.com/).
 
-  <div class="input">
-    C:\cmder\config\user_aliases.cmd
-  </div>
-  ```
-  ll=ls -lah  
-  cdp=cd c:/GIT  # This is my default folder for GIT projects
-  jn=cd C:/GIT $t jupyter notebook  
-  jl=cd c:/GIT $t jupyter lab  
-  rf=python src/index.py 
-  ```
+It works in `Windows`, `Mac` and `Linux` and uses only **GIT** commands under the hood.
 
-  > You should append that to the end of the `user_aliases.cmd` file. **Do not remove the existing content**.
+## 4. Installing an IDE
 
-  ## 3. Connect to your GIT hosting service
+In order to develop you need to write text files.
+You can do it with any text editor but there IDEs that have a lot of nice features.
 
-  There are different ways to connect to the GIT hosting service.
-  The more secure one is by setting up a **SSH** key:
+The one I like the most is [Sublime Text 3](https://www.sublimetext.com/).
 
-  <div class="w3-padding w3-border w3-round ">
-    POST: <a href="https://villoro.com/post/git_ssh">
-      Using git with SSH
-    </a>
-  </div>
+It is also important to install extensions for your IDE that can help you.
+As an example you can use `black` with `sublack` for **Sublime Text**.
 
-  ### 3.1. GIT Client
+<div class="w3-padding w3-border w3-round ">
+  POST: <a href="https://villoro.com/post/black">
+    Black for code formatting
+  </a>
+</div>
 
-  You can work with **GIT** with your terminal or by using a program.
-  In my case I like using [Sublime Merge](https://www.sublimemerge.com/).
+## 5. Create package with poetry
 
-  It works in `Windows`, `Mac` and `Linux` and uses only **GIT** commands under the hood.
+Then you need to create your project. The important part is that you use some kind of virtual environment / package control like:
 
-  ## 4. Installing an IDE
+* [Anaconda](https://www.anaconda.com/)
+* [Virtualenv](https://virtualenv.pypa.io/en/latest/)
+* [Poetry](https://python-poetry.org/)
 
-  In order to develop you need to write text files.
-  You can do it with any text editor but there IDEs that have a lot of nice features.
+I find that **Poetry** is the easiest and the one that has more useful features.
+You can read more about it here:
 
-  The one I like the most is [Sublime Text 3](https://www.sublimetext.com/).
-  
-  It is also important to install extensions for your IDE that can help you.
-  As an example you can use `black` with `sublack` for **Sublime Text**.
+<div class="w3-padding w3-border w3-round ">
+  POST: <a href="https://villoro.com/post/poetry">
+    Poetry package manager
+  </a>
+</div>
 
-  <div class="w3-padding w3-border w3-round ">
-    POST: <a href="https://villoro.com/post/black">
-      Black for code formatting
-    </a>
-  </div>
+## 6. Pre-commit
 
-  ## 5. Create package with poetry
+[Git Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) are a good way to automate some tasks.
+There are multiple way of using them. What I suggest is that you use `pre-commit`:
 
-  Then you need to create your project. The important part is that you use some kind of virtual environment / package control like:
+<div class="w3-padding w3-border w3-round ">
+  POST: <a href="https://villoro.com/post/pre_commit">
+    Using Pre-commit to automate tasks
+  </a>
+</div>
 
-  * [Anaconda](https://www.anaconda.com/)
-  * [Virtualenv](https://virtualenv.pypa.io/en/latest/)
-  * [Poetry](https://python-poetry.org/)
+> `Pre-commit` can be used for any language even though is developed with python.
 
-  I find that **Poetry** is the easiest and the one that has more useful features.
-  You can read more about it here:
+My bare minimum for `pre-commit` with python is to add:
 
-  <div class="w3-padding w3-border w3-round ">
-    POST: <a href="https://villoro.com/post/poetry">
-      Poetry package manager
-    </a>
-  </div>
+* black
+* flake8
 
-  ## 6. Pre-commit
+## 7. CI Integration
 
-  [Git Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) are a good way to automate some tasks.
-  There are multiple way of using them. What I suggest is that you use `pre-commit`:
+**Continuous Integration (CI)** allows to automate tasks such as testing and deploying.
+If you don't know what it is you can read it [here](https://www.atlassian.com/continuous-delivery/continuous-integration)
 
-  <div class="w3-padding w3-border w3-round ">
-    POST: <a href="https://villoro.com/post/pre_commit">
-      Using Pre-commit to automate tasks
-    </a>
-  </div>
+There are a lot of **CI** providers, the more famous are:
 
-  > `Pre-commit` can be used for any language even though is developed with python.
+* [Travis CI](https://travis-ci.org/)
+* [Jenkins](https://www.jenkins.io/)
+* [Circle CI](https://circleci.com/)
+* [Gitlab](https://about.gitlab.com/)
 
-  My bare minimum for `pre-commit` with python is to add:
+## 8. Deploying
 
-  * black
-  * flake8
+Finally you might want to deploy your code.
 
-  ## 7. CI Integration
+For an `app` my favorite is [Heroku](https://www.heroku.com/).
+It has free options and is really easy to set up.
 
-  **Continuous Integration (CI)** allows to automate tasks such as testing and deploying.
-  If you don't know what it is you can read it [here](https://www.atlassian.com/continuous-delivery/continuous-integration)
+For static webpages you should use [Netlify](https://www.netlify.com/).
+They are the ones hosting this webpage.
 
-  There are a lot of **CI** providers, the more famous are:
-
-  * [Travis CI](https://travis-ci.org/)
-  * [Jenkins](https://www.jenkins.io/)
-  * [Circle CI](https://circleci.com/)
-  * [Gitlab](https://about.gitlab.com/)
-
-  ## 8. Deploying
-
-  Finally you might want to deploy your code.
-
-  For an `app` my favorite is [Heroku](https://www.heroku.com/).
-  It has free options and is really easy to set up.
-
-  For static webpages you should use [Netlify](https://www.netlify.com/).
-  They are the ones hosting this webpage.
-
-  Finally for other stuff I usually use [AWS](https://aws.amazon.com/).
+Finally for other stuff I usually use [AWS](https://aws.amazon.com/).
