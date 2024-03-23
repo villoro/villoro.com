@@ -10,12 +10,12 @@ script.onload = function () {
 
     const scale_seconds = {
       scales: {
-        yAxes: [{
-          scaleLabel: {
+        y: {
+          title: {
             display: true,
-            labelString: 'Time [seconds]'
+            text: 'Time [seconds]'
           }
-        }]
+        }
       }
     }
     const scales_MB = {
@@ -23,12 +23,12 @@ script.onload = function () {
         display: false
       },
       scales: {
-        yAxes: [{
-          scaleLabel: {
+        y: {
+          title: {
             display: true,
-            labelString: 'File size [MB]'
+            text: 'File size [MB]'
           }
-        }]
+        }
       }
     }
     const labels_basic = ['csv', 'feather', 'msgpack', 'parquet', 'pickle', 'xlsx']
