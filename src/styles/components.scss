@@ -36,7 +36,7 @@
 
 // notice
 .notice {
-  @apply mb-6 rounded-lg border p-4;
+  @apply mb-6 rounded-md border p-4;
   display: flex;
   align-items: center;
 
@@ -45,27 +45,23 @@
   }
 
   &.info {
-    @apply bg-blue-100;
-    @apply text-blue-900;
-    @apply border-blue-900;
+    @apply bg-blue-100 text-blue-900 border-blue-900;
+    @apply dark:bg-blue-900 dark:text-blue-100 dark:border-blue-100;
   }
 
   &.success {
-    @apply bg-green-100;
-    @apply text-green-900;
-    @apply border-green-900;
+    @apply bg-green-100 text-green-900 border-green-900;
+    @apply dark:bg-green-900 dark:text-green-100 dark:border-green-100;
   }
 
   &.warning {
-    @apply bg-yellow-100;
-    @apply text-yellow-900;
-    @apply border-yellow-900;
+    @apply bg-yellow-100 text-yellow-900 border-yellow-900;
+    @apply dark:bg-yellow-800 dark:text-yellow-100 dark:border-yellow-100;
   }
 
   &.error, &.danger {
-    @apply bg-red-100;
-    @apply text-red-900;
-    @apply border-red-900;
+    @apply bg-red-100 text-red-900 border-red-900;
+    @apply dark:bg-red-900 dark:text-red-100 dark:border-red-100;
   }
 }
 
