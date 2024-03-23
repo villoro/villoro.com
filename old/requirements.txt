@@ -1,6 +1,0 @@
-flask==1.1.2
-frozen-flask==0.15
-gunicorn==20.0.4
-markdown==3.3.3.
-oyaml==1.0
-pygments==2.3.1
