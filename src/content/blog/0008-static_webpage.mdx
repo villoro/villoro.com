@@ -1,228 +1,204 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: static_webpage
-title: How to create a static web
-date: "2019-03-12"
-image: static_webpage_square.jpg
-highlight: False
+---
+slug: create-static-website
+title: How to create a static website
+meta_title: How to create a static web
+description: See how I created a static webpage in some minutes. And how you can do it too.
+date: 2019-03-12
+image: "/images/blog/0008-static_webpage.jpg"
+categories: ["HTML", "Python", "Web"]
+draft: false
+---
 
-tags:
-  - Web
-  - html
-  - Blog
-  - Flask
-  - Python
+Here you can learn how to create a static webpage using Flask. Check the full example on [github](https://github.com/villoro/villoro_posts/tree/master/016-static_webpage).
 
-tags_filter:
-  - Web
-  - Blog
-  - Python
+You only need some **html** knowledge.
 
+## Table of Contents
 
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Github
-  url: https://github.com/villoro/villoro_posts/tree/master/0008-static_webpage
+[TOC]
 
+## 1. Install requirements
 
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  See how I created a static webpage in some minutes. And how you can do it too.
+Run:
 
-# image_head:
-#   filename: image.jpg
-#   caption: image
+```sh
+pip install -r requirements.txt
+```
 
-content_markdown: |
-  Here you can learn how to create a static webpage using Flask. Check the full example on [github](https://github.com/villoro/villoro_posts/tree/master/016-static_webpage).
+This will install the following libraries:
+```yaml
+flask: to create the webpage
+frozen-flask: to make it static
+markdown: to transform from markdown to html
+oyaml: to work with ordered yamls
+pygments: to display beautiful code snipets when transforming markdown
+```
 
-  You only need some **html** knowledge.
+## 2. html templates
+The first thing you will need are some `html` templates. I suggest that you use at least one `base.html` as the basic template and then other templates for each page.
 
-  ## Table of Contents
+The `base.html` file should have the basic structure, for example:
 
-  [TOC]
+<TerminalOutput color="stone">
+  `src/templates/base.html`
+</TerminalOutput>
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <title>Test page</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  ## 1. Install requirements
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='villoro.css') }}">
 
-  Run:
+  <body>
+    <!-- Add children body -->
+    {% block body %}{% endblock %}
+  </body>
+</html>
+```
 
-  ```sh
-  pip install -r requirements.txt
-  ```
+> The template I created in github has a `navbar` and `footer` but the basics are the same.
 
-  This will install the following libraries:
-  ```yaml
-  flask: to create the webpage
-  frozen-flask: to make it static
-  markdown: to transform from markdown to html
-  oyaml: to work with ordered yamls
-  pygments: to display beautiful code snipets when transforming markdown
-  ```
+Then we can create the `about.html` page template using:
 
-  ## 2. html templates
-  The first thing you will need are some `html` templates. I suggest that you use at least one `base.html` as the basic template and then other templates for each page.
+<TerminalOutput color="stone">
+  `src/templates/about.html`
+</TerminalOutput>
+```jinja
+{% extends "base.html" %}
 
-  The `base.html` file should have the basic structure, for example:
+{% block body%}
+  <div class="w3-content w3-padding">
+    <h1>{{ title }}</h1>
 
-  <div class="input">
-    src/templates/base.html
+    {% autoescape false %} {{ description }} {% endautoescape %}
+
   </div>
-  ```html
-  <!DOCTYPE html>
-  <html lang="en">
-    <title>Test page</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock %}
+```
 
-    <!-- Custom styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='villoro.css') }}">
-
-    <body>
-      <!-- Add children body -->
-      {% block body %}{% endblock %}
-    </body>
-  </html>
-  ```
-
-  > The template I created in github has a `navbar` and `footer` but the basics are the same.
-
-  Then we can create the `about.html` page template using:
-
-  <div class="input">
-    src/templates/about.html
-  </div>
-  ```html
-  {% extends "base.html" %}
-
-  {% block body%}
-    <div class="w3-content w3-padding">
-      <h1>{{ title }}</h1>
-
-      {% autoescape false %} {{ description }} {% endautoescape %}
-
-    </div>
-  {% endblock %}
-  ```
-
-  > `{{ title }}` and `{{ description }}` are parameters that we will pass to the flask template.
-
-  ## 3. Flask app and freezer
-
-  The `index.py` will be the actual `Flask` app. It will only render the templates.
-
-  <div class="input">
-    src/index.py
-  </div>
-  ```python
-  from flask import Flask, render_template
-
-  @APP.route("/about.html")
-  def about():
-      """ about me page """
-
-      return render_template("about.html", title="Title1", description="Hello world")
-
-  if __name__ == "__main__":
-      APP.run(debug=True)
-  ```
-
-  > As you can see we are passing `title` and `description` as parameters as commented before.
-
-  Now you can run `python src/index.py` to view the app at `localhost:5000`.
-
-  Then you can create the `freeze.py` file that will create the static html files.
-
-  <div class="input">
-    src/freeze.py
-  </div>
-  ```python
-  from flask_frozen import Freezer
-  from index import APP
-
-  FREEZER = Freezer(APP)
+<Notice type="info">
+  `{{ title }}` and `{{ description }}` are parameters that we will pass to the flask template.
+</Notice>
 
 
-  if __name__ == "__main__":
-      FREEZER.freeze()
-  ```
+## 3. Flask app and freezer
 
-  Now if you run `python src/freeze.py` you will crate the folder `src/build` with the static webpage.
+The `index.py` will be the actual `Flask` app. It will only render the templates.
 
-  ## 4. Using yamls
-  In order to make it easier to customize the pages I suggest using `yaml` files. They are like `json` files but more compact.
+<TerminalOutput color="stone">
+  `src/index.py`
+</TerminalOutput>
+```python
+from flask import Flask, render_template
 
-  For example you can create the file `about.yaml` with:
+@APP.route("/about.html")
+def about():
+    """ about me page """
 
-  <div class="input">
-    src/content/about.yaml
-  </div>
-  ```yaml
-  title: Title 1
-  description: Hello **world**
-  ```
+    return render_template("about.html", title="Title1", description="Hello world")
 
-  I suggest that you also transform the description from **markdown** to **html** since it will give you more flexibility.
-  To do all of that you should modify the file `index.py` to read that `yaml`.
+if __name__ == "__main__":
+    APP.run(debug=True)
+```
 
-  <div class="input">
-    src/index.py
-  </div>
-  ```python
-  import oyaml as yaml
-
-  from markdown import markdown
-  from flask import Flask, render_template
-
-  APP = Flask(__name__)
+<Notice type="info">
+  As you can see we are passing `title` and `description` as parameters as commented before.
+</Notice>
 
 
-  def _read_yaml(filename):
-      """ auxiliar function to raad a yaml """
+Now you can run `python src/index.py` to view the app at `localhost:5000`.
 
-      with open(f"src/content/{filename}.yaml", encoding="utf-8") as file:
-          out = yaml.load(file)
+Then you can create the `freeze.py` file that will create the static html files.
 
-      # Transform from markdown to html
-      if "description" in out:
-          out["description"] = markdown(out["description"], extensions=["fenced_code", "codehilite"])
+<TerminalOutput color="stone">
+  `src/freeze.py`
+</TerminalOutput>
+```python
+from flask_frozen import Freezer
+from index import APP
 
-      return out
-
-  @APP.route("/about.html")
-  def about():
-      """ about me page """
-
-      return render_template("about.html", **_read_yaml("about"))
+FREEZER = Freezer(APP)
 
 
-  if __name__ == "__main__":
-      APP.run(debug=True)
-  ```
+if __name__ == "__main__":
+    FREEZER.freeze()
+```
 
-  ## 5. css and images
-  To use custom `css` files and/or images simply place them in the folder `src/static/`. For using them you can:
+Now if you run `python src/freeze.py` you will crate the folder `src/build` with the static webpage.
 
-  ```html
-  <!-- Use a css -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='file.css') }}">
+## 4. Using yamls
+In order to make it easier to customize the pages I suggest using `yaml` files. They are like `json` files but more compact.
 
-  <!-- Use an image -->
-  <img src="/static/image.jpg" alt="image"/>
-  ```
+For example you can create the file `about.yaml` with:
 
-  ## 6. Hosting the webpage
+<TerminalOutput color="stone">
+  `src/content/about.yaml`
+</TerminalOutput>
+```yaml
+title: Title 1
+description: Hello **world**
+```
 
-  I strongly recommend using [Netlify](https://www.netlify.com/) since they do a lot of things for free. Some of them you probably didn't know that you should do them (or at least I didn't).
+I suggest that you also transform the description from **markdown** to **html** since it will give you more flexibility.
+To do all of that you should modify the file `index.py` to read that `yaml`.
 
-  It is really easy to set up. The most imporant steps are:
+<TerminalOutput color="stone">
+  `src/index.py`
+</TerminalOutput>
+```python
+import oyaml as yaml
 
-  1. Login with your github account.
-  2. Link to the repository where you have the project
-  3. Tell the build command (which should be `python src/freeze.py`)
+from markdown import markdown
+from flask import Flask, render_template
 
-  And with that you will have your custom static webpage up and running. It will be very fast and very customizable.
+APP = Flask(__name__)
+
+
+def _read_yaml(filename):
+    """ auxiliar function to raad a yaml """
+
+    with open(f"src/content/{filename}.yaml", encoding="utf-8") as file:
+        out = yaml.load(file)
+
+    # Transform from markdown to html
+    if "description" in out:
+        out["description"] = markdown(out["description"], extensions=["fenced_code", "codehilite"])
+
+    return out
+
+@APP.route("/about.html")
+def about():
+    """ about me page """
+
+    return render_template("about.html", **_read_yaml("about"))
+
+
+if __name__ == "__main__":
+    APP.run(debug=True)
+```
+
+## 5. css and images
+To use custom `css` files and/or images simply place them in the folder `src/static/`. For using them you can:
+
+```html
+<!-- Use a css -->
+<link rel="stylesheet" href="{{ url_for('static', filename='file.css') }}">
+
+<!-- Use an image -->
+<img src="/static/image.jpg" alt="image"/>
+```
+
+## 6. Hosting the webpage
+
+I strongly recommend using [Netlify](https://www.netlify.com/) since they do a lot of things for free. Some of them you probably didn't know that you should do them (or at least I didn't).
+
+It is really easy to set up. The most imporant steps are:
+
+1. Login with your github account.
+2. Link to the repository where you have the project
+3. Tell the build command (which should be `python src/freeze.py`)
+
+And with that you will have your custom static webpage up and running. It will be very fast and very customizable.
