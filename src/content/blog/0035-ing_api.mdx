@@ -1,294 +1,267 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: ing_api
+---
+slug: ing-api-python
 title: ING API with python
-title_short: ING API
-date: "2020-03-10"
-image: ing_square.png
-highlight: True
+meta_title: ING API with python
+description: xxxx
+date: 2021-03-10
+image: "/images/blog/0035-ing.png"
+categories: ["Python", "DE"]
+draft: false
+---
 
-tags:
-  - Python
-  - API
+## Table of Contents
 
-tags_filter:
-  - Python
-  - API
+[TOC]
 
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Github
-  url: https://github.com/villoro/villoro_posts/tree/master/0035-ing_api
+## 1. ING Developer
 
+ING has a [developer portal](https://developer.ing.com/openbanking/home) with instructions
+for accessing their APIs.
 
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  xx
+There are 2 API types:
 
-# image_head:
-#   filename: pre_commit.png
-#   caption: pre_commit
+* [openbanking](https://developer.ing.com/openbanking/get-started/openbanking): open for anyone to access
+* [PSD2](https://developer.ing.com/openbanking/get-started/psd2): for accessing those ones you need an eIDAS certificate.
 
-content_markdown: |
+> eIDAS certificates can only be optained by organizations, not by individuals like you or me
 
-  ## Table of Contents
+This post focus on the **Open Banking** API.
 
-  [TOC]
 
-  ## 1. ING Developer
+## 2. The Open Banking API
 
-  ING has a [developer portal](https://developer.ing.com/openbanking/home) with instructions
-  for accessing their APIs.
+At the moment of writting of this post there is not a lot that you can do with this API.
+Those are the 2 APIs you can use:
 
-  There are 2 API types:
+* [OAuth 2.0](https://developer.ing.com/api-marketplace/marketplace/2d00fd5f-88cd-4416-bbca-f309ebb03bfe/reference?endpoint=0): Allows to authenticate and retrive a token
+* [Showcase API](https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview): This allows you to query `/greetings/single` which is the equivalent of a `hello world`
 
-  * [openbanking](https://developer.ing.com/openbanking/get-started/openbanking): open for anyone to access
-  * [PSD2](https://developer.ing.com/openbanking/get-started/psd2): for accessing those ones you need an eIDAS certificate.
-  
-  > eIDAS certificates can only be optained by organizations, not by individuals like you or me
+As you can see right now it is not very useful.
+When I started investigating I didn't realized that you couldn't retrive your own data with the **Open Banking API**.
+So I followed all their documentation and developed all the code until I realized that it was not useful at all.
+But since I had all the code I thought it might be useful to share.
 
-  This post focus on the **Open Banking** API.
+I also contacted their **support** and they told me they plan to allow users to access their account info with the **Open Banking API**.
+But there is no ETA for that.
 
 
-  ## 2. The Open Banking API
+## 3. Open Banking API Sandbox
 
-  At the moment of writting of this post there is not a lot that you can do with this API.
-  Those are the 2 APIs you can use:
+This part follows the [Getting Started with Open Banking API](https://developer.ing.com/openbanking/get-started/openbanking).
 
-  * [OAuth 2.0](https://developer.ing.com/api-marketplace/marketplace/2d00fd5f-88cd-4416-bbca-f309ebb03bfe/reference?endpoint=0): Allows to authenticate and retrive a token
-  * [Showcase API](https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview): This allows you to query `/greetings/single` which is the equivalent of a `hello world`
+The first thing you need to do is to download the example certificates:
 
-  As you can see right now it is not very useful.
-  When I started investigating I didn't realized that you couldn't retrive your own data with the **Open Banking API**.
-  So I followed all their documentation and developed all the code until I realized that it was not useful at all.
-  But since I had all the code I thought it might be useful to share.
+* example_client_signing.cer (you don't really need this one)
+* example_client_signing.key
+* example_client_tls.cer
+* example_client_tls.key
 
-  I also contacted their **support** and they told me they plan to allow users to access their account info with the **Open Banking API**.
-  But there is no ETA for that.
+And also:
 
+* host: `https://api.sandbox.ing.com`
+* client_id: `e77d776b-90af-4684-bebc-521e5b2614dd`
 
-  ## 3. Open Banking API Sandbox
+For requesting the token with the `OAuth 2.0 API` they provide a script.
+However I wanted to have everything in python.
 
-  This part follows the [Getting Started with Open Banking API](https://developer.ing.com/openbanking/get-started/openbanking).
+The first thing is to install `cryptodome` with
 
-  The first thing you need to do is to download the example certificates:
+```
+pip install pycryptodome
+```
 
-  * example_client_signing.cer (you don't really need this one)
-  * example_client_signing.key
-  * example_client_tls.cer
-  * example_client_tls.key
+> All the code can be found in https://github.com/villoro/villoro_posts/tree/master/0035-ing_api
 
-  And also:
+Let's break down the script in parts
 
-  * host: `https://api.sandbox.ing.com`
-  * client_id: `e77d776b-90af-4684-bebc-521e5b2614dd`
+### 3.1. Digesting and signing
 
-  For requesting the token with the `OAuth 2.0 API` they provide a script.
-  However I wanted to have everything in python.
+You need to calculate the `SHA256` of some parts.
+That can be done with:
 
-  The first thing is to install `cryptodome` with
+```python
+from Crypto.Hash import SHA256
 
-  ```
-  pip install pycryptodome
-  ```
+# to digest 'text'
+digest = SHA256.new()
+digest.update(text.encode())
+```
 
-  > All the code can be found in https://github.com/villoro/villoro_posts/tree/master/0035-ing_api
+From that we can create a function that does it and can also sign the digest with:
 
-  Let's break down the script in parts
+```python
+sign_key = "certificates/example_client_signing.key" # Adapt path
 
-  ### 3.1. Digesting and signing
+def encode_sha256(text, sign=False):
+    """ digest a text with SHA256 """
 
-  You need to calculate the `SHA256` of some parts.
-  That can be done with:
+    digest = SHA256.new()
+    digest.update(text.encode())
 
-  ```python
-  from Crypto.Hash import SHA256
+    if sign:
+        # Get the signing key
+        with open(sign_key, "r") as file:
+            data = file.read()
+
+        private_key = RSA.importKey(data)
+        signer = PKCS1_v1_5.new(private_key)
+        out = signer.sign(digest)
+
+    else:
+        out = digest.digest()
 
-  # to digest 'text'
-  digest = SHA256.new()
-  digest.update(text.encode())
-  ```
-
-  From that we can create a function that does it and can also sign the digest with:
-
-  ```python
-  sign_key = "certificates/example_client_signing.key" # Adapt path
+    return b64encode(out).decode()
+```
 
-  def encode_sha256(text, sign=False):
-      """ digest a text with SHA256 """
-
-      digest = SHA256.new()
-      digest.update(text.encode())
-
-      if sign:
-          # Get the signing key
-          with open(sign_key, "r") as file:
-              data = file.read()
-
-          private_key = RSA.importKey(data)
-          signer = PKCS1_v1_5.new(private_key)
-          out = signer.sign(digest)
-
-      else:
-          out = digest.digest()
-
-      return b64encode(out).decode()
-  ```
+And finally we need to encode it as a base64 string with:
+```
+from base64 import b64encode
 
-  And finally we need to encode it as a base64 string with:
-  ```
-  from base64 import b64encode
+b64encode(out).decode()
+```
 
-  b64encode(out).decode()
-  ```
+### 3.2. Parameters
 
-  ### 3.2. Parameters
+Now let's create the basic parameters:
 
-  Now let's create the basic parameters:
+```python
+import uuid
+from datetime import datetime
 
-  ```python
-  import uuid
-  from datetime import datetime
+mdate = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
+digest = encode_sha256(body) # Without signing
+req_id = str(uuid.uuid4())
+```
 
-  mdate = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
-  digest = encode_sha256(body) # Without signing
-  req_id = str(uuid.uuid4())
-  ```
+And the headers:
+```python
+headers = {
+    "Date": mdate,
+    "Digest": f"SHA-256={digest}",
+    "X-ING-ReqID": req_id,
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Accept": "application/json",
+}
+```
 
-  And the headers:
-  ```python
-  headers = {
-      "Date": mdate,
-      "Digest": f"SHA-256={digest}",
-      "X-ING-ReqID": req_id,
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Accept": "application/json",
-  }
-  ```
+### 3.3. Getting the signature
 
-  ### 3.3. Getting the signature
+In this step you need to encode with `SHA256` the composition of:
+* endpoint
+* date
+* body digest
+* req_id
 
-  In this step you need to encode with `SHA256` the composition of:
-  * endpoint
-  * date
-  * body digest
-  * req_id
+After that you need to append some information.
+All of that can be done with:
 
-  After that you need to append some information.
-  All of that can be done with:
+```python
+def get_signature(method, endpoint, mdate, digest, req_id):
 
-  ```python
-  def get_signature(method, endpoint, mdate, digest, req_id):
+    text = [
+        f"(request-target): {method.lower()} {endpoint}",
+        f"date: {mdate}",
+        f"digest: SHA-256={digest}",
+        f"x-ing-reqid: {req_id}",
+    ]
 
-      text = [
-          f"(request-target): {method.lower()} {endpoint}",
-          f"date: {mdate}",
-          f"digest: SHA-256={digest}",
-          f"x-ing-reqid: {req_id}",
-      ]
+    signature_digest = encode_sha256("\n".join(text), True)
 
-      signature_digest = encode_sha256("\n".join(text), True)
+    signature = [
+        f'keyId="{client_id}"',
+        'algorithm="rsa-sha256"',
+        'headers="(request-target) date digest x-ing-reqid"',
+        f'signature="{signature_digest}"',
+    ]
 
-      signature = [
-          f'keyId="{client_id}"',
-          'algorithm="rsa-sha256"',
-          'headers="(request-target) date digest x-ing-reqid"',
-          f'signature="{signature_digest}"',
-      ]
+    return ",".join(signature)
+```
 
-      return ",".join(signature)
-  ```
+### 3.4. Doing the request
 
-  ### 3.4. Doing the request
+Now we need to append the authorization as a header:
 
-  Now we need to append the authorization as a header:
-  
-  ```python
-  signature = get_signature(method, endpoint, mdate, digest, req_id)
-  if token:
-      headers.update({"Authorization": f"Bearer {token}", "Signature": signature})
-  else:
-      headers.update({"Authorization": f"Signature {signature}"})
-  ```
+```python
+signature = get_signature(method, endpoint, mdate, digest, req_id)
+if token:
+    headers.update({"Authorization": f"Bearer {token}", "Signature": signature})
+else:
+    headers.update({"Authorization": f"Signature {signature}"})
+```
 
-  And finally we can do the request:
+And finally we can do the request:
 
-  ```python
-  tls_cert="certificates/example_client_tls.cer",
-  tls_key="certificates/example_client_tls.key",
+```python
+tls_cert="certificates/example_client_tls.cer",
+tls_key="certificates/example_client_tls.key",
 
-  result = requests.request(
-      method.upper(),
-      self.host + endpoint,
-      headers=headers,
-      data=body,
-      cert=(tls_cert, tls_key),
-  )
-  ```
+result = requests.request(
+    method.upper(),
+    self.host + endpoint,
+    headers=headers,
+    data=body,
+    cert=(tls_cert, tls_key),
+)
+```
 
-  ### 3.5. Getting the token
+### 3.5. Getting the token
 
-  This can be done with the code explained and using those params:
+This can be done with the code explained and using those params:
 
-  * endpoint: `/oauth2/token`
-  * method: `POST`
-  * body: `grant_type=client_credentials`
+* endpoint: `/oauth2/token`
+* method: `POST`
+* body: `grant_type=client_credentials`
 
 
-  ## 4. Creating your app
+## 4. Creating your app
 
-  In this step you need to sign in to the [ing developer portal](https://developer.ing.com/openbanking/auth/login).
+In this step you need to sign in to the [ing developer portal](https://developer.ing.com/openbanking/auth/login).
 
-  Then you need to create an app.
+Then you need to create an app.
 
-  ### 4.1. Generating your certificates
+### 4.1. Generating your certificates
 
-  You need to generate:
+You need to generate:
 
-  * ing_http.key
-  * ing_http.key
-  * ing_tls.crt
-  * ing_tls.crt
+* ing_http.key
+* ing_http.key
+* ing_tls.crt
+* ing_tls.crt
 
-  You can generate the first 2 with:
+You can generate the first 2 with:
 
-  ```
-  # 1. Generate an RSA private key. The password of the private key can be entered during execution of the command, so it doesn't end up in the history of your shell.
-  openssl genrsa -out ing_http.key -passout stdin 2048
-  # 2. Generate the X.509 Certificate Signing Request
-  openssl req -sha256 -new -key ing_http.key -out ing_http.csr
-  # 3. Sign the X.509 certificate with your own private key
-  openssl x509 -req -sha256 -days 365 -in ing_http.csr -signkey ing_http.key -out ing_http.crt
-  ```
+```
+# 1. Generate an RSA private key. The password of the private key can be entered during execution of the command, so it doesn't end up in the history of your shell.
+openssl genrsa -out ing_http.key -passout stdin 2048
+# 2. Generate the X.509 Certificate Signing Request
+openssl req -sha256 -new -key ing_http.key -out ing_http.csr
+# 3. Sign the X.509 certificate with your own private key
+openssl x509 -req -sha256 -days 365 -in ing_http.csr -signkey ing_http.key -out ing_http.crt
+```
 
-  Then need to repeat the 3 steps but replacing `ing_http` by `ing_tls`.
+Then need to repeat the 3 steps but replacing `ing_http` by `ing_tls`.
 
-  ### 4.2. Getting a token with your API
+### 4.2. Getting a token with your API
 
-  You need to follow the same as before but changing some params:
+You need to follow the same as before but changing some params:
 
-  * host: `https://api.ing.com`
-  * client_id: You can get that from the web
-  * sign_key: `certificates/ing_http.key`
-  * tls_cert: `certificates/ing_tls.crt`
-  * tls_key: `certificates/ing_tls.key`
+* host: `https://api.ing.com`
+* client_id: You can get that from the web
+* sign_key: `certificates/ing_http.key`
+* tls_cert: `certificates/ing_tls.crt`
+* tls_key: `certificates/ing_tls.key`
 
-  ### 4.3. Doing a hello world
+### 4.3. Doing a hello world
 
-  Once you have the open you can suscribe to [Showcase API](https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview).
-  You will need to wait until your request is approved.
+Once you have the open you can suscribe to [Showcase API](https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview).
+You will need to wait until your request is approved.
 
-  Once it is approved you can query the only endpoint to check that everything is working:
+Once it is approved you can query the only endpoint to check that everything is working:
 
-  * method: `GET`
-  * endpoint: `/greetings/single`
+* method: `GET`
+* endpoint: `/greetings/single`
 
 
-  ## 5. Next steps
+## 5. Next steps
 
-  Now you can wait with me until they add more APIs under the Open Banking.
+Now you can wait with me until they add more APIs under the Open Banking.

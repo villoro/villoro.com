@@ -1,116 +1,95 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: cmder
+---
+slug: cmder-terminal-windows
 title: Cmder terminal for windows
-title_short: Cmder terminal
-date: "2020-02-29"
-image: cmder_square.png
-highlight: True
+meta_title: Cmder terminal for windows
+description: Cmder is a really good terminal for windows that can replace the default one.
+date: 2020-02-29
+image: "/images/blog/0030-cmder.png"
+categories: ["Tools"]
+draft: false
+---
 
-tags:
-  - Tools
+## Table of Contents
 
-tags_filter:
-  - Tools
+[TOC]
 
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Cmder
-  url: https://cmder.net/
+## 0. Overview
 
+**Cmder** is a software package created out of pure frustration over the absence of nice console emulators on Windows.
+It is based on amazing software, and spiced up with the Monokai color scheme and a custom prompt layout, looking sexy from the start.
 
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  Cmder is a really good terminal for windows that can replace the default one.
+## 1. Instalation
 
-content_markdown: |
+You can download from the [webpage](https://cmder.net/).
+I advise you install the version with git.
 
-  ## Table of Contents
+After downloading it extract the data and copy it to `C:\cmder_mini`.
+I suggest you put it directly on `c:\` to avoid permission problems.
 
-  [TOC]
+Then open the `.exe` file (`C:\cmder_mini\Cmder.exe`) to start using it.
 
-  ## 0. Overview
-  
-  **Cmder** is a software package created out of pure frustration over the absence of nice console emulators on Windows.
-  It is based on amazing software, and spiced up with the Monokai color scheme and a custom prompt layout, looking sexy from the start.
+> You can right click the `.exe` file and pin it to the task bar.
 
-  ## 1. Instalation
+## 2. Setting it as the default terminal
 
-  You can download from the [webpage](https://cmder.net/).
-  I advise you install the version with git.
+Open the **cmder** settings with `WIN` + `ALT` + `P`.
+Then go to `Integration` / `Default term` and mark `Force conEmu as default terminal for console applications`.
 
-  After downloading it extract the data and copy it to `C:\cmder_mini`.
-  I suggest you put it directly on `c:\` to avoid permission problems.
+<div class="w3-center">
+  <img src="/static/images/posts/cmder_defualt.png" alt="cmder_defualt" class="w3-image w3-padding-16" style="max-height: 600px;"/>
+</div>
 
-  Then open the `.exe` file (`C:\cmder_mini\Cmder.exe`) to start using it.
+After that any operation that opens the terminal or the powershell will open `cmder`.
 
-  > You can right click the `.exe` file and pin it to the task bar.
+## 3. Features
 
-  ## 2. Setting it as the default terminal
+One of the best features is that most linx commands (like `ls`) work here as well as the windows ones (like `dir`).
+So for example, no more problems with `cls` vs `clear` both work here!
 
-  Open the **cmder** settings with `WIN` + `ALT` + `P`.
-  Then go to `Integration` / `Default term` and mark `Force conEmu as default terminal for console applications`.
+Another really great feature is that you can open multiple consoles as tabs (like with chrome) with `CTRL` + `T` and close it with `CTRL` + `W`.
 
-  <div class="w3-center">
-    <img src="/static/images/posts/cmder_defualt.png" alt="cmder_defualt" class="w3-image w3-padding-16" style="max-height: 600px;"/>
-  </div>
+It is also way better visually than the default windows terminal.
+And it has git integrations so that you will see by default the branch you are working on.
 
-  After that any operation that opens the terminal or the powershell will open `cmder`.
+<div class="w3-center">
+  <img src="/static/images/posts/cmder.png" alt="cmder" class="w3-image w3-padding-16" style="max-height: 600px;"/>
+</div>
 
-  ## 3. Features
+One other cool feature are alias.
+For example you can write `alias jn=jupyter notebook` and the write `jn` to start jupyter notebooks.
 
-  One of the best features is that most linx commands (like `ls`) work here as well as the windows ones (like `dir`).
-  So for example, no more problems with `cls` vs `clear` both work here!
+As an example some useful alias would be:
 
-  Another really great feature is that you can open multiple consoles as tabs (like with chrome) with `CTRL` + `T` and close it with `CTRL` + `W`.
+<table class="v-table" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">command</th>
+    <th class="v-table-header">description</th>
+  </tr>
+  <tr>
+    <td>alias ll=ls -lah</td>
+    <td>list files with details and human readable sizes</td>
+  </tr>
+  <tr>
+    <td>alias cdp=cd c:/PYTHON</td>
+    <td>go to the python path</td>
+  </tr>
+  <tr>
+    <td>alias jn=cd c:/PYTHON && jupyter notebook</td>
+    <td>go to the python path and open jupyter notebook</td>
+  </tr>
+  <tr>
+    <td>alias jl=cd c:/PYTHON && jupyter lab</td>
+    <td>go to the python path and open jupyter lab</td>
+  </tr>
+  <tr>
+    <td>alias rf=python src/index.py</td>
+    <td>open a flask app</td>
+  </tr>
+  <tr>
+    <td>alias vtasks=cd c:/GIT/vtasks && poetry run python src/master.py</td>
+    <td>go to vtasks folder and run it with poetry</td>
+  </tr>
+</table>
 
-  It is also way better visually than the default windows terminal.
-  And it has git integrations so that you will see by default the branch you are working on.
-
-  <div class="w3-center">
-    <img src="/static/images/posts/cmder.png" alt="cmder" class="w3-image w3-padding-16" style="max-height: 600px;"/>
-  </div>
-
-  One other cool feature are alias.
-  For example you can write `alias jn=jupyter notebook` and the write `jn` to start jupyter notebooks.
-
-  As an example some useful alias would be:
-
-  <table class="v-table" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">command</th>
-      <th class="v-table-header">description</th>
-    </tr>
-    <tr>
-      <td>alias ll=ls -lah</td>
-      <td>list files with details and human readable sizes</td>
-    </tr>
-    <tr>
-      <td>alias cdp=cd c:/PYTHON</td>
-      <td>go to the python path</td>
-    </tr>
-    <tr>
-      <td>alias jn=cd c:/PYTHON && jupyter notebook</td>
-      <td>go to the python path and open jupyter notebook</td>
-    </tr>
-    <tr>
-      <td>alias jl=cd c:/PYTHON && jupyter lab</td>
-      <td>go to the python path and open jupyter lab</td>
-    </tr>
-    <tr>
-      <td>alias rf=python src/index.py</td>
-      <td>open a flask app</td>
-    </tr>
-    <tr>
-      <td>alias vtasks=cd c:/GIT/vtasks && poetry run python src/master.py</td>
-      <td>go to vtasks folder and run it with poetry</td>
-    </tr>
-  </table>
-
-  It has a lot of other nice features, you can read about it in their webpage.
-  You can read about them in the [documentation](https://github.com/cmderdev/cmder).
+It has a lot of other nice features, you can read about it in their webpage.
+You can read about them in the [documentation](https://github.com/cmderdev/cmder).

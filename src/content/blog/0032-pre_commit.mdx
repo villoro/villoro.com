@@ -1,151 +1,125 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: pre_commit
+---
+slug: pre-commit
 title: Using Pre-commit to automate tasks
-title_short: Pre-commit
-date: "2020-05-14"
-image: pre_commit_square.png
-highlight: True
-
-tags:
-  - Tools
-
-tags_filter:
-  - Tools
-
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Pre-commit
-  url: https://pre-commit.com//
-
-
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  With pre-commit you can automate some repetitive tasks before doing a `commit` on a **git** repository.
+meta_title: Using Pre-commit to automate tasks
+description: |
+  With pre-commit you can automate some repetitive tasks before doing a commit on a git repository.
   It is useful for identifying simple issues before submission to code review.
+date: 2020-05-14
+image: "/images/blog/0032-pre_commit.png"
+categories: ["Tools"]
+draft: false
+---
 
-image_head:
-  filename: pre_commit.png
-  caption: pre_commit
+## Table of Contents
 
-content_markdown: |
+[TOC]
 
-  ## Table of Contents
+## 1. What is pre-commit
 
-  [TOC]
+With pre-commit you can automate some repetitive tasks before doing a `commit` on a **git** repository.
+It is useful for identifying simple issues before submission to code review.
 
-  ## 1. What is pre-commit
+For example with **pre-commit** you can point out issues in code such as missing semicolons, trailing whitespace, and debug statements.
 
-  With pre-commit you can automate some repetitive tasks before doing a `commit` on a **git** repository.
-  It is useful for identifying simple issues before submission to code review.
+**Pre-commit** can work with **any development language** even though is a python package.
 
-  For example with **pre-commit** you can point out issues in code such as missing semicolons, trailing whitespace, and debug statements.
+## 2. Installation
 
-  **Pre-commit** can work with **any development language** even though is a python package.
+To install you can simply run:
 
-  ## 2. Installation
+```sh
+pip install pre-commit
+```
 
-  To install you can simply run:
+## 3. Configuration
 
-  ```sh
-  pip install pre-commit
-  ```
+Once you have the package installed you need the file `.pre-commit-config.yaml` with the hooks you need.
 
-  ## 3. Configuration
+As an example you can use:
 
-  Once you have the package installed you need the file `.pre-commit-config.yaml` with the hooks you need.
+<div class="input">
+  .pre-commit-config.yaml
+</div>
+```yaml
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/psf/black
+    rev: 19.3b0
+    hooks:
+    -   id: black
+```
 
-  As an example you can use:
+Once you are in a repository that has the `.pre-commit-config.yaml` file you can install the hooks with:
 
-  <div class="input">
-    .pre-commit-config.yaml
-  </div>
-  ```yaml
-  repos:
-  -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.3.0
-      hooks:
-      -   id: check-yaml
-      -   id: end-of-file-fixer
-      -   id: trailing-whitespace
-  -   repo: https://github.com/psf/black
-      rev: 19.3b0
-      hooks:
-      -   id: black
-  ```
+```sh
+pre-commit install
+```
 
-  Once you are in a repository that has the `.pre-commit-config.yaml` file you can install the hooks with:
+## 4. Usage
 
-  ```sh
-  pre-commit install
-  ```
+By default `pre-commit` will run only on the stagged files. You can check all the files the first time you install it with:
 
-  ## 4. Usage
+```sh
+pre-commit run --all-files
+```
 
-  By default `pre-commit` will run only on the stagged files. You can check all the files the first time you install it with:
+After that each time you try to do a commit `pre-commit` will run all hooks and will prevent you from commiting simple issues.
 
-  ```sh
-  pre-commit run --all-files
-  ```
+## 5. Updating hooks
 
-  After that each time you try to do a commit `pre-commit` will run all hooks and will prevent you from commiting simple issues.
+You can update all `pre-commit` hooks with:
 
-  ## 5. Updating hooks
+```sh
+pre-commit autoupdate
+```
 
-  You can update all `pre-commit` hooks with:
+## 6. Continuous integration (CI)
 
-  ```sh
-  pre-commit autoupdate
-  ```
+It is a good idea to run `pre-commit` on your CI to check that nobody is pushing code with errors.
 
-  ## 6. Continuous integration (CI)
+You can do it with:
 
-  It is a good idea to run `pre-commit` on your CI to check that nobody is pushing code with errors.
+```sh
+pre-commit run --all-files
+```
 
-  You can do it with:
+If you want to only run it on the files that have changed just do:
 
-  ```sh
-  pre-commit run --all-files
-  ```
+```sh
+pre-commit run --from-ref origin.HEAD --to-ref HEAD
+```
 
-  If you want to only run it on the files that have changed just do:
+## 7. Useful hooks
 
-  ```sh
-  pre-commit run --from-ref origin.HEAD --to-ref HEAD
-  ```
+There are some default hooks defined [here](https://github.com/pre-commit/pre-commit-hooks).
 
-  ## 7. Useful hooks
+Some that I find really useful are:
 
-  There are some default hooks defined [here](https://github.com/pre-commit/pre-commit-hooks).
+* check-merge-conflict
+* check-json
+* check-toml
+* check-yaml
+* no-commit-to-branch
 
-  Some that I find really useful are:
+You can add them with the following code:
 
-  * check-merge-conflict
-  * check-json
-  * check-toml
-  * check-yaml
-  * no-commit-to-branch
-
-  You can add them with the following code:
-
-  <div class="input">
-    .pre-commit-config.yaml
-  </div>
-  ```yaml
-  repos:
-  -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.3.0
-      hooks:
-      -   id: check-merge-conflict
-      -   id: check-json
-      -   id: check-toml
-      -   id: check-yaml
-      -   id: no-commit-to-branch
-  ```
-
-  
+<div class="input">
+  .pre-commit-config.yaml
+</div>
+```yaml
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: check-merge-conflict
+    -   id: check-json
+    -   id: check-toml
+    -   id: check-yaml
+    -   id: no-commit-to-branch
+```

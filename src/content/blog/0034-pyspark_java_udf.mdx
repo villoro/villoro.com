@@ -1,409 +1,378 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: pyspark_java_udf
+---
+slug: java-udf-pyspark
 title: Java UDF with pyspark
-title_short: Pyspark Java UDF
-date: "2020-11-03"
-image: pyspark_java_udf_square.png
-highlight: True
+meta_title: Java UDF with pyspark
+description: xxxx
+date: 2020-11-03
+image: "/images/blog/0034-pyspark_java_udf.png"
+categories: ["Python", "Spark"]
+draft: false
+---
 
-tags:
-  - Python
-  - Spark
+## Table of Contents
 
-tags_filter:
-  - Python
-  - Spark
+[TOC]
 
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Github
-  url: https://github.com/villoro/villoro_posts/tree/master/0034-pyspark_java_udf
+## 0. Problem
 
+When using **spark** it's always advised to use the spark functions.
+However sometimes we need to use more advanced functions or we need external libraries.
 
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  xx
+As an example we might want to use [Uber H3](https://github.com/uber/h3) library to work with geospatial data.
 
-# image_head:
-#   filename: pre_commit.png
-#   caption: pre_commit
+The library is implemented in multiple languages:
 
-use_chartjs: True
+* https://github.com/uber/h3
+* https://github.com/uber/h3-py
+* https://github.com/uber/h3-java
 
-content_markdown: |
+In this post we will explore different options for using this function with spark.
 
-  ## Table of Contents
+## 1. Creating a python UDF
 
-  [TOC]
+The first option is to create a python **UDF** using the **h3** python library.
+Before creating the UDF we can try the library with:
 
+```python
+import h3
+h3.geo_to_h3(0, 0, 8)
+```
+<div class="output">
+  <b>Out:</b> '88754e6499fffff'
+</div>
 
-  ## 0. Problem
+To create the **UDF** we only need to use the `udf` decorator and specify the output type.
+It's also a good idea to handle cases where `latitude` or `longitude` might be `null`/`None`.
 
-  When using **spark** it's always advised to use the spark functions.
-  However sometimes we need to use more advanced functions or we need external libraries.
+```python
+import pyspark.sql.functions as F
+import pyspark.sql.types as T
 
-  As an example we might want to use [Uber H3](https://github.com/uber/h3) library to work with geospatial data.
+@F.udf(T.StringType())
+def geo_to_h3_py(latitude, longitude, resolution):
+    if latitude is None or longitude is None:
+        return None
 
-  The library is implemented in multiple languages:
+    return h3.geo_to_h3(latitude, longitude, resolution)
+```
 
-  * https://github.com/uber/h3
-  * https://github.com/uber/h3-py
-  * https://github.com/uber/h3-java
+Once it's defined it can be called with:
 
-  In this post we will explore different options for using this function with spark.
+```python
+(
+    sdf
+    .withColumn("h8", geo_to_h3_py("latitude", "longitude", F.lit(8)))
+    .show()
+)
+```
 
-  ## 1. Creating a python UDF
+## 2. Use a Java function with spark
 
-  The first option is to create a python **UDF** using the **h3** python library.
-  Before creating the UDF we can try the library with:
+### 2.1. Use H3 directly
 
-  ```python
-  import h3
-  h3.geo_to_h3(0, 0, 8)
-  ```
-  <div class="output">
-    <b>Out:</b> '88754e6499fffff'
-  </div>
+The first thing needed to work with the **Java H3** library is to download the `jar`.
+It can be downloaded from [maven/h3](https://mvnrepository.com/artifact/com.uber/h3).
 
-  To create the **UDF** we only need to use the `udf` decorator and specify the output type.
-  It's also a good idea to handle cases where `latitude` or `longitude` might be `null`/`None`.
+Once you have the `jar` file you need to add it to `$JAVA_HOME/jars` folder so that **spark** can use it without extra configuration.
 
-  ```python
-  import pyspark.sql.functions as F
-  import pyspark.sql.types as T
+Then you can directly access the java code and create the `h3` instance and then call the `geoToH3Address` function.
 
-  @F.udf(T.StringType())
-  def geo_to_h3_py(latitude, longitude, resolution):
-      if latitude is None or longitude is None:
-          return None
+```python
+h3 = spark.sparkContext._jvm.com.uber.h3core.H3Core.newInstance()
+h3.geoToH3Address(0.0, 0.0, 8)
+```
+<div class="output">
+  <b>Out:</b> '88754e6499fffff'
+</div>
 
-      return h3.geo_to_h3(latitude, longitude, resolution)
-  ```
+However it is not possible to create a **UDF** using the java instance.
+The problem is that it's a java object so it can't be pickled.
 
-  Once it's defined it can be called with:
+### 2.2. Create a java callable function
 
-  ```python
-  (
-      sdf
-      .withColumn("h8", geo_to_h3_py("latitude", "longitude", F.lit(8)))
-      .show()
-  )
-  ```
+Let's create a simple **java** `static` function that we can use without needing to create an instance.
 
-  ## 2. Use a Java function with spark
+We can create the file `SimpleH3.java` inside the path `/com/villoro/` (so that it's better organized).
+Remember to define the `package` so that it matches the path.
 
-  ### 2.1. Use H3 directly
+#### 2.2.1 Create the java file
 
-  The first thing needed to work with the **Java H3** library is to download the `jar`.
-  It can be downloaded from [maven/h3](https://mvnrepository.com/artifact/com.uber/h3).
+<div class="input">
+  /com/villoro/SimpleH3.java
+</div>
+```java
+package com.villoro;
 
-  Once you have the `jar` file you need to add it to `$JAVA_HOME/jars` folder so that **spark** can use it without extra configuration.
+import java.io.IOException;
+import com.uber.h3core.H3Core;
 
-  Then you can directly access the java code and create the `h3` instance and then call the `geoToH3Address` function.
+class SimpleH3
+{ 
 
-  ```python
-  h3 = spark.sparkContext._jvm.com.uber.h3core.H3Core.newInstance()
-  h3.geoToH3Address(0.0, 0.0, 8)
-  ```
-  <div class="output">
-    <b>Out:</b> '88754e6499fffff'
-  </div>
+    private static H3Core h3;
 
-  However it is not possible to create a **UDF** using the java instance.
-  The problem is that it's a java object so it can't be pickled.
+    public static String toH3Address(Double longitude, Double latitude, int resolution){
+        
+        // Lazy instantiation
+        if (h3 == null) {
+            try {
+                h3 = H3Core.newInstance();
+            }
+            catch(IOException e) {
+                return null;
+            }
+        }
 
-  ### 2.2. Create a java callable function
+        // Check that coordinates are
+        if (longitude == null || latitude == null) {
+            return null;
+        } else {
+            return h3.geoToH3Address(longitude, latitude, resolution);
+        }
+    }
+} 
+```
 
-  Let's create a simple **java** `static` function that we can use without needing to create an instance.
+The only different thing from the **python** implementation is that we are doing a **lazy instantiation**.
+That means that the first time the function is run it will create the `h3` instance.
+But the next times it will reuse the same instance.
 
-  We can create the file `SimpleH3.java` inside the path `/com/villoro/` (so that it's better organized).
-  Remember to define the `package` so that it matches the path.
+> **Lazy instantiation** will make the code faster.
 
-  #### 2.2.1 Create the java file
+#### 2.2.2. Compile the code
 
-  <div class="input">
-    /com/villoro/SimpleH3.java
-  </div>
-  ```java
-  package com.villoro;
+Once we have our `java` code we need to compile it.
 
-  import java.io.IOException;
-  import com.uber.h3core.H3Core;
+Since we are importing things from `com.uber.h3core.H3Core` we need that `jar`.
+You can copy the `jar` you downloaded and save it as `jars/h3.jar`.
 
-  class SimpleH3
-  { 
+Then you can compile the code with:
 
-      private static H3Core h3;
+```sh
+javac -cp "jars/h3.jar" com\villoro\*.java
+```
 
-      public static String toH3Address(Double longitude, Double latitude, int resolution){
-          
-          // Lazy instantiation
-          if (h3 == null) {
-              try {
-                  h3 = H3Core.newInstance();
-              }
-              catch(IOException e) {
-                  return null;
-              }
-          }
+#### 2.2.3. Create the jar
 
-          // Check that coordinates are
-          if (longitude == null || latitude == null) {
-              return null;
-          } else {
-              return h3.geoToH3Address(longitude, latitude, resolution);
-          }
-      }
-  } 
-  ```
+To create the `jar` we can simple specify that we want to create the `SimpleH3.jar` with all `.class` files from `com\villoro\` with:
 
-  The only different thing from the **python** implementation is that we are doing a **lazy instantiation**.
-  That means that the first time the function is run it will create the `h3` instance.
-  But the next times it will reuse the same instance.
+```sh
+jar cvf SimpleH3.jar com\villoro\*.class
+```
 
-  > **Lazy instantiation** will make the code faster.
+Once you created the `jar`, remeber to copy it to `$JAVA_HOME/jars`.
 
-  #### 2.2.2. Compile the code
+#### 2.2.4. Call the static java function with spark
 
-  Once we have our `java` code we need to compile it.
+We can do something similar to call the new static function:
 
-  Since we are importing things from `com.uber.h3core.H3Core` we need that `jar`.
-  You can copy the `jar` you downloaded and save it as `jars/h3.jar`.
+```python
+# Using our static function
+spark.sparkContext._jvm.com.villoro.SimpleH3.toH3Address(0.0, 0.0, 8)
+```
 
-  Then you can compile the code with:
+However this can't still be pickled since it's a java class.
+So we can't create a **UDF** with python.
 
-  ```sh
-  javac -cp "jars/h3.jar" com\villoro\*.java
-  ```
+## 3. Create a Java UDF
 
-  #### 2.2.3. Create the jar
+The solution will be to create the **UDF** with **java**.
 
-  To create the `jar` we can simple specify that we want to create the `SimpleH3.jar` with all `.class` files from `com\villoro\` with:
+The first thing you will need is to get the `spark-sql.jar` from `$JAVA_HOME/jars` and copy it to `com\villoro\`.
+Without this `jar` you won't be able to compile the **UDF** with **java**.
 
-  ```sh
-  jar cvf SimpleH3.jar com\villoro\*.class
-  ```
+### 3.1. Create the java function
 
-  Once you created the `jar`, remeber to copy it to `$JAVA_HOME/jars`.
+Then to create the **UDF** you need to implement one of the `UDFX` class.
+Since it will have three imputs we will use `UDF3`.
+We will need to declare all the input types (`Double`, `Double` and `Integer`) as well as the ouput (`String`).
+So it will extend `UDF3<Double, Double, Integer, String>`.
 
-  #### 2.2.4. Call the static java function with spark
+The rest of the code it's really similar to the previous function.
 
-  We can do something similar to call the new static function:
+<div class="input">
+  /com/villoro/toH3AddressUDF.java
+</div>
+```java
+package com.villoro;
 
-  ```python
-  # Using our static function
-  spark.sparkContext._jvm.com.villoro.SimpleH3.toH3Address(0.0, 0.0, 8)
-  ```
+import java.io.IOException;
+import com.uber.h3core.H3Core;
+import org.apache.spark.sql.api.java.UDF3;
 
-  However this can't still be pickled since it's a java class.
-  So we can't create a **UDF** with python.
+public class toH3AddressUDF implements UDF3<Double, Double, Integer, String> {
 
-  ## 3. Create a Java UDF
+    private H3Core h3;
 
-  The solution will be to create the **UDF** with **java**.
+    @Override
+    public String call(Double longitude, Double latitude, Integer resolution) throws Exception {
 
-  The first thing you will need is to get the `spark-sql.jar` from `$JAVA_HOME/jars` and copy it to `com\villoro\`.
-  Without this `jar` you won't be able to compile the **UDF** with **java**.
-
-  ### 3.1. Create the java function
-
-  Then to create the **UDF** you need to implement one of the `UDFX` class.
-  Since it will have three imputs we will use `UDF3`.
-  We will need to declare all the input types (`Double`, `Double` and `Integer`) as well as the ouput (`String`).
-  So it will extend `UDF3<Double, Double, Integer, String>`.
-
-  The rest of the code it's really similar to the previous function.
-
-  <div class="input">
-    /com/villoro/toH3AddressUDF.java
-  </div>
-  ```java
-  package com.villoro;
-
-  import java.io.IOException;
-  import com.uber.h3core.H3Core;
-  import org.apache.spark.sql.api.java.UDF3;
-
-  public class toH3AddressUDF implements UDF3<Double, Double, Integer, String> {
-
-      private H3Core h3;
-
-      @Override
-      public String call(Double longitude, Double latitude, Integer resolution) throws Exception {
-
-          // Lazy instantiation
-          if (h3 == null) {
-              try {
-                  h3 = H3Core.newInstance();
-              }
-              catch(IOException e) {
-                  return null;
-              }
-          }
-
-          // Check that coordinates are
-          if (longitude == null || latitude == null) {
-              return null;
-          } else {
-              return h3.geoToH3Address(longitude, latitude, resolution);
-          }
-
-      }
-  }
-  ```
-
-  ### 3.2. Compile the code
-
-  The command is really similar to the one we used before:
-
-  ```sh
-  javac -cp "jars/h3.jar;jars/spark-sql.jar" com\villoro\*.java
-  ```
-
-  > Make sure the name of the `jars` you are importing match.
-
-  ### 3.3. Create the jar
-
-  We can use exactly the same command as before:
-
-  ```sh
-  jar cvf SimpleH3.jar com\villoro\*.class
-  ```
-
-  Once you created the `jar`, remeber to overwrite it in `$JAVA_HOME/jars`.
-
-  ### 3.4. Call the java UDF with spark
-
-  Before calling the function we need to register it with:
-
-  ```python
-  spark.udf.registerJavaFunction("geo_to_h3", "com.villoro.toH3AddressUDF", T.StringType())
-  ```
-
-  Then we can call it using `F.expr`:
-
-  ```python
-  (
-      sdf
-      .withColumn("h8", F.expr("geo_to_h3(latitude, longitude, 8)"))
-      .show()
-  )
-  ```
-
-  And we can also use it with SQL:
-
-  ```
-  spark.sql("""
-      SELECT
-          latitude, longitude, geo_to_h3(latitude, longitude, 8)
-      FROM my_table
-  """).show()
-  ```
-
-  ## 4. Performance results
-
-  In order to test it I created 6 datasets with different sizes.
-  The total execution times for the `python udf` and `java udf` are:
-
-  <table class="v-table v-table-right" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">num_rows</th>
-      <th class="v-table-header">python [s]</th>
-      <th class="v-table-header">java [s]</th>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^3</td>
-      <td>2.348551</td>
-      <td>0.492574</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^4</td>
-      <td>3.140185</td>
-      <td>0.579370</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^5</td>
-      <td>3.876405</td>
-      <td>0.795821</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^6</td>
-      <td>5.552880</td>
-      <td>1.958956</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^7</td>
-      <td>24.151182</td>
-      <td>11.507726</td>
-    </tr>
-    <tr>
-      <td class="v-table-center">10^8</td>
-      <td>195.032587</td>
-      <td>88.875919</td>
-    </tr>
-  </table>
-
-  As we expected the `java_udf` is faster than the `python_udf`.
-
-  <canvas id="chart_times" style="width:100%;height:600px;"></canvas>
-
-  If we take a closer look at the values we can see that creating the `python_udf` has a cost.
-  That is why the results are so bad for the small datasets.
-  Once the dataset is bigger that cost is no longer visible but there is a cost of moving the information from `python` to `java`.
-  That is why the `pandas_udf` is around 2 times slower.
+        // Lazy instantiation
+        if (h3 == null) {
+            try {
+                h3 = H3Core.newInstance();
+            }
+            catch(IOException e) {
+                return null;
+            }
+        }
+
+        // Check that coordinates are
+        if (longitude == null || latitude == null) {
+            return null;
+        } else {
+            return h3.geoToH3Address(longitude, latitude, resolution);
+        }
+
+    }
+}
+```
+
+### 3.2. Compile the code
+
+The command is really similar to the one we used before:
+
+```sh
+javac -cp "jars/h3.jar;jars/spark-sql.jar" com\villoro\*.java
+```
+
+> Make sure the name of the `jars` you are importing match.
+
+### 3.3. Create the jar
+
+We can use exactly the same command as before:
+
+```sh
+jar cvf SimpleH3.jar com\villoro\*.class
+```
+
+Once you created the `jar`, remeber to overwrite it in `$JAVA_HOME/jars`.
+
+### 3.4. Call the java UDF with spark
+
+Before calling the function we need to register it with:
+
+```python
+spark.udf.registerJavaFunction("geo_to_h3", "com.villoro.toH3AddressUDF", T.StringType())
+```
+
+Then we can call it using `F.expr`:
+
+```python
+(
+    sdf
+    .withColumn("h8", F.expr("geo_to_h3(latitude, longitude, 8)"))
+    .show()
+)
+```
+
+And we can also use it with SQL:
+
+```
+spark.sql("""
+    SELECT
+        latitude, longitude, geo_to_h3(latitude, longitude, 8)
+    FROM my_table
+""").show()
+```
+
+## 4. Performance results
+
+In order to test it I created 6 datasets with different sizes.
+The total execution times for the `python udf` and `java udf` are:
+
+<table class="v-table v-table-right" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">num_rows</th>
+    <th class="v-table-header">python [s]</th>
+    <th class="v-table-header">java [s]</th>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^3</td>
+    <td>2.348551</td>
+    <td>0.492574</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^4</td>
+    <td>3.140185</td>
+    <td>0.579370</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^5</td>
+    <td>3.876405</td>
+    <td>0.795821</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^6</td>
+    <td>5.552880</td>
+    <td>1.958956</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^7</td>
+    <td>24.151182</td>
+    <td>11.507726</td>
+  </tr>
+  <tr>
+    <td class="v-table-center">10^8</td>
+    <td>195.032587</td>
+    <td>88.875919</td>
+  </tr>
+</table>
+
+As we expected the `java_udf` is faster than the `python_udf`.
+
+<canvas id="chart_times" style="width:100%;height:600px;"></canvas>
+
+If we take a closer look at the values we can see that creating the `python_udf` has a cost.
+That is why the results are so bad for the small datasets.
+Once the dataset is bigger that cost is no longer visible but there is a cost of moving the information from `python` to `java`.
+That is why the `pandas_udf` is around 2 times slower.
 
 
 scripts: |
-  <script>
-    const scales = {
-      scales: {
-        yAxes: [{
-          scaleLabel: {
-            display: true,
-            labelString: 'Time [s]',
-          },
-          type: 'logarithmic',
-        }],
-        xAxes: [{
-          scaleLabel: {
-            display: true,
-            labelString: 'Number of rows'
-          },
-        }],
-      }
-    }
-    var chart_times = new Chart("chart_times", {
-      type: 'line',
-      data: {
-        labels: ['10^3', '10^4', '10^5', '10^6', '10^7', '10^8'],
-        datasets: [
-          {
-            label: 'python_udf',
-            borderColor: "#FFA726", 
-            data: [2.348551, 3.140185, 3.876405, 5.552880, 24.151182, 195.032587],
-            fill: false
-          },
-          {
-            label: 'java_udf',
-            borderColor: "#AED581", 
-            data: [0.492574, 0.579370, 0.795821, 1.958956, 11.507726, 88.875919],
-            fill: false
-          },
-        ],
-      },
-      options: {
-        title: {
+<script>
+  const scales = {
+    scales: {
+      yAxes: [{
+        scaleLabel: {
           display: true,
-          text: 'Time with different UDFs'
+          labelString: 'Time [s]',
         },
-        ...scales
-      }
-    });
-  </script>
-  
+        type: 'logarithmic',
+      }],
+      xAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: 'Number of rows'
+        },
+      }],
+    }
+  }
+  var chart_times = new Chart("chart_times", {
+    type: 'line',
+    data: {
+      labels: ['10^3', '10^4', '10^5', '10^6', '10^7', '10^8'],
+      datasets: [
+        {
+          label: 'python_udf',
+          borderColor: "#FFA726", 
+          data: [2.348551, 3.140185, 3.876405, 5.552880, 24.151182, 195.032587],
+          fill: false
+        },
+        {
+          label: 'java_udf',
+          borderColor: "#AED581", 
+          data: [0.492574, 0.579370, 0.795821, 1.958956, 11.507726, 88.875919],
+          fill: false
+        },
+      ],
+    },
+    options: {
+      title: {
+        display: true,
+        text: 'Time with different UDFs'
+      },
+      ...scales
+    }
+  });
+</script>
