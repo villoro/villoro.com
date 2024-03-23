@@ -1,207 +1,194 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: pypi
+---
+slug: creating-python-packages
 title: Creating Python packages
-date: "2019-05-02"
-image: pypi_square.jpg
-highlight: True
+meta_title: Creating Python packages
+description: Learn how to create a python package that can be installed with pip.
+date: 2019-05-02
+image: "/images/blog/0016-pypi.svg"
+categories: ["Python"]
+draft: false
+---
 
-tags:
-  - Python
+## Table of Contents
 
-tags_filter:
-  - Python
+[TOC]
 
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: PYPI docs
-  url: https://packaging.python.org/tutorials/packaging-projects/
+## 1. Create a python package
 
+To work with python you only need a `.py` file. However if you are creating a package you need to follow a concrete structure and include some needed files.
 
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
-  Learn how to create a python package that can be installed with pip.
+Before creating your project, I suggest you check if the name you want to use exists:
 
-image_head:
-  filename: pypi.jpg
-  caption: pypi_logo
+```sh
+pip search package_name
+```
+<Notice type="info">
+  You can also look for it at [pypi web](https://pypi.org/)
+</Notice>
 
-content_markdown: |
+### 1.1. Structure your project
 
-  ## Table of Contents
+You should have your project inside a folder with the name of the package. This will be the `root` of your project and should include `.gitignore`, `README.md` and `LICENSE.txt` among other configuration files.
 
-  [TOC]
+The code should be inside another folder with the name of the package. So the structure should be:
 
-  ## 1. Create a python package
+```text
+- /package_name
+    ├── /package_name
+    │   ├── __init__.py
+    │   ├── file1.py
+    │   ├── file2.py
+    │   └── fileN.py
+    ├── .gitignore
+    ├── LICENSE.txt
+    ├── README.md
+    └── setup.py
+```
 
-  To work with python you only need a `.py` file. However if you are creating a package you need to follow a concrete structure and include some needed files.
+#### 1.1.1. Main files
 
-  Before creating your project, I suggest you check if the name you want to use exists:
+All files inside `/package_name/package_name` should have imports that work from the main path. For example to import the `file1` in `file2` you should:
 
-  ```sh
-  pip search package_name
-  ```
+```python
+from .file1 import my_function
+```
 
-  > You can also look for it at [pypi web](https://pypi.org/)
+<Notice type="warning">
+  Do not forget the **'.'** before the name
+</Notice>
 
-  ### 1.1. Structure your project
+The `__init__.py` file will contain whatever you want to call from the 'outside'.
 
-  You should have your project inside a folder with the name of the package. This will be the `root` of your project and should include `.gitignore`, `README.md` and `LICENSE.txt` among other configuration files.
+For example:
 
-  The code should be inside another folder with the name of the package. So the structure should be:
+```python
+from .file2 import public_function
+```
 
-  ```
-  - /package_name
-      ├── /package_name
-      │   ├── __init__.py
-      │   ├── file1.py
-      │   ├── file2.py
-      │   └── fileN.py
-      ├── .gitignore
-      ├── LICENSE.txt
-      ├── README.md
-      └── setup.py
-  ```
+This is what will allow you to do the following one you have uploaded the package:
 
-  #### 1.1.1. Main files
+```python
+import package_name
+package_name.public_function() # This will call the 'public_function' from 'file2.py'
+```
 
-  All files inside `/package_name/package_name` should have imports that work from the main path. For example to import the `file1` in `file2` you should:
+#### 1.1.2. setup.py
 
-  ```python
-  from .file1 import my_function
-  ```
+This is where you define the package itself, how can it be installed and some basic information about it. A basic example would be:
 
-  > Do not forget the **'.'** before the name
+```python
+import io
+from setuptools import setup
 
-  The `__init__.py` file will contain whatever you want to call from the 'outside'.
+setup(
+    name="package_name",
+    version="1.0.2",
+    author="Your Name",
+    author_email="your@email.com",
+    packages=["package_name"],
+    install_requires=io.open("requirements.txt", encoding="utf-8").read().splitlines(),
+    include_package_data=True,
+    license="MIT",
+    description=("write here a short description"),
+    long_description=io.open("README.md", encoding="utf-8").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/your_user/package_name",
+    package_data={"package_name": ["resources/*"]},
+)
+```
 
-  For example:
+##### 1.1.2.1. long_description param
+`long_description` is extracted from the `README.md`
 
-  ```python
-  from .file2 import public_function
-  ```
+<Notice type="info">
+  You can use other formats for the README like `ost`
+</Notice>
 
-  This is what will allow you to do the following one you have uploaded the package:
+##### 1.1.2.2. install_requires param
+`install_requires` is a list of requirements. In the example I get it from `requirements.txt`.
 
-  ```python
-  import package_name
-  package_name.public_function() # This will call the 'public_function' from 'file2.py'
-  ```
+You could also write the requirements by hand with:
 
-  #### 1.1.2. setup.py
+```python
+install_requires=["pandas>0.22", "flask"]
+```
 
-  This is where you define the package itself, how can it be installed and some basic information about it. A basic example would be:
+<Notice type="info">
+  You should avoid requirements with a fixed number version use `<` or `>` instead.
+</Notice>
 
-  ```python
-  import io
-  from setuptools import setup
+##### 1.1.2.3. package_data param
 
-  setup(
-      name="package_name",
-      version="1.0.2",
-      author="Your Name",
-      author_email="your@email.com",
-      packages=["package_name"],
-      install_requires=io.open("requirements.txt", encoding="utf-8").read().splitlines(),
-      include_package_data=True,
-      license="MIT",
-      description=("write here a short description"),
-      long_description=io.open("README.md", encoding="utf-8").read(),
-      long_description_content_type="text/markdown",
-      url="https://github.com/your_user/package_name",
-      package_data={"package_name": ["resources/*"]},
-  )
-  ```
+The `package_data` parameter allows you to include all files inside `/package_name/resources/` path even if they are not `.py` files. This will be useful if you want to include `html` templates or `yaml`/`json` with data. 
 
-  ##### 1.1.2.1. long_description param
-  `long_description` is extracted from the `README.md`
+### 1.2. Create the package
 
-  > you can use other formats for the README like `ost`
+Before creating the package I suggest you add some rules in the `.gitignore`:
 
-  ##### 1.1.2.2. install_requires param
-  `install_requires` is a list of requirements. In the example I get it from `requirements.txt`.
+```
+build/
+dist/
+*.egg-info
+```
 
-  You could also write the requirements by hand with:
+After that you can run:
 
-  ```python
-  install_requires=["pandas>0.22", "flask"]
-  ```
+```sh
+python setup.py sdist bdist_wheel
+```
 
-  > You should avoid requirements with a fixed number version use `<` or `>` instead.
+Then you will have `build` with the content of the package and `dist` with `tar` and `wheels` of the package (what will be uploaded).
 
-  ##### 1.1.2.3. package_data param
+## 2. Upload the package
 
-  The `package_data` parameter allows you to include all files inside `/package_name/resources/` path even if they are not `.py` files. This will be useful if you want to include `html` templates or `yaml`/`json` with data. 
+### 2.1. Requirements
 
-  ### 1.2. Create the package
+When you run `pip install package` you are actually downloading it from [pypi](https://pypi.org/). There is also [test.pypi](https://test.pypi.org/) for testing purpouses. So you will need to register:
 
-  Before creating the package I suggest you add some rules in the `.gitignore`:
+* [test.pypi](https://test.pypi.org/account/register/)
+* [pypi](https://pypi.org/account/register/)
 
-  ```
-  build/
-  dist/
-  *.egg-info
-  ```
+To upload the packages I suggest you use `twine`. You can install it with:
 
-  After that you can run:
+```sh
+pip install twine
+```
 
-  ```sh
-  python setup.py sdist bdist_wheel
-  ```
+### 2.2. Uploading a package to test.pypi
 
-  Then you will have `build` with the content of the package and `dist` with `tar` and `wheels` of the package (what will be uploaded).
+You can run the next command which will upload all packages created in the `dist` folder:
 
-  ## 2. Upload the package
+```sh
+python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+```
 
-  ### 2.1. Requirements
+<Notice type="info">
+  The first time you run this command you will be asked to log in. Use the credentials from the previous step.
+</Notice>
 
-  When you run `pip install package` you are actually downloading it from [pypi](https://pypi.org/). There is also [test.pypi](https://test.pypi.org/) for testing purpouses. So you will need to register:
-  
-  * [test.pypi](https://test.pypi.org/account/register/)
-  * [pypi](https://pypi.org/account/register/)
+After uploading the package you can download it to test if it is working as expected:
 
-  To upload the packages I suggest you use `twine`. You can install it with:
+```sh
+pip install --index-url https://test.pypi.org/simple/ package_name
 
-  ```sh
-  pip install twine
-  ```
+# You can specify the version with
+pip install --index-url https://test.pypi.org/simple/ package_name==X.X.X
+```
 
-  ### 2.2. Uploading a package to test.pypi
+## 2.3. Uploading a package to pypi
 
-  You can run the next command which will upload all packages created in the `dist` folder:
+In order to upload the package to `pypi` the process is very similar to the step before:
 
-  ```sh
-  python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-  ```
+```sh
+python -m twine upload dist/*
+```
 
-  > The first time you run this command you will be asked to log in. Use the credentials from the previous step.
+And to install it you can simply run:
 
-  After uploading the package you can download it to test if it is working as expected:
+```sh
+pip install package
+```
 
-  ```sh
-  pip install --index-url https://test.pypi.org/simple/ package_name
-
-  # You can specify the version with
-  pip install --index-url https://test.pypi.org/simple/ package_name==X.X.X
-  ```
-
-  ## 2.3. Uploading a package to pypi
-
-  In order to upload the package to `pypi` the process is very similar to the step before:
-
-  ```sh
-  python -m twine upload dist/*
-  ```
-
-  And to install it you can simply run:
-
-  ```sh
-  pip install package
-  ```
-
-  > Well done, you now have your first python package uploaded to **pypi**.
+<Notice type="success">
+  Well done, you now have your first python package uploaded to **pypi**.
+</Notice>
