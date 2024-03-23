@@ -1,582 +1,557 @@
-# --------------------------------------------------------------------------------------------------
-# Basic metadata
-# --------------------------------------------------------------------------------------------------
-code: regex
+---
+slug: regex-python
 title: Using regexs with python
-title_short: Regexs with python
-date: "2020-04-05"
-image: regex_square.jpg
-highlight: True
-
-tags:
-  - Python
-  - regex
-
-tags_filter:
-  - Python
-
-# --------------------------------------------------------------------------------------------------
-# Extra info. This will add a button with href to the url
-# --------------------------------------------------------------------------------------------------
-link: 
-  text: Github
-  url: https://github.com/villoro/villoro_posts/tree/master/0036-regex
-
-
-# --------------------------------------------------------------------------------------------------
-# Content
-# --------------------------------------------------------------------------------------------------
-brief_markdown: |
+meta_title: Using regexs with python
+description: |
   This post provides a detailed guide on regular expressions (regex), covering their basics, character classes, quantifiers, groups, boundaries, flags, and more.
   It also explains how to use regex in Python, Pandas, and Amazon Redshift, offering practical examples and functions for working with text data.
   This comprehensive resource helps users understand and apply regex in various programming contexts.
-
-image_head:
-  filename: regex.jpg
-  caption: regex
-
-content_markdown: |
-
-  ## Table of Contents
-
-  [TOC]
-
-  ## 1. Regex basics
-
-  A regular expression, or **regex** for short, is a pattern describing a certain amount of text.
-  The most simple regex is a regular string, like `hello` which will match the literal text `hello`.
-
-  There are some characters with special meanings. For example `.` will match any character (except line break).
-  As an example `ip.d` will match `ipad`, `ipod`, `ip@d` etc.
-
-  If we want to only match `ipod` or `ipad` we can use `ip[ao]d`.
-
-  ### 1.1. Brackets `[]`
-
-  Brackets (`[` and `]`) are used for specifying which characters are allowed. It is similar to an **or** operator. As an example:
-
-  * `[abc]`: `a`, `b` or `c`
-  * `[a-c]`: `a`, `b` or `c`
-  * `[^a-c]`: anything but `a`, `b` or `c`
-  * `[0-9a-fA-F]`: any number or any letter between `a` and `f` or between `A` and `F`. This represents hexadecimal
-
-  ### 1.1. Position
-
-  It is possible to specify matches based on the position with:
-
-  * `^`: Start 
-  * `$`: End
-
-  For example `^ab` will only match the first `ab` in `ab abc ab` ([Demo](https://regex101.com/r/TJzoA7/2))
-
-  ### 1.2. Classes
-
-  There are certain keywords that will match different types of characters.
-  For example `\d` will match any digit (any of those `0123456789`).
-  Those classes can be inversed with capital letters. As an example `\D` will match any character except a digit.
-
-  The main classes available are:
-
-  <table class="v-table" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">regex</th>
-      <th class="v-table-header">description</th>
-      <th class="v-table-header">example</th>
-      <th class="v-table-header">inverse</th>
-    </tr>
-    <tr>
-      <td><code>\d</code></td>
-      <td>Digits</td>
-      <td><a href="https://regex101.com/r/RM6mHO/1">d_example</a></td>
-      <td><code>\D</code></td>
-    </tr>
-    <tr>
-      <td><code>\w</code></td>
-      <td>Alphanumeric and/or <code>_</code></td>
-      <td><a href="https://regex101.com/r/IkIMMm/1">w_example</a></td>
-      <td><code>\W</code></td>
-    </tr>
-    <tr>
-      <td><code>\s</code></td>
-      <td>Whitespaces and equivalents (like tabs)</td>
-      <td><a href="https://regex101.com/r/oSziKA/1">s_example</a></td>
-      <td><code>\S</code></td>
-    </tr>
-  </table>
-
-
-  ### 1.3. Quantifiers
-
-  It is possible to specify how many times a letter or group (defined in the next section) should appear.
-
-  As an example we want the letter `a` + the letter `b` which should appear different number of times:
-
-  <table class="v-table" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">regex</th>
-      <th class="v-table-header">description</th>
-      <th class="v-table-header">example</th>
-    </tr>
-    <tr>
-      <td><code>ab*</code></td>
-      <td><code>a</code> + <code>b</code> zero times or more</td>
-      <td><a href="https://regex101.com/r/ob5aYo/1">example_ab*</a></td>
-    </tr>
-    <tr>
-      <td><code>ab+</code></td>
-      <td><code>a</code> + <code>b</code> one time or more</td>
-      <td><a href="https://regex101.com/r/b0o38q/1">example_ab+</a></td>
-    </tr>
-    <tr>
-      <td><code>ab?</code></td>
-      <td><code>a</code> + optional <code>b</code> (zero or one time)</td>
-      <td><a href="https://regex101.com/r/S91Cbe/1">example_ab?</a></td>
-    </tr>
-    <tr>
-      <td><code>ab{2}</code></td>
-      <td><code>a</code> + <code>b</code> exactly 2 times</td>
-      <td><a href="https://regex101.com/r/TYBz4I/1">example_ab{2}</a></td>
-    </tr>
-    <tr>
-      <td><code>ab{2,5}</code></td>
-      <td><code>a</code> + <code>b</code> between 2 and 5 times (inclusive)</td>
-      <td><a href="https://regex101.com/r/b4oI9X/1">example_ab{2,5}</a></td>
-    </tr>
-  </table>
-
-  ### 1.4. Groups
-
-  It is possible to define **groups** in regex.
-  They are use to capture part of the text and are declared with parenthesis `()`.
-  We can use any regex inside the group. For example if we want to math `hello`:
-
-  * `(hello)`: capturing group ([Demo](https://regex101.com/r/8W86e1/1)) 
-  * `(?:hello)`: non-capturing group
-  * `(?P<name>hello)`: same but giving the group a name (`name` in this case)
-  * `(hello|bye):` **or** operator in groups.
-
-  ### 1.5. Boundaries
-
-  It is possible to declare a boundary with `\b` (with the inverse `\B`).
-  A boundary means that is surrounded with a non word type character.
-  It is similar to the **start** (`^`) and **end** (`$`).
-
-  It is easier to understand it with some examples:
-
-  <table class="v-table" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">regex</th>
-      <th class="v-table-header">text: <span style="background-color:white;"><code>Impossible to do</code></span></th>
-      <th class="v-table-header">text: <span style="background-color:white;"><code>I'm possible :)</code></span></th>
-      <th class="v-table-header">text: <span style="background-color:white;"><code>possibler</code></span></th>
-      <th class="v-table-header">example</th>
-    </tr>
-    <tr>
-      <td><code>possible</code></td>
-      <td>Im<span style="background-color:yellow;">possible</span> to do</td>
-      <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
-      <td><span style="background-color:yellow;">possible</span>r</td>
-      <td><a href="https://regex101.com/r/Ygl8wW/1">boundaries_1</a></td>
-    </tr>
-    <tr>
-      <td><code>\bpossible</code></td>
-      <td>Impossible to do</td>
-      <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
-      <td><span style="background-color:yellow;">possible</span>r</td>
-      <td><a href="https://regex101.com/r/WT2kd5/1">boundaries_2</a></td>
-    </tr>
-    <tr>
-      <td><code>\bpossible\b</code></td>
-      <td>Impossible to do</td>
-      <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
-      <td>possibler</td>
-      <td><a href="https://regex101.com/r/2qDt77/1">boundaries_3</a></td>
-    </tr>
-    <tr>
-      <td><code>possible\B</code></td>
-      <td>Impossible to do</td>
-      <td>I'm possible :)</td>
-      <td><span style="background-color:yellow;">possible</span>r</td>
-      <td><a href="https://regex101.com/r/jL4Lkv/1">boundaries_4</a></td>
-    </tr>
-    <tr>
-      <td><code>\Bpossible</code></td>
-      <td>Im<span style="background-color:yellow;">possible</span> to do</td>
-      <td>I'm possible :)</td>
-      <td>possibler</td>
-      <td><a href="https://regex101.com/r/bnTUnx/1">boundaries_5</a></td>
-    </tr>
-  </table>
-
-  ### 1.6. Flags
-
-  It is possible to change the behaviour of the regex with some flags:
-
-  * `(?i)`: **case insensitive**. For example `(?i)hello` will match `HELLO` ([demo](https://regex101.com/r/jr3Zrq/1))
-  * `(?m)`: **multi line**. When this is active the anchor `^` will be start of line instead of start of text ([demo](https://regex101.com/r/Ol3N99/1))
-  * `(?s)`: **single line**.
-
-  ### 1.7. Greedy vs lazy
-
-  Imagine that we have the following text:
-
-  ```html
-  <h1> Title </h1>
-  <p> Hello </p>
-  ```
-
-  If we want to capture the start of an html tag (`<h1>` and `<p>` in this case) one might be tempted to use something like `<\w+>`.
-  However that will match the whole line (for both lines) since we are specifying `<` followed by any text and ended with `>` ([demo](https://regex101.com/r/ZoRRT1/1)).
-  If we want to stop it at the first appearence of `>` we can use the non greedy regex `<.+?>` ([demo](https://regex101.com/r/j2OnQv/1)).
-
-  Some better alternatives are `<\w+>` or `<[^<>]+>`.
-
-  To sum up:
-
-  * `<.+>`: greedy
-  * `<.+?>`: non greedy
-
-  > It can also be used with other quantifiers that are not the `+`.
-
-
-
-  ## 2. Regex with python
-
-  ### 2.1. `re` package
-
-  To use regex in **python** you first need to import the `re` package with
-
-  ```
-  import re
-  ```
-
-  Then to check if there is a match in a text with one regex using `out = re.match(regex, text)`:
-
-  ```python
-  out = re.match(r"hello", "hello world")
-
-  # out is a class if we only want to know if there is a match we can use `bool(out)`
-  ```
-
-  > When declaring regexs in python it is a good practise to declare them as **raw** strings with `r"regex"`
-
-  ### 2.2. `match` vs `search`
-
-  We have use `re.match` since it's faster. However this only looks at the begining of the string.
-  To do a more in deep search we can use `re.search`.
-
-  Let's compare them by doing checking different regexs against the following text:
-
-  ```python
-  text = """hello world
-  bye world"""
-  ```
-
-  The results would be:
-
-  <table class="v-table" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">regex</th>
-      <th class="v-table-header">re.match</th>
-      <th class="v-table-header">re.search</th>
-    </tr>
-    <tr>
-      <td><code>r"hello"</code></td>
-      <td class="v-table-center">✔️</td>
-      <td class="v-table-center">✔️</td>
-    </tr>
-    <tr>
-      <td><code>r"world"</code></td>
-      <td class="v-table-center">❌</td>
-      <td class="v-table-center">✔️</td>
-    </tr>
-    <tr>
-      <td><code>r"bye"</code></td>
-      <td class="v-table-center">❌</td>
-      <td class="v-table-center">✔️</td>
-    </tr>
-  </table>
-
-  ### 2.3. `re.compile`
-
-  If we plan to reuse the same regex we can compile it with `regex = re.compile(regex)`:
-
-  ```python
-  regex = re.compile(r"hello")
-  ```
-
-  And then we can use both `match` and/or `search` with:
-
-  ```python
-  regex.match("hello world")
-
-  regex.search("hello world")
-  ```
-
-  The advantage is that a **compiled regex is faster** than a non-compiled one.
-
-  ### 2.4. Working with groups
-
-  Imagine that we have the following file names:
-
-  ```python
-  filenames = [
-      "Informe mensual Indexa Capital - AABBCCDD - 2020-01.pdf",
-      "Informe mensual Indexa Capital - XXYYZZWW - 2020-01.pdf",
-      "Informe mensual Indexa Capital - AABBCCDD - 2021-03.pdf",
-      "Informe mensual Indexa Capital - XXYYZZWW - 2020-12.pdf",
-  ]
-  ```
-
-  #### 2.4.1. Unnamed groups
-
-  It looks more or less clear that we can extract some data from those names:
-
-  ```python
-  regex = re.compile(r"Informe mensual Indexa Capital - (\w{8}) - (\d{4})-(\d{2}).pdf")
-
-  out = regex.match(filenames[0])
-  out.groups()
-  ```
-  <div class="output">
-    <b>Out:</b> ('AABBCCDD', '2020', '01')
-  </div>
-
-  #### 2.4.2. Named groups
-
-  We can use named groups to better extract the data
-
-  ```python
-  regex = re.compile(r"Informe mensual Indexa Capital - (?P<account>\w{8}) - (?P<year>\d{4})-(?P<month>\d{2}).pdf")
-
-  out = regex.match(filenames[1])
-  out.groupdict()
-  ```
-  <div class="output">
-    <b>Out:</b> {'account': 'XXYYZZWW', 'year': '2020', 'month': '01'}
-  </div>
-
-  Clearly we can use that to rename the files doing something like:
-
-  ```python
-  out_pattern = "{year}_{month} Indexa capital {account}.pdf"
-
-  for filename in filenames:
-      groups = regex.match(filename).groupdict()
-      new_name = out_pattern.format(**groups)
-    
-      print(new_name)
-  ```
-  <div class="output">
-    <li>2020_01 Indexa capital AABBCCDD.pdf</li>
-    <li>2020_01 Indexa capital XXYYZZWW.pdf</li>
-    <li>2021_03 Indexa capital AABBCCDD.pdf</li>
-    <li>2020_12 Indexa capital XXYYZZWW.pdf</li>
-  </div>
-
-
-
-  ## 3. Regex with pandas
-
-  There are multiple functions in **pandas** that can be used with **regex**. They are:
-
-  1. `count`: count occurrences that match a regex
-  2. `replace`: replace based on a regex
-  3. `match`: same as `re.match`
-  4. `contains`: same as `re.search`
-  5. `findall`: same as `re.findall`
-  6. `split` / `rsplit`: splits text based on a regex
-  7. `extract`: extract groups using a regex
-
-  In order to explain them let's create a really dummy dataframe with:
-
-  ```python
-  import pandas as pd
-
-  queries = [
-      "select *  FROM  users",
-      "SELECT count(id) AS cnt FROM public.users",
-      "SELECT * FROM orders",
-      "SELECT city, count(1) FROM orders GROUP BY 1",
-  ]
-  df = pd.DataFrame(queries, columns=["query"])
-  ```
-
-  ### 3.1. `series.str.count`
-
-  In this case we want to `count` the number of queries that come from the `users` table.
-  It doesn't matter if the schema is specified or not. It can be done with:
-
-  ```python
-  df["query"].str.count(r"\s+FROM\s+(\w+\.)?users\b")
-  ```
-  <div class="output">
-    <b>Out:</b>
-    <li>1</li>
-    <li>1</li>
-    <li>0</li>
-    <li>0</li>
-  </div>  
-
-  ### 3.2. `series.str.replace`
-
-  We can use this for deleting the renamings (like ` AS cnt`):
-
-  ```python
-  df["query"].str.replace(r"\s+AS\s+\w+\b", "", regex=True)
-  ```
-  <div class="output">
-    <b>Out:</b>
-    <li><code>select *  FROM  users</code></li>
-    <li><code>SELECT count(id) FROM public.users</code></li>
-    <li><code>SELECT * FROM orders</code></li>
-    <li><code>SELECT city, count(1) FROM orders GROUP BY 1</code></li>
-  </div>  
-
-  ### 3.3. `series.str.match`
-
-  In this case we can look which queries are selecting all columns (`SELECT * FROM`):
-
-  ```python
-  df["query"].str.match(r"(?i)(SELECT)\s+\*\s+(?i)(FROM)")
-  ```
-  <div class="output">
-    <b>Out:</b>
-    <li>True</li>
-    <li>False</li>
-    <li>True</li>
-    <li>False</li>
-  </div>  
-
-  ### 3.4. `series.str.contains`
-
-  Similar to the `replace` example, let's get the queries that have a rename `AS x`:
-
-  ```python
-  df["query"].str.contains(r"\s+AS\s+\w+")
-  ```
-  <div class="output">
-    <b>Out:</b>
-    <li>False</li>
-    <li>True</li>
-    <li>False</li>
-    <li>False</li>
-  </div>  
-
-  ### 3.5. `series.str.findall`
-
-  We can use this for getting a list with all words that have between 5 and 8 letters:
-
-  ```python
-  df["query"].str.findall("\w{5,8}")
-  ```
-  <div class="output">
-    <b>Out:</b>
-    <li>[<code>select</code>, <code>users</code>]</li>
-    <li>[<code>SELECT</code>, <code>count</code>, <code>public</code>, <code>users</code>]</li>
-    <li>[<code>SELECT</code>, <code>orders</code>]</li>
-    <li>[<code>SELECT</code>, <code>count</code>, <code>orders</code>, <code>GROUP</code>]</li>
-  </div>  
-
-  > Note that the output is one list per row.
-
-  ### 3.6. `series.str.split` / `series.str.rsplit`
-
-  In this case let's split the query in 2 parts, all before the `FROM` and all after it:
-
-  ```python
-  df["query"].str.split("\s+(?i)from\s+")
-  ```
-  <div class="output">
-    <b>Out:</b>
-    <li>[<code>select *</code>, <code>users</code>]</li>
-    <li>[<code>SELECT count(id) AS cnt</code>, <code>public.users</code>]</li>
-    <li>[<code>SELECT *</code>, <code>orders</code>]</li>
-    <li>[<code>SELECT city, count(1)</code>, <code>orders GROUP BY 1</code>]</li>
-  </div>  
-
-  ### 3.7. `series.str.extract`
-
-  With this function we can extract data from groups.
-  The output of this function is a **DataFrame** where each group is a column.
-
-  ```python
-  regex = r"(?i)SELECT\s+(?:.+)\s+(?i)FROM\s+(?P<schema>\w+\.)?(?P<table>\w+)\b"
-  df["query"].str.extract(regex)
-  ```
-
-  The output in this case is:
-
-  <table class="v-table" align="center">
-    <tr class="v-table-center">
-      <th class="v-table-header">schema</th>
-      <th class="v-table-header">table</th>
-    </tr>
-    <tr>
-      <td>Nan</td>
-      <td>users</td>
-    </tr>
-    <tr>
-      <td>public.</td>
-      <td>users</td>
-    </tr>
-    <tr>
-      <td>Nan</td>
-      <td>orders</td>
-    </tr>
-    <tr>
-      <td>Nan</td>
-      <td>orders</td>
-    </tr>
-  </table>
-
-  The regex used in this example might be a little bit complex, let's analyze it by parts:
-
-  * `(?i)SELECT`: `SELECT` statement case insensitive
-  * `\s+`: one or more spaces
-  * `(?:.+)`: any number of characters in a non-capturing group (so that it does not appear as column in the output)
-  * `\s+`: one or more spaces
-  * `(?i)FROM`: `FROM` statement case insensitive
-  * `\s+`: one or more spaces
-  * `(?:(?P<schema>\w+)\.)?`: Optional non-capturing group composed with:
-      * `(?P<schema>\w+)`: Capturing group named `schema` made only with words
-      * `\.`: a dot (`.`)
-  * `(?P<table>\w+)\b`: Capturing group named `table` made only with words and that has a right boundary
-
-
-  ## 4. Regex with redshift
-
-  In **redshift** there are 4 string functions that work with regular expressions (regex).
-  They are:
-
-  <table class="v-table">
-    <tr class="v-table-center">
-      <th class="v-table-header">Function</th>
-      <th class="v-table-header">Description</th>
-    </tr>
-    <tr>
-      <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_COUNT.html">REGEXP_COUNT</a></td>
-      <td>Returns an integer that indicates the number of times the pattern occurs in the string. If no match is found, then the function returns 0.</td>
-    </tr>
-    <tr>
-      <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_INSTR.html">REGEXP_INSTR</a></td>
-      <td>Returns an integer that indicates the beginning position or ending position of the matched substring. If no match is found, then the function returns 0.</td>
-    </tr>
-    <tr>
-      <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_REPLACE.html">REGEXP_REPLACE</a></td>
-      <td>Replaces every occurrence of the pattern with the specified string.</td>
-    </tr>
-    <tr>
-      <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_SUBSTR.html">REGEXP_SUBSTR</a></td>
-      <td>Returns the characters extracted from a string by searching for a regular expression pattern.</td>
-    </tr>
-  </table>
-
-  There is also the `SIMILAR` operator for using **regexs** inside `WHERE` statements. For example:
-
-  ```sql
-  SELECT count(*) FROM event WHERE name SIMILAR TO '%(Ring|Die)%';
-
-  -- It is the same as:
-  SELECT count(*) FROM event where name LIKE '%Ring%' OR name LIKE '%Die%';
-  ```
+date: 2021-04-05
+image: "/images/blog/0036-regex.jpg"
+categories: ["Python", "DE"]
+draft: false
+---
+
+## Table of Contents
+
+[TOC]
+
+## 1. Regex basics
+
+A regular expression, or **regex** for short, is a pattern describing a certain amount of text.
+The most simple regex is a regular string, like `hello` which will match the literal text `hello`.
+
+There are some characters with special meanings. For example `.` will match any character (except line break).
+As an example `ip.d` will match `ipad`, `ipod`, `ip@d` etc.
+
+If we want to only match `ipod` or `ipad` we can use `ip[ao]d`.
+
+### 1.1. Brackets `[]`
+
+Brackets (`[` and `]`) are used for specifying which characters are allowed. It is similar to an **or** operator. As an example:
+
+* `[abc]`: `a`, `b` or `c`
+* `[a-c]`: `a`, `b` or `c`
+* `[^a-c]`: anything but `a`, `b` or `c`
+* `[0-9a-fA-F]`: any number or any letter between `a` and `f` or between `A` and `F`. This represents hexadecimal
+
+### 1.1. Position
+
+It is possible to specify matches based on the position with:
+
+* `^`: Start 
+* `$`: End
+
+For example `^ab` will only match the first `ab` in `ab abc ab` ([Demo](https://regex101.com/r/TJzoA7/2))
+
+### 1.2. Classes
+
+There are certain keywords that will match different types of characters.
+For example `\d` will match any digit (any of those `0123456789`).
+Those classes can be inversed with capital letters. As an example `\D` will match any character except a digit.
+
+The main classes available are:
+
+<table class="v-table" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">regex</th>
+    <th class="v-table-header">description</th>
+    <th class="v-table-header">example</th>
+    <th class="v-table-header">inverse</th>
+  </tr>
+  <tr>
+    <td><code>\d</code></td>
+    <td>Digits</td>
+    <td><a href="https://regex101.com/r/RM6mHO/1">d_example</a></td>
+    <td><code>\D</code></td>
+  </tr>
+  <tr>
+    <td><code>\w</code></td>
+    <td>Alphanumeric and/or <code>_</code></td>
+    <td><a href="https://regex101.com/r/IkIMMm/1">w_example</a></td>
+    <td><code>\W</code></td>
+  </tr>
+  <tr>
+    <td><code>\s</code></td>
+    <td>Whitespaces and equivalents (like tabs)</td>
+    <td><a href="https://regex101.com/r/oSziKA/1">s_example</a></td>
+    <td><code>\S</code></td>
+  </tr>
+</table>
+
+
+### 1.3. Quantifiers
+
+It is possible to specify how many times a letter or group (defined in the next section) should appear.
+
+As an example we want the letter `a` + the letter `b` which should appear different number of times:
+
+<table class="v-table" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">regex</th>
+    <th class="v-table-header">description</th>
+    <th class="v-table-header">example</th>
+  </tr>
+  <tr>
+    <td><code>ab*</code></td>
+    <td><code>a</code> + <code>b</code> zero times or more</td>
+    <td><a href="https://regex101.com/r/ob5aYo/1">example_ab*</a></td>
+  </tr>
+  <tr>
+    <td><code>ab+</code></td>
+    <td><code>a</code> + <code>b</code> one time or more</td>
+    <td><a href="https://regex101.com/r/b0o38q/1">example_ab+</a></td>
+  </tr>
+  <tr>
+    <td><code>ab?</code></td>
+    <td><code>a</code> + optional <code>b</code> (zero or one time)</td>
+    <td><a href="https://regex101.com/r/S91Cbe/1">example_ab?</a></td>
+  </tr>
+  <tr>
+    <td><code>ab{2}</code></td>
+    <td><code>a</code> + <code>b</code> exactly 2 times</td>
+    <td><a href="https://regex101.com/r/TYBz4I/1">example_ab{2}</a></td>
+  </tr>
+  <tr>
+    <td><code>ab{2,5}</code></td>
+    <td><code>a</code> + <code>b</code> between 2 and 5 times (inclusive)</td>
+    <td><a href="https://regex101.com/r/b4oI9X/1">example_ab{2,5}</a></td>
+  </tr>
+</table>
+
+### 1.4. Groups
+
+It is possible to define **groups** in regex.
+They are use to capture part of the text and are declared with parenthesis `()`.
+We can use any regex inside the group. For example if we want to math `hello`:
+
+* `(hello)`: capturing group ([Demo](https://regex101.com/r/8W86e1/1)) 
+* `(?:hello)`: non-capturing group
+* `(?P<name>hello)`: same but giving the group a name (`name` in this case)
+* `(hello|bye):` **or** operator in groups.
+
+### 1.5. Boundaries
+
+It is possible to declare a boundary with `\b` (with the inverse `\B`).
+A boundary means that is surrounded with a non word type character.
+It is similar to the **start** (`^`) and **end** (`$`).
+
+It is easier to understand it with some examples:
+
+<table class="v-table" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">regex</th>
+    <th class="v-table-header">text: <span style="background-color:white;"><code>Impossible to do</code></span></th>
+    <th class="v-table-header">text: <span style="background-color:white;"><code>I'm possible :)</code></span></th>
+    <th class="v-table-header">text: <span style="background-color:white;"><code>possibler</code></span></th>
+    <th class="v-table-header">example</th>
+  </tr>
+  <tr>
+    <td><code>possible</code></td>
+    <td>Im<span style="background-color:yellow;">possible</span> to do</td>
+    <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
+    <td><span style="background-color:yellow;">possible</span>r</td>
+    <td><a href="https://regex101.com/r/Ygl8wW/1">boundaries_1</a></td>
+  </tr>
+  <tr>
+    <td><code>\bpossible</code></td>
+    <td>Impossible to do</td>
+    <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
+    <td><span style="background-color:yellow;">possible</span>r</td>
+    <td><a href="https://regex101.com/r/WT2kd5/1">boundaries_2</a></td>
+  </tr>
+  <tr>
+    <td><code>\bpossible\b</code></td>
+    <td>Impossible to do</td>
+    <td>I'm <span style="background-color:yellow;">possible</span> :)</td>
+    <td>possibler</td>
+    <td><a href="https://regex101.com/r/2qDt77/1">boundaries_3</a></td>
+  </tr>
+  <tr>
+    <td><code>possible\B</code></td>
+    <td>Impossible to do</td>
+    <td>I'm possible :)</td>
+    <td><span style="background-color:yellow;">possible</span>r</td>
+    <td><a href="https://regex101.com/r/jL4Lkv/1">boundaries_4</a></td>
+  </tr>
+  <tr>
+    <td><code>\Bpossible</code></td>
+    <td>Im<span style="background-color:yellow;">possible</span> to do</td>
+    <td>I'm possible :)</td>
+    <td>possibler</td>
+    <td><a href="https://regex101.com/r/bnTUnx/1">boundaries_5</a></td>
+  </tr>
+</table>
+
+### 1.6. Flags
+
+It is possible to change the behaviour of the regex with some flags:
+
+* `(?i)`: **case insensitive**. For example `(?i)hello` will match `HELLO` ([demo](https://regex101.com/r/jr3Zrq/1))
+* `(?m)`: **multi line**. When this is active the anchor `^` will be start of line instead of start of text ([demo](https://regex101.com/r/Ol3N99/1))
+* `(?s)`: **single line**.
+
+### 1.7. Greedy vs lazy
+
+Imagine that we have the following text:
+
+```html
+<h1> Title </h1>
+<p> Hello </p>
+```
+
+If we want to capture the start of an html tag (`<h1>` and `<p>` in this case) one might be tempted to use something like `<\w+>`.
+However that will match the whole line (for both lines) since we are specifying `<` followed by any text and ended with `>` ([demo](https://regex101.com/r/ZoRRT1/1)).
+If we want to stop it at the first appearence of `>` we can use the non greedy regex `<.+?>` ([demo](https://regex101.com/r/j2OnQv/1)).
+
+Some better alternatives are `<\w+>` or `<[^<>]+>`.
+
+To sum up:
+
+* `<.+>`: greedy
+* `<.+?>`: non greedy
+
+> It can also be used with other quantifiers that are not the `+`.
+
+
+
+## 2. Regex with python
+
+### 2.1. `re` package
+
+To use regex in **python** you first need to import the `re` package with
+
+```
+import re
+```
+
+Then to check if there is a match in a text with one regex using `out = re.match(regex, text)`:
+
+```python
+out = re.match(r"hello", "hello world")
+
+# out is a class if we only want to know if there is a match we can use `bool(out)`
+```
+
+> When declaring regexs in python it is a good practise to declare them as **raw** strings with `r"regex"`
+
+### 2.2. `match` vs `search`
+
+We have use `re.match` since it's faster. However this only looks at the begining of the string.
+To do a more in deep search we can use `re.search`.
+
+Let's compare them by doing checking different regexs against the following text:
+
+```python
+text = """hello world
+bye world"""
+```
+
+The results would be:
+
+<table class="v-table" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">regex</th>
+    <th class="v-table-header">re.match</th>
+    <th class="v-table-header">re.search</th>
+  </tr>
+  <tr>
+    <td><code>r"hello"</code></td>
+    <td class="v-table-center">✔️</td>
+    <td class="v-table-center">✔️</td>
+  </tr>
+  <tr>
+    <td><code>r"world"</code></td>
+    <td class="v-table-center">❌</td>
+    <td class="v-table-center">✔️</td>
+  </tr>
+  <tr>
+    <td><code>r"bye"</code></td>
+    <td class="v-table-center">❌</td>
+    <td class="v-table-center">✔️</td>
+  </tr>
+</table>
+
+### 2.3. `re.compile`
+
+If we plan to reuse the same regex we can compile it with `regex = re.compile(regex)`:
+
+```python
+regex = re.compile(r"hello")
+```
+
+And then we can use both `match` and/or `search` with:
+
+```python
+regex.match("hello world")
+
+regex.search("hello world")
+```
+
+The advantage is that a **compiled regex is faster** than a non-compiled one.
+
+### 2.4. Working with groups
+
+Imagine that we have the following file names:
+
+```python
+filenames = [
+    "Informe mensual Indexa Capital - AABBCCDD - 2020-01.pdf",
+    "Informe mensual Indexa Capital - XXYYZZWW - 2020-01.pdf",
+    "Informe mensual Indexa Capital - AABBCCDD - 2021-03.pdf",
+    "Informe mensual Indexa Capital - XXYYZZWW - 2020-12.pdf",
+]
+```
+
+#### 2.4.1. Unnamed groups
+
+It looks more or less clear that we can extract some data from those names:
+
+```python
+regex = re.compile(r"Informe mensual Indexa Capital - (\w{8}) - (\d{4})-(\d{2}).pdf")
+
+out = regex.match(filenames[0])
+out.groups()
+```
+<div class="output">
+  <b>Out:</b> ('AABBCCDD', '2020', '01')
+</div>
+
+#### 2.4.2. Named groups
+
+We can use named groups to better extract the data
+
+```python
+regex = re.compile(r"Informe mensual Indexa Capital - (?P<account>\w{8}) - (?P<year>\d{4})-(?P<month>\d{2}).pdf")
+
+out = regex.match(filenames[1])
+out.groupdict()
+```
+<div class="output">
+  <b>Out:</b> {'account': 'XXYYZZWW', 'year': '2020', 'month': '01'}
+</div>
+
+Clearly we can use that to rename the files doing something like:
+
+```python
+out_pattern = "{year}_{month} Indexa capital {account}.pdf"
+
+for filename in filenames:
+    groups = regex.match(filename).groupdict()
+    new_name = out_pattern.format(**groups)
+  
+    print(new_name)
+```
+<div class="output">
+  <li>2020_01 Indexa capital AABBCCDD.pdf</li>
+  <li>2020_01 Indexa capital XXYYZZWW.pdf</li>
+  <li>2021_03 Indexa capital AABBCCDD.pdf</li>
+  <li>2020_12 Indexa capital XXYYZZWW.pdf</li>
+</div>
+
+
+
+## 3. Regex with pandas
+
+There are multiple functions in **pandas** that can be used with **regex**. They are:
+
+1. `count`: count occurrences that match a regex
+2. `replace`: replace based on a regex
+3. `match`: same as `re.match`
+4. `contains`: same as `re.search`
+5. `findall`: same as `re.findall`
+6. `split` / `rsplit`: splits text based on a regex
+7. `extract`: extract groups using a regex
+
+In order to explain them let's create a really dummy dataframe with:
+
+```python
+import pandas as pd
+
+queries = [
+    "select *  FROM  users",
+    "SELECT count(id) AS cnt FROM public.users",
+    "SELECT * FROM orders",
+    "SELECT city, count(1) FROM orders GROUP BY 1",
+]
+df = pd.DataFrame(queries, columns=["query"])
+```
+
+### 3.1. `series.str.count`
+
+In this case we want to `count` the number of queries that come from the `users` table.
+It doesn't matter if the schema is specified or not. It can be done with:
+
+```python
+df["query"].str.count(r"\s+FROM\s+(\w+\.)?users\b")
+```
+<div class="output">
+  <b>Out:</b>
+  <li>1</li>
+  <li>1</li>
+  <li>0</li>
+  <li>0</li>
+</div>  
+
+### 3.2. `series.str.replace`
+
+We can use this for deleting the renamings (like ` AS cnt`):
+
+```python
+df["query"].str.replace(r"\s+AS\s+\w+\b", "", regex=True)
+```
+<div class="output">
+  <b>Out:</b>
+  <li><code>select *  FROM  users</code></li>
+  <li><code>SELECT count(id) FROM public.users</code></li>
+  <li><code>SELECT * FROM orders</code></li>
+  <li><code>SELECT city, count(1) FROM orders GROUP BY 1</code></li>
+</div>  
+
+### 3.3. `series.str.match`
+
+In this case we can look which queries are selecting all columns (`SELECT * FROM`):
+
+```python
+df["query"].str.match(r"(?i)(SELECT)\s+\*\s+(?i)(FROM)")
+```
+<div class="output">
+  <b>Out:</b>
+  <li>True</li>
+  <li>False</li>
+  <li>True</li>
+  <li>False</li>
+</div>  
+
+### 3.4. `series.str.contains`
+
+Similar to the `replace` example, let's get the queries that have a rename `AS x`:
+
+```python
+df["query"].str.contains(r"\s+AS\s+\w+")
+```
+<div class="output">
+  <b>Out:</b>
+  <li>False</li>
+  <li>True</li>
+  <li>False</li>
+  <li>False</li>
+</div>  
+
+### 3.5. `series.str.findall`
+
+We can use this for getting a list with all words that have between 5 and 8 letters:
+
+```python
+df["query"].str.findall("\w{5,8}")
+```
+<div class="output">
+  <b>Out:</b>
+  <li>[<code>select</code>, <code>users</code>]</li>
+  <li>[<code>SELECT</code>, <code>count</code>, <code>public</code>, <code>users</code>]</li>
+  <li>[<code>SELECT</code>, <code>orders</code>]</li>
+  <li>[<code>SELECT</code>, <code>count</code>, <code>orders</code>, <code>GROUP</code>]</li>
+</div>  
+
+> Note that the output is one list per row.
+
+### 3.6. `series.str.split` / `series.str.rsplit`
+
+In this case let's split the query in 2 parts, all before the `FROM` and all after it:
+
+```python
+df["query"].str.split("\s+(?i)from\s+")
+```
+<div class="output">
+  <b>Out:</b>
+  <li>[<code>select *</code>, <code>users</code>]</li>
+  <li>[<code>SELECT count(id) AS cnt</code>, <code>public.users</code>]</li>
+  <li>[<code>SELECT *</code>, <code>orders</code>]</li>
+  <li>[<code>SELECT city, count(1)</code>, <code>orders GROUP BY 1</code>]</li>
+</div>  
+
+### 3.7. `series.str.extract`
+
+With this function we can extract data from groups.
+The output of this function is a **DataFrame** where each group is a column.
+
+```python
+regex = r"(?i)SELECT\s+(?:.+)\s+(?i)FROM\s+(?P<schema>\w+\.)?(?P<table>\w+)\b"
+df["query"].str.extract(regex)
+```
+
+The output in this case is:
+
+<table class="v-table" align="center">
+  <tr class="v-table-center">
+    <th class="v-table-header">schema</th>
+    <th class="v-table-header">table</th>
+  </tr>
+  <tr>
+    <td>Nan</td>
+    <td>users</td>
+  </tr>
+  <tr>
+    <td>public.</td>
+    <td>users</td>
+  </tr>
+  <tr>
+    <td>Nan</td>
+    <td>orders</td>
+  </tr>
+  <tr>
+    <td>Nan</td>
+    <td>orders</td>
+  </tr>
+</table>
+
+The regex used in this example might be a little bit complex, let's analyze it by parts:
+
+* `(?i)SELECT`: `SELECT` statement case insensitive
+* `\s+`: one or more spaces
+* `(?:.+)`: any number of characters in a non-capturing group (so that it does not appear as column in the output)
+* `\s+`: one or more spaces
+* `(?i)FROM`: `FROM` statement case insensitive
+* `\s+`: one or more spaces
+* `(?:(?P<schema>\w+)\.)?`: Optional non-capturing group composed with:
+    * `(?P<schema>\w+)`: Capturing group named `schema` made only with words
+    * `\.`: a dot (`.`)
+* `(?P<table>\w+)\b`: Capturing group named `table` made only with words and that has a right boundary
+
+
+## 4. Regex with redshift
+
+In **redshift** there are 4 string functions that work with regular expressions (regex).
+They are:
+
+<table class="v-table">
+  <tr class="v-table-center">
+    <th class="v-table-header">Function</th>
+    <th class="v-table-header">Description</th>
+  </tr>
+  <tr>
+    <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_COUNT.html">REGEXP_COUNT</a></td>
+    <td>Returns an integer that indicates the number of times the pattern occurs in the string. If no match is found, then the function returns 0.</td>
+  </tr>
+  <tr>
+    <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_INSTR.html">REGEXP_INSTR</a></td>
+    <td>Returns an integer that indicates the beginning position or ending position of the matched substring. If no match is found, then the function returns 0.</td>
+  </tr>
+  <tr>
+    <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_REPLACE.html">REGEXP_REPLACE</a></td>
+    <td>Replaces every occurrence of the pattern with the specified string.</td>
+  </tr>
+  <tr>
+    <td><a href="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_SUBSTR.html">REGEXP_SUBSTR</a></td>
+    <td>Returns the characters extracted from a string by searching for a regular expression pattern.</td>
+  </tr>
+</table>
+
+There is also the `SIMILAR` operator for using **regexs** inside `WHERE` statements. For example:
+
+```sql
+SELECT count(*) FROM event WHERE name SIMILAR TO '%(Ring|Die)%';
+
+-- It is the same as:
+SELECT count(*) FROM event where name LIKE '%Ring%' OR name LIKE '%Die%';
+```
