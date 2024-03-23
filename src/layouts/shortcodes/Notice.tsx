@@ -11,17 +11,19 @@ function Notice({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`notice ${type}`}>
-      {type === "info" ? (
-        <FaInfoCircle />
-      ) : type === "success" ? (
-        <FaCheckCircle />
-      ) : type === "warning" ? (
-        <FaExclamationCircle />
-      ) : (
-        <FaTimesCircle />
-      )}
-      <div className="ml-4">{children}</div>
+    <div className={`notice ${type} text-md`}>
+      <span>
+        {type === "info" ? (
+          <FaInfoCircle />
+        ) : type === "success" ? (
+          <FaCheckCircle />
+        ) : type === "warning" ? (
+          <FaExclamationCircle />
+        ) : (
+          <FaTimesCircle />
+        )}
+      </span>
+      <span className="ml-4">{children}</span>
     </div>
   );
 }
