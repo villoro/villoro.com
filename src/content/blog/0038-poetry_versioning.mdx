@@ -25,11 +25,9 @@ This post will explain how to simplify this process and how to automate it.
 It only focuses on how to manage it using `poetry` since it's the tool I recommend for handling virtual environments.
 If you need to set up **Poetry**, see:
 
-<div class="w3-padding w3-border w3-round ">
-  POST: <a href="https://villoro.com/post/poetry">
-    Poetry package manager
-  </a>
-</div>
+<Notice type="info">
+  POST: [Poetry python package manager](https://villoro.com/blog/poetry-python-package-manager)
+</Notice>
 
 ## 1. `poetry-bumpversion`
 
@@ -37,7 +35,9 @@ With [poetry-bumpversion](https://pypi.org/project/poetry-bumpversion/), we can 
 
 It assumes you follow [semver](https://semver.org/) for the versioning of the project.
 
-> If you are not following [semver](https://semver.org/), you probably should since it's the standard.
+<Notice type="warning">
+  If you are not following [semver](https://semver.org/), you probably should since it's the standard.
+</Notice>
 
 In short with `semver` the version consists of three numbers (`M.m.p`) where:
 
@@ -79,11 +79,9 @@ In that case, you will need to declare in `pyproject.toml` the files you want to
 
 As an example for DBT:
 
-<div class="input">
+<TerminalOutput color="stone">
   /pyproject.toml
-</div>
-
-
+</TerminalOutput>
 ```toml
 [[tool.poetry_bumpversion.replacements]]
 files = ["dbt_project.yml"]
@@ -97,14 +95,15 @@ The idea is to create a GitHub action that automatically updates the version.
 It should be smart enough to only do it if you haven't updated it.
 This way you can decide if you want to increase the `major`, `minor`, or `patch` digit.
 
-> In this example, if the version is not manually updated, it will increase the `minor` version.
+<Notice type="info">
+  In this example, if the version is not manually updated, it will increase the `minor` version.
+</Notice>
 
 The first thing you need is a simple script that reads the package version from `pyproject.toml`:
 
-<div class="input">
+<TerminalOutput color="stone">
   /.github/scripts/get_version.py
-</div>
-
+</TerminalOutput>
 ```python
 import click
 import toml
@@ -131,10 +130,9 @@ if __name__ == "__main__":
 This scripts uses the `set_output`  function to export the version as an environment variable in GitHub action.
 Since this is used in another `python` script, it is declared in a `utils.py` file:
 
-<div class="input">
+<TerminalOutput color="stone">
   /.github/scripts/utils.py
-</div>
-
+</TerminalOutput>
 ```python
 import os
 
@@ -148,15 +146,16 @@ def set_output(name, value):
 
 ```
 
-> For more details about using `environment variables` in `Github actions` see `section 4`
+<Notice type="info">
+  For more details about using `environment variables` in `Github actions` see `section 4`
+</Notice>
 
 Then you will need a script that checks if the version needs to be updated.
 It will compare the version from `main` to the one in the current PR.
 
-<div class="input">
+<TerminalOutput color="stone">
   /.github/scripts/check_if_update_needed.py
-</div>
-
+</TerminalOutput>
 ```python
 import click
 
@@ -188,10 +187,9 @@ if __name__ == "__main__":
 
 And the last step is to create a GitHub action that updates the version:
 
-<div class="input">
+<TerminalOutput color="stone">
   /.github/workflow/fix_version.yaml
-</div>
-
+</TerminalOutput>
 ```yaml
 name: Fix Version
 
@@ -261,10 +259,9 @@ The way this works is by:
 In order to keep better tracking of the package version, we will be tagging all commits to `main` with their version.
 We can do that with the following GitHub action:
 
-<div class="input">
+<TerminalOutput color="stone">
   /.github/workflow/tag_commits_on_main.yaml
-</div>
-
+</TerminalOutput>
 ```yaml
 name: Tag
 
@@ -343,7 +340,7 @@ To retrieve the environment variable, simply use `$ENV_VAR_NAME` like:
 Notice that in the `tag_commits_on_main.yaml` GitHub action, we are using the value directly within a string.
 This is done with:
 
-```
+```sh
 `text ${{env.ENV_VAR_NAME}}`
 ```
 
