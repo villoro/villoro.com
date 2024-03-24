@@ -49,7 +49,9 @@ This method will have some major problems:
 3. If requirements are added with `pip freeze` it will be difficult to differenciate between real dependencies and dependencies of the installed packages
 4. There will be no differenciation between **development dependencies** and **production dependencies**
 
-> It is true that you can create a `requirements_dev.txt` file to handle development dependencies but you will need to manually mantain it.
+<Notice type="info">
+  It is true that you can create a `requirements_dev.txt` file to handle development dependencies but you will need to manually mantain it.
+</Notice>
 
 ### 1.2. Virtualenv / Conda
 
@@ -85,7 +87,9 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 ```
 
-> By using the `pyproject.toml` file you will not need the `setup.py` file.
+<Notice type="info">
+  By using the `pyproject.toml` file you will not need the `setup.py` file.
+</Notice>
 
 Finally the `poetry.lock` is a snapshot with the exact versions install. It can be updated from the `pyproject.toml`.
 
@@ -104,7 +108,7 @@ poetry new projectname
 
 Creating a new project will create the following files:
 
-```
+```yaml
 - /projectname
     ├── /projectname
     │   └── __init__.py
@@ -145,7 +149,7 @@ poetry remove --dev black
 Poetry is more has more ways of specifing the versions of the dependencies.
 The default one is:
 
-```
+```sh
 pandas = "^0.25"
 ```
 
@@ -157,7 +161,9 @@ You can check all the possible ways in the [poetry doc](https://python-poetry.or
 
 Once there is a `pyproject.toml` file you can install/update all the specified dependencies.
 
-> Those are also the commands you should run if the project was created and you are **fetching it from git**.
+<Notice type="info">
+  Those are also the commands you should run if the project was created and you are **fetching it from git**.
+</Notice>
 
 ```sh
 poetry install
@@ -167,7 +173,9 @@ poetry update
 poetry install --no-dev
 ```
 
-> Both commands will create a the `poetry.lock` file with a snapshot of the installed packages (or update it if already present).
+<Notice type="info">
+  Both commands will create a the `poetry.lock` file with a snapshot of the installed packages (or update it if already present).
+</Notice>
 
 ### 3.3. See dependencies
 
@@ -183,9 +191,7 @@ poetry show -t --no-dev
 
 As an example:
 
-<div class="w3-center">
-  <img src="/static/images/posts/poetry_show.png" alt="poetry_show" class="w3-image w3-padding-16" style="max-height: 378px;"/>
-</div>
+![Poetry Show](../../images/posts/2020/0031-poetry_show.png)
 
 ### 3.4. Check
 
