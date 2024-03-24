@@ -24,7 +24,9 @@ There are two options:
 * **Community Edition:** this is free but you only can use a single small cluster.
 * **Databricks Plaform:** use this option if you plan to create your own clusters. It has 14 days of free trial and you will need to pay for the machines you use for the clusters
 
-> I suggest you start trying it with the **Community Edition**
+<Notice type="info">
+  I suggest you start trying it with the **Community Edition**
+</Notice>
 
 ## 1. Clusters
 
@@ -37,20 +39,16 @@ The available options will change based on the **Databricks** version you are us
 
 With this version you can configure more things.
 
-<div class="w3-center">
-  <img
-    src="/static/images/posts/databricks_cluster_creation.png"
-    alt="databricks_cluster_creation"
-    class="w3-image w3-padding-16 w3-border"
-  />
-</div>
+![Databricks Cluster Creation](../../images/posts/2019/0027-databricks_cluster_creation.png)
 
 ##### 1.1.1.1. Cluster mode
 
 The default mode is `standard` and will work well for 1 user.
 For multiuser use `high concurrency`.
 
-> If you want to use scala you must use `standard` cluster mode
+<Notice type="warning">
+  If you want to use scala you must use `standard` cluster mode
+</Notice>
 
 ##### 1.1.1.2. Databricks runtime version
 
@@ -81,13 +79,7 @@ If you are using the **Community Edition** version of databricks is really easy 
 
 You only need to write a cluster name and decide the databricks runtime version.
 
-<div class="w3-center">
-  <img
-    src="/static/images/posts/databricks_cluster_creation_community_edition.png"
-    alt="databricks_cluster_creation_community_edition"
-    class="w3-image w3-padding-16 w3-border"
-  />
-</div>
+![Databricks Cluster Creation CE](../../images/posts/2019/0027-databricks_cluster_creation_community_edition.png)
 
 ### 1.2. Permissions
 
@@ -117,15 +109,11 @@ The default way for new libraries should be using the `Libraries` section.
 From there you can install `eggs` from a **blob storage** or directly using **PyPI**.
 You can see an example of the libraries installed on a cluster:
 
-<div class="w3-center">
-  <img
-    src="/static/images/posts/databricks_clusters_libraries.png"
-    alt="databricks_clusters_libraries"
-    class="w3-image w3-padding-16 w3-border"
-  />
-</div>
+![Databricks Cluster libraries](../../images/posts/2019/0027-databricks_clusters_libraries.png)
 
-> It is not possible to install python `wheels`, use `eggs` instead.
+<Notice type="warning">
+  It is not possible to install python `wheels`, use `eggs` instead.
+</Notice>
 
 And lastly you should avoid installing libraries using `dbutils`.
 This also won't work if you are using a `conda` databricks runtime.
@@ -143,13 +131,7 @@ There are some kind of logs:
     * worker standard output
     * worker standard error
 
-<div class="w3-center">
-  <img
-    src="/static/images/posts/databricks_logs.jpg"
-    alt="databricks_logs"
-    class="w3-image w3-padding-16 w3-border"
-  />
-</div>
+![Databricks logs](../../images/posts/2019/0027-databricks_logs.jpg)
 
 #### 1.4.1. Event logs
 
@@ -167,22 +149,8 @@ The `log4j output` is the output that **spark** uses.
 
 This allows to access the `stdout` and `stderr` logs of each spark worker.
 
-<div class="w3-center">
-  <img
-    src="/static/images/posts/databricks_logs_spark_1.jpg"
-    alt="databricks_logs_spark_1"
-    class="w3-image w3-padding-16 w3-border"
-    style="margin-bottom: 16px;"
-  />
-</div>
-
-<div class="w3-center">
-  <img
-    src="/static/images/posts/databricks_logs_spark_2.jpg"
-    alt="databricks_logs_spark_2"
-    class="w3-image w3-padding-16 w3-border"
-  />
-</div>
+![Databricks logs spark 1](../../images/posts/2019/0027-databricks_logs_spark_1.jpg)
+![Databricks logs spark 2](../../images/posts/2019/0027-databricks_logs_spark_2.jpg)
 
 ## 2. Notebooks
 
@@ -202,7 +170,9 @@ You can later rename the notebook or attach it to another cluster if needed.
 You can work with multiple languages in the same notebook even though there is a default one.
 To do so you only need to use some magic commands like `%python` to work with python.
 
-> No need to use anything to work with the default language
+<Notice type="info">
+  No need to use anything to work with the default language
+</Notice>
 
 The languages you can use are:
 
@@ -273,7 +243,9 @@ For example you can create and dropdown that sets the value of one python variab
 This allow you to install packages.
 I would advise to manage libraries with the `Libraries` section of the cluster configuration.
 
-> If you are using a **conda** environment `dbutils.library` won't work.
+<Notice type="warning">
+  If you are using a **conda** environment `dbutils.library` won't work.
+</Notice>
 
 ### 2.4. display and displayHTML
 
