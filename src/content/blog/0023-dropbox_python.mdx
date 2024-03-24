@@ -20,7 +20,7 @@ One good option is to store it in [dropbox](https://www.dropbox.com/).
 ## 1. Using dropbox with python
 Dropbox has a really nice package that you can install with
 
-```
+```sh
 pip install dropbox
 ```
 
@@ -30,16 +30,12 @@ So I decided that I could create a post that explained everything.
 The first thing to do is create an app inside **dropbox** since you cannot get a token without it.
 To do so go to [dropbox developers](https://www.dropbox.com/developers/apps).
 
-<div class="w3-center">
-  <img src="/static/images/posts/dropbox_create_app.png" alt="dropbox_create_app" class="w3-image w3-padding-16 w3-border" style="max-height: 800px;"/>
-</div>
+![Dropbox Create APP](../../images/posts/2019/0023-dropbox_create_app.png)
 
 Register a new app that will use **Dropbox API** and will acces only the **app folder**.
 Once you have create the app go to the app settings page and create a token.
 
-<div class="w3-center">
-  <img src="/static/images/posts/dropbox_get_token.png" alt="dropbox_get_token" class="w3-image w3-padding-16 w3-border" style="max-height: 800px;"/>
-</div>
+![Dropbox Get Token](../../images/posts/2019/0023-dropbox_get_token.png)
 
 You can now store that secret in a safe way (for example as an environment variable or a hidden file).
 
@@ -71,7 +67,9 @@ with io.BytesIO(txt.encode()) as stream:
     # Here you do whatever you need
 ```
 
-> It is important to run `stream.seek(0)` to go to the begining of the stream.
+<Notice type="warning">
+  It is important to run `stream.seek(0)` to go to the begining of the stream.
+</Notice>
 
 ## 3. Writting files to dropbox
 
@@ -102,7 +100,9 @@ with io.BytesIO(txt.encode()) as stream:
 
 To allow overwriting you need to pass `mode=dropbox.files.WriteMode.overwrite` to the function `DBX.files_upload`.
 
-> **Important:** filenames should start with `/`. It won't work without it.
+<Notice type="warning">
+  **Important:** filenames should start with `/`. It won't work without it.
+</Notice>
 
 ### 3.2. Write a json
 
@@ -194,7 +194,9 @@ with io.BytesIO(res.content) as stream:
     txt = stream.read().decode()
 ```
 
-> Remember to decode the stream to transform it from bytes to string
+<Notice type="warning">
+  Remember to decode the stream to transform it from bytes to string
+</Notice>
 
 ### 4.2. Read a json
 
@@ -214,7 +216,9 @@ with io.BytesIO(res.content) as stream:
     data = yaml.safe_load(stream)
 ```
 
-> You should always use `yaml.safe_load` instead of `yaml.load`
+<Notice type="warning">
+  You should always use `yaml.safe_load` instead of `yaml.load`
+</Notice>
 
 ### 4.4. Read an Excel with Pandas
 
@@ -225,7 +229,9 @@ with io.BytesIO(res.content) as stream:
     df = pd.read_excel(stream, index_col=0)
 ```
 
-> If you do not want a new dummy index use `index_col=0`.
+<Notice type="info">
+  If you do not want a new dummy index use `index_col=0`.
+</Notice>
 
 ### 4.5. Read a csv with Pandas
 
