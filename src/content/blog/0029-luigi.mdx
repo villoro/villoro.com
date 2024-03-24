@@ -36,7 +36,9 @@ pip install luigi
 **Luigi** work with tasks that are defined with classes that extend the `luigi.Task` class.
 The basic usage is to overwrite the `run` function (with what to do) and the `output` (with the file that will output).
 
-> All **Luigi** tasks need to end with writting a file. This is how luigi tracks which tasks are completed.
+<Notice type="warning">
+  All **Luigi** tasks need to end with writting a file. This is how luigi tracks which tasks are completed.
+</Notice>
 
 For example a basic task would look like:
 
@@ -64,9 +66,9 @@ First of all, for this example let's create two python files (`register.py` and 
 They both will accept a name as parameter so that it can be run for different days.
 The first one will simply write a file with the execution time:
 
-<div class="input">
+<TerminalOutput color="stone">
   register.py
-</div>
+</TerminalOutput>
 ```python
 from datetime import date, datetime
 
@@ -82,9 +84,9 @@ def main(filename):
 
 And the other will write the same as an html file:
 
-<div class="input">
+<TerminalOutput color="stone">
   report.py
-</div>
+</TerminalOutput>
 ```python
 from datetime import date, datetime
 from markdown import markdown
@@ -151,7 +153,9 @@ class DoAllTask(luigi.WrapperTask):
         return RegisterTask(self.mdate), ReportTask(self.mdate)
 ```
 
-> Since `DoAllTask` does not need to do anything it extends `luigi.WrapperTask`.
+<Notice type="info">
+  Since `DoAllTask` does not need to do anything it extends `luigi.WrapperTask`.
+</Notice>
 
 To run the example you first need to start the luigi server with:
 
@@ -178,25 +182,21 @@ And you should see how **Luigi** completes the 3 tasks.
 
 If you go to `localhost:8082` you can see luigi server.
 
-<div class="w3-center">
-  <img src="/static/images/posts/luigi_server.jpg" alt="luigi_server" class="w3-image w3-padding-16"/>
-</div>
+![Luigi Server](../../images/posts/2020/0029-luigi_server.jpg)
 
 It gives a summary of the tasks and their status.
 
 If you select a task (for example `DoAllTask`) you can see the dependency tree.
 
-<div class="w3-center">
-  <img src="/static/images/posts/luigi_pipeline_svg.jpg" alt="luigi_pipeline_svg" class="w3-image w3-padding-16"/>
-</div>
+![Luigi Pipeline SVG](../../images/posts/2020/0029-luigi_pipeline_svg.jpg)
 
-> Remember to unmark the `Hide Done` button to see all task.
+<Notice type="info">
+  Remember to unmark the `Hide Done` button to see all task.
+</Notice>
 
 It is also possible view the dependency graph created with `D3`.
 
-<div class="w3-center">
-  <img src="/static/images/posts/luigi_pipeline_d3.jpg" alt="luigi_pipeline_d3" class="w3-image w3-padding-16"/>
-</div>
+![Luigi Pipeline D3](../../images/posts/2020/0029-luigi_pipeline_d3.jpg)
 
 ## 3. Using task templates
 
@@ -211,9 +211,9 @@ When a task fails will output file with have a slightly different name so that i
 
 The full template would be:
 
-<div class="input">
+<TerminalOutput color="stone">
   luigi_default.py
-</div>
+</TerminalOutput>
 ```python
 import os
 import time
@@ -318,9 +318,9 @@ class StandardTask(luigi.Task):
 
 Then is easy to create a StandardTask. The two task from the example below would be:
 
-<div class="input">
+<TerminalOutput color="stone">
   master.py
-</div>
+</TerminalOutput>
 ```python
 import luigi
 
@@ -393,9 +393,9 @@ sudo mkdir /var/lib/luigi-server/
 
 And now declare the `luigid` service by creating the file `/etc/supervisor/conf.d/luigid.conf`
 
-<div class="input">
+<TerminalOutput color="stone">
   /etc/supervisor/conf.d/luigid.conf
-</div>
+</TerminalOutput>
 ```toml
 [program:luigid]
 command=/home/ubuntu/.local/bin/luigid
@@ -409,7 +409,9 @@ user=ubuntu
 It is important to use the full path for the command that **supervisor** will run.
 Be careful to set `user` to one that has visbility of the `luigid` file.
 
-> Remember you can call `whereis luigid` to get the full path
+<Notice type="info">
+  Remember you can call `whereis luigid` to get the full path
+</Notice>
 
 Then start supervisor:
 
@@ -453,9 +455,9 @@ And `deactivate` to deactivate the environment.
 
 Let's create the `run_luigi.sh` file with:
 
-<div class="input">
+<TerminalOutput color="stone">
   ~/run_luigi.sh
-</div>
+</TerminalOutput>
 ```bash
 #!/bin/bash 
 
@@ -482,7 +484,9 @@ python src/master.py
 deactivate
 ```
 
-> Do not forget the `#!/bin/bash` part. If you do, the `source` command won't work. 
+<Notice type="warning">
+  Do not forget the `#!/bin/bash` part. If you do, the `source` command won't work. 
+</Notice>
 
 This script does some things:
 
