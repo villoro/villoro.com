@@ -23,10 +23,17 @@ There are 2 API types:
 * [openbanking](https://developer.ing.com/openbanking/get-started/openbanking): open for anyone to access
 * [PSD2](https://developer.ing.com/openbanking/get-started/psd2): for accessing those ones you need an eIDAS certificate.
 
-> eIDAS certificates can only be optained by organizations, not by individuals like you or me
+<Notice type="info">
+  eIDAS certificates can only be optained by organizations, not by individuals like you or me
+</Notice>
 
 This post focus on the **Open Banking** API.
 
+<Notice type="error">
+  **Disclaimer:** At the time of writting it is not possible to use "Open Banking" for personal use.
+  **Only accredited institutions will get the requeried credentials.**
+  I discovered after doing all the work and I'm sharing it in case anyone wants to try it and/or in case individuals can use it in the future.
+</Notice>
 
 ## 2. The Open Banking API
 
@@ -66,11 +73,13 @@ However I wanted to have everything in python.
 
 The first thing is to install `cryptodome` with
 
-```
+```sh
 pip install pycryptodome
 ```
 
-> All the code can be found in https://github.com/villoro/villoro_posts/tree/master/0035-ing_api
+<Notice type="info">
+  All the code can be found in https://github.com/villoro/villoro_posts/tree/master/0035-ing_api
+</Notice>
 
 Let's break down the script in parts
 
@@ -114,7 +123,7 @@ def encode_sha256(text, sign=False):
 ```
 
 And finally we need to encode it as a base64 string with:
-```
+```python
 from base64 import b64encode
 
 b64encode(out).decode()
@@ -230,7 +239,7 @@ You need to generate:
 
 You can generate the first 2 with:
 
-```
+```sh
 # 1. Generate an RSA private key. The password of the private key can be entered during execution of the command, so it doesn't end up in the history of your shell.
 openssl genrsa -out ing_http.key -passout stdin 2048
 # 2. Generate the X.509 Certificate Signing Request
@@ -264,4 +273,4 @@ Once it is approved you can query the only endpoint to check that everything is 
 
 ## 5. Next steps
 
-Now you can wait with me until they add more APIs under the Open Banking.
+Now you can wait with me until they add more APIs under the Open Banking 😢

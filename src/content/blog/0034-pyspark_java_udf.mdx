@@ -9,6 +9,8 @@ categories: ["Python", "Spark"]
 draft: false
 ---
 
+<script type="module" src="/js/posts/0037-plots-spark-java-udf.js"></script>
+
 ## Table of Contents
 
 [TOC]
@@ -37,9 +39,9 @@ Before creating the UDF we can try the library with:
 import h3
 h3.geo_to_h3(0, 0, 8)
 ```
-<div class="output">
-  <b>Out:</b> '88754e6499fffff'
-</div>
+<TerminalOutput>
+  \> '88754e6499fffff'
+</TerminalOutput>
 
 To create the **UDF** we only need to use the `udf` decorator and specify the output type.
 It's also a good idea to handle cases where `latitude` or `longitude` might be `null`/`None`.
@@ -81,9 +83,9 @@ Then you can directly access the java code and create the `h3` instance and then
 h3 = spark.sparkContext._jvm.com.uber.h3core.H3Core.newInstance()
 h3.geoToH3Address(0.0, 0.0, 8)
 ```
-<div class="output">
-  <b>Out:</b> '88754e6499fffff'
-</div>
+<TerminalOutput>
+  \> '88754e6499fffff'
+</TerminalOutput>
 
 However it is not possible to create a **UDF** using the java instance.
 The problem is that it's a java object so it can't be pickled.
@@ -97,9 +99,9 @@ Remember to define the `package` so that it matches the path.
 
 #### 2.2.1 Create the java file
 
-<div class="input">
+<TerminalOutput color="stone">
   /com/villoro/SimpleH3.java
-</div>
+</TerminalOutput>
 ```java
 package com.villoro;
 
@@ -137,7 +139,9 @@ The only different thing from the **python** implementation is that we are doing
 That means that the first time the function is run it will create the `h3` instance.
 But the next times it will reuse the same instance.
 
-> **Lazy instantiation** will make the code faster.
+<Notice type="success">
+  **Lazy instantiation** will make the code faster.
+</Notice>
 
 #### 2.2.2. Compile the code
 
@@ -190,9 +194,9 @@ So it will extend `UDF3<Double, Double, Integer, String>`.
 
 The rest of the code it's really similar to the previous function.
 
-<div class="input">
+<TerminalOutput color="stone">
   /com/villoro/toH3AddressUDF.java
-</div>
+</TerminalOutput>
 ```java
 package com.villoro;
 
@@ -236,7 +240,9 @@ The command is really similar to the one we used before:
 javac -cp "jars/h3.jar;jars/spark-sql.jar" com\villoro\*.java
 ```
 
-> Make sure the name of the `jars` you are importing match.
+<Notice type="warning">
+  Make sure the name of the `jars` you are importing match.
+</Notice>
 
 ### 3.3. Create the jar
 
@@ -268,7 +274,7 @@ Then we can call it using `F.expr`:
 
 And we can also use it with SQL:
 
-```
+```python
 spark.sql("""
     SELECT
         latitude, longitude, geo_to_h3(latitude, longitude, 8)
@@ -326,53 +332,4 @@ As we expected the `java_udf` is faster than the `python_udf`.
 If we take a closer look at the values we can see that creating the `python_udf` has a cost.
 That is why the results are so bad for the small datasets.
 Once the dataset is bigger that cost is no longer visible but there is a cost of moving the information from `python` to `java`.
-That is why the `pandas_udf` is around 2 times slower.
-
-
-scripts: |
-<script>
-  const scales = {
-    scales: {
-      yAxes: [{
-        scaleLabel: {
-          display: true,
-          labelString: 'Time [s]',
-        },
-        type: 'logarithmic',
-      }],
-      xAxes: [{
-        scaleLabel: {
-          display: true,
-          labelString: 'Number of rows'
-        },
-      }],
-    }
-  }
-  var chart_times = new Chart("chart_times", {
-    type: 'line',
-    data: {
-      labels: ['10^3', '10^4', '10^5', '10^6', '10^7', '10^8'],
-      datasets: [
-        {
-          label: 'python_udf',
-          borderColor: "#FFA726", 
-          data: [2.348551, 3.140185, 3.876405, 5.552880, 24.151182, 195.032587],
-          fill: false
-        },
-        {
-          label: 'java_udf',
-          borderColor: "#AED581", 
-          data: [0.492574, 0.579370, 0.795821, 1.958956, 11.507726, 88.875919],
-          fill: false
-        },
-      ],
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Time with different UDFs'
-      },
-      ...scales
-    }
-  });
-</script>
+That is why the `pandas_udf` is around **2 times slower**.
