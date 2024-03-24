@@ -72,7 +72,9 @@ iris_data = parts.map(lambda x: types.Row(SL=x[0], SW=x[1], PL=x[2], classificat
 sdf = spark.createDataFrame(iris_data)
 ```
 
-> It is only an example is better to read it directly as a dataframe
+<Notice type="warning">
+  It is only an example is better to read it directly as a dataframe
+</Notice>
 
 ## 2. Inspect
 
@@ -170,7 +172,9 @@ sdf.select("Pclass").exceptAll(sdf.select("Survived"))
 To modify a dataframe you need to update the original dataframe.
 For example you would do `sdf = do_something(sdf)`.
 
-> It is posible to only call `do_something(sdf)` but **it won't update the dataframe**.
+<Notice type="warning">
+  It is posible to only call `do_something(sdf)` but **it won't update the dataframe**.
+</Notice>
 
 ### 4.1. Add columns
 
@@ -189,7 +193,9 @@ from pyspark.sql.types import IntegerType
 sdf = sdf.withColumn("Age", sdf["Age"].cast(IntegerType()))
 ```
 
-> You need to specify a type from `pyspark.sql.types`.
+<Notice type="info">
+  You need to specify a type from `pyspark.sql.types`.
+</Notice>
 
 ### 4.3. Modify certain vales
 
@@ -280,7 +286,9 @@ Then you can perform queries using `spark` object:
 spark.sql("SELECT * FROM titanic WHERE sex = 'female' LIMIT 5")
 ```
 
-> The output of `spark.sql` is another dataframe and you can save it with `sdf = spark.sql`
+<Notice type="info">
+  The output of `spark.sql` is another dataframe and you can save it with `sdf = spark.sql`
+</Notice>
 
 ## 7. Write
 
@@ -297,7 +305,9 @@ Some times you need to retrive some data from spark to python.
 
 For example you can always transform a dataframe to **pandas** with `sdf.toPandas()`.
 
-> When transforming to Pandas it will load the data into memory. Be careful to not load a dataframe too big.
+<Notice type="warning">
+  When transforming to Pandas it will load the data into memory. Be careful to not load a dataframe too big.
+</Notice>
 
 To get a column as a python list use:
 

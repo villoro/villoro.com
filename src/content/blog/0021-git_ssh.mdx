@@ -31,7 +31,9 @@ Finally add a passphrase. This will ensure that your SSH credentials are safe ev
 
 ## 2. Use keychain
 
-> If you are using **Windows** you don't need to do that step.
+<Notice type="info">
+  If you are using **Windows** you don't need to do that step.
+</Notice>
 
 The **SSH key** you just created has a passphrase and you probably don't want to write it every time you open a new terminal.
 
@@ -46,20 +48,23 @@ First of all some people use **ssh-agent** to add the **SSH keys** but you need 
 ```sh
 keychain --stop all
 ```
-
-> You can check that only one ssh-agent is running with `ps -ef | grep ssh-agent`
+<Notice type="info">
+  You can check that only one ssh-agent is running with `ps -ef | grep ssh-agent`
+</Notice>
 
 To set up **keychain** edit the `~/.bashrc` file so that **keychain** is started everytime you open a terminal.
 
-<div class="input">
-  ~/.bashrc
-</div>
-```
+<TerminalOutput color="stone">
+  `~/.bashrc`
+</TerminalOutput>
+```sh
 # Add this line at the end
 eval `keychain --agents ssh --eval github_ssh`
 ```
 
-> `github_ssh` is the name of the SSH key to import you could add more separating them by spaces
+<Notice type="info">
+  `github_ssh` is the name of the SSH key to import you could add more separating them by spaces
+</Notice>
 
 ## 3. Add the SSH key to github
 
@@ -84,7 +89,9 @@ ssh -T git@github.com
 
 The first time it will say that the authenticity of **github.com** can't be established. Enter yes to add it to the list of known hosts so that you won't get asked each time.
 
-> You should see a message saying `Hi XXXX! You've successfully authenticated`
+<Notice type="success">
+  You should see a message saying `Hi XXXX! You've successfully authenticated`
+</Notice>
 
 ## 5. Cloning a **git** repo
 

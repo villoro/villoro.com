@@ -53,23 +53,23 @@ From the previous step you created and account with an email similar to `your_pr
 4. Add the user with the email from the previous step
 5. Give it read access.
 
-> It can take some time until the new user has reading permisions.
+<Notice type="warning">
+  It can take some time until the new user has reading permisions.
+</Notice>
 
 ### 1.4. Profile ID
 
 Get the ID that you will need to use with the API. There are three levels and the ID that you need to use is in the last one, the one with the red mark in the image.
 
-<div class="w3-center">
-  <img src="/static/images/posts/google_analytics_profile.jpg" alt="google_analytics_profile" class="w3-image w3-padding-16" style="max-height: 600px;"/>
-</div>
+![Google Analytics Profile](../../images/posts/2019/0022-google_analytics_profile.jpg)
 
 ## 2. Test the conection
 
 You can run the `test_conexion.py` code to check that everything is working.
 
-<div class="input">
+<TerminalOutput color="stone">
   test_conexion.py
-</div>
+</TerminalOutput>
 ```python
 from datetime import date, timedelta
 
@@ -118,7 +118,9 @@ def test():
 
 ```
 
-> Remeber to edit both `FILE_GA_KEY` and `PROFILE` constants using the values from the previous steps.
+<Notice type="warning">
+  Remeber to edit both `FILE_GA_KEY` and `PROFILE` constants using the values from the previous steps.
+</Notice>
 
 ## 3. Building the ETL
 ### 3.1. Decide metrics and dimensions
@@ -137,9 +139,9 @@ In this step I will descrive functions in the `etl.py` file.
 
 The first thing to do is to create the Google Analytics service with:
 
-<div class="input">
+<TerminalOutput color="stone">
   etl.py
-</div>
+</TerminalOutput>
 ```python
 def get_ga_service(key_file_location=None):
     """ Connect to GA API service"""
@@ -161,9 +163,9 @@ This function takes the default path of the Google Analytics key from the consta
 
 Then to retrive the actual data you should use `get_da_df` function.
 
-<div class="input">
+<TerminalOutput color="stone">
   etl.py
-</div>
+</TerminalOutput>
 ```python
 def get_ga_df(query_data, end=date.today(), service=None):
     """ Retrive GA data as dataframe """
@@ -219,9 +221,9 @@ It will also change the columns types using the same dictionary.
 
 So for exemple having:
 
-<div class="input">
+<TerminalOutput color="stone">
   constants.py
-</div>
+</TerminalOutput>
 ```python
 QUERY_DATA = {
   "traffic_google": {
@@ -239,9 +241,9 @@ Will retrive the `ga:deviceCategory` dimension rename the column to `device` and
 
 Finally to run the ETL for all the tables in ``QUERY_DATA` there is the function `do_etl`:
 
-<div class="input">
+<TerminalOutput color="stone">
   etl.py
-</div>
+</TerminalOutput>
 ```python
 def do_etl():
     """ Reads from GA, transforms the data and loads into mysql """
@@ -265,9 +267,9 @@ In order to lose that it must fail 7 consecutive days.
 
 And the last function is for retriving all old data. This is meant to only be used the first time.
 
-<div class="input">
+<TerminalOutput color="stone">
   etl.py
-</div>
+</TerminalOutput>
 ```python
 def import_old_stats(end=date.today()):
   """ Imports old data up until 2017-01-01 """
@@ -324,9 +326,9 @@ This solution is less efficient since it will need to load all existing data and
 The first thing to do is to create the SQL Alchemy engine for MySQL.
 For other SQL engines check the [SQL Alchemy post](https://villoro.com/post/sql_alchemy).
 
-<div class="input">
+<TerminalOutput color="stone">
   sql.py
-</div>
+</TerminalOutput>
 ```python
 def _get_mysql_engine():
     """ Get MySQL SQLAlchemy engine """
@@ -348,9 +350,9 @@ Using the `create_engine` and `engine.url.URL` functions from SQLAlchemy is the 
 
 To retrive a table you can use:
 
-<div class="input">
+<TerminalOutput color="stone">
   sql.py
-</div>
+</TerminalOutput>
 ```python
 def get_df_mysql(tablename, columns="*", engine=None):
   """ Retrives one table from MySQL """
@@ -366,9 +368,9 @@ def get_df_mysql(tablename, columns="*", engine=None):
 
 And finally the code to insert the data handling the duplicates:
 
-<div class="input">
+<TerminalOutput color="stone">
   sql.py
-</div>
+</TerminalOutput>
 ```python
 def insert_into_mysql(df, tablename, cols_id=None, engine=None):
     """
