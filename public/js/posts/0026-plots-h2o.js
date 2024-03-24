@@ -247,9 +247,11 @@ script.onload = function () {
       type: 'scatter',
       data: data_auc_train_time,
       options: {
-        title: {
-          display: true,
-          text: 'AUC vs training time [s]'
+        plugins: {
+          title: {
+            display: true,
+            text: 'AUC vs training time [s]'
+          }
         },
         scales: {
           ...xaxes,

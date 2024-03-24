@@ -13,6 +13,8 @@ categories: ["Python", "DE", "SQL"]
 draft: false
 ---
 
+<script type="module" src="/js/posts/0037-plots-reading-from-redshift.js"></script>
+
 ## Table of Contents
 
 [TOC]
@@ -42,11 +44,9 @@ The biggest example here might be jobs that are running Machine Learning (ML) pi
 The most basic option for reading data from redshift is to connect directly to the database.
 As an example this can be done with **SQL alchemy**:
 
-<div class="w3-padding w3-border w3-round ">
-  POST: <a href="https://villoro.com/post/sql_alchemy">
-    SQL Alchemy with python
-  </a>
-</div>
+<Notice type="info">
+  POST: [SQL Alchemy with python](https://villoro.com/blog/sql-alchemy-python)
+</Notice>
 
 For other processing tools (like **spark**) it is possible to consume data with direct queries (by using `jdbc` or other connectors).
 
@@ -63,11 +63,9 @@ More info in [unload official AWS doc](https://docs.aws.amazon.com/redshift/late
 
 As usual, the suggestion is to use **parquet** for storing columnar data. More info here:
 
-<div class="w3-padding w3-border w3-round ">
-  POST: <a href="https://villoro.com/post/tables_format">
-    Storing tables efficiently
-  </a>
-</div>
+<Notice type="info">
+  POST: [Storing tables efficiently with Pandas](https://villoro.com/blog/storing-tables-efficiently-pandas)
+</Notice>
 
 By default the **unload** will produce multiple files so that different **redshift** workers can do the job in parallel.
 It might be tempting to do the unload to only one file in order to simplify the reading.
@@ -95,8 +93,10 @@ dfs = [pd.read_parquet(file) for file in files]
 df = pd.concat(dfs)
 ```
 
-> The list of files can be created with different options.
-> We suggest using `os.listdir` if all files are in the same folder and `os.walk` if there are subfolder with files.
+<Notice type="info">
+  The list of files can be created with different options.
+  We suggest using `os.listdir` if all files are in the same folder and `os.walk` if there are subfolder with files.
+</Notice>
 
 If we need to filter based on a column with this option we would do it after creating the pandas dataframe.
 
@@ -118,7 +118,9 @@ dfs = [pq.read_table(file).to_pandas() for file in files]
 df = pd.concat(dfs)
 ```
 
-> The performance should be similar since **pandas** usually use `pyarrow` under the hood.
+<Notice type="info">
+  The performance should be similar since **pandas** usually use `pyarrow` under the hood.
+</Notice>
 
 If we need to filter based on a column with this option we would do it after creating the pandas dataframe.
 
@@ -198,7 +200,7 @@ This is the kind of dataset we would have if we were to do only one export with 
 This dataset contains only one parquet per month.
 Those parquets are stored in subfolders following the **hive** partitioning:
 
-```
+```yaml
 - /dataset_1
     ├── /p_creation_month=p_creation_month=2016-02
     │   └── 0001.parquet
@@ -267,7 +269,9 @@ In this case we want to do another test where we apply 2 filters at the same tim
 * filter by the partition column (`p_creation_month`)
 * filter by the state (`state`)
 
-> We are using the same column we used for splitting the `dataset_2` as the second filter
+<Notice type="info">
+  We are using the same column we used for splitting the `dataset_2` as the second filter
+</Notice>
 
 <canvas id="row_group" style="width:100%;height:400px;"></canvas>
 
@@ -290,152 +294,4 @@ If the table we are consuming is not changing past data we suggest only `unloadi
 If reading data partitioned by the time window is slow, we suggest running a job that compacts the `parquets` into each partition into less files.
 This can be done after doing the unload.
 
-Finally the best way of reading parquets into **pandas** dataframes is by using the new `pyarrow.dataset` introduced in **pyarrow 3.0.0**
-
-scripts: |
-<script>
-  const scale_seconds = {
-    scales: {
-      yAxes: [{
-        scaleLabel: {
-          display: true,
-          labelString: 'Time [seconds]'
-        }
-      }]
-    }
-  }
-  const functions = ['pandas_read', 'pyarrow_ds_read', 'pyarrow_parquet_ds_read', 'pyarrow_single_read']
-  const datasets = ['dataset_1', 'dataset_2']
-
-  var dataset_0 = new Chart("dataset_0", {
-    type: 'bar',
-    data: {
-      labels: functions,
-      datasets: [
-        {
-          label: 'no_filter',
-          backgroundColor: "#EF5350",
-          data: [8.856600, 7.468612, 7.463320, 9.433437, 0],
-            /* Adding an extra 0 for setting the min axis to 0 */
-        },
-      ],
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Reading time for dataset 0 (single parquet)'
-      },
-      legend: {
-        display: false
-      },
-      ...scale_seconds
-    }
-  });
-
-  var dataset_2 = new Chart("dataset_2", {
-    type: 'bar',
-    data: {
-      labels: functions,
-      datasets: [
-        {
-          label: 'filter',
-          backgroundColor: "#FF9800",
-          data: [29.401111, 0.582480, 0.739624, 29.645606],
-        },
-        {
-          label: 'no_filter',
-          backgroundColor: "#FFCC80",
-          data: [22.709390, 7.273302, 8.621203, 28.806552],
-        },
-      ],
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Reading time for dataset 2 (Multiple parquets by month)'
-      },
-      ...scale_seconds
-    }
-  });
-
-  var dataset_1 = new Chart("dataset_1", {
-    type: 'bar',
-    data: {
-      labels: functions,
-      datasets: [
-        {
-          label: 'filter',
-          backgroundColor: "#8BC34A",
-          data: [7.235872, 0.464466, 0.394429, 7.429504],
-        },
-        {
-          label: 'no_filter',
-          backgroundColor: "#C5E1A5",
-          data: [5.349147, 4.558274, 4.739228, 5.164837],
-        },
-      ],
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Reading time for dataset 1 (One parquet by month)'
-      },
-      ...scale_seconds
-    }
-  });
-
-  var pyarrow_best = new Chart("pyarrow_best", {
-    type: 'bar',
-    data: {
-      labels: datasets,
-      datasets: [
-        {
-          label: 'pyarrow_ds_read',
-          backgroundColor: "#4FC3F7",
-          data: [0.464466, 0.582480],
-        },
-        {
-          label: 'pyarrow_parquet_ds_read',
-          backgroundColor: "#9575CD",
-          data: [0.394429, 0.739624, 0],
-            /* Adding an extra 0 for setting the min axis to 0 */
-        },
-      ],
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Comparison between best reading options'
-      },
-      ...scale_seconds
-    }
-  });
-
-  var row_group = new Chart("row_group", {
-    type: 'bar',
-    data: {
-      labels: datasets,
-      datasets: [
-        {
-          label: 'pyarrow_ds_read',
-          backgroundColor: "#29B6F6",
-          data: [0.495962, 0.623322],
-        },
-        {
-          label: 'pyarrow_parquet_ds_read',
-          backgroundColor: "#7E57C2",
-          data: [1.254674, 2.003886, 0],
-            /* Adding an extra 0 for setting the min axis to 0 */
-        },
-      ],
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Reading time when using row group filtering'
-      },
-      ...scale_seconds
-    }
-  });
-</script>
-
+Finally the best way of reading parquets into **pandas** dataframes is by using the new `pyarrow.dataset` introduced in **pyarrow 3.0.0**.
