@@ -157,6 +157,7 @@
   }
 
   code:not(pre code) {
+    @apply text-black dark:text-white;
     @apply inline-block;
     @apply bg-gray-100 dark:bg-gray-800 px-1 rounded-sm;
   }

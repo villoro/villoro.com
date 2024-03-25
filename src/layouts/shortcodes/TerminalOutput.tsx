@@ -6,36 +6,32 @@ interface TerminalOutputProps {
   color?: string;
 }
 
-const TerminalOutput: React.FC<TerminalOutputProps> = ({ children, className, color }) => {
-  let colorLight = "";
-  let colorDark = "";
+const TerminalOutput: React.FC<TerminalOutputProps> = ({ children, className = "", color }) => {
+  let colorClasses = "";
 
   // Determine background colors based on color prop
   switch (color) {
     case "gray":
     case "grey": // both spelling just in case
     case "stone":
-      colorLight = "bg-gray-200";
-      colorDark = "dark:bg-gray-800";
+      colorClasses = "bg-gray-200 dark:bg-gray-800";
       break;
 
     case "red":
-      colorLight = "bg-red-100";
-      colorDark = "dark:bg-red-900";
+      colorClasses = "bg-red-100 dark:bg-red-900";
       break;
 
     case "yellow":
     default:
       // Default to yellow if color prop is not provided or unrecognized
-      colorLight = "bg-yellow-100";
-      colorDark = "dark:bg-yellow-900";
+      colorClasses = "bg-yellow-100 dark:bg-yellow-900";
       break;
   }
 
   return (
-    <div className={`terminal-output ${className}`}>
+    <div className={`terminal-output ${className.trim()}`}>
       {/* Apply conditional background colors based on light/dark mode */}
-      <pre className={`py-0 m-0 ${colorLight} ${colorDark}`}>{children}</pre>
+      <pre className={`py-0 m-0 ${colorClasses}`}>{children}</pre>
     </div>
   );
 }
