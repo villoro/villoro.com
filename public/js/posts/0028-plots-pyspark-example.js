@@ -11,11 +11,11 @@ script.onload = function () {
           display: true,
           text: 'time [s]'
         }
-      },
+      }
     }
 
     new Chart("count_time_by_format", {
-      type: 'horizontalBar',
+      type: 'bar',
       data: {
         labels: ["count", "unique_stations"],
         datasets: [
@@ -32,6 +32,7 @@ script.onload = function () {
         ],
       },
       options: {
+        indexAxis: 'y',
         plugins: {
           title: {
             display: true,
@@ -43,7 +44,7 @@ script.onload = function () {
     });
 
     new Chart("count_time_by_partition", {
-      type: 'horizontalBar',
+      type: 'bar',
       data: {
         labels: ["count", "unique_stations"],
         datasets: [
@@ -60,6 +61,7 @@ script.onload = function () {
         ],
       },
       options: {
+        indexAxis: 'y',
         plugins: {
           title: {
             display: true,
