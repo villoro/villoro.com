@@ -5,7 +5,7 @@
 .rounded-sm {
   @apply rounded-[4px];
 }
-.rounded {
+.rounded, .rounded-md {
   @apply rounded-[6px];
 }
 .rounded-lg {
