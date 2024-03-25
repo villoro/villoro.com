@@ -6,12 +6,17 @@ import { FaInfoCircle, FaCheckCircle, FaExclamationCircle, FaTimesCircle  } from
 function Notice({
   type,
   children,
+  className = "", // Optional className prop
 }: {
   type: string;
   children: React.ReactNode;
+  className?: string; // Optional className prop
 }) {
+  // Filter out undefined and empty strings
+  const classNames = ["notice", type, "text-md", className].filter(Boolean).join(" ");
+
   return (
-    <div className={`notice ${type} text-md`}>
+    <div className={classNames}>
       <span>
         {type === "info" ? (
           <FaInfoCircle />
