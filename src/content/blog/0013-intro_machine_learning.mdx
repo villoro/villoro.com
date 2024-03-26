@@ -54,7 +54,9 @@ As a way to help you understand what is ML we will use an example of supervised 
 
 Bike-sharing rental process is highly correlated to the environmental and seasonal settings. For instance, weather conditions, precipitation, day of week, season, hour of the day, etc. can affect the rental behaviors. So in this example of regression we will use that information to try to predict the bike rental.
 
-> To follow this post you should be looking at the code from [github](TODO)
+<Notice type="info">
+  To follow this post you should be looking at the code from [github](TODO)
+</Notice>
 
 ### 2.1. How the data is used in a supervised learning problem
 
@@ -80,15 +82,15 @@ The first thing we need to do is to handle the categorical features since machin
 
 We will create new dummy columns for all categorical features. For example there are four seasons so we will create **season_1**, **season_2**, **season_3** and **season_4** columns with `1` if the point is in that season and `0` otherwise.
 
-> We cannot use only one column and `1`, `2`, `3` or `4` as the options since the seasons are not **linearly related**. That is to say that `sumer + spring = winter` does not make sense. To avoid this relations we create the four new columns.
+<Notice type="warning">
+  We cannot use only one column and `1`, `2`, `3` or `4` as the options since the seasons are not **linearly related**. That is to say that `sumer + spring = winter` does not make sense. To avoid this relations we create the four new columns.
+</Notice>
 
 Another important thing to do is to **normalize** the data. This step is mandatory for some algorithms and it never has a bad efect. To normalize the data we will calculate the mean and the standard deviation (std) of each column and then we will substract the mean to all values of the column and divide by the std. This will ensure that all columns have `mean = 0` and `std = 1`.
 
 Let's also check the target we want to predict. In the dataset there are the rentals for `casual` and `registred` users as well as the sum of those two. This last one (`cnt`) will be our target.
 
-<div id="plotly_preview_target" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
-
-> You can use zoom and scroling with this plot. I suggest you view it with a computer or on landscape if you are using a phone.
+![Preview target variable](../../images/posts/2019/0013-preview-target-variable.png)
 
 ### 2.3. Selecting the algorithm
 
@@ -98,14 +100,16 @@ In this example we will use Support Vector Regression (SVR). It is an algorithm 
 
 First we fit the algorithm using the **training** data and we check the result using the **validation** data.
 
-<div id="plotly_predictions_validation" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
+![Prediction vs target with validation data](../../images/posts/2019/0013-predictions-vs-target-with-validation-data.jpg)
 
-> Since the results are good there is no need to tune the parameters, the default ones work well.
+<Notice type="success">
+  Since the results are good there is no need to tune the parameters, the default ones work well.
+</Notice>
 
 ### 2.5. Check that the algorithm is working
 
 Now we will use the **test** data to ensure that everything is working well.
 
-<div id="plotly_predictions_test" style="height: 100%; width: 100%;" class="plotly-graph-div"></div>
+![Predictions vs target with test data](../../images/posts/2019/0013-predictions-vs-target-with-test-data.jpg)
 
 And it is indeed. It only has some problems around christmas since they are special days. One way to solve this would be to include more years so that the classifier can learn what happens on christmas 
