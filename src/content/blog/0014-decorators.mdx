@@ -35,7 +35,8 @@ def message_to_person(message, name):
     
     return "{} {}".format(send_message(), name)
 ```
-<Notice type="info">
+
+<Notice type="info" className="mt-6">
   We can pass **any** object as a parameter to a function. We can even pass a **function** as a parameter.
 </Notice>
 
@@ -90,7 +91,7 @@ wait_3_seconds_and_print()
   Done in 3.00 seconds
 </TerminalOutput>
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   The `*args` parameter used at `timed` and `func` is a trick to preserve whatever parameter is passed to the original function.
 </Notice>
 
@@ -196,7 +197,7 @@ hello_argh()
   After function
 </TerminalOutput>
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   This decorator allows the user to decide what to print before the main function.
 </Notice>
 
@@ -289,7 +290,7 @@ def infallible(output_func=print):
     return infallible_decorator
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   `func.__name__` is a way to get the function name as a string
 </Notice>
 
@@ -307,7 +308,7 @@ wrong_math(1)
   Error in 'wrong_math': division by zero
 </TerminalOutput>
 
-<Notice type="success">
+<Notice type="success"  className="mt-6">
   Now we see a message when it crashes
 </Notice>
 
