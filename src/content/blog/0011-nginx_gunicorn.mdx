@@ -25,6 +25,8 @@ There are three main components needed for serving a python app:
 3. Python app
 4. Supervisor
 
+![Architecture diagram](../../images/posts/2019/0011-nginx_gunicorn.jpg)
+
 ### 1.1 Web server
 This component will handle the requests and among other things it will deal with static files (images, css, js...). In this post we are going to use [Nginx](https://www.nginx.com/) since it is more commonly used for python. Another popular option is [apache](https://httpd.apache.org/).
 
@@ -84,7 +86,7 @@ You can try it by running:
 python3 index.py
 ```
 
-You can now view it by going at XX.XXX.XXX.XXX:PORT (Use your EC2 IP and the port).
+You can now view it by going at `XX.XXX.XXX.XXX:PORT` (Use your EC2 IP and the port).
 
 <Notice type="info">
   Default flask port is **5000**. To try it you need to open the port.
@@ -131,7 +133,9 @@ autostart = true
 autorestart = true
 ```
 
-> `index` refers to the python file. `app` is the name of the flask app that is inside this file.
+<Notice type="info">
+  `index` refers to the python file. `app` is the name of the flask app that is inside this file.
+</Notice>
 
 Then start supervisor:
 
@@ -203,7 +207,7 @@ sudo nginx -t
 sudo service nginx restart
 ```
 
-You can now go to XX.XXX.XXX.XXX and you should see the flask app `Hello World` message.
+You can now go to `XX.XXX.XXX.XXX` and you should see the flask app `Hello World` message.
 
 <Notice type="warning">
   If everything is working remeber to close the ports that you opened only for testing.

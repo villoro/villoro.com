@@ -57,7 +57,7 @@ const { title, description, date } = post.data;
       <div class="row justify-center">
         {
           similarPosts.map((post) => (
-            <div class="lg:col-4">
+            <div class="sm:col-4">
               <BlogCard data={post} loading="lazy" />
             </div>
           ))

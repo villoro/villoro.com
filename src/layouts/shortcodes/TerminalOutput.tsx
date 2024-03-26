@@ -21,6 +21,10 @@ const TerminalOutput: React.FC<TerminalOutputProps> = ({ children, className = "
       colorClasses = "bg-red-100 dark:bg-red-900";
       break;
 
+    case "green":
+      colorClasses = "bg-green-100 dark:bg-green-900";
+      break;
+
     case "yellow":
     default:
       // Default to yellow if color prop is not provided or unrecognized

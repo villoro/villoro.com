@@ -128,7 +128,7 @@ To concatenate strings you should work with lists and join them at the end. It's
 %%timeit
 " ".join(mlist)
 ```
-<TerminalOutput>
+<TerminalOutput color="green">
   7.53 µs ± 53.2 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 </TerminalOutput>
 
@@ -141,7 +141,7 @@ out = ""
 for x in mlist:
     out += x + " "
 ```
-<TerminalOutput>
+<TerminalOutput color="red">
   105 µs ± 3.92 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 </TerminalOutput>
 

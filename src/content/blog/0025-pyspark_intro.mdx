@@ -189,8 +189,8 @@ sdf = sdf.withColumn("new_col", sdf["Age"])
 **Dtypes** are changed using the `cast` method of a column.
 
 ```python
-from pyspark.sql.types import IntegerType
-sdf = sdf.withColumn("Age", sdf["Age"].cast(IntegerType()))
+from pyspark.sql.types as T
+sdf = sdf.withColumn("Age", sdf["Age"].cast(T.IntegerType()))
 ```
 
 <Notice type="info">

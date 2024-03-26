@@ -18,6 +18,8 @@ draft: false
 
 ## 0. Overview
 
+![Home page](../../images/posts/2020/0031-poetry.png)
+
 Poetry is a python packaging and dependency manager.
 It makes it really easy to manage packages while using environments under the hood.
 It also allows build and publishing packages to PyPI (or other sites).
@@ -87,15 +89,15 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   By using the `pyproject.toml` file you will not need the `setup.py` file.
 </Notice>
 
 Finally the `poetry.lock` is a snapshot with the exact versions install. It can be updated from the `pyproject.toml`.
 
-## 2. Creating a project
+## 3. Creating a project
 
-### 2.1. Init a new project
+### 3.1. Init a new project
 
 The first thing to do with python is to create a new project. You can do it with:
 
@@ -104,7 +106,7 @@ poetry new projectname
 # Replace projectname for the name you want
 ```
 
-### 2.2. Project structure
+### 3.2. Project structure
 
 Creating a new project will create the following files:
 
@@ -121,11 +123,11 @@ Creating a new project will create the following files:
 
 There will be a dummy test inside the `tests` folder using the `pytest` package.
 
-## 3. Managing dependencies
+## 4. Managing dependencies
 
 The idea is to use poetry to add or remove packages and let it handle the `pyproject.toml` file.
 
-### 3.1. Add/remove packages
+### 4.1. Add/remove packages
 
 To add or remove packages you can use:
 
@@ -157,7 +159,7 @@ Wich translates to `>=0.25.0 <1.0.0`
 
 You can check all the possible ways in the [poetry doc](https://python-poetry.org/docs/dependency-specification/#version-constraints).
 
-### 3.2. Install update dependencies
+### 4.2. Install update dependencies
 
 Once there is a `pyproject.toml` file you can install/update all the specified dependencies.
 
@@ -173,11 +175,11 @@ poetry update
 poetry install --no-dev
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   Both commands will create a the `poetry.lock` file with a snapshot of the installed packages (or update it if already present).
 </Notice>
 
-### 3.3. See dependencies
+### 4.3. See dependencies
 
 With poetry you easily see the dependencies of your project as well as the dependencies of those dependencies.
 
@@ -193,11 +195,11 @@ As an example:
 
 ![Poetry Show](../../images/posts/2020/0031-poetry_show.png)
 
-### 3.4. Check
+### 4.4. Check
 
 With `poetry check` you can check if the `pyproject.toml` file has any errors.
 
-## 4. Runing code with Poetry
+## 5. Runing code with Poetry
 
 Since poetry uses a virtual environment and you are not activating/sourcing it has commands to actually work with the environment.
 
@@ -220,7 +222,7 @@ poetry run luigid
 poetry run python src/master.py
 ```
 
-## 5. Create and publish packages
+## 6. Create and publish packages
 
 You can use poetry to build python packages with:
 
@@ -236,7 +238,7 @@ And then you can also upload it to `PyPI` with:
 poetry publish
 ```
 
-## 6. Poetry compatibility
+## 7. Poetry compatibility
 
 Finally you can use poetry and allow other people to use the old `requirements.txt` file.
 
@@ -246,7 +248,7 @@ You will only need to export it with:
 poetry export -f requirements.txt > requirements.txt
 ```
 
-## 7. More info
+## 8. More info
 
 If you want to read more about poetry check out the following links:
 

@@ -35,9 +35,11 @@ We would use open data from [Catalunya](https://en.wikipedia.org/wiki/Catalonia)
 
 It consits of 3 csvs:
 
-* [Data](https://analisi.transparenciacatalunya.cat/Medi-Ambient/Dades-meteorol-giques-de-la-XEMA/nzvn-apee) (~22GB)
-* [Variables](https://analisi.transparenciacatalunya.cat/d/4fb2-n3yi) (2 KB)
-* [Stations](https://analisi.transparenciacatalunya.cat/d/yqwd-vj5e) (43 KB)
+<div class="flex justify-center">
+  <Button label="Data (~22GB)" link="https://analisi.transparenciacatalunya.cat/Medi-Ambient/Dades-meteorol-giques-de-la-XEMA/nzvn-apee" style="solid" />
+  <Button label="Variables (2 KB)" link="https://analisi.transparenciacatalunya.cat/d/4fb2-n3yi" style="solid" />
+  <Button label="Stations (43 KB)" link="https://analisi.transparenciacatalunya.cat/d/yqwd-vj5e" style="solid" />
+</div>
 
 To download first click the `Exporta` button then `CSV per a Excel`.
 
@@ -90,7 +92,7 @@ Let's transform it to `parquet` which is way better.
 sdf.write.format("parquet").mode("overwrite").save("weather_data.parquet")
 ```
 
-<Notice type="info">
+<Notice type="warning" className="mt-6">
   Remember to load the dataframe from the `parquet` file to see the performance improvement.
 </Notice>
 
