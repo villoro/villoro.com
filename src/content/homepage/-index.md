@@ -6,6 +6,9 @@ banner:
     
 slogan:
   title: Crafting Solutions, Delivering Efficiency
+  
+blog:
+  title: Latest posts  
 
 companies:
   title: "I'm proud to have collaborated with some awesome companies:"  

@@ -1,15 +1,25 @@
 ---
+import config from "@/config/config.json";
 import Base from "@/layouts/Base.astro";
 import Parallax from "@/components/Parallax.astro";
+import BlogCard from "@/components/BlogCard.astro";
 import { markdownify } from "@/lib/utils/textConverter";
+import { sortByDate } from "@/lib/utils/sortFunctions";
+import { getSinglePage } from "@/lib/contentParser.astro";
 import { getEntry } from "astro:content";
 import { FaGear } from "react-icons/fa6";
 
 const homepage = await getEntry("homepage", "-index");
-const { banner, slogan, companies } = homepage.data;
+const { banner, slogan, companies, blog } = homepage.data;
 
 import { Image } from 'astro:assets';
 const bannerImage = "/images/me_thinking.jpg";
+
+const { blog_folder } = config.settings;
+
+const posts = await getSinglePage(blog_folder);
+const sortedPosts = sortByDate(posts);
+const latestPosts = sortedPosts.slice(0, config.settings.num_latest_posts);
 
 const importImage = async (imageName, darkMode = false) => {
   if (darkMode) {
@@ -54,7 +64,7 @@ const importImage = async (imageName, darkMode = false) => {
   </section>
 
   <!-- Companies -->
-  <section class="section">
+  <section class="section bg-theme-light dark:bg-darkmode-theme-light p-6 lg:p-14">
     <div class="container">
       <div class="text-center">
         <h1
@@ -94,6 +104,27 @@ const importImage = async (imageName, darkMode = false) => {
             </div>
           );
         })}
+      </div>
+    </div>
+  </section>
+
+  <!-- Posts -->
+  <section class="section p-6 lg:p-14">
+    <div class="container">
+      <div class="text-center">
+        <h1
+          set:html={markdownify(blog.title)}
+          class="mb-16 text-h4 lg:text-h2"
+        />
+      </div>
+      <div class="row">
+        {
+          latestPosts.map((item, index) => (
+            <div class="sm:mb-8 sm:col-4" key={index}>
+              <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
+            </div>
+          ))
+        }
       </div>
     </div>
   </section>
