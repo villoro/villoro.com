@@ -19,6 +19,7 @@
     "default_theme": "system",
     "pagination": 12,
     "similar_items_length": 3,
+    "num_latest_posts": 3,
     "blog_folder": "blog",
     "page_name": "page"
   },

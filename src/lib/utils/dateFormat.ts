@@ -1,5 +1,4 @@
 import { format } from "date-fns";
-import { en } from 'date-fns/locale';
 
 // MMM for short month format, MMMM for full month name
 const dateFormat = (
@@ -7,7 +6,7 @@ const dateFormat = (
   pattern: string = "yyyy-MM-dd",
 ): string => {
   const dateObj = new Date(date);
-  const output = format(dateObj, pattern, {locale: en});
+  const output = format(dateObj, pattern);
   return output;
 };
 
