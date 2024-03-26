@@ -7,11 +7,11 @@
 }
 
 .btn-primary {
-  @apply no-underline border-primary bg-primary text-white transition-colors;
+  @apply no-underline border-primary bg-primary text-white dark:border-darkmode-primary dark:bg-darkmode-primary dark:text-dark transition-colors;
 }
 
 .btn-primary:hover {
-  @apply border-darkmode-primary bg-darkmode-primary text-dark dark:border-primary dark:bg-primary dark:text-white;
+  @apply border-black bg-black dark:border-white dark:bg-white text-white dark:text-black;
 }
 
 .btn-outline-primary {
