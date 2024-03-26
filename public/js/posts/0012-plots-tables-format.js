@@ -182,14 +182,14 @@ script.onload = function () {
     });
 
     const xaxes_mb = {
-      xAxes: [{
-        scaleLabel: {display: true, labelString: 'File size [MB]'}
-      }]
+      x: {
+        title: {display: true, text: 'File size [MB]'}
+      }
     }
     const xaxes_gb = {
-      xAxes: [{
-        scaleLabel: {display: true, labelString: 'File size [GB]'}
-      }]
+      x: {
+        scaleLabel: {display: true, text: 'File size [GB]'}
+      }
     }
     const tooltip_s_mb = {
       tooltips: {
@@ -286,12 +286,12 @@ script.onload = function () {
         },
         scales: {
           ...xaxes_mb,
-          yAxes: [{
-            scaleLabel: {
+          y: {
+            title: {
               display: true,
-              labelString: 'Read average time [s]'
+              text: 'Read average time [s]'
             }
-          }]
+          }
         },
         ...tooltip_s_mb
       }
@@ -361,12 +361,12 @@ script.onload = function () {
         },
         scales: {
           ...xaxes_mb,
-          yAxes: [{
-            scaleLabel: {
+          y: {
+            title: {
               display: true,
-              labelString: 'Write average time [s]'
+              text: 'Write average time [s]'
             }
-          }]
+          }
         },
         ...tooltip_s_mb
       }
@@ -417,12 +417,12 @@ script.onload = function () {
         },
         scales: {
           ...xaxes_gb,
-          yAxes: [{
-            scaleLabel: {
+          y: {
+            title: {
               display: true,
-              labelString: 'Read average time [min]'
+              text: 'Read average time [min]'
             }
-          }]
+          }
         },
         ...tooltip_min_gb
       }
@@ -472,12 +472,12 @@ script.onload = function () {
         },
         scales: {
           ...xaxes_gb,
-          yAxes: [{
-            scaleLabel: {
+          y: {
+            title: {
               display: true,
-              labelString: 'Write average time [min]'
+              text: 'Write average time [min]'
             }
-          }]
+          }
         },
         ...tooltip_min_gb
       },
