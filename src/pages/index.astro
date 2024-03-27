@@ -124,7 +124,7 @@ const importImage = async (imageName, darkMode = false) => {
         {
           latestPosts.map((item, index) => (
             <div class="sm:mb-8 sm:col-4" key={index}>
-              <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
+              <BlogCard data={item} loading="lazy" />
             </div>
           ))
         }
