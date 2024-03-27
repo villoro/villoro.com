@@ -62,6 +62,19 @@ const { title, meta_title, description, image, noindex, canonical } =
     <meta name="generator" content={Astro.generator} />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-08V17G7ZDD"></script>
+    <script>
+      /* Only track the page when it is in the main domain. No develop.villoro.com or localhost */
+      if (window.location.host==="villoro.com" || window.location.host==="www.villoro.com") {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-08V17G7ZDD');
+      }
+    </script>
+
     <!-- google font css -->
     <AstroFont
       config={[
