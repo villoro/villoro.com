@@ -28,5 +28,9 @@ const { title, image, date, tags } = data.data;
     </h4>
   </a>
 
-  <BlogDetails date={date} tags={tags} />
+  <BlogDetails
+    date={date}
+    tags={tags}
+    className="bg-theme-light hover:bg-primary hover:text-white dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark"
+  />
 </div>

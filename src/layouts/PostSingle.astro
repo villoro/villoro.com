@@ -23,7 +23,11 @@ const { title, description, date, tags } = post.data;
       <article class="lg:col-10">
         <h1 set:html={markdownify(title)} class="h2 mb-4" />
         
-        <BlogDetails date={date} tags={tags} />
+        <BlogDetails
+          date={date}
+          tags={tags}
+          className="btn-primary"
+        />
 
         <div class="content mb-10">
           <Content />
