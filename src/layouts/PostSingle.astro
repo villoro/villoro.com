@@ -2,12 +2,10 @@
 import config from "@/config/config.json";
 import BlogCard from "@/components/BlogCard.astro";
 import Share from "@/components/Share.astro";
-import Tags from "@/components/Tags.astro";
+import BlogDetails from "@/components/BlogDetails.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
-import dateFormat from "@/lib/utils/dateFormat";
 import similarItems from "@/lib/utils/similarItems";
 import { markdownify } from "@/lib/utils/textConverter";
-import { FaRegClock } from "react-icons/fa";
 import ImageMod from "./components/ImageMod.astro";
 
 const { blog_folder, similar_items_length } = config.settings;
@@ -24,14 +22,8 @@ const { title, description, date, tags } = post.data;
     <div class="row justify-center">
       <article class="lg:col-10">
         <h1 set:html={markdownify(title)} class="h2 mb-4" />
-        <ul class="mb-4">
-          <li class="mr-8 inline-block">
-            <FaRegClock className={"mr-1 -mt-1 inline-block"} />
-            {dateFormat(date)}
-          </li>
-
-          <Tags tags={tags} className="mr-4 inline-block" />
-        </ul>
+        
+        <BlogDetails date={date} tags={tags} />
 
         <div class="content mb-10">
           <Content />

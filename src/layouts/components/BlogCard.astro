@@ -1,9 +1,6 @@
 ---
 import config from "@/config/config.json";
-import dateFormat from "@/lib/utils/dateFormat";
-import { humanize, slugify } from "@/lib/utils/textConverter";
-import Tags from "@/components/Tags.astro";
-import { FaRegClock } from "react-icons/fa";
+import BlogDetails from "@/components/BlogDetails.astro";
 import ImageMod from "./ImageMod.astro";
 
 const { blog_folder } = config.settings;
@@ -30,10 +27,6 @@ const { title, image, date, tags } = data.data;
       {title}
     </h4>
   </a>
-  <ul class="mb-4">
-    <FaRegClock className={"-mt-1 inline-block"} />
-    {date && <li class="inline-block mr-4">{dateFormat(date)}</li>}
-    
-    <Tags tags={tags} className="mr-4 inline-block" />
-  </ul>
+
+  <BlogDetails date={date} tags={tags} />
 </div>
