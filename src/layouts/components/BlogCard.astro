@@ -1,13 +1,13 @@
 ---
 import config from "@/config/config.json";
 import dateFormat from "@/lib/utils/dateFormat";
-import { humanize, plainify, slugify } from "@/lib/utils/textConverter";
-import { FaRegClock } from "react-icons/fa";
+import { humanize, slugify } from "@/lib/utils/textConverter";
+import { FaRegFolder, FaRegClock } from "react-icons/fa";
 import ImageMod from "./ImageMod.astro";
 
 const { blog_folder } = config.settings;
 const { data, loading } = Astro.props;
-const { title, image, date } = data.data;
+const { title, image, date, tags } = data.data;
 ---
 
 <div class="bg-body dark:bg-darkmode-body">
@@ -32,5 +32,18 @@ const { title, image, date } = data.data;
   <ul class="mb-4">
     <FaRegClock className={"-mt-1 inline-block"} />
     {date && <li class="inline-block mr-4">{dateFormat(date)}</li>}
+    <li class="mr-4 inline-block">
+      <FaRegFolder className={"md:ml-4 -mt-1 inline-block"} />
+      {
+        tags && tags.length > 0 && tags.map((tag: string) => (
+          <a
+            class="m-1 rounded bg-theme-light px-3 py-1 hover:bg-primary hover:text-white dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark" 
+            href={`/tags/${slugify(tag)}`}
+          >
+            {humanize(tag)}
+          </a>
+        ))
+      }
+    </li>
   </ul>
 </div>
