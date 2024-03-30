@@ -13,7 +13,6 @@ const homepage = await getEntry("homepage", "-index");
 const { banner, slogan, companies, blog } = homepage.data;
 
 import { Image } from 'astro:assets';
-const bannerImage = "/images/me_thinking.jpg";
 
 const { blog_folder } = config.settings;
 
@@ -40,7 +39,7 @@ const importImage = async (imageName, darkMode = false) => {
 <Base>
   <!-- Banner -->
   <Parallax 
-    parallaxImage={bannerImage}
+    imageName={banner.image}
   >
     <div class="text-center md:col-10 lg:col-7">
       <h1
