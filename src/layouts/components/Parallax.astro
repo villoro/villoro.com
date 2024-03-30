@@ -11,7 +11,6 @@ const backgroundImageStyle  = `background-image: url(${parallaxImage})`;
 
 <div
   class="parallax bg-cover bg-center min-h-screen flex items-center justify-center text-white dark:text-darkmode-primary"
-  style={backgroundImageStyle}
 >
   <slot />
 </div>
@@ -29,7 +28,6 @@ const backgroundImageStyle  = `background-image: url(${parallaxImage})`;
   @media (max-width: 330px) {
     .parallax {
       background-size: 150% auto;
-      background-image: url(${imageSize330});
       min-height: 100px;
     }
   }
@@ -37,7 +35,6 @@ const backgroundImageStyle  = `background-image: url(${parallaxImage})`;
   @media (min-width: 330px) and (max-width: 640px) {
     .parallax {
       background-size: 150% auto;
-      background-image: url(${imageSize640});
       min-height: 250px;
     }
   }
@@ -45,36 +42,76 @@ const backgroundImageStyle  = `background-image: url(${parallaxImage})`;
   @media (min-width: 640px) and (max-width: 768px) {
     .parallax {
       min-height: 350px;
-      background-image: url(${imageSize768});
     }
   }
 
   @media (min-width: 768px) and (max-width: 1024px) {
     .parallax {
       min-height: 480px;
-      background-image: url(${imageSize1024});
     }
   }
 
   @media (min-width: 1024px) and (max-width: 1280px) {
     .parallax {
       min-height: 600px;
-      background-image: url(${imageSize1280});
     }
   }
 
   @media (min-width: 1280px) and (max-width: 1536px) {
     .parallax {
       min-height: 700px;
-      background-image: url(${imageSize1536});
     }
   }
 
   @media (min-width: 1536px) {
     .parallax {
       background-size: 100% auto;
-      background-image: url(${parallaxImage});
       min-height: 800px;
+    }
+  }
+
+
+
+
+  @media (max-width: 330px) {
+    .parallax {
+      background-image: url("images/parallax/me_thinking__330.jpg");
+    }
+  }
+
+  @media (min-width: 330px) and (max-width: 640px) {
+    .parallax {
+      background-image: url("images/parallax/me_thinking__640.jpg");
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 768px) {
+    .parallax {
+      background-image: url("images/parallax/me_thinking__768.jpg");
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .parallax {
+      background-image: url("images/parallax/me_thinking__1024.jpg");
+    }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1280px) {
+    .parallax {
+      background-image: url("images/parallax/me_thinking__1280.jpg");
+    }
+  }
+
+  @media (min-width: 1280px) and (max-width: 1536px) {
+    .parallax {
+      background-image: url("images/parallax/me_thinking__1536.jpg");
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .parallax {
+      background-image: url("images/parallax/me_thinking__2000.jpg");
     }
   }
 </style>
