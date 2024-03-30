@@ -2,6 +2,7 @@
 title: Who I am
 meta_title: Who I am
 description: A little bit of information about myself
+image: me_cnn
 
 info:
   title: A Bit About Me

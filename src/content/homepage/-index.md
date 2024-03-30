@@ -1,6 +1,7 @@
 ---
 # Banner
 banner:
+  image: me_thinking
   title: Hi, I am Arnau Villoro
   content: Trust me, I'm an engineer :)
 
