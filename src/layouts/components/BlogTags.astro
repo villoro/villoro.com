@@ -2,12 +2,13 @@
 import config from "@/config/config.json";
 import { getAllTaxonomy, getTaxonomy } from "@/lib/taxonomyParser.astro";
 import { humanize } from "@/lib/utils/textConverter";
+import { slugify } from "@/lib/utils/textConverter";
 import { getSinglePage } from "@/lib/contentParser.astro";
 
 const { blog_folder } = config.settings;
 
-const allTags = await getAllTaxonomy(blog_folder, "tags");
-const tags = await getTaxonomy(blog_folder, "tags");
+const allTags = await getAllTaxonomy(blog_folder, "tags", false);
+const tags = await getTaxonomy(blog_folder, "tags", false);
 
 const posts = await getSinglePage(blog_folder);
 ---
@@ -30,10 +31,10 @@ const posts = await getSinglePage(blog_folder);
       return (
         <span class="m-1 inline-block" key={tag}>
           <a
-            href={`/tags/${tag}`}
+            href={`/tags/${slugify(tag)}`}
             class="bg-theme-light px-2 md:px-4 py-1 md:py-2 md:text-lg text-dark dark:bg-darkmode-theme-light dark:text-darkmode-dark hover:bg-primary hover:text-white dark:hover:bg-darkmode-primary dark:hover:text-dark"
           >
-            {humanize(tag)}{" "}
+            {tag}{" "}
             <span class="md:ml-2 rounded">
               ({count})
             </span>
