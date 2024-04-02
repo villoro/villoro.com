@@ -1,6 +1,7 @@
 ---
 import config from "@/config/config.json";
 import BlogCard from "@/components/BlogCard.astro";
+import BlogTags from "@/components/BlogTags.astro";
 import Pagination from "@/components/Pagination.astro";
 import Base from "@/layouts/Base.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
@@ -23,6 +24,8 @@ const currentPosts = sortedPosts.slice(0, config.settings.pagination);
   description={postIndex.data.description}
 >
   <section class="section pt-6 md:pt-14">
+    <BlogTags />
+
     <!-- Posts -->
     <div class="container">
       <div class="row">

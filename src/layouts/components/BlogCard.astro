@@ -1,13 +1,11 @@
 ---
 import config from "@/config/config.json";
-import dateFormat from "@/lib/utils/dateFormat";
-import { humanize, plainify, slugify } from "@/lib/utils/textConverter";
-import { FaRegClock } from "react-icons/fa";
+import BlogDetails from "@/components/BlogDetails.astro";
 import ImageMod from "./ImageMod.astro";
 
 const { blog_folder } = config.settings;
 const { data, loading } = Astro.props;
-const { title, image, date } = data.data;
+const { title, image, date, tags } = data.data;
 ---
 
 <div class="bg-body dark:bg-darkmode-body">
@@ -29,8 +27,10 @@ const { title, image, date } = data.data;
       {title}
     </h4>
   </a>
-  <ul class="mb-4">
-    <FaRegClock className={"-mt-1 inline-block"} />
-    {date && <li class="inline-block mr-4">{dateFormat(date)}</li>}
-  </ul>
+
+  <BlogDetails
+    date={date}
+    tags={tags}
+    className="bg-theme-light hover:bg-primary hover:text-white dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark"
+  />
 </div>

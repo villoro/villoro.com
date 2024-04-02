@@ -2,11 +2,10 @@
 import config from "@/config/config.json";
 import BlogCard from "@/components/BlogCard.astro";
 import Share from "@/components/Share.astro";
+import BlogDetails from "@/components/BlogDetails.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
-import dateFormat from "@/lib/utils/dateFormat";
 import similarItems from "@/lib/utils/similarItems";
-import { humanize, markdownify, slugify } from "@/lib/utils/textConverter";
-import { FaRegClock, FaRegFolder, FaRegUserCircle } from "react-icons/fa";
+import { markdownify } from "@/lib/utils/textConverter";
 import ImageMod from "./components/ImageMod.astro";
 
 const { blog_folder, similar_items_length } = config.settings;
@@ -15,7 +14,7 @@ const { post } = Astro.props;
 const posts = await getSinglePage(blog_folder);
 const similarPosts = similarItems(post, posts, similar_items_length);
 const { Content } = await post.render();
-const { title, description, date } = post.data;
+const { title, description, date, tags } = post.data;
 ---
 
 <section class="section pt-7">
@@ -23,12 +22,12 @@ const { title, description, date } = post.data;
     <div class="row justify-center">
       <article class="lg:col-10">
         <h1 set:html={markdownify(title)} class="h2 mb-4" />
-        <ul class="mb-4">
-          <li class="mr-8 inline-block">
-            <FaRegClock className={"mr-1 -mt-1 inline-block"} />
-            {dateFormat(date)}
-          </li>
-        </ul>
+        
+        <BlogDetails
+          date={date}
+          tags={tags}
+          className="btn-primary"
+        />
 
         <div class="content mb-10">
           <Content />

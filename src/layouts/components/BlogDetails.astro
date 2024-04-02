@@ -1,0 +1,26 @@
+---
+import dateFormat from "@/lib/utils/dateFormat";
+import { humanize, slugify } from "@/lib/utils/textConverter";
+import { FaRegClock, FaTag } from "react-icons/fa";
+const { date, tags, className } = Astro.props;
+---
+
+<ul>
+  <li class="mb-4 mr-4 inline-block">
+    <FaRegClock className="mr-1 -mt-1 inline-block" />
+    {dateFormat(date)}
+  </li>
+  <li class="mb-4 mr-4 inline-block">
+    <FaTag className="md:ml-4 -mt-1 inline-block" />
+    {
+      tags && tags.length > 0 && tags.map((tag: string) => (
+        <a
+          class={`m-1 px-2 py-1 ${className}`} 
+          href={`/tags/${slugify(tag)}`}
+        >
+          {humanize(tag)}
+        </a>
+      ))
+    }
+  </li>
+</ul>

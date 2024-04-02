@@ -4,12 +4,13 @@ banner:
   image: me_thinking
   title: Hi, I am Arnau Villoro
   content: Trust me, I'm an engineer :)
-    
+
 slogan:
   title: Crafting Solutions, Delivering Efficiency
-  
+
 blog:
-  title: Latest posts  
+  title: Latest posts
+  button: See all
 
 companies:
   title: "I'm proud to have collaborated with some awesome companies:"  

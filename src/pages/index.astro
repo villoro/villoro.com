@@ -110,17 +110,20 @@ const importImage = async (imageName, darkMode = false) => {
   <!-- Posts -->
   <section class="section p-6 lg:p-14">
     <div class="container">
-      <div class="text-center">
+      <div class="flex justify-center text-center pb-16">
         <h1
           set:html={markdownify(blog.title)}
-          class="mb-16 text-h4 lg:text-h2"
+          class="text-h3 lg:text-h1 lg:text-h2 mr-6"
         />
+        <a class="btn btn-primary lg:mt-1 lg:text-xl" href={blog_folder}>
+          {blog.button}
+        </a>
       </div>
       <div class="row">
         {
           latestPosts.map((item, index) => (
             <div class="sm:mb-8 sm:col-4" key={index}>
-              <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
+              <BlogCard data={item} loading="lazy" />
             </div>
           ))
         }
