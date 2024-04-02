@@ -1,0 +1,44 @@
+---
+import config from "@/config/config.json";
+import { getAllTaxonomy, getTaxonomy } from "@/lib/taxonomyParser.astro";
+import { humanize } from "@/lib/utils/textConverter";
+
+const { blog_folder } = config.settings;
+
+const allTags = await getAllTaxonomy(blog_folder, "tags");
+const tags = await getTaxonomy(blog_folder, "tags");
+---
+
+<div class="text-center mb-8 md:mb-16">
+  <ul>
+    <li class="m-2 md:m-3 inline-block">
+      <a
+        href={`/${blog_folder}`}
+        class="rounded bg-theme-light px-2 md:px-4 py-1 md:py-2 md:text-lg text-dark dark:bg-darkmode-theme-light dark:text-darkmode-dark hover:bg-primary hover:text-white dark:hover:bg-darkmode-primary dark:hover:text-dark"
+      >
+        All
+        <span class="md:ml-2 rounded">
+          ({allTags.length})
+        </span>
+      </a>
+    </li>
+    {
+      tags.map((tag: string) => {
+        const count = allTags.filter((c) => c === tag).length;
+        return (
+          <li class="m-2 md:m-3 inline-block">
+            <a
+              href={`/tags/${tag}`}
+              class="rounded bg-theme-light px-2 md:px-4 py-1 md:py-2 md:text-lg text-dark dark:bg-darkmode-theme-light dark:text-darkmode-dark hover:bg-primary hover:text-white dark:hover:bg-darkmode-primary dark:hover:text-dark"
+            >
+              {humanize(tag)}{" "}
+              <span class="md:ml-2 rounded">
+                ({count})
+              </span>
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</div>
