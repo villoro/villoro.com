@@ -42,11 +42,12 @@ The biggest example here might be jobs that are running Machine Learning (ML) pi
 ## 1. Using direct queries
 
 The most basic option for reading data from redshift is to connect directly to the database.
-As an example this can be done with **SQL alchemy**:
+As an example this can be done with **SQL alchemy**: 
 
-<Notice type="info">
-  POST: [SQL Alchemy with python](https://villoro.com/blog/sql-alchemy-python)
-</Notice>
+<FancyLink
+  linkText="SQL Alchemy with python"
+  url="https://villoro.com/blog/sql-alchemy-python"
+/>
 
 For other processing tools (like **spark**) it is possible to consume data with direct queries (by using `jdbc` or other connectors).
 
@@ -63,9 +64,10 @@ More info in [unload official AWS doc](https://docs.aws.amazon.com/redshift/late
 
 As usual, the suggestion is to use **parquet** for storing columnar data. More info here:
 
-<Notice type="info">
-  POST: [Storing tables efficiently with Pandas](https://villoro.com/blog/storing-tables-efficiently-pandas)
-</Notice>
+<FancyLink
+  linkText="Storing tables efficiently with Pandas"
+  url="https://villoro.com/blog/storing-tables-efficiently-pandas"
+/>
 
 By default the **unload** will produce multiple files so that different **redshift** workers can do the job in parallel.
 It might be tempting to do the unload to only one file in order to simplify the reading.
