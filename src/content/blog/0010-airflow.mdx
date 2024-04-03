@@ -16,13 +16,15 @@ Apache Airflow is a platform to programmatically author, schedule and monitor wo
 [TOC]
 
 ## 1. Why Airflow?
-People usually need to execute some tasks periodically. One common solution is to use [cron](https://es.wikipedia.org/wiki/Cron_(Unix)) wich is a good solution for simple tasks. But the more tasks you need to schedule the more problems I will have, specially if there are dependencies between one another.
+People usually need to execute some tasks periodically. One common solution is to use <FancyLink linkText="Cron" url="https://es.wikipedia.org/wiki/Cron_(Unix)"/> wich is a good solution for simple tasks. But the more tasks you need to schedule the more problems I will have, specially if there are dependencies between one another.
 
-Airflow allows to define workflows of tasks and you can define them as code making ig more maintainable, versionable, testable and collaborative. Check out the [Airflow documentation](https://airflow.apache.org/) for more information.
+Airflow allows to define workflows of tasks and you can define them as code making ig more maintainable, versionable, testable and collaborative.
+Check out the <FancyLink linkText="Airflow documentation" url="https://airflow.apache.org/" company="airflow"/> for more information.
 
 
 ## 2. Installation
-First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance. You can see [here](https://villoro.com/post/aws_ec2.html) how to create one.
+First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance.
+You can see <FancyLink linkText="Creating EC2 instances in AWS" url="https://villoro.com/blog/creating-ec2-aws/"/> how to create one.
 
 Then you can download airflow:
 ```sh
@@ -35,7 +37,7 @@ airflow initdb
 ```
 
 ### 2.1 Test Airflow
-We will test airflow with an example from [airflow documentation](https://airflow.apache.org/tutorial.html). You will need to create the file `tutorial.py`:
+We will test airflow with an example from <FancyLink linkText="Airflow documentation" url="https://airflow.apache.org/tutorial.html" company="airflow"/>. You will need to create the file `tutorial.py`:
 
 ```sh
 cd airflow
@@ -141,7 +143,7 @@ airflow test tutorial templated 2015-06-01
 
 ## 3. Use Airflow UI
 
-Of the great things about airflow is the [UI](https://airflow.apache.org/ui.html).
+Of the great things about airflow is the <FancyLink linkText="Airflow UI" url="https://airflow.apache.org/ui.html" company="airflow"/>.
 
 ![Airflow DAGs](../../images/posts/2019/0010-airflow_dags.png)
 

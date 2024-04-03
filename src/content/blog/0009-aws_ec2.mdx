@@ -17,7 +17,7 @@ Amazon is one of the most important infrastructure services provider. This inclu
 
 ## 1. Create an EC2 instance
 
-First of all go to [AWS console](https://aws.amazon.com/) and log in. From there it is important to select the **Region** where you want your services. You should select somewhere that is close to the locations that will receive most traffic. In my case I will use `UE (London)` since is close to where I live.
+First of all go to <FancyLink linkText="AWS console" url="https://aws.amazon.com/" company="aws"/> and log in. From there it is important to select the **Region** where you want your services. You should select somewhere that is close to the locations that will receive most traffic. In my case I will use `UE (London)` since is close to where I live.
 
 Using the AWS navigation go to `EC2` and press `Launch Instance`. I would suggest you start with a `Ubuntu Server 18.04 LTS`.
 
@@ -30,7 +30,7 @@ For the configuration of the instance I suggest the following:
 3. Next (Add storage).
     * 8 GB might not be enough. Increase the storage size if needed.
 4. Next (Add tags)
-    * Here you can define tags to classify the instances. It can be very useful to classify the costs ([more info](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html))
+    * Here you can define tags to classify the instances. It can be very useful to classify the costs (<FancyLink linkText="Cost Allocation" url="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html" company="aws"/>)
 5. Next (Security groups)
     * Here you can define which **IP** can access and which **ports** they can use to enter the instance. I suggest that right now you only use your IP.
 6. Review and Launch
@@ -43,7 +43,7 @@ For the configuration of the instance I suggest the following:
 </Notice>
 
 ## 2. Accessing the instance
-You can access your instance through an SSH connection. I suggest using the open source [PuTTY](https://www.putty.org/).
+You can access your instance through an SSH connection. I suggest using the open source <FancyLink linkText="PuTTY" url="https://www.putty.org/" company="default"/>.
 
 ### 2.1. Transform pem to ppk
 After installing PuTTY open `PuTTYgen` to transform the `.pem` file with the key to a `.ppk`.
