@@ -28,20 +28,23 @@ There are three main components needed for serving a python app:
 ![Architecture diagram](../../images/posts/2019/0011-nginx_gunicorn.jpg)
 
 ### 1.1 Web server
-This component will handle the requests and among other things it will deal with static files (images, css, js...). In this post we are going to use [Nginx](https://www.nginx.com/) since it is more commonly used for python. Another popular option is [apache](https://httpd.apache.org/).
+This component will handle the requests and among other things it will deal with static files (images, css, js...).
+In this post we are going to use <FancyLink linkText="Nginx" url="https://www.nginx.com/"/> since it is more commonly used for python.
+Another popular option is <FancyLink linkText="Httpd" url="https://httpd.apache.org/" company="httpd"/>.
 
 ### 1.2. WSGI
-Web servers cannot communicate directly with python apps so you need a Web Server Gateway Interface ([WSGI](https://wsgi.readthedocs.io/en/latest/what.html)).
-In this case we will use [Gunicorn](https://gunicorn.org/) because it is a simple solution. Another common choice would be [uwsgi](https://uwsgi-docs.readthedocs.io/en/latest/).
+Web servers cannot communicate directly with python apps so you need a Web Server Gateway Interface (<FancyLink linkText="WSGI" url="https://wsgi.readthedocs.io/en/latest/what.html" company="readthedocs"/>).
+In this case we will use <FancyLink linkText="Gunicorn" url="https://gunicorn.org/"/> because it is a simple solution.
+Another common choice would be <FancyLink linkText="Uwsgi" url="https://uwsgi-docs.readthedocs.io/en/latest/" company="readthedocs"/>.
 
 ### 1.3. Python App
-The idea of this post is to set up `nginx` and `gunicorn`. To test them you can create a very simple app using [flask](http://flask.pocoo.org/). You can do the same with [django](https://www.djangoproject.com/) or [dash](https://plot.ly/products/dash/) apps.
+The idea of this post is to set up `nginx` and `gunicorn`. To test them you can create a very simple app using <FancyLink linkText="Flask" url="http://flask.pocoo.org/" company="flask"/>. You can do the same with <FancyLink linkText="Django" url="https://www.djangoproject.com/"/> or <FancyLink linkText="Dash" url="https://plot.ly/products/dash/" company="plotly"/> apps.
 
 ### 1.4. Supervisor
-[Supervisor](http://supervisord.org/) is a system that allows users to monitor and control processes. This will make sure to restart the gunicorn process if it anything goes wrong. Without it you should do it yourself.
+<FancyLink linkText="Supervisor" url="http://supervisord.org/" company="default"/> is a system that allows users to monitor and control processes. This will make sure to restart the gunicorn process if it anything goes wrong. Without it you should do it yourself.
 
 <Notice type="info">
-  You can read more about why a web server and wsgi [here](https://serverfault.com/questions/331256/why-do-i-need-nginx-and-something-like-gunicorn).
+  You can read more about <FancyLink linkText="Why a web server and wsgi" url="https://serverfault.com/questions/331256/why-do-i-need-nginx-and-something-like-gunicorn"/>.
 </Notice>
 
 
@@ -236,10 +239,12 @@ server {
 }
 ```
 
-For more info about how to configure nginx [here](https://www.linode.com/docs/web-servers/nginx/how-to-configure-nginx/).
+For more info about <FancyLink linkText="How to configure nginx" url="https://www.linode.com/docs/web-servers/nginx/how-to-configure-nginx/"/>.
 
 ### 3.2. SSL certificate
 
-I strongly suggest you set up a SSL certificate for apps that are in production. You can learn how with this [tutorial](https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04).
+I strongly suggest you set up a SSL certificate for apps that are in production.
+You can learn how with <FancyLink linkText="How to secure nginx with let's encrypt" url="https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04"/>.
 
-While working on this post I set this app for my first time. It is normal to encounter difficultes but I was able to sort it out, you can do it too!
+While working on this post I set this app for my first time.
+It is normal to encounter difficultes but I was able to sort it out, you can do it too!
