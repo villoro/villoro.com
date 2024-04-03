@@ -23,7 +23,12 @@ const FancyLink: React.FC<FancyLinkProps> = ({ url, linkText, company }) => {
   const domainLogoUrl = `/favicons/${companyName}.ico`;
 
   return (
-    <a href={url} role="button" className="inline-flex rounded-md border border-gray-300 px-2 items-center hover:bg-gray-100">
+    <a
+      href={url}
+      role="button"
+      style={{"text-decoration": "none"}}
+      className="inline-flex rounded-md border border-gray-300 dark:border-gray-600 px-2 items-center hover:bg-gray-100 dark:hover:bg-gray-800"
+    >
       <img src={domainLogoUrl} alt="Domain Logo" className="w-4 h-4 mr-2 my-0" />
       <span className="text-primary dark:text-darkmode-primary">{linkText}</span>
     </a>
