@@ -17,18 +17,13 @@ draft: false
 
 The first thing to do is select a **GIT** hosting service. The most popular are:
 
-* [Github](https://github.com/)
-* [Bitbucket](https://bitbucket.org/)
-* [Gitlab](https://about.gitlab.com/)
-* [Azure DevOps](https://azure.microsoft.com/services/devops/)
+* <FancyLink linkText="Github" url="https://github.com/"/>
+* <FancyLink linkText="Bitbucket" url="https://bitbucket.org/"/>
+* <FancyLink linkText="Gitlab" url="https://about.gitlab.com/"/>
+* <FancyLink linkText="Azure DevOps" url="https://azure.microsoft.com/services/devops/" company="azure-devops"/>
 
 Those services host your **GIT** repository and allow you to interact with your team.
-There are some methodologies that you can follow when working with **GIT**, my suggestion is that you use **gitflow**:
-
-<FancyLink
-  linkText="Using gitflow for code control"
-  url="https://villoro.com/blog/using-gitflow"
-/>
+There are some methodologies that you can follow when working with **GIT**, my suggestion is that you use **gitflow**: <FancyLink linkText="Using gitflow for code control" url="https://villoro.com/blog/using-gitflow"/>
 
 ### 1.1. Protecting branches
 
@@ -44,12 +39,7 @@ As an example this is how you prevent the `master` branch to be deleted or to ha
 If you are developing you almost certainly will also be using a terminal.
 If you are a **Windows** the default terminal lacks a lot of nice features so I you can install a custom terminal.
 
-My personal favorite is **cmder**:
-
-<FancyLink
-  linkText="Cmder terminal for windows"
-  url="https://villoro.com/blog/cmder-terminal-windows"
-/>
+My personal favorite is **cmder**: <FancyLink linkText="Cmder terminal for windows" url="https://villoro.com/blog/cmder-terminal-windows"/>
 
 With **cmder** you can define your own **alias**.
 Here you have an example of the ones I am using:
@@ -72,12 +62,7 @@ rf=python src/index.py
 ## 3. Connect to your GIT hosting service
 
 There are different ways to connect to the GIT hosting service.
-The more secure one is by setting up a **SSH** key:
-
-<FancyLink
-  linkText="Using git with SSH"
-  url="https://villoro.com/blog/git-with-ssh"
-/>
+The more secure one is by setting up a **SSH** key: <FancyLink linkText="Using git with SSH" url="https://villoro.com/blog/git-with-ssh"/>
 
 ### 3.1. GIT Client
 
@@ -94,38 +79,23 @@ You can do it with any text editor but there IDEs that have a lot of nice featur
 The one I like the most is <FancyLink linkText="Sublime Text 3" url="https://www.sublimetext.com/"/>.
 
 It is also important to install extensions for your IDE that can help you.
-As an example you can use `black` with `sublack` for **Sublime Text**.
-
-<FancyLink
-  linkText="Black for code formatting"
-  url="https://villoro.com/blog/black-code-formatting"
-/>
+As an example you can use `black` with `sublack` for **Sublime Text**: <FancyLink linkText="Black for code formatting" url="https://villoro.com/blog/black-code-formatting"/>
 
 ## 5. Create package with poetry
 
 Then you need to create your project. The important part is that you use some kind of virtual environment / package control like:
 
-* [Anaconda](https://www.anaconda.com/)
-* [Virtualenv](https://virtualenv.pypa.io/en/latest/)
-* [Poetry](https://python-poetry.org/)
+* <FancyLink linkText="Anaconda" url="https://www.anaconda.com/"/>
+* <FancyLink linkText="Virtualenv" url="https://virtualenv.pypa.io/en/latest/" company="generic"/>
+* <FancyLink linkText="Poetry" url="https://python-poetry.org/" company="poetry"/>
 
 I find that **Poetry** is the easiest and the one that has more useful features.
-You can read more about it here:
-
-<FancyLink
-  linkText="Poetry package manager"
-  url="https://villoro.com/blog/poetry-python-package-manager"
-/>
+You can read more about it here: <FancyLink linkText="Poetry package manager" url="https://villoro.com/blog/poetry-python-package-manager"/>
 
 ## 6. Pre-commit
 
 [Git Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) are a good way to automate some tasks.
-There are multiple way of using them. What I suggest is that you use `pre-commit`:
-
-<FancyLink
-  linkText="Using Pre-commit to automate tasks"
-  url="https://villoro.com/blog/pre-commit"
-/>
+There are multiple way of using them. What I suggest is that you use `pre-commit`: <FancyLink linkText="Using Pre-commit to automate tasks" url="https://villoro.com/blog/pre-commit"/>
 
 <Notice type="success">
   `Pre-commit` can be used for any language even though is developed with python.
@@ -143,7 +113,7 @@ If you don't know what it is you can read it [here](https://www.atlassian.com/co
 
 There are a lot of **CI** providers, the more famous are:
 
-* <FancyLink linkText="Travis CI" url="https://travis-ci.org/" faviconUrl="https://raw.githubusercontent.com/travis-ci/docs-travis-ci-com/master/favicon.ico"/>
+* <FancyLink linkText="Travis CI" url="https://travis-ci.org/"/>
 * <FancyLink linkText="Jenkins" url="https://www.jenkins.io/"/>
 * <FancyLink linkText="Circle CI" url="https://circleci.com/"/>
 * <FancyLink linkText="Gitlab" url="https://gitlab.com/"/>
@@ -152,10 +122,10 @@ There are a lot of **CI** providers, the more famous are:
 
 Finally you might want to deploy your code.
 
-For an `app` my favorite is <FancyLink linkText="Heroku" url="https://www.heroku.com/" faviconUrl="https://raw.githubusercontent.com/heroku/favicon/master/favicon.ico"/>.
+For an `app` my favorite is <FancyLink linkText="Heroku" url="https://www.heroku.com/"/>.
 It has free options and is really easy to set up.
 
 For static webpages you should use <FancyLink linkText="Netlify" url="https://www.netlify.com/"/>.
 They are the ones hosting this webpage.
 
-Finally for other stuff I usually use <FancyLink linkText="AWS" url="https://aws.amazon.com/"/>.
+Finally for other stuff I usually use <FancyLink linkText="AWS" url="https://aws.amazon.com/" company="aws"/>.
