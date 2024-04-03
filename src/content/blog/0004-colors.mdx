@@ -15,7 +15,7 @@ Choosing between colors is always a difficult task, especially for people like m
 
 I used to have a hard time every time I had to deal with colors. I allways felt that having a lot of names for the colors was not a practical solution. For example in html you can use colors like `darksalmon`, `mediumvioletred` or `darkslateblue` which I find almost impossible to remeber and work with.
 
-But in 2014 google presented [Material Design](https://material.io/) and a very good [color palette](https://material.io/design/color/the-color-system.html#color-usage-palettes).
+But in 2014 google presented <FancyLink linkText="Material Design" url="https://material.io/"/> and a very good <FancyLink linkText="Color palette" url="https://material.io/design/color/the-color-system.html#color-usage-palettes" company="material"/>.
 
 ## Table of Contents
 
@@ -31,13 +31,13 @@ This allows us to use gradients of the same colors like in the following plot:
 
 <canvas id="plot-colors"></canvas>
 
-More info about colors and palettes can be found at [htmlcolorcodes.com](https://htmlcolorcodes.com/color-chart/).
+More info about colors and palettes can be found at <FancyLink linkText="HTML Color codes" url="https://htmlcolorcodes.com/color-chart/"/>.
 
-## 2. Using material colors in python (v-palette)
+## 2. Using material colors in python (vpalette)
 
-I use [plotly](https://plotly.com/) in a lot of projects and I like using the material colors as well.
+I use <FancyLink linkText="Plotly" url="https://plotly.com/"/> in a lot of projects and I like using the material colors as well.
 
-To do so I create a simple module ([v-palette](https://github.com/villoro/v-palette)) that allows me to call the colors I want to use with an array of color names and indexs. For example:
+To do so I create a simple module <FancyLink linkText="Vpalette" url="https://github.com/villoro/vpalette" company="github"/> that allows me to call the colors I want to use with an array of color names and indexs. For example:
 
 ```python
 from v_palette import get_colors
@@ -60,12 +60,12 @@ get_colors([("red", 100), ("blue", 100)])
 Remeber to install it using pip with:
 
 ```sh
-pip install v-palette
+pip install vpalette
 ```
 
 ### 2.1. Flat colors
 
-If you use v-palette you can also use the [flat colors](https://htmlcolorcodes.com/color-chart/flat-design-color-chart/).
+If you use vpalette you can also use the <FancyLink linkText="Flat colors" url="https://htmlcolorcodes.com/color-chart/flat-design-color-chart/"/>.
 
 ![Material colors](../../images/posts/2019/0004-flat_colors.svg)
 
