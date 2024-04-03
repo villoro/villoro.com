@@ -20,13 +20,13 @@ draft: false
 When using **spark** it's always advised to use the spark functions.
 However sometimes we need to use more advanced functions or we need external libraries.
 
-As an example we might want to use [Uber H3](https://github.com/uber/h3) library to work with geospatial data.
+As an example we might want to use <FancyLink linkText="H3" url="https://github.com/uber/h3"/> library to work with geospatial data.
 
 The library is implemented in multiple languages:
 
-* https://github.com/uber/h3
-* https://github.com/uber/h3-py
-* https://github.com/uber/h3-java
+* <FancyLink linkText="H3" url="https://github.com/uber/h3"/>
+* <FancyLink linkText="H3-py" url="https://github.com/uber/h3-py"/>
+* <FancyLink linkText="H3-java" url="https://github.com/uber/h3-java"/>
 
 In this post we will explore different options for using this function with spark.
 
@@ -73,7 +73,7 @@ Once it's defined it can be called with:
 ### 2.1. Use H3 directly
 
 The first thing needed to work with the **Java H3** library is to download the `jar`.
-It can be downloaded from [maven/h3](https://mvnrepository.com/artifact/com.uber/h3).
+It can be downloaded from <FancyLink linkText="Maven/h3" url="https://mvnrepository.com/artifact/com.uber/h3" company="default"/>.
 
 Once you have the `jar` file you need to add it to `$JAVA_HOME/jars` folder so that **spark** can use it without extra configuration.
 

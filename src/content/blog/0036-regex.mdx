@@ -42,7 +42,7 @@ It is possible to specify matches based on the position with:
 * `^`: Start 
 * `$`: End
 
-For example `^ab` will only match the first `ab` in `ab abc ab` ([Demo](https://regex101.com/r/TJzoA7/2))
+For example `^ab` will only match the first `ab` in `ab abc ab` (<FancyLink linkText="Demo" url="https://regex101.com/r/TJzoA7/2"/>)
 
 ### 1.2. Classes
 
@@ -52,11 +52,11 @@ Those classes can be inversed with capital letters. As an example `\D` will matc
 
 The main classes available are:
 
-| regex | description                             | example                                      | inverse |
-|-------|-----------------------------------------|----------------------------------------------|---------|
-| `\d`  | Digits                                  | [d_example](https://regex101.com/r/RM6mHO/1) | `\D`    |
-| `\w`  | Alphanumeric and/or `_`                 | [w_example](https://regex101.com/r/IkIMMm/1) | `\W`    |
-| `\s`  | Whitespaces and equivalents (like tabs) | [s_example](https://regex101.com/r/oSziKA/1) | `\S`    |
+| regex | description                             | example                                                                 | inverse |
+|-------|-----------------------------------------|-------------------------------------------------------------------------|---------|
+| `\d`  | Digits                                  | <FancyLink linkText="d_example" url="https://regex101.com/r/RM6mHO/1"/> | `\D`    |
+| `\w`  | Alphanumeric and/or `_`                 | <FancyLink linkText="w_example" url="https://regex101.com/r/IkIMMm/1"/> | `\W`    |
+| `\s`  | Whitespaces and equivalents (like tabs) | <FancyLink linkText="s_example" url="https://regex101.com/r/oSziKA/1"/> | `\S`    |
 
 ### 1.3. Quantifiers
 
@@ -64,13 +64,13 @@ It is possible to specify how many times a letter or group (defined in the next 
 
 As an example we want the letter `a` + the letter `b` which should appear different number of times:
 
-| regex    | description                                     | example                                            |
-|----------|-------------------------------------------------|----------------------------------------------------|
-| `ab*`    | `a` + `b` zero times or more                    | [example_ab*](https://regex101.com/r/ob5aYo/1)     |
-| `ab+`    | `a` + `b` one time or more                      | [example_ab+](https://regex101.com/r/b0o38q/1)     |
-| `ab?`    | `a` + optional `b` (zero or one time)           | [example_ab?](https://regex101.com/r/S91Cbe/1)     |
-| `ab{2}`  | `a` + `b` exactly 2 times                       | [example_ab{2}](https://regex101.com/r/TYBz4I/1)   |
-| `ab{2,5}`| `a` + `b` between 2 and 5 times (inclusive)     | [example_ab{2,5}](https://regex101.com/r/b4oI9X/1) |
+| regex    | description                                     | example                                                                       |
+|----------|-------------------------------------------------|-------------------------------------------------------------------------------|
+| `ab*`    | `a` + `b` zero times or more                    | <FancyLink linkText="example_ab*" url="https://regex101.com/r/ob5aYo/1"/>     |
+| `ab+`    | `a` + `b` one time or more                      | <FancyLink linkText="example_ab+" url="https://regex101.com/r/b0o38q/1"/>     |
+| `ab?`    | `a` + optional `b` (zero or one time)           | <FancyLink linkText="example_ab?" url="https://regex101.com/r/S91Cbe/1"/>     |
+| `ab{2}`  | `a` + `b` exactly 2 times                       | <FancyLink linkText="example_ab{2}" url="https://regex101.com/r/TYBz4I/1"/>   |
+| `ab{2,5}`| `a` + `b` between 2 and 5 times (inclusive)     | <FancyLink linkText="example_ab{2,5}" url="https://regex101.com/r/b4oI9X/1"/> |
 
 ### 1.4. Groups
 
@@ -78,7 +78,7 @@ It is possible to define **groups** in regex.
 They are use to capture part of the text and are declared with parenthesis `()`.
 We can use any regex inside the group. For example if we want to math `hello`:
 
-* `(hello)`: capturing group ([Demo](https://regex101.com/r/8W86e1/1)) 
+* `(hello)`: capturing group (<FancyLink linkText="Demo" url="https://regex101.com/r/8W86e1/2"/>) 
 * `(?:hello)`: non-capturing group
 * `(?P<name>hello)`: same but giving the group a name (`name` in this case)
 * `(hello|bye):` **or** operator in groups.
@@ -91,20 +91,20 @@ It is similar to the **start** (`^`) and **end** (`$`).
 
 It is easier to understand it with some examples:
 
-| regex          | text: `Impossible to do`                                       | text: `I'm possible :)`                                       | text: `possibler`                                       | example                                         |
-|----------------|----------------------------------------------------------------|---------------------------------------------------------------|---------------------------------------------------------|-------------------------------------------------|
-| `possible`     | Im<span style="background-color:aquamarine;">possible</span> to do | I'm <span style="background-color:aquamarine;">possible</span> :) | <span style="background-color:aquamarine;">possible</span>r | [boundaries_1](https://regex101.com/r/Ygl8wW/1) |
-| `\bpossible`   | Impossible to do                                               | I'm <span style="background-color:aquamarine;">possible</span> :) | <span style="background-color:aquamarine;">possible</span>r | [boundaries_2](https://regex101.com/r/WT2kd5/1) |
-| `\bpossible\b` | Impossible to do                                               | I'm <span style="background-color:aquamarine;">possible</span> :) | possibler                                               | [boundaries_3](https://regex101.com/r/2qDt77/1) |
-| `possible\B`   | Impossible to do                                               | I'm possible :)                                               | <span style="background-color:aquamarine;">possible</span>r | [boundaries_4](https://regex101.com/r/jL4Lkv/1) |
-| `\Bpossible`   | Im<span style="background-color:aquamarine;">possible</span> to do | I'm possible :)                                               | possibler                                               | [boundaries_5](https://regex101.com/r/bnTUnx/1) |
+| regex          | text: `Impossible to do`                                           | text: `I'm possible :)`                                           | text: `possibler`                                           | example                                                                    |
+|----------------|--------------------------------------------------------------------|-------------------------------------------------------------------|-------------------------------------------------------------|----------------------------------------------------------------------------|
+| `possible`     | Im<span style="background-color:aquamarine;">possible</span> to do | I'm <span style="background-color:aquamarine;">possible</span> :) | <span style="background-color:aquamarine;">possible</span>r | <FancyLink linkText="boundaries_1" url="https://regex101.com/r/Ygl8wW/1"/> |
+| `\bpossible`   | Impossible to do                                                   | I'm <span style="background-color:aquamarine;">possible</span> :) | <span style="background-color:aquamarine;">possible</span>r | <FancyLink linkText="boundaries_2" url="https://regex101.com/r/WT2kd5/1"/> |
+| `\bpossible\b` | Impossible to do                                                   | I'm <span style="background-color:aquamarine;">possible</span> :) | possibler                                                   | <FancyLink linkText="boundaries_3" url="https://regex101.com/r/2qDt77/1"/> |
+| `possible\B`   | Impossible to do                                                   | I'm possible :)                                                   | <span style="background-color:aquamarine;">possible</span>r | <FancyLink linkText="boundaries_4" url="https://regex101.com/r/jL4Lkv/1"/> |
+| `\Bpossible`   | Im<span style="background-color:aquamarine;">possible</span> to do | I'm possible :)                                                   | possibler                                                   | <FancyLink linkText="boundaries_5" url="https://regex101.com/r/bnTUnx/1"/> |
 
 ### 1.6. Flags
 
 It is possible to change the behaviour of the regex with some flags:
 
-* `(?i)`: **case insensitive**. For example `(?i)hello` will match `HELLO` ([demo](https://regex101.com/r/jr3Zrq/1))
-* `(?m)`: **multi line**. When this is active the anchor `^` will be start of line instead of start of text ([demo](https://regex101.com/r/Ol3N99/1))
+* `(?i)`: **case insensitive**. For example `(?i)hello` will match `HELLO` (<FancyLink linkText="Demo" url="https://regex101.com/r/jr3Zrq/1"/>)
+* `(?m)`: **multi line**. When this is active the anchor `^` will be start of line instead of start of text (<FancyLink linkText="Demo" url="https://regex101.com/r/Ol3N99/1"/>)
 * `(?s)`: **single line**.
 
 ### 1.7. Greedy vs lazy
@@ -117,8 +117,8 @@ Imagine that we have the following text:
 ```
 
 If we want to capture the start of an html tag (`<h1>` and `<p>` in this case) one might be tempted to use something like `<\w+>`.
-However that will match the whole line (for both lines) since we are specifying `<` followed by any text and ended with `>` ([demo](https://regex101.com/r/ZoRRT1/1)).
-If we want to stop it at the first appearence of `>` we can use the non greedy regex `<.+?>` ([demo](https://regex101.com/r/j2OnQv/1)).
+However that will match the whole line (for both lines) since we are specifying `<` followed by any text and ended with `>` (<FancyLink linkText="Demo" url="https://regex101.com/r/ZoRRT1/1"/>).
+If we want to stop it at the first appearence of `>` we can use the non greedy regex `<.+?>` (<FancyLink linkText="Demo" url="https://regex101.com/r/j2OnQv/1"/>).
 
 Some better alternatives are `<\w+>` or `<[^<>]+>`.
 
@@ -405,13 +405,12 @@ The regex used in this example might be a little bit complex, let's analyze it b
 In **redshift** there are 4 string functions that work with regular expressions (regex).
 They are:
 
-| Function                                                                             | Description                                                                                                                                              |
-|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [REGEXP_COUNT](https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_COUNT.html)     | Returns an integer that indicates the number of times the pattern occurs in the string. If no match is found, then the function returns 0.               |
-| [REGEXP_INSTR](https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_INSTR.html)     | Returns an integer that indicates the beginning position or ending position of the matched substring. If no match is found, then the function returns 0. |
-| [REGEXP_REPLACE](https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_REPLACE.html) | Replaces every occurrence of the pattern with the specified string.                                                                                      |
-| [REGEXP_SUBSTR](https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_SUBSTR.html)   | Returns the characters extracted from a string by searching for a regular expression pattern.                                                            |
-
+| Function                                                                                                                      | Description                                                                                                                                              |
+|-------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| <FancyLink linkText="REGEXP_COUNT" url="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_COUNT.html" company="aws"/>     | Returns an integer that indicates the number of times the pattern occurs in the string. If no match is found, then the function returns 0.               |
+| <FancyLink linkText="REGEXP_INSTR" url="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_INSTR.html" company="aws"/>     | Returns an integer that indicates the beginning position or ending position of the matched substring. If no match is found, then the function returns 0. |
+| <FancyLink linkText="REGEXP_REPLACE" url="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_REPLACE.html" company="aws"/> | Replaces every occurrence of the pattern with the specified string.                                                                                      |
+| <FancyLink linkText="REGEXP_SUBSTR" url="https://docs.aws.amazon.com/redshift/latest/dg/REGEXP_SUBSTR.html" company="aws"/>   | Returns the characters extracted from a string by searching for a regular expression pattern.                                                            |
 
 There is also the `SIMILAR` operator for using **regexs** inside `WHERE` statements. For example:
 
