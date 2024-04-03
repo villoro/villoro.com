@@ -27,7 +27,7 @@ The first way to improve the python performance is by using different compilers.
   <Button label="Numba" link="http://numba.pydata.org/" style="solid" />
 </div>
 
-**Numba** and **cython** are similar in terms of speed and **pypy** is a little bit slower. You can read more at [this quora question](https://www.quora.com/How-do-Cython-Numba-and-PyPy-compare-in-terms-of-performance-ease-of-use-and-restrictions).
+**Numba** and **cython** are similar in terms of speed and **pypy** is a little bit slower. You can read more at <FancyLink linkText="How to use Cython, Numba and Pypy" url="https://www.quora.com/How-do-Cython-Numba-and-PyPy-compare-in-terms-of-performance-ease-of-use-and-restrictions"/>.
 
 ### 1.1. Cython overview
 **Cython** is an optimising static compiler for both the Python programming language and the extended Cython programming language (based on Pyrex).
@@ -142,7 +142,7 @@ square(mlist)
 </TerminalOutput>
 
 To increase the speed you can specify the inputs and output dtypes using `int8` since in this example is enough for storing `81` which is the max value.
-You can check the [numpy documentation](https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html) to see the different `dtypes`.
+You can check the <FancyLink linkText="Numpy documentation" url="https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html"/> to see the different `dtypes`.
 
 ```python
 from numba import vectorize, int8
@@ -690,6 +690,7 @@ It is important to remember that **pandas only work with one core** so I am not 
 
 ## 4. More info
 
-You can read the [numba documentation](http://numba.pydata.org/numba-doc/latest/index.html). Some examples of **numba** form their web page at [numba examples](http://numba.pydata.org/numba-doc/0.21.0/user/examples.html).
+You can read the <FancyLink linkText="Numba documentation" url="http://numba.pydata.org/numba-doc/latest/index.html" company="numba"/>.
+Some examples of **numba** form their web page at <FancyLink linkText="Numba examples" url="http://numba.pydata.org/numba-doc/0.21.0/user/examples.html" company="numba"/>.
 
-I also suggest you read this post from Jake VanderPlas about [code optimization with numba](https://jakevdp.github.io/blog/2015/02/24/optimizing-python-with-numpy-and-numba/).
+I also suggest you read this post from Jake VanderPlas about <FancyLink linkText="Code optimization with numba" url="https://jakevdp.github.io/blog/2015/02/24/optimizing-python-with-numpy-and-numba/" company="jakevdp"/>.

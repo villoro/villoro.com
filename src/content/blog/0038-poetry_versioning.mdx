@@ -23,20 +23,16 @@ To make matters worse, we often need to update the version in multiple files.
 
 This post will explain how to simplify this process and how to automate it.
 It only focuses on how to manage it using `poetry` since it's the tool I recommend for handling virtual environments.
-If you need to set up **Poetry**, see:
-
-<Notice type="info">
-  POST: [Poetry python package manager](https://villoro.com/blog/poetry-python-package-manager)
-</Notice>
+If you need to set up **Poetry**, see: <FancyLink linkText="Poetry python package manager" url="https://villoro.com/blog/poetry-python-package-manager"/>
 
 ## 1. `poetry-bumpversion`
 
-With [poetry-bumpversion](https://pypi.org/project/poetry-bumpversion/), we can easily update the package version.
+With <FancyLink linkText="Poetry-bumpversion" url="https://pypi.org/project/poetry-bumpversion/"/>, we can easily update the package version.
 
-It assumes you follow [semver](https://semver.org/) for the versioning of the project.
+It assumes you follow <FancyLink linkText="Semver" url="https://semver.org/" company="default"/> for the versioning of the project.
 
 <Notice type="warning">
-  If you are not following [semver](https://semver.org/), you probably should since it's the standard.
+  If you are not following <FancyLink linkText="Semver" url="https://semver.org/" company="default"/>, you probably should since it's the standard.
 </Notice>
 
 In short with `semver` the version consists of three numbers (`M.m.p`) where:

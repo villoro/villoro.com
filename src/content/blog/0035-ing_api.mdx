@@ -15,13 +15,13 @@ draft: false
 
 ## 1. ING Developer
 
-ING has a [developer portal](https://developer.ing.com/openbanking/home) with instructions
+ING has a <FancyLink linkText="developer portal" url="https://developer.ing.com/openbanking/home"/> with instructions
 for accessing their APIs.
 
 There are 2 API types:
 
-* [openbanking](https://developer.ing.com/openbanking/get-started/openbanking): open for anyone to access
-* [PSD2](https://developer.ing.com/openbanking/get-started/psd2): for accessing those ones you need an eIDAS certificate.
+* <FancyLink linkText="Openbanking" url="https://developer.ing.com/openbanking/get-started/openbanking"/>: open for anyone to access
+* <FancyLink linkText="PSD2" url="https://developer.ing.com/openbanking/get-started/psd2"/>: for accessing those ones you need an eIDAS certificate.
 
 <Notice type="info">
   eIDAS certificates can only be optained by organizations, not by individuals like you or me
@@ -40,8 +40,8 @@ This post focus on the **Open Banking** API.
 At the moment of writting of this post there is not a lot that you can do with this API.
 Those are the 2 APIs you can use:
 
-* [OAuth 2.0](https://developer.ing.com/api-marketplace/marketplace/2d00fd5f-88cd-4416-bbca-f309ebb03bfe/reference?endpoint=0): Allows to authenticate and retrive a token
-* [Showcase API](https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview): This allows you to query `/greetings/single` which is the equivalent of a `hello world`
+* <FancyLink linkText="OAuth 2.0" url="https://developer.ing.com/api-marketplace/marketplace/2d00fd5f-88cd-4416-bbca-f309ebb03bfe/reference?endpoint=0"/>: Allows to authenticate and retrive a token
+* <FancyLink linkText="Showcase API" url="https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview"/>: This allows you to query `/greetings/single` which is the equivalent of a `hello world`
 
 As you can see right now it is not very useful.
 When I started investigating I didn't realized that you couldn't retrive your own data with the **Open Banking API**.
@@ -54,7 +54,7 @@ But there is no ETA for that.
 
 ## 3. Open Banking API Sandbox
 
-This part follows the [Getting Started with Open Banking API](https://developer.ing.com/openbanking/get-started/openbanking).
+This part follows the <FancyLink linkText="Getting Started with Open Banking API" url="https://developer.ing.com/openbanking/get-started/openbanking"/>.
 
 The first thing you need to do is to download the example certificates:
 
@@ -78,7 +78,7 @@ pip install pycryptodome
 ```
 
 <Notice type="info" className="mt-6">
-  All the code can be found in https://github.com/villoro/villoro_posts/tree/master/0035-ing_api
+  All the code can be found in <FancyLink linkText="Villoro posts: ING API" url="https://github.com/villoro/villoro_posts/tree/master/0035-ing_api"/>
 </Notice>
 
 Let's break down the script in parts
@@ -224,7 +224,7 @@ This can be done with the code explained and using those params:
 
 ## 4. Creating your app
 
-In this step you need to sign in to the [ing developer portal](https://developer.ing.com/openbanking/auth/login).
+In this step you need to sign in to the <FancyLink linkText="ING developer portal" url="https://developer.ing.com/openbanking/auth/login"/>.
 
 Then you need to create an app.
 
@@ -262,7 +262,7 @@ You need to follow the same as before but changing some params:
 
 ### 4.3. Doing a hello world
 
-Once you have the open you can suscribe to [Showcase API](https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview).
+Once you have the open you can suscribe to <FancyLink linkText="Showcase API" url="https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview"/>.
 You will need to wait until your request is approved.
 
 Once it is approved you can query the only endpoint to check that everything is working:
