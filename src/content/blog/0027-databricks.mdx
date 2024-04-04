@@ -176,36 +176,14 @@ To do so you only need to use some magic commands like `%python` to work with py
 
 The languages you can use are:
 
-<table class="v-table" align="center">
-  <tr>
-    <th class="v-table-header">language</th>
-    <th class="v-table-header">preffix</th>
-  </tr>
-  <tr>
-    <td>python</td>
-    <td>%python</td>
-  </tr>
-  <tr>
-    <td>markdown</td>
-    <td>%md</td>
-  </tr>
-  <tr>
-    <td>Linux commands</td>
-    <td>%sh</td>
-  </tr>
-  <tr>
-    <td>SQL</td>
-    <td>%sql</td>
-  </tr>
-  <tr>
-    <td>R</td>
-    <td>%r</td>
-  </tr>
-  <tr>
-    <td>scala</td>
-    <td>%scala</td>
-  </tr>
-</table>
+| language       | preffix |
+|----------------|---------|
+| python         | %python |
+| markdown       | %md     |
+| Linux commands | %sh     |
+| SQL            | %sql    |
+| R              | %r      |
+| scala          | %scala  |
 
 ### 2.2. Spark
 
@@ -266,28 +244,12 @@ One important aspect for reading and writting data is the paths.
 Imagine that you have a table stored in `/dbfs/mnt/blob/data.delta`.
 To read that in different languages you should:
 
-<table class="v-table" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">language</th>
-    <th class="v-table-header">sentence</th>
-  </tr>
-  <tr>
-    <td>python</td>
-    <td>/dbfs/mnt/blob/data.delta</td>
-  </tr>
-  <tr>
-    <td>sh</td>
-    <td>/dbfs/mnt/blob/data.delta</td>
-  </tr>
-  <tr>
-    <td>spark</td>
-    <td>dbfs:/mnt/blob/data.delta</td>
-  </tr>
-  <tr>
-    <td>SQL</td>
-    <td>SELECT * FROM delta.`/mnt/blob/data.delta`</td>
-  </tr>
-</table>
+| language | sentence                                     |
+|----------|----------------------------------------------|
+| python   | /dbfs/mnt/blob/data.delta                    |
+| sh       | /dbfs/mnt/blob/data.delta                    |
+| spark    | dbfs:/mnt/blob/data.delta                    |
+| SQL      | SELECT * FROM delta.\`/mnt/blob/data.delta\` |
 
 ## 4. Scheduling jobs
 

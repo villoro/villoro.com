@@ -69,140 +69,28 @@ Regarding the file size both `xlsx` and `parquet` outperform the rest. If you lo
 
 This time each extensions will be tested using all posible compressions. The results are:
 
-<table class="v-table v-table-right" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">format</th>
-    <th class="v-table-header">compression</th>
-    <th class="v-table-header">read [s]</th>
-    <th class="v-table-header">write [s]</th>
-    <th class="v-table-header">size [MB]</th>
-  </tr>
-  <tr>
-    <td rowspan="6" class="v-table-center"><b>csv</b></td>
-    <td class="v-table-center">None</td>
-    <td>3.05</td>
-    <td>5.90</td>
-    <td>236.10</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">bz2</td>
-    <td>10.52</td>
-    <td>24.44</td>
-    <td>47.58</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">gzip</td>
-    <td>4.26</td>
-    <td>49.02</td>
-    <td>65.80</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">infer</td>
-    <td>3.09</td>
-    <td>6.00</td>
-    <td>236.10</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">xz</td>
-    <td>9.92</td>
-    <td>288.62</td>
-    <td>43.99</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">zip</td>
-    <td>4.05</td>
-    <td>21.26</td>
-    <td>66.44</td>
-  </tr>
-  <tr>
-    <td class="v-table-center"><b>feather</b></td>
-    <td class="v-table-center">feather</td>
-    <td>0.61</td>
-    <td>1.00</td>
-    <td>213.38</td>
-  </tr>
-  <tr>
-    <td rowspan="3"  class="v-table-center"><b>msgpack</b></td>
-    <td class="v-table-center">None</td>
-    <td>0.49</td>
-    <td>1.32</td>
-    <td>210.09</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">blosc</td>
-    <td>0.48</td>
-    <td>1.37</td>
-    <td>202.88</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">zlib</td>
-    <td>0.51</td>
-    <td>2.05</td>
-    <td>202.90</td>
-  </tr>
-  <tr>
-    <td rowspan="4" class="v-table-center"><b>parquet</b></td>
-    <td class="v-table-center">None</td>
-    <td>0.77</td>
-    <td>1.41</td>
-    <td>209.58</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">brotli</td>
-    <td>0.99</td>
-    <td>27.04</td>
-    <td>50.82</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">gzip</td>
-    <td>1.00</td>
-    <td>18.28</td>
-    <td>56.75</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">snappy</td>
-    <td>0.81</td>
-    <td>1.87</td>
-    <td>96.37</td>
-  </tr>
-  <tr>
-    <td rowspan="6" class="v-table-center"><b>pickle</b></td>
-    <td class="v-table-center">None</td>
-    <td>0.47</td>
-    <td>1.34</td>
-    <td>207.54</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">bz2</td>
-    <td>7.78</td>
-    <td>18.51</td>
-    <td>40.93</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">gzip</td>
-    <td>1.49</td>
-    <td>40.68</td>
-    <td>54.85</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">infer</td>
-    <td>0.48</td>
-    <td>1.37</td>
-    <td>207.54</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">xz</td>
-    <td>6.26</td>
-    <td>254.32</td>
-    <td>38.05</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">zip</td>
-    <td>2.07</td>
-    <td>17.86</td>
-    <td>55.43</td>
-  </tr>
-</table>
+| format      | compression | read [s] | write [s] | size [MB] |
+|-------------|-------------|---------:|----------:|----------:|
+| **csv**     | None        |     3.05 |      5.90 |    236.10 |
+|             | bz2         |    10.52 |     24.44 |     47.58 |
+|             | gzip        |     4.26 |     49.02 |     65.80 |
+|             | infer       |     3.09 |      6.00 |    236.10 |
+|             | xz          |     9.92 |    288.62 |     43.99 |
+|             | zip         |     4.05 |     21.26 |     66.44 |
+| **feather** | feather     |     0.61 |      1.00 |    213.38 |
+| **msgpack** | None        |     0.49 |      1.32 |    210.09 |
+|             | blosc       |     0.48 |      1.37 |    202.88 |
+|             | zlib        |     0.51 |      2.05 |    202.90 |
+| **parquet** | None        |     0.77 |      1.41 |    209.58 |
+|             | brotli      |     0.99 |     27.04 |     50.82 |
+|             | gzip        |     1.00 |     18.28 |     56.75 |
+|             | snappy      |     0.81 |      1.87 |     96.37 |
+| **pickle**  | None        |     0.47 |      1.34 |    207.54 |
+|             | bz2         |     7.78 |     18.51 |     40.93 |
+|             | gzip        |     1.49 |     40.68 |     54.85 |
+|             | infer       |     0.48 |      1.37 |    207.54 |
+|             | xz          |     6.26 |    254.32 |     38.05 |
+|             | zip         |     2.07 |     17.86 |     55.43 |
 
 By plotting both reading and writing time is easier to se that writing times for `xz` compression are really slow.
 
@@ -227,97 +115,22 @@ For this test I will only use the best formats from the previous test. Those are
 * parquet
 * pickle
 
-<table class="v-table v-table-right" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">format</th>
-    <th class="v-table-header">compression</th>
-    <th class="v-table-header">read [min]</th>
-    <th class="v-table-header">write [min]</th>
-    <th class="v-table-header">size [GB]</th>
-  </tr>
-  <tr>
-    <td class="v-table-center"><b>feather</b></td>
-    <td class="v-table-center">feather</td>
-    <td>-</td>
-    <td>-</td>
-    <td>4.24</td>
-  </tr>
-  <tr>
-    <td rowspan="3"  class="v-table-center"><b>msgpack</b></td>
-    <td class="v-table-center">None</td>
-    <td>5.86</td>
-    <td>6.32</td>
-    <td>7.21</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">blosc</td>
-    <td>5.45</td>
-    <td>5.01</td>
-    <td>6.50</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">zlib</td>
-    <td>5.49</td>
-    <td>5.55</td>
-    <td>6.50</td>
-  </tr>
-  <tr>
-    <td rowspan="4" class="v-table-center"><b>parquet</b></td>
-    <td class="v-table-center">None</td>
-    <td>1.15</td>
-    <td>2.69</td>
-    <td>5.96</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">brotli</td>
-    <td>0.92</td>
-    <td>11.22</td>
-    <td>1.56</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">gzip</td>
-    <td>0.97</td>
-    <td>8.98</td>
-    <td>2.00</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">snappy</td>
-    <td>0.89</td>
-    <td>2.78</td>
-    <td>3.30</td>
-  </tr>
-  <tr>
-    <td rowspan="6" class="v-table-center"><b>pickle</b></td>
-    <td class="v-table-center">None</td>
-    <td>1.38</td>
-    <td>7.47</td>
-    <td>6.25</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">bz2</td>
-    <td>5.15</td>
-    <td>17.47</td>
-    <td>1.24</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">gzip</td>
-    <td>1.88</td>
-    <td>20.76</td>
-    <td>1.81</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">infer</td>
-    <td>1.46</td>
-    <td>5.80</td>
-    <td>6.25</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">xz</td>
-    <td>3.46</td>
-    <td>97.62</td>
-    <td>0.97</td>
-  </tr>
-</table>
+| format      | compression | read [min] | write [min] | size [GB] |
+|-------------|-------------|------------|-------------|-----------|
+| **feather** | feather     | -          | -           | 4.24      |
+| **msgpack** | None        | 5.86       | 6.32        | 7.21      |
+|             | blosc       | 5.45       | 5.01        | 6.50      |
+|             | zlib        | 5.49       | 5.55        | 6.50      |
+| **parquet** | None        | 1.15       | 2.69        | 5.96      |
+|             | brotli      | 0.92       | 11.22       | 1.56      |
+|             | gzip        | 0.97       | 8.98        | 2.00      |
+|             | snappy      | 0.89       | 2.78        | 3.30      |
+| **pickle**  | None        | 1.38       | 7.47        | 6.25      |
+|             | bz2         | 5.15       | 17.47       | 1.24      |
+|             | gzip        | 1.88       | 20.76       | 1.81      |
+|             | infer       | 1.46       | 5.80        | 6.25      |
+|             | xz          | 3.46       | 97.62       | 0.97      |
+
 
 <Notice type="error">
   **feather** did not work since it has a restriction of 2 GB per column and it was exceeded.

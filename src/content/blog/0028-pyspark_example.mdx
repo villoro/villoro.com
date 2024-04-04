@@ -135,32 +135,11 @@ The problem is that using to partitions is only useful if there are really a lot
 
 In our case it ends up using **2 times the space disk** as the file partitioned by `station`.
 
-<table class="v-table" align="center">
-  <tr>
-    <th class="v-table-header">partition</th>
-    <th class="v-table-header">unique partitions</th>
-    <th class="v-table-header">disk usage [GB]</th>
-    <th class="v-table-header">writting time [min]</th>
-  </tr>
-  <tr>
-    <td>station</td>
-    <td>212</td>
-    <td>2.56</td>
-    <td>30.28</td>
-  </tr>
-  <tr>
-    <td>variables</td>
-    <td>26</td>
-    <td>-</td>
-    <td>-</td>
-  </tr>
-  <tr>
-    <td>station + variables</td>
-    <td>2893</td>
-    <td>4.44</td>
-    <td>60.6</td>
-  </tr>
-</table>
+| partition           | unique partitions | disk usage [GB] | writing time [min] |
+|---------------------|------------------:|----------------:|-------------------:|
+| station             |               212 |            2.56 |              30.28 |
+| variables           |                26 |               - |                  - |
+| station + variables |              2893 |            4.44 |               60.6 |
 
 ## 5. Explore data
 

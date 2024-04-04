@@ -203,64 +203,14 @@ The other options is to use the `sum()` python function and the `numpy.sum()`.
 
 For the tests we will try different array lenghts.
 
-<table class="v-table v-table-right" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">numpy size</th>
-    <th class="v-table-header">iter_and_sum</th>
-    <th class="v-table-header">jit</th>
-    <th class="v-table-header">njit</th>
-    <th class="v-table-header">np.sum</th>
-    <th class="v-table-header">sum</th>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^4</td>
-    <td>0.000926</td>
-    <td>0.000001</td>
-    <td>0.000001</td>
-    <td>0.000008</td>
-    <td>0.000750</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^5</td>
-    <td>0.009162</td>
-    <td>0.000009</td>
-    <td>0.000010</td>
-    <td>0.000042</td>
-    <td>0.007408</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^6</td>
-    <td>0.092395</td>
-    <td>0.000106</td>
-    <td>0.000120</td>
-    <td>0.000408</td>
-    <td>0.075894</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^7</td>
-    <td>0.936200</td>
-    <td>0.002313</td>
-    <td>0.002345</td>
-    <td>0.004393</td>
-    <td>0.766890</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^8</td>
-    <td>9.335412</td>
-    <td>0.021232</td>
-    <td>0.020506</td>
-    <td>0.042701</td>
-    <td>7.549756</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^9</td>
-    <td>96.134125</td>
-    <td>0.238718</td>
-    <td>0.225308</td>
-    <td>0.433185</td>
-    <td>76.537118</td>
-  </tr>
-</table>
+| numpy size | iter_and_sum |      jit |     njit |   np.sum |       sum |
+|-----------:|-------------:|---------:|---------:|---------:|----------:|
+|       10^4 |     0.000926 | 0.000001 | 0.000001 | 0.000008 |  0.000750 |
+|       10^5 |     0.009162 | 0.000009 | 0.000010 | 0.000042 |  0.007408 |
+|       10^6 |     0.092395 | 0.000106 | 0.000120 | 0.000408 |  0.075894 |
+|       10^7 |     0.936200 | 0.002313 | 0.002345 | 0.004393 |  0.766890 |
+|       10^8 |     9.335412 | 0.021232 | 0.020506 | 0.042701 |  7.549756 |
+|       10^9 |    96.134125 | 0.238718 | 0.225308 | 0.433185 | 76.537118 |
 
 <Notice type="warning">
   First time result has been excluded to avoid computing the time of compilation before calculating the mean.
@@ -287,24 +237,11 @@ I had a huge dataframe (650 milion rows) and among other columns there was one f
 The `date` column followed the format `YYYY-MM-DD` like 2019-05-15. The problem was with the `time` column.
 The original format was `hhmmsscc` (`c` for centiseconds) and instead of being a string it was presented as an **integer**. So for example you could find the following values:
 
-<table class="v-table v-table-right" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">value</th>
-    <th class="v-table-header">represents</th>
-  </tr>
-  <tr>
-    <td>23411210</td>
-    <td>23:41:12.10</td>
-  </tr>
-  <tr>
-    <td>9051137</td>
-    <td>09:05:11.37</td>
-  </tr>
-  <tr>
-    <td>712</td>
-    <td>00:00:07.12</td>
-  </tr>
-</table>
+| value    | represents    |
+|---------:|---------------|
+| 23411210 | 23:41:12.10   |
+|  9051137 | 09:05:11.37   |
+|      712 | 00:00:07.12   |
 
 #### 3.2.1. The functions
 
@@ -502,88 +439,15 @@ def divmod_vectorize(df):
 
 #### 3.2.2. The results
 
-<table class="v-table v-table-center" align="center">
-  <tr>
-    <th class="v-table-header">size</th>
-    <th class="v-table-header">zfill</th>
-    <th class="v-table-header">fix_time_individual</th>
-    <th class="v-table-header">fix_time_np_string</th>
-    <th class="v-table-header">fix_time_np_datetime</th>
-    <th class="v-table-header">np_divmod_jit</th>
-    <th class="v-table-header">divmod_njit</th>
-    <th class="v-table-header">divmod_vectorize</th>
-  </tr>
-  <tr>
-    <td>10^2</td>
-    <td>0.004388</td>
-    <td>0.213377</td>
-    <td>0.434647</td>
-    <td>0.535352</td>
-    <td>0.428438</td>
-    <td>0.132344</td>
-    <td>0.088566</td>
-  </tr>
-  <tr>
-    <td>10^3</td>
-    <td>0.007160</td>
-    <td>0.223842</td>
-    <td>0.443458</td>
-    <td>0.518424</td>
-    <td>0.437135</td>
-    <td>0.131134</td>
-    <td>0.090028</td>
-  </tr>
-  <tr>
-    <td>10^4</td>
-    <td>0.030412</td>
-    <td>0.265528</td>
-    <td>0.483543</td>
-    <td>0.558784</td>
-    <td>0.536995</td>
-    <td>0.142893</td>
-    <td>0.101280</td>
-  </tr>
-  <tr>
-    <td>10^5</td>
-    <td>0.295480</td>
-    <td>0.711711</td>
-    <td>0.735900</td>
-    <td>0.838042</td>
-    <td>1.435995</td>
-    <td>0.168305</td>
-    <td>0.127379</td>
-  </tr>
-  <tr>
-    <td>10^6</td>
-    <td>3.424938</td>
-    <td>5.112963</td>
-    <td>3.425526</td>
-    <td>3.527455</td>
-    <td>10.157285</td>
-    <td>0.419848</td>
-    <td>0.384422</td>
-  </tr>
-  <tr>
-    <td>10^7</td>
-    <td>37.434941</td>
-    <td>50.304211</td>
-    <td>30.280986</td>
-    <td>32.378085</td>
-    <td>97.415906</td>
-    <td>2.916234</td>
-    <td>2.804018</td>
-  </tr>
-  <tr>
-    <td>10^8</td>
-    <td>721.881598</td>
-    <td>508.880023</td>
-    <td>310.148904</td>
-    <td>326.442289</td>
-    <td>973.317809</td>
-    <td>31.491899</td>
-    <td>31.602522</td>
-  </tr>
-</table>
+| size |    zfill | fix_time_individual | fix_time_np_string | fix_time_np_datetime | np_divmod_jit | divmod_njit | divmod_vectorize |
+|-----:|---------:|--------------------:|-------------------:|---------------------:|--------------:|------------:|-----------------:|
+| 10^2 |   0.0044 |              0.2134 |             0.4346 |               0.5354 |        0.4284 |      0.1323 |           0.0886 |
+| 10^3 |   0.0072 |              0.2238 |             0.4435 |               0.5184 |        0.4371 |      0.1311 |           0.0900 |
+| 10^4 |   0.0304 |              0.2655 |             0.4835 |               0.5588 |        0.5370 |      0.1429 |           0.1013 |
+| 10^5 |   0.2955 |              0.7117 |             0.7359 |               0.8380 |        1.4360 |      0.1683 |           0.1274 |
+| 10^6 |   3.4249 |              5.1130 |             3.4255 |               3.5275 |       10.1573 |      0.4198 |           0.3844 |
+| 10^7 |  37.4349 |             50.3042 |            30.2810 |              32.3781 |       97.4159 |      2.9162 |           2.8040 |
+| 10^8 | 721.8816 |            508.8800 |           310.1489 |             326.4423 |      973.3178 |     31.4919 |          31.6025 |
 
 Both `divmod_njit` and `divmod_vectorize` performs really well compared to the other options. Is intersting that my first approach (`zfill`) is the best for small dataframes but it starts to underperform at 10^5.
 
@@ -601,86 +465,22 @@ Then I repeated everything with an `M64` **azure** machine.
 
 The specs of each machine are:
 
-<table class="v-table v-table-center" align="center">
-  <tr>
-    <th class="v-table-header">feature</th>
-    <th class="v-table-header">my computer</th>
-    <th class="v-table-header">azure M64</th>
-  </tr>
-  <tr>
-    <td>processor</td>
-    <td>Intel Core i5-6500 3.2Ghz</td>
-    <td>Intel Xeon E7-8890 v3 2.5GHz (Haswell)</td>
-  </tr>
-  <tr>
-    <td>cores</td>
-    <td>4</td>
-    <td>64</td>
-  </tr>
-  <tr>
-    <td>RAM</td>
-    <td>16 GB</td>
-    <td>1 TB</td>
-  </tr>
-</table>
+|             | processor                              | cores | RAM   |
+|-------------|----------------------------------------|-------|-------|
+| my computer | Intel Core i5-6500 3.2Ghz              | 4     | 16 GB |
+| azure M64   | Intel Xeon E7-8890 v3 2.5GHz (Haswell) | 64    | 1 TB  |
 
 Let's compare the results of two functions.
 
-<table class="v-table v-table-center" align="center">
-  <tr>
-    <th class="v-table-header" rowspan="2">size</th>
-    <th class="v-table-header" colspan="2">zfill</th>
-    <th class="v-table-header" colspan="2">divmod_vectorize</th>
-  </tr>
-  <tr>
-    <td class="v-table-header2">i5</td>
-    <td class="v-table-header2">azure</td>
-    <td class="v-table-header2">i5</td>
-    <td class="v-table-header2">azure</td>
-  </tr>
-  <tr>
-    <td>10^2</td>
-    <td>0.004002</td>
-    <td>0.004388</td>
-    <td>0.090219</td>
-    <td>0.088566</td>
-  </tr>
-  <tr>
-    <td>10^3</td>
-    <td>0.005410</td>
-    <td>0.007160</td>
-    <td>0.091660</td>
-    <td>0.090028</td>
-  </tr>
-  <tr>
-    <td>10^4</td>
-    <td>0.031415</td>
-    <td>0.030412</td>
-    <td>0.100109</td>
-    <td>0.101280</td>
-  </tr>
-  <tr>
-    <td>10^5</td>
-    <td>0.291654</td>
-    <td>0.295480</td>
-    <td>0.191021</td>
-    <td>0.127379</td>
-  </tr>
-  <tr>
-    <td>10^6</td>
-    <td>3.143935</td>
-    <td>3.424938</td>
-    <td>1.051343</td>
-    <td>0.384422</td>
-  </tr>
-  <tr>
-    <td>10^7</td>
-    <td>32.780381</td>
-    <td>37.434941</td>
-    <td>9.711320</td>
-    <td>2.804018</td>
-  </tr>
-</table>
+| size | zfill (i5) | zfill (azure) | divmod_vectorize (i5) | divmod_vectorize (azure) |
+|-----:|-----------:|--------------:|----------------------:|-------------------------:|
+| 10^2 |     0.0040 |        0.0044 |                0.0902 |                   0.0886 |
+| 10^3 |     0.0054 |        0.0072 |                0.0917 |                   0.0900 |
+| 10^4 |     0.0314 |        0.0304 |                0.1001 |                   0.1013 |
+| 10^5 |     0.2917 |        0.2955 |                0.1910 |                   0.1274 |
+| 10^6 |     3.1439 |        3.4249 |                1.0513 |                   0.3844 |
+| 10^7 |    32.7804 |       37.4349 |                9.7113 |                   2.8040 |
+
 
 If we take a look at the results we can see that they both perform similar. 
 
