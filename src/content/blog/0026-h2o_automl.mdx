@@ -109,85 +109,18 @@ lb.head(rows=lb.nrows)
 
 The total training time (for all models) of the example was **limited to 2 minutes**. The results are:
 
-<table class="v-table" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">model_id</th>
-    <th class="v-table-header">auc</th>
-    <th class="v-table-header">logloss</th>
-    <th class="v-table-header">aucpr</th>
-    <th class="v-table-header">mean_per_class_error</th>
-  </tr>
-  <tr>
-    <td>StackedEnsemble_AllModels_AutoML</td>
-    <td>0.786427</td>
-    <td>0.555344</td>
-    <td>0.803633</td>
-    <td>0.319589</td>
-  </tr>
-  <tr>
-    <td>StackedEnsemble_BestOfFamily_AutoML</td>
-    <td>0.783762</td>
-    <td>0.557932</td>
-    <td>0.800806</td>
-    <td>0.33061</td>
-  </tr>
-  <tr>
-    <td>GBM_5_AutoML</td>
-    <td>0.780862</td>
-    <td>0.559708</td>
-    <td>0.79783</td>
-    <td>0.325399</td>
-  </tr>
-  <tr>
-    <td>GBM_1_AutoML</td>
-    <td>0.778997</td>
-    <td>0.56159</td>
-    <td>0.796523</td>
-    <td>0.326697</td>
-  </tr>
-  <tr>
-    <td>GBM_grid__1_AutoML_model_2</td>
-    <td>0.778615</td>
-    <td>0.591319</td>
-    <td>0.795194</td>
-    <td>0.34516</td>
-  </tr>
-  <tr>
-    <td>GBM_2_AutoML</td>
-    <td>0.778338</td>
-    <td>0.561527</td>
-    <td>0.79632</td>
-    <td>0.329805</td>
-  </tr>
-  <tr>
-    <td>GBM_3_AutoML</td>
-    <td>0.776389</td>
-    <td>0.563906</td>
-    <td>0.793284</td>
-    <td>0.328065</td>
-  </tr>
-  <tr>
-    <td>GBM_4_AutoML</td>
-    <td>0.770758</td>
-    <td>0.570912</td>
-    <td>0.790371</td>
-    <td>0.353743</td>
-  </tr>
-  <tr>
-    <td>DRF_1_AutoML</td>
-    <td>0.765151</td>
-    <td>0.580246</td>
-    <td>0.783285</td>
-    <td>0.340491</td>
-  </tr>
-  <tr>
-    <td>XRT_1_AutoML</td>
-    <td>0.765134</td>
-    <td>0.582172</td>
-    <td>0.783059</td>
-    <td>0.349171</td>
-  </tr>
-</table>
+| model_id                            | auc    | logloss | aucpr  | mean_per_class_error |
+|-------------------------------------|--------|---------|--------|----------------------|
+| StackedEnsemble_AllModels_AutoML    | 0.7864 | 0.5553  | 0.8036 | 0.3196               |
+| StackedEnsemble_BestOfFamily_AutoML | 0.7838 | 0.5579  | 0.8008 | 0.3306               |
+| GBM_5_AutoML                        | 0.7809 | 0.5597  | 0.7978 | 0.3254               |
+| GBM_1_AutoML                        | 0.779  | 0.5616  | 0.7965 | 0.3267               |
+| GBM_grid__1_AutoML_model_2          | 0.7786 | 0.5913  | 0.7952 | 0.3452               |
+| GBM_2_AutoML                        | 0.7783 | 0.5615  | 0.7963 | 0.3298               |
+| GBM_3_AutoML                        | 0.7764 | 0.5639  | 0.7933 | 0.3281               |
+| GBM_4_AutoML                        | 0.7708 | 0.5709  | 0.7904 | 0.3537               |
+| DRF_1_AutoML                        | 0.7652 | 0.5802  | 0.7833 | 0.3405               |
+| XRT_1_AutoML                        | 0.7651 | 0.5822  | 0.7831 | 0.3492               |
 
 ## 3. H2O vs Manual ML
 

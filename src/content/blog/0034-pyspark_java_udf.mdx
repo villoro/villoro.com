@@ -287,43 +287,14 @@ spark.sql("""
 In order to test it I created 6 datasets with different sizes.
 The total execution times for the `python udf` and `java udf` are:
 
-<table class="v-table v-table-right" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">num_rows</th>
-    <th class="v-table-header">python [s]</th>
-    <th class="v-table-header">java [s]</th>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^3</td>
-    <td>2.348551</td>
-    <td>0.492574</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^4</td>
-    <td>3.140185</td>
-    <td>0.579370</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^5</td>
-    <td>3.876405</td>
-    <td>0.795821</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^6</td>
-    <td>5.552880</td>
-    <td>1.958956</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^7</td>
-    <td>24.151182</td>
-    <td>11.507726</td>
-  </tr>
-  <tr>
-    <td class="v-table-center">10^8</td>
-    <td>195.032587</td>
-    <td>88.875919</td>
-  </tr>
-</table>
+| num_rows | python [s] | java [s] |
+|:--------:|-----------:|---------:|
+| 10^3     |     2.3486 |   0.4926 |
+| 10^4     |     3.1402 |   0.5794 |
+| 10^5     |     3.8764 |   0.7958 |
+| 10^6     |     5.5529 |   1.9590 |
+| 10^7     |    24.1512 |  11.5077 |
+| 10^8     |   195.0326 |  88.8759 |
 
 As we expected the `java_udf` is faster than the `python_udf`.
 

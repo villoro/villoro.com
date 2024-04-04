@@ -80,24 +80,11 @@ That is why is important to preview, describe and summarize the data it contains
 One of the most basic things to do is to view a part of the data.
 The three most common functions to do so are:
 
-<table class="v-table" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">Function</th>
-    <th class="v-table-header">What it does</th>
-  </tr>
-  <tr>
-    <td>df.head(n)</td>
-    <td>Show first n rows</td>
-  </tr>
-  <tr>
-    <td>df.tail(n)</td>
-    <td>Show last n rows</td>
-  </tr>
-  <tr>
-    <td>df.sample(n)</td>
-    <td>Show a sample of n rows</td>
-  </tr>
-</table>
+| Function       | What it does            |
+|:--------------:|:-----------------------:|
+| `df.head(n)`   | Show first n rows       |
+| `df.tail(n)`   | Show last n rows        |
+| `df.sample(n)` | Show a sample of n rows |
 
 ### 2.2. Describe the dataframe
 
@@ -130,24 +117,11 @@ For example: `df["age"].head()`.
 
 There are also some functions to describe the column. The most important are:
 
-<table class="v-table" align="center">
-  <tr class="v-table-center">
-    <th class="v-table-header">Function</th>
-    <th class="v-table-header">What it does</th>
-  </tr>
-  <tr>
-    <td>df[column].head(n)</td>
-    <td>Show first n values</td>
-  </tr>
-  <tr>
-    <td>df[column].unique()</td>
-    <td>Show all unique values</td>
-  </tr>
-  <tr>
-    <td>df["Sex"].value_counts()</td>
-    <td>Show all unique values while counting how many times they appear</td>
-  </tr>
-</table>
+| Function                    | What it does                                                     |
+|:---------------------------:|:----------------------------------------------------------------:|
+| `df[column].head(n)`        | Show first n values                                              |
+| `df[column].unique()`       | Show all unique values                                           |
+| `df["Sex"].value_counts()`  | Show all unique values while counting how many times they appear |
 
 ### 2.4. Summarize
 
