@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "https://villoro.netlify.com/*"
+  to = "https://villoro.com/:splat"
+  status = 301
+
+[[redirects]]
+  from = "https://villoro.com/home"
+  to = "https://villoro.com"
+  status = 301
