@@ -1,3 +1,4 @@
+# General rules
 [[redirects]]
   from = "https://villoro.netlify.com/*"
   to = "https://villoro.com/:splat"
@@ -6,4 +7,112 @@
 [[redirects]]
   from = "https://villoro.com/home"
   to = "https://villoro.com"
+  status = 301
+
+
+[[redirects]]
+  from = "/post/xxxx"
+  to = "/blog/xxxx"
+  status = 301
+
+
+# Old posts
+[[redirects]]
+  from = "/post/personal_web"
+  to = "/blog/personal-webpage"
+  status = 301
+
+[[redirects]]
+  from = "/post/black"
+  to = "/blog/black-code-formatting"
+  status = 301
+
+[[redirects]]
+  from = "/post/sql_alchemy"
+  to = "/blog/sql-alchemy-python"
+  status = 301
+
+[[redirects]]
+  from = "/post/colors"
+  to = "/blog/material-colors-and-palettes"
+  status = 301
+
+[[redirects]]
+  from = "/post/strings_python"
+  to = "/blog/string-best-practices-with-python"
+  status = 301
+
+[[redirects]]
+  from = "/post/singleton"
+  to = "/blog/singleton-python"
+  status = 301
+
+[[redirects]]
+  from = "/post/blog_basic_tools"
+  to = "/blog/basic-tools-for-blogs"
+  status = 301
+
+[[redirects]]
+  from = "/post/static_webpage"
+  to = "/blog/create-static-website"
+  status = 301
+
+[[redirects]]
+  from = "/post/aws_ec2"
+  to = "/blog/creating-ec2-aws"
+  status = 301
+
+[[redirects]]
+  from = "/post/airflow"
+  to = "/blog/setting-up-airflow"
+  status = 301
+
+[[redirects]]
+  from = "/post/nginx_gunicorn"
+  to = "/blog/serving-python-app-nginx-gunicorn"
+  status = 301
+
+[[redirects]]
+  from = "/post/tables_format"
+  to = "/blog/storing-tables-efficiently-pandas"
+  status = 301
+
+[[redirects]]
+  from = "/post/intro_machine_learning"
+  to = "/blog/intro-machine-learning"
+  status = 301
+
+[[redirects]]
+  from = "/post/decorators"
+  to = "/blog/python-decorators"
+  status = 301
+
+[[redirects]]
+  from = "/post/aws_lambda"
+  to = "/blog/aws-lambdas-to-control-ec2"
+  status = 301
+
+[[redirects]]
+  from = "/post/pypi"
+  to = "/blog/creating-python-packages"
+  status = 301
+
+[[redirects]]
+  from = "/post/passwords_encryption"
+  to = "/blog/encrypting-secrets-python"
+  status = 301
+
+[[redirects]]
+  from = "/post/logging"
+  to = "/blog/python-logging"
+  status = 301
+
+[[redirects]]
+  from = "/post/numba"
+  to = "/blog/improve-python-performance-with-numba"
+  status = 301
+
+[[redirects]]
+  from = "/post/gitflow"
+  to = "/blog/using-gitflow"
   status = 301
