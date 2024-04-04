@@ -10,12 +10,6 @@
   status = 301
 
 
-[[redirects]]
-  from = "/post/xxxx"
-  to = "/blog/xxxx"
-  status = 301
-
-
 # Old posts
 [[redirects]]
   from = "/post/personal_web"
@@ -115,4 +109,89 @@
 [[redirects]]
   from = "/post/gitflow"
   to = "/blog/using-gitflow"
+  status = 301
+
+[[redirects]]
+  from = "/post/git_ssh"
+  to = "/blog/git-with-ssh"
+  status = 301
+
+[[redirects]]
+  from = "/post/google_analytics_etl"
+  to = "/blog/google-analytics-etl-python"
+  status = 301
+
+[[redirects]]
+  from = "/post/dropbox_python"
+  to = "/blog/dropbox-python"
+  status = 301
+
+[[redirects]]
+  from = "/post/pandas_intro"
+  to = "/blog/pandas-intro"
+  status = 301
+
+[[redirects]]
+  from = "/post/pyspark_intro"
+  to = "/blog/pyspark-intro"
+  status = 301
+
+[[redirects]]
+  from = "/post/h2o_automl"
+  to = "/blog/h2o-automl"
+  status = 301
+
+[[redirects]]
+  from = "/post/databricks"
+  to = "/blog/databricks-intro"
+  status = 301
+
+[[redirects]]
+  from = "/post/pyspark_example"
+  to = "/blog/pyspark-example"
+  status = 301
+
+[[redirects]]
+  from = "/post/luigi"
+  to = "/blog/luigi-orchestrator"
+  status = 301
+
+[[redirects]]
+  from = "/post/cmder"
+  to = "/blog/cmder-terminal-windows"
+  status = 301
+
+[[redirects]]
+  from = "/post/poetry"
+  to = "/blog/poetry-python-package-manager"
+  status = 301
+
+[[redirects]]
+  from = "/post/pre_commit"
+  to = "/blog/pre-commit"
+  status = 301
+
+[[redirects]]
+  from = "/post/python_environment_config"
+  to = "/blog/python-environmint-configuration"
+  status = 301
+
+[[redirects]]
+  from = "/post/pyspark_java_udf"
+  to = "/blog/java-udf-pyspark"
+  status = 301
+
+[[redirects]]
+  from = "/post/ing_api"
+  to = "/blog/ing-api-python"
+  status = 301
+
+[[redirects]]
+  from = "/post/regex"
+  to = "/blog/regex-python"
+  status = 301
+
+[[redirects]]
+  from = "/post/reading_from_redshift"
+  to = "/blog/reading-from-redshift-with-pyarrow"
   status = 301
