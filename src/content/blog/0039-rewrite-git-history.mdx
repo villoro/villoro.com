@@ -2,7 +2,7 @@
 slug: clean-repo-rewrite-git-history
 title: Clean repo by rewriting GIT history
 meta_title: Clean repo by rewriting GIT history
-description: xxx
+description: Discover how to clean up your Git history effortlessly with our step-by-step guide. Learn to eliminate unnecessary commits, maintain versioning consistency, and automate the process with Python scripts. Streamline your repository and enhance collaboration today!
 date: 2024-03-17
 image: "/images/blog/0039-git.png"
 tags: ["GIT"]
@@ -26,10 +26,12 @@ By rewriting Git history, you can eliminate unnecessary commits, squash related 
 
 ## 2. Step-by-Step Guide to Rewriting Git History
 
-<Notice type="alert">
+<Notice type="danger">
   Make sure to read all post before rewriting the history.
   This way you might be able to use the code at the end to automate the process.
 </Notice>
+
+Also you might want to read <FancyLink linkText="Git Rewriting History" url="https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History"/> 
 
 ### 2.1. Create a New main Branch
 
@@ -78,7 +80,7 @@ git push origin <tag_name> -f
 
 ## 3. Python Script for Automating the Process
 
-<Notice type="alert">
+<Notice type="danger">
   Before running the automated process I **strongly** suggest you first try it in a demo repository.
   Any problem or issue with the code will mean **losing important data that can't be recovered**.
 </Notice>
