@@ -6,42 +6,107 @@ description: xxx
 date: 2024-03-17
 image: "/images/blog/0039-git.png"
 tags: ["GIT"]
-draft: true
+draft: false
 ---
 
-1. Create new `main` branch
+## Table of Contents
 
-2. `Cherry pick` the oldest commit on `master`
+[TOC]
 
-3. Edit the new `commit` date with
+## 0. Motivation
+
+Maintaining a clean and organized Git history is crucial for project management and collaboration.
+Over time, repositories can become cluttered with unnecessary commits, making it challenging to track changes effectively.
+In this guide, we'll walk through the process of cleaning up your Git history by rewriting commits, ensuring a streamlined and efficient version control system.
+
+## 1. Why Clean Git History Matters
+
+A cluttered Git history can obscure meaningful changes and make it difficult for team members to understand the evolution of a project.
+By rewriting Git history, you can eliminate unnecessary commits, squash related changes into logical units, and improve the overall clarity and readability of your repository.
+
+## 2. Step-by-Step Guide to Rewriting Git History
+
+<Notice type="alert">
+  Make sure to read all post before rewriting the history.
+  This way you might be able to use the code at the end to automate the process.
+</Notice>
+
+### 2.1. Create a New main Branch
+
+To begin, create a new branch named `main` (or any preferred branch name) to perform the cleanup process without affecting the existing `master` branch.
+
+<Notice type="warning">
+  If you already had a `main` branch, rename it to `old_main` or something similar. Adapt the code in this post so that any reference to `master` is replaced by `old_main`
+</Notice>
+
+### 2.2. Cherry Pick the Oldest Commit on `master`
+
+Cherry pick the oldest commit from the `master` branch onto the new `main` branch using the following command:
 
 ```sh
-set GIT_COMMITTER_DATE=2018-10-07T11:37:00
-git commit --amend --no-edit --date="2018-10-07 11:37:00"
+git cherry-pick <commit_hash>
 ```
 
-4. Remove the `tag` from the `cherry picked` commit in `github` and locally
+<Notice type="info">
+  You might prefer using a git progrom such as <FancyLink linkText="Sublime Merge" url="https://www.sublimemerge.com/"/> instead.
+</Notice>
 
-5. Apply the `tag` to the newly created commit
+### 2.3. Edit the new `commit` date with
 
-6. Push new `tag` to `github`
+Modify the date of the newly cherry-picked commit to match the original commit date using the following commands:
+
+```sh
+export GIT_COMMITTER_DATE="YYYY-MM-DDTHH:MM:SS"
+git commit --amend --no-edit --date="YYYY-MM-DD HH:MM:SS"
+```
+
+### 2.4. Remove the Tag from the Cherry-Picked Commit
+
+Remove the tag associated with the cherry-picked commit both locally and on GitHub to avoid conflicts with the newly created commit.
+
+### 2.5. Apply the Tag to the Newly Created Commit
+
+Apply the tag to the newly created commit on the main branch to maintain versioning consistency.
+
+
+### 2.6. Push the New Tag to GitHub
+Ensure the updated tag is pushed to the remote repository on GitHub using the following command:
+
+```bash
+git push origin <tag_name> -f
+```
+
+## 3. Python Script for Automating the Process
+
+<Notice type="alert">
+  Before running the automated process I **strongly** suggest you first try it in a demo repository.
+  Any problem or issue with the code will mean **losing important data that can't be recovered**.
+</Notice>
+
+You can use `gitpython` and some `python` code to automate the process.
+To do so you will first need to install `gitpython` with:
 
 ```bash
 pip install gitpython
 ```
 
+Then you can use this script which:
+
+1. Export the current git history with all commits
+2. Creates a script (`commands.sh`) with the needed `git` commands to rewrite the history
 
 ```python
+# Python script for automating Git history cleanup
 import git
 import pandas as pd
 
-repo = git.Repo('/repo/path') # edit it
+# Initialize Git repository
+repo = git.Repo('/repo/path') # Update with your repository path
 
+# Extract commit information
 data = []
-
 for tag in repo.tags:
     commit = tag.commit
-
     data.append([
         tag.name,
         commit.hexsha,
@@ -49,12 +114,14 @@ for tag in repo.tags:
         commit.message,
     ])
 
+# Convert data to DataFrame
 df = pd.DataFrame(data, columns=["tag", "commit", "dt", "message"])
 df = df.sort_values("dt").reset_index(drop=True)
-df.to_csv("commits.csv") # Export it just in case something goes wron
-```
 
-```python
+# Export commit information to CSV
+df.to_csv("commits.csv") # Optional step, helps
+
+# Generate shell commands for executing Git operations
 COMMANDS = """
 git cherry-pick {commit} -m 1
 export GIT_COMMITTER_DATE="{datetime:%Y-%m-%dT%H:%M:%S}"
@@ -63,14 +130,19 @@ git tag -a {tag} -m "" -f
 git push origin {tag} -f
 """
 
+# Generate shell script for executing commands
 out = ""
 for _, row in df.iterrows():
     out += COMMANDS.format(**row)
 
+# Write commands to shell script
 with open("commands.sh", "w") as stream:
     stream.write(out)
-```
 
 ```
-sh commands.sh
-```
+
+Execute the generated shell script (`commands.sh`) to automate the Git history cleanup process.
+
+## 4. Conclusion
+
+By following these steps, you can effectively clean up your Git history and maintain a well-organized repository. Remember to review the changes carefully before pushing them to the remote repository. Embrace the power of Git's version control capabilities to enhance collaboration and project management within your development workflow.
