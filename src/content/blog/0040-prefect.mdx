@@ -16,7 +16,7 @@ draft: false
 
 [TOC]
 
-## Why Prefect?
+## 0. Why Prefect?
 
 Five years ago (on 2019) I created a pipeline that helps me automate some tasks (more info in <FancyLink linkText="Vtasks" url="https://github.com/villoro/vtasks" dark="true"/>).
 I created it using <FancyLink linkText="Airflow" url="https://airflow.apache.org/" company="airflow"/> (see how in <FancyLink linkText="Setting up Airflow" url="https://villoro.com/blog/setting-up-airflow/" dark="true"/>) since back in 2019 it was already the industry standard.
@@ -41,29 +41,32 @@ But `Prefect` is a project that is gaining a lot of popularity and it's posing i
   To quickly see the stars history of a repo you can use <FancyLink linkText="Stars History" url="https://star-history.com/"/>.
 </Notice>
 
-## Prefect Basics
+## 1. Prefect Basics
 
-## Connection to Prefect Cloud
+## 2. Connection to Prefect Cloud
 
-## Using Prefect Blocks
+## 3. Using Prefect Blocks
 
-## Setting up a Prefect Server
+## 4. Setting up a Prefect Server
 
-### Creating the Prefect Server
+### 4.1. Creating the Prefect Server
 
-### Creating a Prefect Worker
+<TerminalOutput color="stone">
+  /Dockerfile.server
+</TerminalOutput>
+```docker
+# Prefect version must match Dockerfile.worker and pyproject.toml
+FROM prefecthq/prefect:2.16-python3.10 as base
 
-### Running Both Containers
+# Set connection (format: `postgresql+asyncpg://{user}:{password}@{url}:{port}/prefect`)
+ARG DB_URL
+RUN prefect config set PREFECT_API_DATABASE_CONNECTION_URL="${DB_URL}"
+RUN prefect config set PREFECT_SERVER_API_HOST=0.0.0.0
 
-## Deployments
+CMD ["prefect", "server", "start"]
+```
 
-### Creating Deployments
-
-### Advanced Usage of Deployments
-
-## Prefect API with `prefect.client`
-
-
+### 4.2. Creating a Prefect Worker
 
 <TerminalOutput color="stone">
   /Dockerfile.worker
@@ -87,20 +90,11 @@ ENTRYPOINT prefect worker start --pool ${POOL_NAME}
   Make sure that the `prefect` versions match in both `Dockerfile`.
 </Notice>
 
-<TerminalOutput color="stone">
-  /Dockerfile.server
-</TerminalOutput>
-```docker
-# Prefect version must match Dockerfile.worker and pyproject.toml
-FROM prefecthq/prefect:2.16-python3.10 as base
+### 4.3. Running Both Containers
 
-# Set connection (format: `postgresql+asyncpg://{user}:{password}@{url}:{port}/prefect`)
-ARG DB_URL
-RUN prefect config set PREFECT_API_DATABASE_CONNECTION_URL="${DB_URL}"
-RUN prefect config set PREFECT_SERVER_API_HOST=0.0.0.0
+## 5. Deployments
 
-CMD ["prefect", "server", "start"]
-```
+### 5.1. Creating Deployments
 
 <TerminalOutput color="stone">
   /prefect.yaml
@@ -118,7 +112,7 @@ pull:
     stream_output: False
 ```
 
-
+### 5.2. Advanced Usage of Deployments
 
 ```yaml
 definitions:
@@ -158,6 +152,8 @@ definitions:
   schedule:
     cron: "0 3 * * *"
 ```
+
+## 6. Prefect flows examples
 
 <TerminalOutput color="stone">
   /src/common/prefect_utils.py
@@ -243,3 +239,5 @@ def athena_history(env: Literal["snd", "pro"]):
 def emr_history(env: Literal["snd", "pro"]):
     run_lambda(env, "nt-lambda-function-emr-history")
 ```
+
+## 7. Prefect API with `prefect.client`
