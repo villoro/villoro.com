@@ -21,7 +21,7 @@ It is easy to use and it is fast since it uses **C** under the hood.
 The 2 main disadvantatges is that it will try to fit all the information in the RAM memory so it has limits on the amounth of data it can work with.
 And it only uses one core of the computer so it might be possible to improve.
 
-The best source for information are the <FancyLink linkText="Pandas web" url="https://pandas.pydata.org/" company="pandas"/> and the <FancyLink linkText="Pandas documentation" url="https://pandas.pydata.org/pandas-docs/stable/user_guide/index.html" company="pandas"/>.
+The best source for information are the <FancyLink linkText="Pandas web" url="https://pandas.pydata.org/" company="pandas" dark="true"/> and the <FancyLink linkText="Pandas documentation" url="https://pandas.pydata.org/pandas-docs/stable/user_guide/index.html" company="pandas" dark="true"/>.
 
 This post will be an overview of the basic usage of this library.
 
@@ -53,7 +53,7 @@ df = pd.DataFrame({"A": range(5), "B": list("ABCDE")})
 
 ### 1.2. Read
 The most common reading function is `pd.read_csv`.
-But there are also functions to read almost everything (<FancyLink linkText="Pandas docs" url="https://pandas.pydata.org/pandas-docs/stable/reference/io.html" company="pandas"/>).
+But there are also functions to read almost everything (<FancyLink linkText="Pandas docs" url="https://pandas.pydata.org/pandas-docs/stable/reference/io.html" company="pandas" dark="true"/>).
 
 They are really easy to use since in general you only need the filename of the file you want to read:
 
@@ -65,7 +65,7 @@ df_iris = pd.read_excel("datasets/iris.xlsx")
 
 ### 1.3. Writte
 Dataframes have functions that allows you to export them to almost any format.
-For example you can export it to `parquet` (a really eficient file format, more info <FancyLink linkText="Storing tables efficiently with Pandas" url="https://villoro.com/blog/storing-tables-efficiently-pandas/"/>).
+For example you can export it to `parquet` (a really eficient file format, more info <FancyLink linkText="Storing tables efficiently with Pandas" url="https://villoro.com/blog/storing-tables-efficiently-pandas/" dark="true"/>).
 
 ```python
 df.to_parquet("datasets/output.parquet")
