@@ -5,32 +5,44 @@ import ImageMod from "./ImageMod.astro";
 
 const { blog_folder } = config.settings;
 const { data, loading } = Astro.props;
-const { title, image, date, tags } = data.data;
+const { title, image, image_dark, date, tags } = data.data;
 ---
 
 <div class="bg-body dark:bg-darkmode-body">
   <a href={`/${blog_folder}/${data.slug}`}>
     {
       image && (
-        <ImageMod
-          class="mb-6 w-full rounded"
-          src={image}
-          alt={title}
-          width={480}
-          height={360}
-          format="webp"
-          loading={loading}
-        />
+        <>
+          <ImageMod
+            src={image}
+            class={`mb-6 w-full rounded ${image_dark ? 'dark:hidden' : ''}`}
+            width={480}
+            height={360}
+            alt={title}
+            format="webp"
+            loading={loading}
+          />
+          {image_dark && (
+            <ImageMod
+              src={image_dark}
+              class={`mb-6 w-full rounded hidden dark:inline-block`}
+              width={480}
+              height={360}
+              alt={title}
+              format="webp"
+              loading={loading}
+            />
+          )}
+          <BlogDetails
+            date={date}
+            tags={tags}
+            className="bg-theme-light hover:bg-primary hover:text-white dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark"
+          />
+        </>
       )
     }
     <h4 class="mb-3 hover:text-primary dark:hover:text-darkmode-primary">
       {title}
     </h4>
   </a>
-
-  <BlogDetails
-    date={date}
-    tags={tags}
-    className="bg-theme-light hover:bg-primary hover:text-white dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark"
-  />
 </div>
