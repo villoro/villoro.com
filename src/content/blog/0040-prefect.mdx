@@ -1,0 +1,195 @@
+---
+slug: setting-up-prefect-server
+title: Setting up Prefect Server from scratch
+meta_title: Setting up Prefect Server
+description: xxxx
+date: 2024-04-09
+image: "/images/blog/0040-prefect.png"
+image_dark: "/images/blog/0040-prefect-dark.png"
+tags: ["Tools", "Orchestration"]
+draft: false
+---
+
+## Table of Contents
+
+[TOC]
+
+## 1. 
+
+<TerminalOutput color="stone">
+  /Dockerfile.worker
+</TerminalOutput>
+```docker
+# Prefect version must match Dockerfile.server and pyproject.toml
+FROM prefecthq/prefect:2.16-python3.10 as base
+
+# Connect to prefect
+ARG PREFECT_API_URL
+ENV PREFECT_API_URL=${PREFECT_API_URL}
+
+# Allow to config pool_name
+ARG POOL_NAME=subprocess-pool
+ENV POOL_NAME=${POOL_NAME}
+
+ENTRYPOINT prefect worker start --pool ${POOL_NAME}
+```
+
+<Notice type="warning">
+  Make sure that the `prefect` versions match in both `Dockerfile`.
+</Notice>
+
+<TerminalOutput color="stone">
+  /Dockerfile.server
+</TerminalOutput>
+```docker
+# Prefect version must match Dockerfile.worker and pyproject.toml
+FROM prefecthq/prefect:2.16-python3.10 as base
+
+# Set connection (format: `postgresql+asyncpg://{user}:{password}@{url}:{port}/prefect`)
+ARG DB_URL
+RUN prefect config set PREFECT_API_DATABASE_CONNECTION_URL="${DB_URL}"
+RUN prefect config set PREFECT_SERVER_API_HOST=0.0.0.0
+
+CMD ["prefect", "server", "start"]
+```
+
+<TerminalOutput color="stone">
+  /prefect.yaml
+</TerminalOutput>
+```yaml
+pull:
+- prefect.deployments.steps.git_clone:
+    id: clone-step
+    repository: https://github.com/github_user/repo.git
+    branch: main
+    credentials: "{{ prefect.blocks.github.github }}"
+- prefect.deployments.steps.pip_install_requirements:
+    requirements_file: requirements.txt
+    directory: "{{ clone-step.directory }}"
+    stream_output: False
+```
+
+
+
+```yaml
+definitions:
+  work_pools:
+    subprocess-pool: &subprocess-pool
+      name: subprocess-pool
+
+    version: &version
+      version: 0.4.3
+
+    # Define defaults (that can be overwritten)
+    defaults: &defaults
+      <<: *version
+      work_pool: *subprocess-pool
+      tags: ["type:prefect"]
+      schedule: {}
+```
+
+<Notice type="error">
+  TODO: explain better yaml replacements 
+</Notice>
+
+
+```yaml
+- name: lambdas.athena_history
+  <<: *defaults
+  description: Export Athena history with a lambda
+  entrypoint: prefect_northius/lambdas/lambdas.py:athena_history
+  tags: ["type:prefect", "group:lambda", "job:athena_history"]
+
+- name: lambdas.emr_history
+  <<: *defaults
+  description: Export EMR history with a lambda
+  entrypoint: prefect_northius/lambdas/lambdas.py:emr_history
+  tags: ["type:prefect", "group:lambda", "job:emr_history"]
+  schedule:
+    cron: "0 3 * * *"
+```
+
+<TerminalOutput color="stone">
+  /src/common/prefect_utils.py
+</TerminalOutput>
+```python
+import asyncio
+
+from prefect import get_run_logger
+from prefect.client import get_client
+from prefect.context import get_run_context
+
+
+def update_tags(tags):
+    logger = get_run_logger()
+    if not tags:
+        logger.warning("No tags passed to 'update_tags', nothing to do")
+        return True
+
+    logger.info(f"Adding {tags=} to current flow_run")
+
+    # Read current flow
+    flow_run = get_run_context().flow_run
+    tags += flow_run.tags
+
+    client = get_client()
+    asyncio.run(client.update_flow_run(flow_run.id, tags=set(tags)))
+    return True
+
+```
+
+<TerminalOutput color="stone">
+  /src/lambdas/base.py
+</TerminalOutput>
+```python
+from prefect import get_run_logger
+from prefect import task
+
+from src.common.session import get_session
+
+
+@task(name="prefect.lambdas.run")
+def _run_lambda(client, name):
+    logger = get_run_logger()
+
+    response = client.invoke(
+        FunctionName=name,
+        InvocationType="RequestResponse",
+        LogType="None",
+    )
+
+    if (status_code := response["StatusCode"]) == 200:
+        logger.info(f"Lambda {name=} completed successfully")
+        return True
+
+    logger.error(f"Lambda {name=} failed with {status_code=}")
+
+
+def run_lambda(env, name):
+    logger = get_run_logger()
+    logger.info(f"Running lambda {name=} in {env=}")
+
+    client = get_session(env).client("lambda")
+    _run_lambda(client, name)
+```
+
+<TerminalOutput color="stone">
+  /src/lambdas/lambdas.py
+</TerminalOutput>
+```python
+from typing import Literal
+
+from prefect import flow
+
+from prefect_northius.lambdas.base import run_lambda
+
+
+@flow(name="prefect.lambdas.athena_history")
+def athena_history(env: Literal["snd", "pro"]):
+    run_lambda(env, "nt-lambda-function-athena-history")
+
+
+@flow(name="prefect.lambdas.emr_history")
+def emr_history(env: Literal["snd", "pro"]):
+    run_lambda(env, "nt-lambda-function-emr-history")
+```
