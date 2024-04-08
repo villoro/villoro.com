@@ -8,6 +8,7 @@ description: |
   It will give some best practices for working with data of this size.
 date: 2019-12-24
 image: "/images/blog/0028-spark_example.png"
+image_dark: "/images/blog/0028-spark_example-dark.png"
 tags: ["Python", "Spark"]
 draft: false
 ---
@@ -22,12 +23,12 @@ draft: false
 
 This post about pyspark will work with one example that should be too big to work with pandas.
 
-Be sure to read <FancyLink linkText="Pyspark Intro" url="https://villoro.com/blog/pyspark-intro/"/> before proceding with this post.
+Be sure to read <FancyLink linkText="Pyspark Intro" url="https://villoro.com/blog/pyspark-intro/" dark="true"/> before proceding with this post.
 
 ## 1. Get data
 
 For this example we need to download a table that is really big.
-We would use open data from <FancyLink linkText="Catalunya" url="https://en.wikipedia.org/wiki/Catalonia"/>.
+We would use open data from <FancyLink linkText="Catalunya" url="https://en.wikipedia.org/wiki/Catalonia" dark="true"/>.
 
 <Notice type="warning">
   This dataset is quite big, it might take some hours to download.
@@ -163,7 +164,7 @@ sdf_stations[sdf_stations["NOM_ESTACIO"].startswith("Ull")].toPandas()
 ```
 
 This gives 5 results.
-Two of them are from <FancyLink linkText="Ulldemolins" url="https://en.wikipedia.org/wiki/Ulldemolins"/>, one station that was closed on 2008 and the new one with the code `XD`.
+Two of them are from <FancyLink linkText="Ulldemolins" url="https://en.wikipedia.org/wiki/Ulldemolins" dark="true"/>, one station that was closed on 2008 and the new one with the code `XD`.
 
 So let's join the tables with the data and the one with the variable definitions.
 
