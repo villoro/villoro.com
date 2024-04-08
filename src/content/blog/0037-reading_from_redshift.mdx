@@ -147,7 +147,7 @@ dataset = pq.ParquetDataset(path, validate_schema=False, filter=mfilters)
 
 ### 3.4. Using pyarrow dataset (`pyarrow_ds_read`)
 
-With the release of <FancyLink linkText="Pyarrow 3.0.0" url="https://arrow.apache.org/release/3.0.0.html" company="arrow"/> (released on 2021-01-26) a new way of reading parquets was introduced.
+With the release of <FancyLink linkText="Pyarrow 3.0.0" url="https://arrow.apache.org/release/3.0.0.html" company="arrow" dark="true"/> (released on 2021-01-26) a new way of reading parquets was introduced.
 The idea is to use the new `pyarrow.dataset` to create a table which can then be transformed into a **pandas** dataframe.
 
 This can be done with:
@@ -273,7 +273,7 @@ In this case we see how the new `pyarrow.dataset` introduced in **pyarrow 3.0.0*
 What is happening is that pyarrow is able to push down the filter and take advantage of how parquet files are actually written.
 That means that **pyarrow** is only retriving some `row_groups` and therefore less data needs to be read.
 
-You can find more info about how parquet files are written in <FancyLink linkText="How Parquet Files are Written" url="http://cloudsqale.com/2020/05/29/how-parquet-files-are-written-row-groups-pages-required-memory-and-flush-operations/" company="default"/>.
+You can find more info about how parquet files are written in <FancyLink linkText="How Parquet Files are Written" url="http://cloudsqale.com/2020/05/29/how-parquet-files-are-written-row-groups-pages-required-memory-and-flush-operations/" company="default" dark="true"/>.
 
 ## 6. Conclusions
 
