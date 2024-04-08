@@ -1,7 +1,7 @@
 ---
-slug: setting-up-prefect-server
-title: Setting up Prefect Server from scratch
-meta_title: Setting up Prefect Server
+slug: setting-up-prefect-orchestrator
+title: Setting up Prefect Orchestrator from scratch
+meta_title: Setting up Prefect Orchestrator
 description: xxxx
 date: 2024-04-09
 image: "/images/blog/0040-prefect.png"
@@ -10,11 +10,35 @@ tags: ["Tools", "Orchestration"]
 draft: false
 ---
 
+<script type="module" src="/js/posts/0040-plots-prefect.js"></script>
+
 ## Table of Contents
 
 [TOC]
 
-## 1. 
+## Prefect Basics
+
+## Using prefect blocks
+
+## Connection to prefect cloud
+
+## Setting up a prefect server
+
+### Creating the prefect server
+
+### Creating a prefect worker
+
+## Creating deployments
+
+## Advanced usage of deployments
+
+## Prefect API with `prefect.client`
+
+
+<canvas id="plot-github-stars" style="width:100%;height:300px;"></canvas>
+
+https://github.com/emanuelef/daily-stars-explorer
+https://star-history.com/
 
 <TerminalOutput color="stone">
   /Dockerfile.worker
@@ -92,18 +116,20 @@ definitions:
   TODO: explain better yaml replacements 
 </Notice>
 
-
+<TerminalOutput color="stone">
+  /prefect.yaml
+</TerminalOutput>
 ```yaml
 - name: lambdas.athena_history
   <<: *defaults
   description: Export Athena history with a lambda
-  entrypoint: prefect_northius/lambdas/lambdas.py:athena_history
+  entrypoint: src/lambdas/lambdas.py:athena_history
   tags: ["type:prefect", "group:lambda", "job:athena_history"]
 
 - name: lambdas.emr_history
   <<: *defaults
   description: Export EMR history with a lambda
-  entrypoint: prefect_northius/lambdas/lambdas.py:emr_history
+  entrypoint: src/lambdas/lambdas.py:emr_history
   tags: ["type:prefect", "group:lambda", "job:emr_history"]
   schedule:
     cron: "0 3 * * *"
