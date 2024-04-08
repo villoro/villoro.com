@@ -16,6 +16,31 @@ draft: false
 
 [TOC]
 
+## Why Prefect?
+
+Five years ago (on 2019) I created a pipeline that helps me automate some tasks (more info in <FancyLink linkText="Vtasks" url="https://github.com/villoro/vtasks" dark="true"/>).
+I created it using <FancyLink linkText="Airflow" url="https://airflow.apache.org/" company="airflow"/> (see how in <FancyLink linkText="Setting up Airflow" url="https://villoro.com/blog/setting-up-airflow/" dark="true"/>) since back in 2019 it was already the industry standard.
+But I was not satisfied with it since it's more complex than I'd like.
+This is why I switched to <FancyLink linkText="Luigi" url="https://github.com/spotify/luigi" dark="true"/> (see how in <FancyLink linkText="Luigi orchestrator" url="https://villoro.com/blog/luigi-orchestrator/" dark="true"/>)
+
+It worked better for me but I was still lacking some features, such as being able to create DAGs dynamically based on the input parameters.
+Luckily I discovered <FancyLink linkText="Prefect" url="https://www.prefect.io/" dark="true"/> which is exactly what I wanted:
+
+* Super simple to start with
+* Very flexible
+
+And so I started using <FancyLink linkText="Prefect" url="https://www.prefect.io/" dark="true"/> for my pipeline and I fell in love very fast.
+
+Finally, you might be hesitant to use a new tool without a lot of support.
+But `Prefect` is a project that is gaining a lot of popularity and it's posing itself as the top `Airflow` alternative, as it can be seen by the github stars of all the most relevant orchestrators:
+
+<canvas id="plot-github-stars" style="width:100%;height:300px;"></canvas>
+
+<Notice type="warning" className="mt-6">
+  Github Stars extracted using <FancyLink linkText="Daily Stars explorer" url="https://github.com/emanuelef/daily-stars-explorer"/>.
+  To quickly see the stars history of a repo you can use <FancyLink linkText="Stars History" url="https://star-history.com/"/>.
+</Notice>
+
 ## Prefect Basics
 
 ## Connection to Prefect Cloud
@@ -38,12 +63,6 @@ draft: false
 
 ## Prefect API with `prefect.client`
 
-
-<canvas id="plot-github-stars" style="width:100%;height:300px;"></canvas>
-
-<FancyLink linkText="Daily Stars explorer" url="https://github.com/emanuelef/daily-stars-explorer"/>
-
-<FancyLink linkText="Stars History" url="https://star-history.com/"/>
 
 
 <TerminalOutput color="stone">
