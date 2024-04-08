@@ -4,6 +4,7 @@ import BlogCard from "@/components/BlogCard.astro";
 import BlogTags from "@/components/BlogTags.astro";
 import Base from "@/layouts/Base.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
+import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getTaxonomy } from "@/lib/taxonomyParser.astro";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
 const { blog_folder } = config.settings;
@@ -25,6 +26,7 @@ const { tag } = Astro.params;
 // get items by tag
 const items = await getSinglePage(blog_folder);
 const filterByTags = taxonomyFilter(items, "tags", tag!);
+const sortedPosts = sortByDate(filterByTags);
 ---
 
 <Base title={"Tag " + tag}>
@@ -35,7 +37,7 @@ const filterByTags = taxonomyFilter(items, "tags", tag!);
     <div class="container">
       <div class="row">
         {
-          filterByTags.map((item, index) => (
+          sortedPosts.map((item, index) => (
             <div class="mb-14 md:col-6 lg:col-4" key={index}>
               <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
             </div>
