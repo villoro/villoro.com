@@ -43,6 +43,107 @@ But `Prefect` is a project that is gaining a lot of popularity and it's posing i
 
 ## 1. Prefect Basics
 
+The first thing to do is to install `prefect` with:
+
+```sh
+pip install prefect
+```
+
+Then you are ready to create your first `flow` (this is how `prefect` refers to a `DAG`) with a simple decorator:
+
+<TerminalOutput color="stone">
+  /main.py
+</TerminalOutput>
+```python
+from prefect import flow
+
+@flow
+def greet(name):
+    print(f"Hello {name}")
+
+if __name__ == '__main__':
+    greet("John")
+```
+
+And now you can run the `flow` with
+
+```sh
+python main.py
+```
+
+### 1.1. Adding `tasks` and `subflows`
+
+In prefect you can add `tasks` to be run inside a `flow`.
+`tasks` work similarly to `flows` since they are also defined with a decorator:
+
+<TerminalOutput color="stone">
+  /main.py
+</TerminalOutput>
+```python
+from prefect import flow
+from prefect import task
+
+@task
+def greet(name):
+    print(f"Hello {name}")
+
+@flow
+def good_morning():
+    greet("John")
+    greet("Sam")
+
+if __name__ == '__main__':
+    good_morning()
+```
+
+<Notice type="info" className="mt-6">
+  A `flow` can call another `flow` and you can have as many layers as you want of `flows` calling `flows` inside them.
+</Notice>
+
+So you could change the code above to:
+<TerminalOutput color="stone">
+  /main.py
+</TerminalOutput>
+```python
+from prefect import flow
+
+@flow # Now this is a flow
+def greet(name):
+    print(f"Hello {name}")
+
+@flow
+def good_morning():
+    greet("John")
+    greet("Sam")
+
+if __name__ == '__main__':
+    good_morning()
+```
+
+<Notice type="warning" className="mt-6">
+  A `task` **cannot** call another `task` inside itself.
+</Notice>
+
+### 1.2. Adding `logs`
+
+To add `logs` linked to `prefect` you need to:
+
+```python
+from prefect import flow
+from prefect import get_run_logger
+
+@flow
+def greet(name):
+    logger = get_run_logger()
+    logger.info(f"Hello {name}")
+
+if __name__ == '__main__':
+    greet("John")
+```
+<Notice type="error">
+  `get_run_logger()` **must** be called inside a `task` or a `flow`, else it will fail.
+</Notice>
+
 ## 2. Connection to Prefect Cloud
 
 ## 3. Using Prefect Blocks
