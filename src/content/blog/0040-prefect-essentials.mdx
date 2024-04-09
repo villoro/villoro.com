@@ -319,3 +319,72 @@ if __name__ == '__main__':
 ```
 
 ### 5.2. Querying `prefect` for conditional `flows`
+
+You can query any `prefect` entity with the `prefect.client` like:
+
+* `flows`
+* `flow_runs`
+* `tasks`
+
+For example for querying `flow_runs` we would use something like:
+
+```python
+from prefect.client import get_client
+from prefect.orion.schemas import filters
+from prefect.orion.schemas import sorting
+
+async def read_flow_runs(flow_run_filter=None, sort=sorting.FlowRunSort.START_TIME_DESC):
+    """
+    Asynchronously retrieves flow runs with query limits.
+
+    Args:
+        offset (int): Offset for paginating the results.
+        flow_run_filter (prefect.orion.schemas.filters.FlowRunFilter, optional): Filter for flow runs. Defaults to None.
+        sort (prefect.orion.schemas.sorting.FlowRunSort, optional): Sorting options. Defaults to sorting.FlowRunSort.START_TIME_DESC.
+
+    Returns:
+        list: List of flow runs.
+    """
+    client = get_client()
+    return await client.read_flow_runs(flow_run_filter=flow_run_filter, sort=sort)
+```
+
+We can use the `flow_run_filter` to filter the `flow_runs` we want to get.
+It is a little bit complex since you need to use the `filter` from `prefect.orion.schemas`.
+
+For example:
+```python
+async def query_flow_runs(name_like, env, state_names, start_time_min)
+    filter_params = {
+        "name": filters.FlowRunFilterName(like_=name_like),
+        "tags": filters.FlowRunFilterTags(all_=[f"env:{env}"]),
+        "state": filters.FlowRunFilterState(
+            name=filters.FlowRunFilterStateName(any_=state_names)
+        ),
+        "start_time": filters.FlowRunFilterStartTime(after_=start_time_min),
+    }
+
+    flow_run_filter = filters.FlowRunFilter(**filter_params)
+    return await read_flow_runs(flow_run_filter)
+```
+
+Finally with that we can use that to see if we have already run a `flow` with:
+
+```python
+from datetime import datetime, timedelta
+
+flow_runs = asyncio.run(
+    query_flow_runs(
+       name_like="vtasks.gcal.summary",
+       env="pro",
+       start_time_min=datetime.now() - timedelta(days=1)
+    )
+)
+
+if flow_runs:
+    do_something()
+```
+
+<Notice type="success" className="mt-6">
+  This is very useful when you have a pipeline that executes multiple times a day and you don't want to run a `flow`/`task` each time but only once if it hasn't been done in less than a day.
+</Notice>
