@@ -1,179 +1,17 @@
 ---
-slug: setting-up-prefect-orchestrator
-title: Setting up Prefect Orchestrator from scratch
-meta_title: Setting up Prefect Orchestrator
+slug: prefect-server-setup
+title: "Prefect Server Setup: Configuration and Deployment"
+meta_title: Prefect Server Setup
 description: xxxx
 date: 2024-04-09
-image: "/images/blog/0040-prefect.png"
-image_dark: "/images/blog/0040-prefect-dark.png"
+image: "/images/blog/0041-prefect-server.jpg"
 tags: ["Tools", "Orchestration"]
 draft: false
 ---
 
-<script type="module" src="/js/posts/0040-plots-prefect.js"></script>
-
 ## Table of Contents
 
 [TOC]
-
-## 0. Why Prefect?
-
-Five years ago (on 2019) I created a pipeline that helps me automate some tasks (more info in <FancyLink linkText="Vtasks" url="https://github.com/villoro/vtasks" dark="true"/>).
-I created it using <FancyLink linkText="Airflow" url="https://airflow.apache.org/" company="airflow"/> (see how in <FancyLink linkText="Setting up Airflow" url="https://villoro.com/blog/setting-up-airflow/" dark="true"/>) since back in 2019 it was already the industry standard.
-But I was not satisfied with it since it's more complex than I'd like.
-This is why I switched to <FancyLink linkText="Luigi" url="https://github.com/spotify/luigi" dark="true"/> (see how in <FancyLink linkText="Luigi orchestrator" url="https://villoro.com/blog/luigi-orchestrator/" dark="true"/>)
-
-It worked better for me but I was still lacking some features, such as being able to create DAGs dynamically based on the input parameters.
-Luckily I discovered <FancyLink linkText="Prefect" url="https://www.prefect.io/" dark="true"/> which is exactly what I wanted:
-
-* Super simple to start with
-* Very flexible
-
-And so I started using <FancyLink linkText="Prefect" url="https://www.prefect.io/" dark="true"/> for my pipeline and I fell in love very fast.
-
-Finally, you might be hesitant to use a new tool without a lot of support.
-But `Prefect` is a project that is gaining a lot of popularity and it's posing itself as the top `Airflow` alternative, as it can be seen by the github stars of all the most relevant orchestrators:
-
-<canvas id="plot-github-stars" style="width:100%;height:300px;"></canvas>
-
-<Notice type="warning" className="mt-6">
-  Github Stars extracted using <FancyLink linkText="Daily Stars explorer" url="https://github.com/emanuelef/daily-stars-explorer"/>.
-  To quickly see the stars history of a repo you can use <FancyLink linkText="Stars History" url="https://star-history.com/"/>.
-</Notice>
-
-## 1. Prefect Basics
-
-<Notice type="info">
-  If you want a more in depth intro to **Prefect** basics you can read <FancyLink linkText="Prefect Quickstart" url="https://docs.prefect.io/latest/getting-started/quickstart/" dark="true"/> instead.
-</Notice>
-
-The first thing to do is to install `prefect` with:
-
-```sh
-pip install prefect
-```
-
-Then you are ready to create your first `flow` (this is how `prefect` refers to a `DAG`) with a simple decorator:
-
-<TerminalOutput color="stone">
-  /main.py
-</TerminalOutput>
-```python
-from prefect import flow
-
-@flow
-def greet(name):
-    print(f"Hello {name}")
-
-if __name__ == '__main__':
-    greet("John")
-```
-
-And now you can run the `flow` with
-
-```sh
-python main.py
-```
-
-### 1.1. Adding `tasks` and `subflows`
-
-In prefect you can add `tasks` to be run inside a `flow`.
-`tasks` work similarly to `flows` since they are also defined with a decorator:
-
-<TerminalOutput color="stone">
-  /main.py
-</TerminalOutput>
-```python
-from prefect import flow
-from prefect import task
-
-@task
-def greet(name):
-    print(f"Hello {name}")
-
-@flow
-def good_morning():
-    greet("John")
-    greet("Sam")
-
-if __name__ == '__main__':
-    good_morning()
-```
-
-<Notice type="info" className="mt-6">
-  A `flow` can call another `flow` and you can have as many layers as you want of `flows` calling `flows` inside them.
-</Notice>
-
-So you could change the code above to:
-<TerminalOutput color="stone">
-  /main.py
-</TerminalOutput>
-```python
-from prefect import flow
-
-@flow # Now this is a flow
-def greet(name):
-    print(f"Hello {name}")
-
-@flow
-def good_morning():
-    greet("John")
-    greet("Sam")
-
-if __name__ == '__main__':
-    good_morning()
-```
-
-<Notice type="warning" className="mt-6">
-  A `task` **cannot** call another `task` inside itself.
-</Notice>
-
-### 1.2. Adding `logs`
-
-To add `logs` linked to `prefect` you need to:
-
-```python
-from prefect import flow
-from prefect import get_run_logger
-
-@flow
-def greet(name):
-    logger = get_run_logger()
-    logger.info(f"Hello {name}")
-
-if __name__ == '__main__':
-    greet("John")
-```
-<Notice type="error">
-  `get_run_logger()` **must** be called inside a `task` or a `flow`, else it will fail.
-</Notice>
-
-## 2. Connection to Prefect Cloud
-
-With the example we did `prefect` run locally with a local database it created.
-This is useful for testing but you shouldn't be running jobs in production without a server.
-
-To connect to `prefect cloud` you can do it with: 
-
-```sh
-prefect cloud login
-```
-
-This will open an internet window where you will be asked to log in.
-Since this won't work well on automated processes, the alternative is to create a `prefect token`
-
-```sh
-prefect cloud login -k your_token
-```
-<Notice type="error">
-  Make sure to replace `your_token`. Prefect tokens usually start with `pnu_`
-</Notice>
-
-<Notice type="info" className="mt-6">
-  In some cases you might run into problems because `prefect` is still using the defaults settings.
-  To clean them out, go to `~/.prefect` and delete the files that are there.
-  **Important:** this will delete the local database with the information of the `flows` you just run.
-</Notice>
 
 ## 3. Using Prefect Blocks
 
@@ -259,7 +97,7 @@ However the `server` won't be able to run any flow without a `worker`.
 
 The first thing we need is to create a `Work Pool` so that the `Worker` we will create can join it.
 
-![Create Prefect Work Pool](../../images/posts/2024/0040-prefect-work-pool.jpg)
+![Create Prefect Work Pool](../../images/posts/2024/0041-prefect-work-pool.jpg)
 
 <TerminalOutput color="stone">
   /Dockerfile.worker
