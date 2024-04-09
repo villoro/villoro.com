@@ -24,6 +24,11 @@
     "page_name": "page"
   },
 
+  "subscribe": {
+    "link": "http://eepurl.com/ghAetb",
+    "title": "Join mailing list"
+  },
+
   "metadata": {
     "meta_author": "Arnau Villoro",
     "meta_description": "Villoro's personal website"
