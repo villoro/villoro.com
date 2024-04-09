@@ -43,6 +43,10 @@ But `Prefect` is a project that is gaining a lot of popularity and it's posing i
 
 ## 1. Prefect Basics
 
+<Notice type="info">
+  If you want a more in depth intro to **Prefect** basics you can read <FancyLink linkText="Prefect Quickstart" url="https://docs.prefect.io/latest/getting-started/quickstart/" dark="true"/> instead.
+</Notice>
+
 The first thing to do is to install `prefect` with:
 
 ```sh
@@ -146,9 +150,49 @@ if __name__ == '__main__':
 
 ## 2. Connection to Prefect Cloud
 
+With the example we did `prefect` run locally with a local database it created.
+This is useful for testing but you shouldn't be running jobs in production without a server.
+
+To connect to `prefect cloud` you can do it with: 
+
+```sh
+prefect cloud login
+```
+
+This will open an internet window where you will be asked to log in.
+Since this won't work well on automated processes, the alternative is to create a `prefect token`
+
+```sh
+prefect cloud login -k your_token
+```
+<Notice type="error">
+  Make sure to replace `your_token`. Prefect tokens usually start with `pnu_`
+</Notice>
+
+<Notice type="info" className="mt-6">
+  In some cases you might run into problems because `prefect` is still using the defaults settings.
+  To clean them out, go to `~/.prefect` and delete the files that are there.
+  **Important:** this will delete the local database with the information of the `flows` you just run.
+</Notice>
+
 ## 3. Using Prefect Blocks
 
+You can use <FancyLink linkText="Prefect Blocks" url="https://docs.prefect.io/latest/concepts/blocks/" dark="true"/> to set up connections to external tools.
+For example you can use the `Slack Block` to store a `Slack webhook`.
+Once done you can send `slack` messages by simply running:
+
+```python
+from prefect.blocks.notifications import SlackWebhook
+
+slack_webhook_block = SlackWebhook.load("slack") # The name of the block you just created
+slack_webhook_block.notify("Hello from Prefect!")
+```
+
+This is how I recommend storing `Github` and `AWS` credentials needed for this tutorial.
+
 ## 4. Setting up a Prefect Server
+
+
 
 ### 4.1. Creating the Prefect Server
 
