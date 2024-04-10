@@ -3,32 +3,25 @@ slug: prefect-server-setup
 title: "Prefect Server Setup: Configuration and Deployment"
 meta_title: Prefect Server Setup
 description: xxxx
-date: 2024-04-09
+date: 2024-04-10
 image: "/images/blog/0041-prefect-server.jpg"
 tags: ["Tools", "Orchestration"]
-draft: true
+draft: false
 ---
 
 ## Table of Contents
 
 [TOC]
 
-## 3. Using Prefect Blocks
+## 0. Intro
 
-You can use <FancyLink linkText="Prefect Blocks" url="https://docs.prefect.io/latest/concepts/blocks/" dark="true"/> to set up connections to external tools.
-For example you can use the `Slack Block` to store a `Slack webhook`.
-Once done you can send `slack` messages by simply running:
+XXXX
 
-```python
-from prefect.blocks.notifications import SlackWebhook
-
-slack_webhook_block = SlackWebhook.load("slack") # The name of the block you just created
-slack_webhook_block.notify("Hello from Prefect!")
-```
+<FancyLink linkText="Prefect Essentials: Basics, Setup and Migration" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/>
 
 This is how I recommend storing `Github` and `AWS` credentials needed for this tutorial.
 
-## 4. Setting up a Prefect Server
+## 1. Setting up a Prefect Server
 
 <Notice type="info">
   This section is based on <FancyLink linkText="Hosting a Prefect server instance" url="https://docs.prefect.io/latest/guides/host/" dark="true"/> guide.
@@ -127,9 +120,9 @@ docker build --build-arg PREFECT_API_URL=XXX -f Dockerfile.worker -t northius/pr
 
 ### 4.3. Running Both Containers
 
-## 5. Deployments
+## 2. Deployments
 
-### 5.1. Creating Deployments
+### 2.1. Creating Deployments
 
 <TerminalOutput color="stone">
   /prefect.yaml
@@ -147,7 +140,7 @@ pull:
     stream_output: False
 ```
 
-### 5.2. Advanced Usage of Deployments
+### 2.2. Advanced Usage of Deployments
 
 ```yaml
 definitions:
@@ -188,7 +181,19 @@ definitions:
     cron: "0 3 * * *"
 ```
 
-## 6. Prefect flows examples
+### 2.3. Deploying `deployments`
+
+#### 2.3.1. Manual deploy
+
+#### 2.3.2. Deploys in CD
+
+## 3. Connect to prefect server
+
+### 3.1. Connect EMR
+
+### 3.2. Connect DBT
+
+## 3. Prefect flows examples
 
 <TerminalOutput color="stone">
   /src/common/prefect_utils.py

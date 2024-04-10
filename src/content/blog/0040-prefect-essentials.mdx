@@ -242,7 +242,28 @@ They in turn have different tasks inside:
   └── ...
 ```
 
-## 5. Using `prefect.client`
+## 5. Migrating to `prefect`
+
+I think that migrating from another orquestrator to `prefect` can be easily done in incremental steps:
+
+1. Track executions
+2. Set up a `Prefect Server` (this is optional, you can use `Prefect cloud` instead)
+3. Create `deployments` so that you can trigger executions from `prefect`
+4. Schedule `flows` with `prefect`
+
+The idea behind those steps is to be able to test `prefect` and see if it indeeds suits better your needs compared to other solutions.
+
+### 5.1. Track executions with `prefect`
+
+
+### 5.2. Set up a `Prefect server`
+
+### 5.3. Create `deployments` for running `flows`
+
+### 5.4. Schedule `flows` with `prefect`
+
+
+## 6. Using `prefect.client`
 
 We can use `prefect.client` to interact with the Prefect API.
 This allows us to do very powerful things like:
@@ -256,7 +277,7 @@ That means you will need to do one of the following:
 1. Defining `async` functions whenever interact with it
 2. Calling `asyncio.run()` (or `await` if you are in a Jupyter Notebook)
 
-### 5.1. Updating `tags` at runtime
+### 6.1. Updating `tags` at runtime
 
 In general `tags` are defined prior to a `flow_run`.
 However, it is possible to modify those tags at runtime.
