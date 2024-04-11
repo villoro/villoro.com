@@ -242,7 +242,100 @@ They in turn have different tasks inside:
   └── ...
 ```
 
-## 5. Using `prefect.client`
+## 5. Migrating to `prefect`
+
+I think that migrating from another orchestrator to Prefect can be easily done in incremental steps:
+
+1. Track executions
+2. Set up a Prefect Server (this is optional, you can use Prefect cloud instead)
+3. Create deployments so that you can trigger executions from Prefect
+4. Schedule flows with Prefect
+
+The idea behind those steps is to be able to test Prefect and see if it indeed suits your needs better compared to other solutions.
+
+### 5.1. Track executions with `prefect`
+
+This first step towards implementing Prefect is to add some flows in any Python code you have.
+The idea is to use Prefect only for observability purposes so that you have a centralized place from where you can:
+
+* See logs
+* Track flows/tasks outcomes
+* Have notifications for failures
+
+<Notice type="success">
+  This won't interfere with any existing orchestrator.
+</Notice>
+
+So for example let's imagine that you use Airflow for triggering EMR jobs.
+Here what you would do is to add Prefect decorators to the code that runs in EMR.
+
+For example you could have the following flows:
+
+```plaintext
+- my_emr_job
+  ├── my_emr_job.read
+  ├── my_emr_job.transform
+  │   ├── my_emr_job.transform.rename
+  │   └── my_emr_job.transform.cast
+  └── my_emr_job.write
+```
+
+This is just a dummy example but it helps to illustrate how you could add better observability.
+
+### 5.2. Set up a `Prefect server`
+
+At this point, you will need to decide if you want to set up your Prefect server.
+If you want to do so you can read how in <FancyLink linkText="Prefect Server Setup: Configuration and Deployment" url="https://villoro.com/blog/prefect-server-setup/" dark="true"/>.
+
+You can always start creating your Prefect server and then migrate to Prefect cloud or the other way around.
+
+### 5.3. Create `deployments` for running `flows`
+
+In this step, you will create `Deployments` for the `flows` you want to be able to trigger from Prefect.
+
+This will allow you to perform `backfills` or any other manual run using Prefect UI.
+
+<Notice type="success">
+  Again, this won't interfere with any existing orchestrator.
+  It will only provide another way of manually triggering `flows`.
+</Notice>
+
+As an example, see how you can use `dropdowns`, `date pickers`, default values and other nice features that simplify triggering manual runs:
+
+![Create Prefect Work Pool](../../images/posts/2024/0040-prefect-deployments-parameters.png)
+
+This is automatically created as long as you properly define the parameters in your flow.
+This is the code for the example above:
+
+```python
+from datetime import datetime
+from typing import Literal
+
+@flow(name="prefect.emr.salesforce.sf_export")
+def sf_export(
+    env: Literal["pre", "snd", "pro"],
+    select: str = None,
+    exclude: str = None,
+    min_date: datetime = None,
+    max_date: datetime = None,
+    timeout_mins: int = 150,
+    version: str = "latest",
+):
+```
+
+In order to see how to create the `Deployments` themselves, read <FancyLink linkText="Prefect Server Setup: Configuration and Deployment | Deployments" url="https://villoro.com/blog/prefect-server-setup#2-deployments" dark="true"/>
+
+### 5.4. Schedule `flows` with `prefect`
+
+The last step is to finally use Prefect for scheduling the  `flows`.
+
+<Notice type="warning">
+  Now is the time to finally switch to `Prefect` and to deprecate any other orchestrator you might have.
+</Notice>
+
+To see how to schedule `flows`, go to <FancyLink linkText="Prefect Server Setup: Configuration and Deployment | Deployments" url="https://villoro.com/blog/prefect-server-setup#2-deployments" dark="true"/>
+
+## 6. Using `prefect.client`
 
 We can use `prefect.client` to interact with the Prefect API.
 This allows us to do very powerful things like:
@@ -256,7 +349,7 @@ That means you will need to do one of the following:
 1. Defining `async` functions whenever interact with it
 2. Calling `asyncio.run()` (or `await` if you are in a Jupyter Notebook)
 
-### 5.1. Updating `tags` at runtime
+### 6.1. Updating `tags` at runtime
 
 In general `tags` are defined prior to a `flow_run`.
 However, it is possible to modify those tags at runtime.
@@ -312,7 +405,7 @@ if __name__ == '__main__':
     good_morning("pro")
 ```
 
-### 5.2. Querying `prefect` for conditional `flows`
+### 6.2. Querying `prefect` for conditional `flows`
 
 You can query any `prefect` entity with the `prefect.client` like:
 
