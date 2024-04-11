@@ -148,7 +148,22 @@ In my case I'll also run it as another `ECS service` using `Fargate`.
 
 ## 2. Deployments
 
-### 2.1. Creating Deployments
+As the official documentations states in <FancyLink linkText="Prefect Deployments" url="https://docs.prefect.io/latest/concepts/deployments" dark="true"/>:
+
+> **Prefect Deployments** are server-side representations of flows.
+> They store the crucial metadata needed for remote orchestration including **when**, **where**, and **how** a workflow should run
+> Deployments elevate workflows from functions that you must call manually to API-managed entities that can be triggered remotely.
+
+In my case I'll use them to define:
+* The different `flows` I want to run
+* From where they will get the code (a github repo)
+* When the `flow` should be run (`schedule`)
+
+### 2.1. Getting the code
+
+The first thing you will need to do is to create a `Prefect Block` (more info at <FancyLink linkText="Prefect Essentials: Basics, Setup and Migration | Using prefect blocks" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/#3-using-prefect-blocks" dark="true"/>) to store the `Github` crendentials if the repo is not public.
+
+Once done we can define **how** to get the code and the **dependencies** with:
 
 <TerminalOutput color="stone">
   /prefect.yaml
@@ -165,9 +180,63 @@ pull:
     directory: "{{ clone-step.directory }}"
     stream_output: False
 ```
+<Notice type="warning">
+  This will only work if there is a `Github` block called `github` with a token that allows to read the repo.
+  This is only needed if the repo is not public.
+</Notice>
 
-### 2.2. Advanced Usage of Deployments
+### 2.1. Creating the first Deployment
 
+Now that we defined how to fetch the code we will create the first `Deployment`.
+That is done by adding the following code to the `prefect.yaml` you just created.
+
+<TerminalOutput color="stone">
+  /prefect.yaml
+</TerminalOutput>
+```yaml
+- name: lambdas.athena_history
+  description: Export Athena history with a lambda
+  entrypoint: src/lambdas/lambdas.py:athena_history
+  version: 0.1.0
+  work_pool:
+    name: subprocess-pool
+  tags: ["type:prefect", "group:lambda", "job:athena_history"]
+```
+
+Here is what we are setting:
+
+| variable    | description                                                                     |
+|-------------|---------------------------------------------------------------------------------|
+| name        | The name you want for the deployment                                            |
+| description | Description of what the deployment does                                         |
+| entrypoint  | Where is located the flow. It is `path/to/filename.py:flow_name`                |
+| version     | The version of the flow                                                         |
+| work_pool   | Which work pool should run the deployment. It references what we created before |
+| tags        | Any tags you want to add to all `flow_runs` that will come from this deployment |
+
+Now you can deploy this to the `prefect server` with:
+
+```sh
+set PREFECT_API_URL=XXX
+prefect deploy --all
+```
+<Notice type="warning">
+  Replace `XXX` with the prefect `API URL`.
+  It should be like `https//{server_url}/api`.
+</Notice>
+
+This will deploy all `Deployments` in `prefect.yaml` to the server.
+
+Now you can head to the server and trigger an Run a `Deployment` from there.
+
+### 2.3. Advanced Usage of Deployments
+
+What we created works fine but once you start adding multiple Deployments you will probably have a lot of repetition.
+To avoid it you can define some defaults that will be later used in each `Deployment` with:
+
+<TerminalOutput color="stone">
+  /prefect.yaml
+</TerminalOutput>
 ```yaml
 definitions:
   work_pools:
@@ -175,7 +244,7 @@ definitions:
       name: subprocess-pool
 
     version: &version
-      version: 0.4.3
+      version: 0.1.0
 
     # Define defaults (that can be overwritten)
     defaults: &defaults
@@ -185,8 +254,9 @@ definitions:
       schedule: {}
 ```
 
-<FancyLink linkText="YAML alias nodes" url="https://yaml.org/spec/1.2.2/#71-alias-nodes" dark="true"/>
+More info about <FancyLink linkText="YAML alias nodes" url="https://yaml.org/spec/1.2.2/#71-alias-nodes" dark="true"/>.
 
+With that, you can reuse the defaults with:
 
 <TerminalOutput color="stone">
   /prefect.yaml
@@ -206,12 +276,62 @@ definitions:
   schedule:
     cron: "0 3 * * *"
 ```
+<Notice type="info">
+  Notice that you can overwrite the `defaults`.
+  For example here we are overwritting `tags`.
+</Notice>
 
 ### 2.3. Deploying `deployments`
 
-#### 2.3.1. Manual deploy
+We saw how to manually deploy the `Deployments` but it's better to do it with CD.
 
-#### 2.3.2. Deploys in CD
+#### 2.3.1. Deploys in CD
+
+Here you will only need a `github action` (or any CD equivalent) that:
+
+1. Detects changes to `prefect.yaml` on commits to the `main` branch
+2. Deploys all `flows` to prefect
+
+The only change you will need to do is to add `--no-prompt` so that it doesn't expect user confirmations:
+
+```sh
+prefect --no-prompt deploy --all
+```
+
+<Notice type="info">
+  You can redeploy an already existing `Deployment` without losing any data.
+  It will simply update whatever has changed.
+</Notice>
+
+#### 2.3.2. Manual deploy
+
+One really cool thing you can do is to manually deploy `Deployments` when you are creating a new one.
+Here what I do is to change the `branch` reference to the current branch where I am developing by
+
+```diff
+prefect.deployments.steps.git_clone:
+    id: clone-step
+    repository: https://github.com/github_user/repo.git
+-    branch: main
++    branch: your_current_branch
+    credentials: "{{ prefect.blocks.github.github }}"
+```
+
+And then you can deploy the `Deployment` you are working with:
+```sh
+prefect --no-prompt deploy --name lambdas.athena_history
+```
+<Notice type="warning">
+  It is important to specify only the `Deployment` you are developing so that you don't interfere with the other `Deployments` you might have running in production.
+</Notice>
+
+Once you finish your work and do a commit to `main` the `CD` will overwrite the `branch` reference so that is points to `main`.
+Notice that any `Deployment` run you do will `fetch` the code from the `branch` you set and run.
+That implies that if you are changing only your code you do not need to `deploy` at each commit.
+You will only need to `deploy` if you change:
+
+* The reference `branch`
+* The flow configuration (`name`, `parameters`, `tags` etc.)
 
 ## 3. Connect to prefect server
 
