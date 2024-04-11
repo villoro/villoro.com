@@ -21,7 +21,7 @@ In this post I'll explain how to:
 2. Create `Deployments`.
 3. Connect to the Server.
 
-If you are not familiar with `Prefect` I suggest you read <FancyLink linkText="Prefect Essentials: Basics, Setup and Migration" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/> first.
+If you are not familiar with `Prefect` I suggest you read <FancyLink linkText="Prefect Essentials" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/> first.
 
 ## 1. Setting up a Prefect Server
 
@@ -69,7 +69,7 @@ RUN prefect config set PREFECT_SERVER_API_HOST=0.0.0.0
 CMD ["prefect", "server", "start"]
 ```
 
-<Notice type="warning">
+<Notice type="warning" className="mt-6">
   If you attempt to run this with the database inside a docker container, you may encounter networking issues. It's strongly recommended to use <FancyLink linkText="Prefect example with Docker compose" url="https://github.com/rpeden/prefect-docker-compose/blob/main/docker-compose.yml" dark="true"/> to see how to handle it with `docker compose`.
 </Notice>
 
@@ -154,7 +154,7 @@ In my case, I'll use them to define:
 
 ### 2.1. Getting the code
 
-The first thing you will need to do is to create a `Prefect Block` (more info at <FancyLink linkText="Prefect Essentials: Basics, Setup and Migration | Using prefect blocks" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/#3-using-prefect-blocks" dark="true"/>) to store the `GitHub` credentials if the repo is not public.
+The first thing you will need to do is to create a `Prefect Block` (more info at <FancyLink linkText="Prefect Essentials | Using prefect blocks" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/#3-using-prefect-blocks" dark="true"/>) to store the `GitHub` credentials if the repo is not public.
 
 Once done, we can define `how` to get the code and the `dependencies` with:
 
@@ -375,11 +375,11 @@ You probably have multiple environments such as `pre`, `pro`, and maybe also `sa
 
 With the Prefect Server, you have 2 options:
 
-1. Creating a server per each environment
-2. Having a central server that can trigger runs to multiple/any environment
+1. Creating a **server per each environment**
+2. Having a **central server** that can trigger runs to multiple/any environment
 
 With a dedicated server, you will have better isolation but it would be more work to maintain and will have greater costs.
-In my case, I wanted simplicity and lower costs so I went with a central server.
+In my case, I wanted simplicity and lower costs so **I went with a central server**.
 In that case, the only important bit is you will need to pass to each flow the `env` variable as a `parameter`, and then you will need some code to assume different roles per environment.
 
 ## 5. Useful Code Snippets
