@@ -335,11 +335,52 @@ You will only need to `deploy` if you change:
 
 ## 3. Connect to prefect server
 
-### 3.1. Connect EMR
+Now that we have a working server we want to connect everything that runs `flows` to the `server`.
+This way we can track everything.
 
-### 3.2. Connect DBT
+To connect to the server we only the following environment variable:
 
-## 4. Prefect flows examples
+```sh
+PREFECT_API_URL=XXX
+```
+<Notice type="info">
+  Remember, you need to replace `XXX` with the prefect `API URL`.
+  It should be like `https//{server_url}/api`.
+</Notice>
+
+### 3.1. Connect Docker
+
+For anything that runs in a `docker` container (such as `DBT` in my case) you can follow the same approach we did in the `Prefect worker`.
+We need to set an argument for the `API URL` and then store it as an env variable with:
+
+```sh
+ARG PREFECT_API_URL
+ENV PREFECT_API_URL=${PREFECT_API_URL}
+```
+
+And then when we build it we need to add the following argument:
+
+```sh
+--build-arg PREFECT_API_URL=XXX
+```
+
+### 3.2. Connect EMR
+
+In `EMR` we need to set the environment variable at the `driver`.
+We can do that by adding the following configuration:
+
+```sh
+--conf spark.emr-serverless.driverEnv.PREFECT_API_URL=XXX
+```
+<Notice type="warning">
+  This is for `EMR serverless` but is very similar for the non serverless EMR.
+</Notice>
+
+## 4. Handling multiple environments
+
+
+
+## 5. Prefect flows examples
 
 <TerminalOutput color="stone">
   /src/common/prefect_utils.py
