@@ -378,9 +378,27 @@ We can do that by adding the following configuration:
 
 ## 4. Handling multiple environments
 
+You probably have multiple environments such as `pre`, `pro` and maybe also `sandbox`.
 
+With the `Prefect Server` you have 2 options:
 
-## 5. Prefect flows examples
+1. Creating a `server` per each `environment`
+2. Having a central `server` that can trigger runs to multiple/any enviroment
+
+With a dedicated server you will have better isolation but it would be more work to maintain and will have greater costs.
+In my case I wanted simplicity a lower costs so I went with a central server.
+In that case the only important bit is you will need to pass to each flow the `env` variable as a `parameter` and then you will need some code to assume different roles per environment.
+
+## 5. Useful code snipets
+
+Here you have some snipets that can help you getting started.
+
+### 5.1. Updating tags dynamically
+
+One really cool thing you can do with `Prefect` is to dynamically edit the `tags` of each `flow` at runtime.
+In my case it's very useful for tagging the `enviroment` where the `flow` is running (such as `env:pro` or `env:pre`).
+
+You can do it with:
 
 <TerminalOutput color="stone">
   /src/common/prefect_utils.py
@@ -410,6 +428,15 @@ def update_tags(tags):
     return True
 
 ```
+<Notice type="warning">
+  This example **only** works when called from a `flow`.
+  If you want to run it from a `task` you will need to fetch the `task` instead.
+</Notice>
+
+### 5.2. Running a lambda
+
+Here you have the simplest example I have for running external jobs from `prefect`.
+This calls any `lambda` you might want:
 
 <TerminalOutput color="stone">
   /src/lambdas/base.py
@@ -446,6 +473,11 @@ def run_lambda(env, name):
     _run_lambda(client, name)
 ```
 
+### 5.3. Defining a flow per each possible lambda
+
+With the `base.py` code for running lambdas you can define a `flow` per each `lambda` you have.
+As an example we could have:
+
 <TerminalOutput color="stone">
   /src/lambdas/lambdas.py
 </TerminalOutput>
@@ -466,3 +498,7 @@ def athena_history(env: Literal["snd", "pro"]):
 def emr_history(env: Literal["snd", "pro"]):
     run_lambda(env, "nt-lambda-function-emr-history")
 ```
+
+<Notice type="info">
+  Remember to declare those flows in the `prefect.yaml`.
+</Notice>
