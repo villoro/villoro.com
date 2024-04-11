@@ -1,8 +1,8 @@
 ---
-slug: prefect-server-setup
-title: "Prefect Server Setup: Configuration and Deployment"
+slug: prefect-server-setup-configuration-deployment
+title: "Setting Up and Deploying Prefect Server: A Comprehensive Guide"
 meta_title: Prefect Server Setup
-description: xxxx
+description: Learn how to set up and deploy Prefect Server for orchestrating workflows seamlessly. Understand the steps involved, including server configuration, creating deployments, and connecting to the server
 date: 2024-04-11
 image: "/images/blog/0041-prefect-server.jpg"
 tags: ["Tools", "Orchestration"]
@@ -17,9 +17,9 @@ draft: false
 
 In this post I'll explain how to:
 
-1. Set up your Prefect Server
-2. Create `Deployments`
-3. Connect to the Server
+1. Set up your Prefect Server.
+2. Create `Deployments`.
+3. Connect to the Server.
 
 If you are not familiar with `Prefect` I suggest you read <FancyLink linkText="Prefect Essentials: Basics, Setup and Migration" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/> first.
 
@@ -29,30 +29,30 @@ If you are not familiar with `Prefect` I suggest you read <FancyLink linkText="P
   This section is based on <FancyLink linkText="Hosting a Prefect server instance" url="https://docs.prefect.io/latest/guides/host/" dark="true"/> guide.
 </Notice>
 
-The simplest configuration that can work in `production` needs 3 pieces:
+The simplest configuration that can work in production consists of three main components:
 
-1. A **database** for the server
-2. The `prefect server`
-3. At least one `prefect worker`
+1. A **database** for the server.
+2. The `prefect server`.
+3. At least one `prefect worker`.
 
-For the `database` I simply used a `postgres` hosted on `AWS`.
+For the database, I opted for a `postgres` instance hosted on `AWS`.
 
-Prefect is design to be able to scale way beyond that configuration (more info in <FancyLink linkText="Deploying Flows to Work Pools and Workers" url="https://docs.prefect.io/latest/guides/prefect-deploy/" dark="true"/>)
-However in this post I'll only explain the basic setup.
+Prefect is designed to scale well beyond this basic configuration (more information in <FancyLink linkText="Deploying Flows to Work Pools and Workers" url="https://docs.prefect.io/latest/guides/prefect-deploy/" dark="true"/>), but for the purposes of this post, I'll focus on the fundamental setup.
 
-This basic configuration works for me because I only want the `prefect workers` to trigger different `AWS` jobs and tasks using `boto3`, such as:
+This basic configuration suffices for my needs, as I primarily use `prefect workers` to trigger various `AWS` jobs and tasks using `boto3`, including:
+
 * `lambdas`
 * `ecs` tasks with `fargate`
 * `emr serverless` tasks
 
-So one simple worker is enough for that set up.
+Hence, a single worker adequately serves this setup.
 
 ### 1.1. Creating the Prefect Server
 
-Here we only need a simple `docker` that has `prefect` installed.
-There is no offical images for a `docker server` but we can use the official one for `workers`.
+To create the `Prefect Server`, we need a simple `docker` container with `prefect` installed.
+While there are no official images for a `docker server`, we can use the official one meant for workers.
 
-Then the only set up needed is to provide the correct configuration for the database:
+The setup process involves providing the correct configuration for the database:
 
 <TerminalOutput color="stone">
   /Dockerfile.server
@@ -70,47 +70,40 @@ CMD ["prefect", "server", "start"]
 ```
 
 <Notice type="warning">
-  If you try to run this with the `database` in a `docker` you will probably run into networking problems.
-  I strongly suggest you use <FancyLink linkText="Prefect example with Docker compose" url="https://github.com/rpeden/prefect-docker-compose/blob/main/docker-compose.yml" dark="true"/> to see how to do it with `docker compose`.
+  If you attempt to run this with the database inside a docker container, you may encounter networking issues. It's strongly recommended to use <FancyLink linkText="Prefect example with Docker compose" url="https://github.com/rpeden/prefect-docker-compose/blob/main/docker-compose.yml" dark="true"/> to see how to handle it with `docker compose`.
 </Notice>
 
-And then to create the `docker image` run:
+To create the docker image, execute the following command, replacing `XXX` with the database `URL`. For a `postgres` database, the format should be like `postgresql+asyncpg://{user}:{password}@{url}:{port}/prefect`:
 
 ```sh
 docker build --build-arg DB_URL=XXX -f Dockerfile.server -t northius/prefect/server .
 ```
-<Notice type="warning">
-  Replace `XXX` with the database `URL`.
-  If it's a `postgres` one it should be like `postgresql+asyncpg://{user}:{password}@{url}:{port}/prefect`
-</Notice>
 
-With the `prefect server` you will be able to access the web UI.
-If you are running it locally you can find it in `localhost:4200`.
-However the `server` won't be able to run any flow without a `worker`.
+Once the `Prefect Server` is set up, you can access the web UI.
+If it's running locally, you can find it at `localhost:4200`.
+However, the server won't be able to run any flow without a worker.
 
-Once it works locally you will need to deploy it somewhere.
-In my case I'm using `AWS ECS` and running it as a Service with `Fargate`.
-Make sure to also provision a public URL so that the other pieces can connect to it.
+To deploy the server somewhere, like AWS ECS running as a Service with Fargate, ensure to provision a public URL so that other components can connect to it.
 
 <Notice type="warning">
-  Make sure to set the server behind a **VPN** so that it's not accessible to everyone.
+  Ensure to **secure the server behind a VPN** to prevent unauthorized access.
 </Notice>
 
 ### 1.2. Creating a Prefect Worker
 
-The first thing we need is to create a `Work Pool` so that the `Worker` we will create can join it.
+To create a Prefect Worker, we first need to create a `Work Pool` so that the Worker we create can join it.
 
 <Notice type="info">
   We will use a `local subprocess` work pool.
-  Given that we will only use it to trigger other services with `boto3` it should be more than enough.
-  If needed, we can always change it to a `ECS` task and/or add more `workers`.
+  Given that we will only use it to trigger other services with `boto3`, it should be more than enough.
+  If needed, we can always change it to an ECS task and/or add more workers.
 </Notice>
 
-You can do it using Prefect UI:
+You can do this using the Prefect UI:
 
 ![Create Prefect Work Pool](../../images/posts/2024/0041-prefect-work-pool.jpg)
 
-Once you have the `Work Pool` we will create a `Worker` with docker, following a similar approach to the `Server`:
+Once you have the `Work Pool`, we will create a Worker with Docker, following a similar approach to the Server:
 
 <TerminalOutput color="stone">
   /Dockerfile.worker
@@ -119,7 +112,7 @@ Once you have the `Work Pool` we will create a `Worker` with docker, following a
 # Prefect version must match Dockerfile.server and pyproject.toml
 FROM prefecthq/prefect:2.16-python3.10 as base
 
-# Connect to prefect
+# Connect to Prefect
 ARG PREFECT_API_URL
 ENV PREFECT_API_URL=${PREFECT_API_URL}
 
@@ -130,7 +123,7 @@ ENV POOL_NAME=${POOL_NAME}
 ENTRYPOINT prefect worker start --pool ${POOL_NAME}
 ```
 <Notice type="warning">
-  Make sure that the `prefect` versions match in both `Dockerfile`.
+  Make sure that the `Prefect` versions match in both `Dockerfiles`.
 </Notice>
 
 Similarly to before, we can build the image with:
@@ -139,31 +132,31 @@ Similarly to before, we can build the image with:
 docker build --build-arg PREFECT_API_URL=XXX -f Dockerfile.worker -t northius/prefect/worker .
 ```
 <Notice type="warning">
-  Replace `XXX` with the prefect `API URL`.
-  It should be like `https//{server_url}/api`.
+  Replace `XXX` with the Prefect API URL. It should be like `https//{server_url}/api`.
 </Notice>
 
-Same as before, you will need to run this `docker` container somewhere.
-In my case I'll also run it as another `ECS service` using `Fargate`.
+As before, you will need to run this docker container somewhere.
+In my case, I'll also run it as another ECS service using Fargate.
 
 ## 2. Deployments
 
-As the official documentations states in <FancyLink linkText="Prefect Deployments" url="https://docs.prefect.io/latest/concepts/deployments" dark="true"/>:
+As the official documentation states in <FancyLink linkText="Prefect Deployments" url="https://docs.prefect.io/latest/concepts/deployments" dark="true"/>:
 
 > **Prefect Deployments** are server-side representations of flows.
 > They store the crucial metadata needed for remote orchestration including **when**, **where**, and **how** a workflow should run
 > Deployments elevate workflows from functions that you must call manually to API-managed entities that can be triggered remotely.
 
-In my case I'll use them to define:
-* The different `flows` I want to run
-* From where they will get the code (a github repo)
-* When the `flow` should be run (`schedule`)
+In my case, I'll use them to define:
+
+* The different flows I want to run
+* From where they will get the code (a GitHub repo)
+* When the flow should be run (schedule)
 
 ### 2.1. Getting the code
 
-The first thing you will need to do is to create a `Prefect Block` (more info at <FancyLink linkText="Prefect Essentials: Basics, Setup and Migration | Using prefect blocks" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/#3-using-prefect-blocks" dark="true"/>) to store the `Github` crendentials if the repo is not public.
+The first thing you will need to do is to create a `Prefect Block` (more info at <FancyLink linkText="Prefect Essentials: Basics, Setup and Migration | Using prefect blocks" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/#3-using-prefect-blocks" dark="true"/>) to store the `GitHub` credentials if the repo is not public.
 
-Once done we can define **how** to get the code and the **dependencies** with:
+Once done, we can define `how` to get the code and the `dependencies` with:
 
 <TerminalOutput color="stone">
   /prefect.yaml
@@ -181,14 +174,14 @@ pull:
     stream_output: False
 ```
 <Notice type="warning">
-  This will only work if there is a `Github` block called `github` with a token that allows to read the repo.
+  This will only work if there is a `GitHub` block called `github` with a token that allows reading the repo.
   This is only needed if the repo is not public.
 </Notice>
 
-### 2.1. Creating the first Deployment
+### 2.2. Creating the first Deployment
 
-Now that we defined how to fetch the code we will create the first `Deployment`.
-That is done by adding the following code to the `prefect.yaml` you just created.
+Now that we've defined how to fetch the code, we will create the first `Deployment`.
+Add the following code to the `prefect.yaml` you just created.
 
 <TerminalOutput color="stone">
   /prefect.yaml
@@ -221,18 +214,18 @@ set PREFECT_API_URL=XXX
 prefect deploy --all
 ```
 <Notice type="warning">
-  Replace `XXX` with the prefect `API URL`.
+  Replace `XXX` with the Prefect `API URL`.
   It should be like `https//{server_url}/api`.
 </Notice>
 
 This will deploy all `Deployments` in `prefect.yaml` to the server.
 
-Now you can head to the server and trigger an Run a `Deployment` from there.
+Now you can head to the server and trigger a run of the `Deployment` from there.
 
 ### 2.3. Advanced Usage of Deployments
 
-What we created works fine but once you start adding multiple Deployments you will probably have a lot of repetition.
-To avoid it you can define some defaults that will be later used in each `Deployment` with:
+What we've created works fine, but once you start adding multiple `Deployments`, you will probably encounter a lot of repetition.
+To avoid this, you can define some defaults that will be later used in each `Deployment` with:
 
 <TerminalOutput color="stone">
   /prefect.yaml
@@ -254,9 +247,9 @@ definitions:
       schedule: {}
 ```
 
-More info about <FancyLink linkText="YAML alias nodes" url="https://yaml.org/spec/1.2.2/#71-alias-nodes" dark="true"/>.
+You can read more about <FancyLink linkText="YAML alias nodes" url="https://yaml.org/spec/1.2.2/#71-alias-nodes" dark="true"/>.
 
-With that, you can reuse the defaults with:
+With that, you can reuse the defaults like so:
 
 <TerminalOutput color="stone">
   /prefect.yaml
@@ -278,35 +271,35 @@ With that, you can reuse the defaults with:
 ```
 <Notice type="info">
   Notice that you can overwrite the `defaults`.
-  For example here we are overwritting `tags`.
+  For example here we are overwriting `tags`.
 </Notice>
 
-### 2.3. Deploying `deployments`
+### 2.4. Deploying `deployments`
 
-We saw how to manually deploy the `Deployments` but it's better to do it with CD.
+We've seen how to manually deploy the `Deployments`, but it's better to do it with `Continuous Deployment (CD)`.
 
-#### 2.3.1. Deploys in CD
+#### 2.4.1. Deploying with `Continuous Deployment (CD)`
 
-Here you will only need a `github action` (or any CD equivalent) that:
+Here, you will only need a `GitHub Action` (or any CD equivalent) that:
 
 1. Detects changes to `prefect.yaml` on commits to the `main` branch
-2. Deploys all `flows` to prefect
+2. Deploys all flows to Prefect
 
-The only change you will need to do is to add `--no-prompt` so that it doesn't expect user confirmations:
+The only change you will need to make is to add `--no-prompt` so that it doesn't expect user confirmations:
 
 ```sh
 prefect --no-prompt deploy --all
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   You can redeploy an already existing `Deployment` without losing any data.
   It will simply update whatever has changed.
 </Notice>
 
-#### 2.3.2. Manual deploy
+#### 2.4.2. Manual deploy
 
 One really cool thing you can do is to manually deploy `Deployments` when you are creating a new one.
-Here what I do is to change the `branch` reference to the current branch where I am developing by
+Here's what I do: change the `branch` reference to the current branch where I am developing by with:
 
 ```diff
 prefect.deployments.steps.git_clone:
@@ -318,6 +311,7 @@ prefect.deployments.steps.git_clone:
 ```
 
 And then you can deploy the `Deployment` you are working with:
+
 ```sh
 prefect --no-prompt deploy --name lambdas.athena_history
 ```
@@ -325,40 +319,39 @@ prefect --no-prompt deploy --name lambdas.athena_history
   It is important to specify only the `Deployment` you are developing so that you don't interfere with the other `Deployments` you might have running in production.
 </Notice>
 
-Once you finish your work and do a commit to `main` the `CD` will overwrite the `branch` reference so that is points to `main`.
-Notice that any `Deployment` run you do will `fetch` the code from the `branch` you set and run.
-That implies that if you are changing only your code you do not need to `deploy` at each commit.
-You will only need to `deploy` if you change:
+Once you finish your work and do a commit to `main`, the `CD` will overwrite the `branch` reference so that it points to `main`.
+Notice that any `Deployment` run you do will fetch the code from the `branch` you set and run.
+That implies that if you are changing only your code you do not need to deploy at each commit.
+You will only need to deploy if you change:
 
 * The reference `branch`
 * The flow configuration (`name`, `parameters`, `tags` etc.)
 
-## 3. Connect to prefect server
+## 3. Connect to Prefect Server
 
-Now that we have a working server we want to connect everything that runs `flows` to the `server`.
-This way we can track everything.
+Now that we have a working server, we want to connect everything that runs `flows` to the server so that we can track everything.
 
-To connect to the server we only the following environment variable:
+To connect to the server, we only need the following environment variable:
 
 ```sh
 PREFECT_API_URL=XXX
 ```
 <Notice type="info">
-  Remember, you need to replace `XXX` with the prefect `API URL`.
+  Remember, you need to replace `XXX` with the Prefect `API URL`.
   It should be like `https//{server_url}/api`.
 </Notice>
 
 ### 3.1. Connect Docker
 
-For anything that runs in a `docker` container (such as `DBT` in my case) you can follow the same approach we did in the `Prefect worker`.
-We need to set an argument for the `API URL` and then store it as an env variable with:
+For anything that runs in a Docker container (such as DBT in my case), you can follow the same approach we did in the Prefect worker.
+We need to set an argument for the `API URL` and then store it as an environment variable with:
 
 ```sh
 ARG PREFECT_API_URL
 ENV PREFECT_API_URL=${PREFECT_API_URL}
 ```
 
-And then when we build it we need to add the following argument:
+And then when we build it, we need to add the following argument:
 
 ```sh
 --build-arg PREFECT_API_URL=XXX
@@ -366,37 +359,37 @@ And then when we build it we need to add the following argument:
 
 ### 3.2. Connect EMR
 
-In `EMR` we need to set the environment variable at the `driver`.
+In `EMR`, we need to set the environment variable at the `driver`.
 We can do that by adding the following configuration:
 
 ```sh
 --conf spark.emr-serverless.driverEnv.PREFECT_API_URL=XXX
 ```
 <Notice type="warning">
-  This is for `EMR serverless` but is very similar for the non serverless EMR.
+  This is for EMR serverless but is very similar for the non-serverless EMR.
 </Notice>
 
-## 4. Handling multiple environments
+## 4. Handling Multiple Environments
 
-You probably have multiple environments such as `pre`, `pro` and maybe also `sandbox`.
+You probably have multiple environments such as `pre`, `pro`, and maybe also `sandbox`.
 
-With the `Prefect Server` you have 2 options:
+With the Prefect Server, you have 2 options:
 
-1. Creating a `server` per each `environment`
-2. Having a central `server` that can trigger runs to multiple/any enviroment
+1. Creating a server per each environment
+2. Having a central server that can trigger runs to multiple/any environment
 
-With a dedicated server you will have better isolation but it would be more work to maintain and will have greater costs.
-In my case I wanted simplicity a lower costs so I went with a central server.
-In that case the only important bit is you will need to pass to each flow the `env` variable as a `parameter` and then you will need some code to assume different roles per environment.
+With a dedicated server, you will have better isolation but it would be more work to maintain and will have greater costs.
+In my case, I wanted simplicity and lower costs so I went with a central server.
+In that case, the only important bit is you will need to pass to each flow the `env` variable as a `parameter`, and then you will need some code to assume different roles per environment.
 
-## 5. Useful code snipets
+## 5. Useful Code Snippets
 
-Here you have some snipets that can help you getting started.
+Here you have some snippets that can help you get started.
 
-### 5.1. Updating tags dynamically
+### 5.1. Updating Tags Dynamically
 
-One really cool thing you can do with `Prefect` is to dynamically edit the `tags` of each `flow` at runtime.
-In my case it's very useful for tagging the `enviroment` where the `flow` is running (such as `env:pro` or `env:pre`).
+One really cool thing you can do with Prefect is to dynamically edit the tags of each flow at runtime.
+In my case, it's very useful for tagging the environment where the flow is running (such as `env:pro` or `env:pre`).
 
 You can do it with:
 
@@ -426,17 +419,16 @@ def update_tags(tags):
     client = get_client()
     asyncio.run(client.update_flow_run(flow_run.id, tags=set(tags)))
     return True
-
 ```
 <Notice type="warning">
-  This example **only** works when called from a `flow`.
-  If you want to run it from a `task` you will need to fetch the `task` instead.
+  This example **only** works when called from a flow.
+  If you want to run it from a task, you will need to fetch the task instead.
 </Notice>
 
-### 5.2. Running a lambda
+### 5.2. Running a Lambda
 
-Here you have the simplest example I have for running external jobs from `prefect`.
-This calls any `lambda` you might want:
+Here you have the simplest example I have for running external jobs from Prefect.
+This calls any lambda you might want:
 
 <TerminalOutput color="stone">
   /src/lambdas/base.py
@@ -473,10 +465,10 @@ def run_lambda(env, name):
     _run_lambda(client, name)
 ```
 
-### 5.3. Defining a flow per each possible lambda
+### 5.3. Defining a Flow for Each Possible Lambda
 
-With the `base.py` code for running lambdas you can define a `flow` per each `lambda` you have.
-As an example we could have:
+With the `base.py` code for running lambdas, you can define a flow for each lambda you have.
+As an example, we could have:
 
 <TerminalOutput color="stone">
   /src/lambdas/lambdas.py
