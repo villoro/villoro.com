@@ -3,7 +3,7 @@ slug: prefect-server-setup
 title: "Prefect Server Setup: Configuration and Deployment"
 meta_title: Prefect Server Setup
 description: xxxx
-date: 2024-04-10
+date: 2024-04-11
 image: "/images/blog/0041-prefect-server.jpg"
 tags: ["Tools", "Orchestration"]
 draft: false
@@ -15,11 +15,13 @@ draft: false
 
 ## 0. Intro
 
-XXXX
+In this post I'll explain how to:
 
-<FancyLink linkText="Prefect Essentials: Basics, Setup and Migration" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/>
+1. Set up your Prefect Server
+2. Create `Deployments`
+3. Connect to the Server
 
-This is how I recommend storing `Github` and `AWS` credentials needed for this tutorial.
+If you are not familiar with `Prefect` I suggest you read <FancyLink linkText="Prefect Essentials: Basics, Setup and Migration" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/> first.
 
 ## 1. Setting up a Prefect Server
 
@@ -45,7 +47,7 @@ This basic configuration works for me because I only want the `prefect workers` 
 
 So one simple worker is enough for that set up.
 
-### 4.1. Creating the Prefect Server
+### 1.1. Creating the Prefect Server
 
 Here we only need a simple `docker` that has `prefect` installed.
 There is no offical images for a `docker server` but we can use the official one for `workers`.
@@ -86,11 +88,29 @@ With the `prefect server` you will be able to access the web UI.
 If you are running it locally you can find it in `localhost:4200`.
 However the `server` won't be able to run any flow without a `worker`.
 
-### 4.2. Creating a Prefect Worker
+Once it works locally you will need to deploy it somewhere.
+In my case I'm using `AWS ECS` and running it as a Service with `Fargate`.
+Make sure to also provision a public URL so that the other pieces can connect to it.
+
+<Notice type="warning">
+  Make sure to set the server behind a **VPN** so that it's not accessible to everyone.
+</Notice>
+
+### 1.2. Creating a Prefect Worker
 
 The first thing we need is to create a `Work Pool` so that the `Worker` we will create can join it.
 
+<Notice type="info">
+  We will use a `local subprocess` work pool.
+  Given that we will only use it to trigger other services with `boto3` it should be more than enough.
+  If needed, we can always change it to a `ECS` task and/or add more `workers`.
+</Notice>
+
+You can do it using Prefect UI:
+
 ![Create Prefect Work Pool](../../images/posts/2024/0041-prefect-work-pool.jpg)
+
+Once you have the `Work Pool` we will create a `Worker` with docker, following a similar approach to the `Server`:
 
 <TerminalOutput color="stone">
   /Dockerfile.worker
@@ -109,16 +129,22 @@ ENV POOL_NAME=${POOL_NAME}
 
 ENTRYPOINT prefect worker start --pool ${POOL_NAME}
 ```
-
-```sh
-docker build --build-arg PREFECT_API_URL=XXX -f Dockerfile.worker -t northius/prefect/worker .
-```
-
 <Notice type="warning">
   Make sure that the `prefect` versions match in both `Dockerfile`.
 </Notice>
 
-### 4.3. Running Both Containers
+Similarly to before, we can build the image with:
+
+```sh
+docker build --build-arg PREFECT_API_URL=XXX -f Dockerfile.worker -t northius/prefect/worker .
+```
+<Notice type="warning">
+  Replace `XXX` with the prefect `API URL`.
+  It should be like `https//{server_url}/api`.
+</Notice>
+
+Same as before, you will need to run this `docker` container somewhere.
+In my case I'll also run it as another `ECS service` using `Fargate`.
 
 ## 2. Deployments
 
@@ -193,7 +219,7 @@ definitions:
 
 ### 3.2. Connect DBT
 
-## 3. Prefect flows examples
+## 4. Prefect flows examples
 
 <TerminalOutput color="stone">
   /src/common/prefect_utils.py
