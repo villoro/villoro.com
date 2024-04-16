@@ -236,15 +236,15 @@ definitions:
     subprocess-pool: &subprocess-pool
       name: subprocess-pool
 
-    version: &version
-      version: 0.1.0
+  version: &version
+    version: 0.1.0
 
-    # Define defaults (that can be overwritten)
-    defaults: &defaults
-      <<: *version
-      work_pool: *subprocess-pool
-      tags: ["type:prefect"]
-      schedule: {}
+  # Define defaults (that can be overwritten)
+  defaults: &defaults
+    <<: *version
+    work_pool: *subprocess-pool
+    tags: ["type:prefect"]
+    schedule: {}
 ```
 
 You can read more about <FancyLink linkText="YAML alias nodes" url="https://yaml.org/spec/1.2.2/#71-alias-nodes" dark="true"/>.
