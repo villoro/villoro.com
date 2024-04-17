@@ -299,8 +299,11 @@ prefect --no-prompt deploy --all
 #### 2.4.2. Manual deploy
 
 One really cool thing you can do is to manually deploy `Deployments` when you are creating a new one.
-Here's what I do: change the `branch` reference to the current branch where I am developing by with:
+Here's what I do: change the `branch` reference in `prefect.yaml` to the current branch where I am developing by with:
 
+<TerminalOutput color="stone">
+  /prefect.yaml
+</TerminalOutput>
 ```diff
 prefect.deployments.steps.git_clone:
     id: clone-step
