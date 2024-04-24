@@ -248,14 +248,167 @@ You might want to read <FancyLink linkText="Managing package versions with Poetr
 
 ## 4. Generic entrypoint
 
+You have seen how to add external packages and how to install your own code as a package.
+However you still need an `entrypoint` for running `EMR` jobs.
+Given that any python file you have in your code could be an `entrypoint` you would be force to **upload all files to S3**.
+
+Luckily there is a better way for handling this.
+The idea is to have a generic `entrypoint.py` that runs code from other packages.
+
+Let's imagine we have:
+
+```plaintext
+- my_package
+  ├── salesforce
+  │   ├── utils.py
+  │   ├── query.py
+  │   └── main.py # This is an entrypoint
+  ├── big_query
+  │   ├── constants.py
+  │   └── run.py # This is an entrypoint
+  └── ...
+```
+
+Some of those files will be prepared to be an entrypoint.
+The only important part is that it has a `main` function.
+
+<TerminalOutput color="stone">
+  my_package/salesforce/main.py
+</TerminalOutput>
+```python
+# Other code
+
+def main():
+	# This is what will be called
+	print(1)
+```
+
+With that, we can pass an argument to the generic entrypoint in a way that ends up importing the file we need and running the `main` function inside.
+It would be similar to:
+
+```python
+from my_package import salesforce
+salesforce.main()
+```
+
+However we will be doing the import dynamically so that it can be done based on the path as a string.
+This is done with:
+
+```python
+import importlib
+module = importlib.import_module(entrypoint)
+module.main()
+```
+<Notice type="warning">
+  This does exactly the same as before.
+</Notice>
+
 ## 5. Handling parameters
+
+Now that you have a unique `entrypoint` you could use `sys.argv` or `argparse` to catch the `entrypoint` from the arguments, as explained in <FancyLink linkText="How do I access command line arguments?" url="https://stackoverflow.com/questions/4033723/how-do-i-access-command-line-arguments"/>.
+One way of doing that would be to always use the first parameter for the entrypoint and the rest of the parameters as the actual script parameters.
+
+But there is a better way with `click`.
 
 ### 5.1. Catching generic parameters with `click`
 
+The idea here is to define the `entrypoint` as a parameter in `click` and then catch the rest of the parameters as explained in <FancyLink linkText="Add unspecified options to cli command using python-click" url="https://stackoverflow.com/a/32946412/3488853"/>.
+
+The basic code for that would be:
+
+```python
+import click
+from loguru import logger
+
+@click.command(
+    name="entrypoint",
+    context_settings=dict(
+        ignore_unknown_options=True,
+        allow_extra_args=True,
+    ),
+)
+@click.pass_context
+@click.option(
+    "--entrypoint",
+    "-e",
+    required=True,
+    type=str,
+    help="File used as an entrypoint. Must have a 'main' function",
+)
+def main(ctx, entrypoint):
+    logger.debug("Extracting parameters from context")
+    # https://stackoverflow.com/a/32946412/3488853
+    kwargs = {ctx.args[i][2:]: ctx.args[i + 1] for i in range(0, len(ctx.args), 2)}
+    kwargs.update({"entrypoint": entrypoint})
+
+    # Replace dashes for underscores in param names to ensure compatibility
+    kwargs = {k.replace("-", "_"): v for k, v in kwargs.items()}
+
+    logger.info(f"Importing '{entrypoint}'")
+    module = importlib.import_module(entrypoint)
+	module.main(**kwargs)
+
+
+if __name__ == "__main__":
+    print("Starting EMR job")
+    main()
+```
+
+Then you can define the `parameters` in each file as usual:
+
+<TerminalOutput color="stone">
+  my_package/salesforce/main.py
+</TerminalOutput>
+```python
+# Other code
+
+def main(name, num):
+	# This is what will be called
+	print(f"Hello {name} with {num=}")
+```
+
+<Notice type="warning" className="mt-6">
+  Notice that all parameters are as `strings`.
+</Notice>
+
 ### 5.2. Define script parameters with `pydantic`
 
+One way to improve the previous code is to define the parameters as a `pydantic` class.
+This way you don't need to handle the `castings` and can use the powerful validators from pydantic.
+
+You would do that with:
+
+<TerminalOutput color="stone">
+  my_package/salesforce/main.py
+</TerminalOutput>
+```python
+from pydantic import BaseModel
+
+class BaseParams(BaseModel):
+    """
+    Parent class for the Params meant to be extended.
+    It adds 'entrypoint' as a forced parameter.
+    """
+
+    entrypoint: str
+
+class MyParams(BaseModel):
+	name: str
+	num: int
+
+def main(**kwargs):
+
+	args = MyParams(**kwargs)
+	print(f"Hello {args.name} with {args.num=}")
+```
+
 ## 6. Track executions with `prefect`
+
+
 
 ### 6.1. Jobs as `flows`
 
 ### 6.2. Adding `tasks` and/or `subflows`
+
+
+## 7. Putting it all together
