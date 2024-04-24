@@ -3,7 +3,7 @@ slug: effortless-emr-guide-running-pyspark
 title: "Effortless EMR: A Guide to Seamlessly Running PySpark Code"
 meta_title: EMR Guide to Run PySpark Code
 description: xx
-date: 2024-04-16
+date: 2024-04-24
 image: "/images/blog/0042-emr.jpg"
 tags: ["AWS"]
 draft: false
@@ -15,20 +15,80 @@ draft: false
 
 ## 0. Intro
 
-TODO: Why this guide
+Ever tried setting up PySpark with EMR and found yourself drowning in complexity? You're not alone!
+This guide is born out of frustration with overly convoluted setups.
+I'm here to cut through the noise and show you a simpler way to get PySpark up and running on EMR.
+No more tangled messes—just straightforward steps and clear traceability.
+Whether you're a newbie or just tired of the headache, we've got your back.
+Let's make PySpark on EMR hassle-free together!
 
 ## 1. Running a script in EMR
 
-## 2. Adding packages 
+The simplest way of running `pypspark` code on `EMR` is to store a python file in `s3`.
+As an example let's supose we have the `main.py`:
+
+<TerminalOutput color="stone">
+  s3://your_bucket/main.py
+</TerminalOutput>
+```python
+from pyspark.sql import SparkSession
+
+# Create a SparkSession
+spark = SparkSession.builder.appName("SimplePySparkExample").getOrCreate()
+
+# Create a DataFrame
+data = [("Alice", 34), ("Bob", 45), ("Charlie", 23)]
+sdf = spark.createDataFrame(data, ["Name", "Age"])
+
+# Show the DataFrame
+sdf.show()
+
+# Stop the SparkSession
+spark.stop()
+```
+
+The first thing you will need to do is to create/start your `EMR cluster`, which is out of scope of this post.
+
+Then you will submit a job using the previous file (`s3://your_bucket/main.py`) as the **entrypoint**.
+
+<Notice type="info">
+  This works well for a single file jobs.
+  And since most real jobs will have more dependencies is not that useful.
+</Notice>
+
+The usual solution is to create a `python package` so that you can import code from other files.
+Let's see how this can be done.
+
+## 2. Using packages
+
+In general you will need to use 2 different types of packages:
+
+1. `Java` packages
+2. `Python` packages
 
 ### 2.1 Java packages
 
+Adding `java` packages is quite straighforward.
+You simply need to:
+
+1. Download the package as a `jar` file. For example `spark-3.3-bigquery-0.31.1.jar`
+2. Add this file somewhere in `s3` where you have reading access. For example `s3://your-bucket/emr/jars/`
+3. Set up the cluster to include that package by adding the following configuration:
+
+```conf
+--jars s3://your-bucket/emr/jars/spark-3.3-bigquery-0.31.1.jar
+```
+
+With that, you should be able to use that package.
+
 ### 2.2. Python packages
 
-TODO: Explain the usual options for adding packages
+The simplest way of adding a python package is by <FancyLink linkText="Setting up a bootstrap action" url="https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-bootstrap.html" company="aws"/> (as recomended in <FancyLink linkText="QA: EMR install python libraries" url="https://repost.aws/knowledge-center/emr-install-python-libraries" company="aws"/>)
 
-* https://repost.aws/knowledge-center/emr-install-python-libraries
-* https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-bootstrap.html
+The main problem with that is that you will be downloading the package at runtime.
+You could download the package (an `egg` or a `whl`) to `S3` and install it from there but it will be added complexity.
+
+The way to overcome those problems is to **create a docker image**.
 
 ## 3. Creating a Docker image
 
@@ -45,3 +105,7 @@ TODO: Explain the usual options for adding packages
 ### 5.2. Define script parameters with `pydantic`
 
 ## 6. Track executions with `prefect`
+
+### 6.1. Jobs as `flows`
+
+### 6.2. Adding `tasks` and/or `subflows`
