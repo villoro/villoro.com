@@ -90,11 +90,161 @@ You could download the package (an `egg` or a `whl`) to `S3` and install it from
 
 The way to overcome those problems is to **create a docker image**.
 
-## 3. Creating a Docker image
+## 3. Creating an environment with Docker
+
+According to <FancyLink linkText="EMR spark docker" url="https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-spark-docker.html" company="aws"/> you can create a `docker` image and later use it to run `EMR`.
+However I think it's better to create a `virtual environment` using `docker` and export it as a `tar.gz` file.
+
+With that you can simply export the file to `s3` and later use it.
 
 ### 3.1. Add external packages
 
+The overall idea is to follow <FancyLink linkText="EMR serverless samples" url="https://github.com/aws-samples/emr-serverless-samples/tree/main/examples/pyspark/dependencies" dark="true"/>.
+In this example I'm using <FancyLink linkText="Poetry python package manager" url="https://villoro.com/blog/poetry-python-package-manager" dark="true"/> since I think it's better than regular `pip`.
+
+The steps I follow are:
+1. Get `pip`
+2. Install `poetry`
+3. Copy the needed files in order to install the `poetry` dependencies
+4. Create the `virtual environment`
+5. Create a `tar.gz` with the `virtual environment`
+6. Export the `tar.gz`
+
+<TerminalOutput color="stone">
+  Dockerfile
+</TerminalOutput>
+```sh
+FROM --platform=linux/amd64 amazonlinux:2023 AS base
+
+RUN dnf install python3-pip -y
+
+# Update and install python packages
+RUN pip install poetry --no-cache-dir
+
+# Copy needed files to install the project
+COPY pyproject.toml .
+COPY README.md .
+COPY my_package my_package
+
+# Set up poetry and install dependencies
+RUN poetry config virtualenvs.in-project true && \
+    poetry install
+
+# Create a '.tar.gz' with the virtual environment
+RUN mkdir /output && \
+    poetry run venv-pack -o /output/my_package-latest.tar.gz
+
+# Export the '.tar.gz'
+FROM scratch AS export
+COPY --from=base /output/*.tar.gz /
+```
+<Notice type="warning">
+  For this to work you will need to have `venv-pack` as a `poetry` dependency so that you can export the virtual environment.
+  You can add it with `poetry add venv-pack`
+</Notice>
+
+<Notice type="info" className="mt-6">
+  Here I'm using `amazonlinux:2023` as the base image since I'm using `EMR 7` and it uses that version.
+  For older versions replace it with `amazonlinux:2`.
+</Notice>
+
+To create the `tar.gz` simply run:
+
+```sh
+docker build --output . .
+```
+
+Once the `tar.gz` is created you will need to upload to S3.
+Then you can set up an `EMR` cluster to use that environment with:
+
+```plaintext
+--conf spark.emr-serverless.driverEnv.PYSPARK_DRIVER_PYTHON=./environment/bin/python
+--conf spark.emr-serverless.driverEnv.PYSPARK_PYTHON=./environment/bin/python
+--conf spark.emr-serverless.executorEnv.PYSPARK_PYTHON=./environment/bin/python
+--conf spark.archives=s3:/your-bucket/venv/my_package-latest.tar.gz#environment
+```
+<Notice type="warning">
+  Make sure to adapt the path (`s3:/your-bucket/venv/my_package-latest.tar.gz` in the example) to the file you created.
+</Notice>
+
 ### 3.2. Create a 'package' for adding code
+
+Once we now how to add external packages we can reuse it to also be able to import our own code.
+As stated in <FancyLink linkText="How to run a Python project (package) on AWS EMR serverless?" url="https://stackoverflow.com/questions/74193417/how-to-run-a-python-project-package-on-aws-emr-serverless"/> the idea is to create a `python package` and then install it.
+
+In my case it would be done with docker by:
+```sh
+# Install 'my_package' as a package
+RUN poetry build && \
+    poetry run pip install dist/*.whl
+```
+
+Another thing I added is the avability to pass the `version` as an argument.
+The final `Dockerfile` code would be:
+
+<TerminalOutput color="stone">
+  Dockerfile
+</TerminalOutput>
+```sh
+FROM --platform=linux/amd64 amazonlinux:2023 AS base
+
+ARG PACKAGE_VERSION
+
+# Should match CI config
+ARG POETRY_VERSION=1.6.1 
+
+RUN dnf install python3-pip -y
+
+# Update and install python packages
+RUN pip install \
+  "poetry==${POETRY_VERSION}" \
+  boto3 \
+  loguru \
+  toml \
+  --no-cache-dir
+
+# Copy needed files to install the project
+COPY pyproject.toml .
+COPY README.md .
+COPY my_package my_package
+
+# Set up poetry and install dependencies
+RUN poetry config virtualenvs.in-project true && \
+    poetry install
+
+# Install 'my_package' as a package
+RUN poetry build && \
+    poetry run pip install dist/*.whl
+
+# Create a '.tar.gz' with the virtual environment
+RUN mkdir /output && \
+    poetry run venv-pack -o /output/my_package-${PACKAGE_VERSION}.tar.gz
+
+# Export the '.tar.gz'
+FROM scratch AS export
+COPY --from=base /output/*.tar.gz /
+```
+
+And it is compiled with:
+
+```bash
+# Set a version that is unique and will not collide with other people
+docker build --output . . --build-arg PACKAGE_VERSION=2.1.7 # Any version you want
+```
+
+### 3.3. Export the environment with CD
+
+Here the idea is to have a github action that uploads the `virtual environment` whenever there is a commit to `main`.
+
+The general steps are:
+1. `Fetch` the code
+2. Create the `tar.gz` as seen in the previous section
+3. Upload it to `S3`
+
+One thing that I find very useful is to export always the real version, such as `2.1.7` and then also create one called `latest`.
+With this I can easily point to the `latest.tar.gz` in `production` and/or point to a specific version if I need to.
+
+You might want to read <FancyLink linkText="Managing package versions with Poetry" url="https://villoro.com/blog/managing-package-versions-with-poetry" dark="true"/> for more information about how to manage versions with `Poetry`.
 
 ## 4. Generic entrypoint
 
