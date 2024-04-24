@@ -316,6 +316,9 @@ The idea here is to define the `entrypoint` as a parameter in `click` and then c
 
 The basic code for that would be:
 
+<TerminalOutput color="stone">
+  entrypoint.py
+</TerminalOutput>
 ```python
 import click
 from loguru import logger
@@ -384,6 +387,155 @@ You would do that with:
 ```python
 from pydantic import BaseModel
 
+class MyParams(BaseModel):
+    entrypoint: str # This is needed
+	name: str
+	num: int
+
+def main(**kwargs):
+	args = MyParams(**kwargs)
+	print(f"Hello {args.name} with {args.num=}")
+```
+
+## 6. Track executions with `prefect`
+
+One really good way of having better observability on `EMR` jobs is to add `Prefect`.
+If you are not familiar with `Prefect` I suggest you read <FancyLink linkText="Prefect Essentials" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/> first.
+
+Also make sure you connect EMR to prefect by following <FancyLink linkText="Connect EMR | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#32-connect-emr" dark="true"/>.
+
+### 6.1. Jobs as `flows`
+
+The idea here is to create a `flow` at the `entrypoint` so that you can see each run.
+The idea is to create a `flow` dynamically with `flow(name="flow_name")(function)(*args, **kwargs)`.
+
+So the modified lines look like as follows:
+
+<TerminalOutput color="stone">
+  entrypoint.py
+</TerminalOutput>
+```python
+from prefect import flow
+
+def main(ctx, entrypoint):
+
+    logger.info(f"Importing '{entrypoint}'")
+    module = importlib.import_module(entrypoint)
+	flow(name=entrypoint)(module.main)(**kwargs)
+```
+
+### 6.2. Adding `tasks` and/or `subflows`
+
+You can follow the same approach to add different `tasks` and/or `subflows`.
+For example, let's imagine you are extracting multiple tables from somewhere.
+Here you could create a `prefect.task` for each table.
+This way you will have a much better observability system.
+It would be done with something like:
+
+```python
+from prefect import task
+
+for table in tables:
+	name = f"{params.entrypoint}.{table.name}"
+	task(name=name)(process_one_table)(name=table.name, **any_other_arguments)
+```
+
+## 7. Putting it all together
+
+We have seen multiple code snippets explaining the different parts.
+Here I'm adding the final code so that it's easier to see the final outcome.
+
+### 7.1. Entrypoint
+
+This takes care of:
+
+* Calling the `main` function of other files
+* Catching parameters as a `dict`
+* Adding `prefect.tags`
+
+<TerminalOutput color="stone">
+  entrypoint.py
+</TerminalOutput>
+```python
+import importlib
+import sys
+
+import click
+from loguru import logger
+from prefect import tags
+
+
+PACKAGE_NAME = "my_package"
+
+logger.configure(handlers=[{"sink": sys.stdout, "level": "INFO"}])
+logger.enable(PACKAGE_NAME)
+
+
+def get_run_tags(entrypoint):
+    tags = [
+        "type:emr",
+        "entrypoint:" + entrypoint.replace("my_package.", ""),
+        # Feel free to add any other tags
+    ]
+    logger.info(f"Running with {tags=}")
+    return tags
+
+
+@click.command(
+    name="entrypoint",
+    context_settings=dict(
+        ignore_unknown_options=True,
+        allow_extra_args=True,
+    ),
+)
+@click.pass_context
+@click.option(
+    "--entrypoint",
+    "-e",
+    required=True,
+    type=str,
+    help="File used as an entrypoint. Must have a 'main' function",
+)
+def main(ctx, entrypoint):
+    if not entrypoint.startswith("my_package."):
+        entrypoint = f"my_package.{entrypoint}"
+
+    logger.debug("Extracting parameters from context")
+    # https://stackoverflow.com/a/32946412/3488853
+    kwargs = {ctx.args[i][2:]: ctx.args[i + 1] for i in range(0, len(ctx.args), 2)}
+    kwargs.update({"entrypoint": entrypoint})
+
+    # Replace dashes for underscores in param names to ensure compatibility
+    kwargs = {k.replace("-", "_"): v for k, v in kwargs.items()}
+
+    logger.info(f"Importing '{entrypoint}'")
+    module = importlib.import_module(entrypoint)
+
+    logger.info(f"Running '{entrypoint}.main()' with kwargs='{kwargs}'")
+    with tags(*get_run_tags(entrypoint)):
+        module.main(**kwargs)
+
+
+if __name__ == "__main__":
+    print("Starting EMR job")
+    main()
+```
+
+### 7.2. Arguments code
+
+Here we define:
+* `BaseParams` to be extended in each `module`
+* A decorator that catch the `Params` and that creates a `prefect.flow`
+
+<TerminalOutput color="stone">
+  my_package/common/parameters.py
+</TerminalOutput>
+```python
+from time import time
+
+from pydantic import BaseModel
+from prefect import flow, get_run_logger
+
 class BaseParams(BaseModel):
     """
     Parent class for the Params meant to be extended.
@@ -392,23 +544,73 @@ class BaseParams(BaseModel):
 
     entrypoint: str
 
-class MyParams(BaseModel):
-	name: str
-	num: int
+def catch_params(ParamsClass):
+    """
+    This is used to easily parse params. It takes a class that inherits from 'BaseParams'.
 
-def main(**kwargs):
+    For example:
+        class Params(params.BaseParams):
+            schema_out: str = "nt_bronze__big_query"
+            files_per_partition: str = 1
 
-	args = MyParams(**kwargs)
-	print(f"Hello {args.name} with {args.num=}")
+
+        @params.catch_params(Params)
+        def main(params):
+            do_stuff
+    """
+
+    def decorator(func):
+        def inner(**kwargs):
+            params = ParamsClass(**kwargs)
+            entrypoint = params.entrypoint
+
+            @flow(name=entrypoint)
+            def prefect_flow(params):
+                t0 = time()
+                logger = get_run_logger()
+
+                logger.info(f"Running with {params=}")
+
+                # Make sure to log the outcome of the process
+                try:
+                    func(params)
+
+                except Exception as ex:
+                    logger.exception(
+                        f"Job '{entrypoint}.main()' failed after {(time() - t0)/ 60:.2f} minutes"
+                    )
+                    raise ex
+                else:
+                    logger.info(
+                        f"Job '{entrypoint}.main()' finished successfully "
+                        f"after {(time() - t0)/ 60:.2f} minutes"
+                    )
+
+            return prefect_flow(params)
+
+        return inner
+
+    return decorator
 ```
 
-## 6. Track executions with `prefect`
+### 7.3. Sample module
 
+Here is an example of how to define a `job`:
 
+<TerminalOutput color="stone">
+  my_package/salesforce/main.py
+</TerminalOutput>
+```python
+from datetime import datetime
 
-### 6.1. Jobs as `flows`
+from my_package.common import BaseParams, catch_params
 
-### 6.2. Adding `tasks` and/or `subflows`
+# Here we define all params
+class Params(BaseParams):
+    n_jobs: int = 10
+    start_time: datetime = None
 
-
-## 7. Putting it all together
+@catch_params(Params)
+def main(params):
+	print(f"Starting {params.n_jobs} jobs with start_time={params.start_time}")
+```
