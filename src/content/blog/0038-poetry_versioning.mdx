@@ -83,14 +83,13 @@ search = "version: '{current_version}'"
 replace = "version: '{new_version}'"
 ```
 
-## 2. Automatically update version
+## 2. Automatically validate versions
 
-The idea is to create a GitHub action that automatically updates the version.
-It should be smart enough to only do it if you haven't updated it.
+The idea is to create a GitHub action that automatically validates that the version is updated.
 This way you can decide if you want to increase the `major`, `minor`, or `patch` digit.
 
 <Notice type="info">
-  In this example, if the version is not manually updated, it will increase the `minor` version.
+  In this example, if the version is not manually updated, the CI will fail.
 </Notice>
 
 The first thing you need is a simple script that reads the package version from `pyproject.toml`:
@@ -156,9 +155,6 @@ import click
 from packaging import version
 from loguru import logger as log
 
-from utils import set_output
-
-
 @click.command()
 @click.option("--version_current")
 @click.option("--version_main")
@@ -167,19 +163,20 @@ def compare_versions(version_current, version_main):
 
     version_current = version.parse(version_current)
     version_main = version.parse(version_main)
+    
+    if version_current <= version_main:
+        logger.error("Version needs to be updated")
+        exit(1)
 
-    needs_update = version_current <= version_main
-
-    log.info(f"Outcome {needs_update}")
-
-    set_output("NEEDS_UPDATE", str(needs_update).lower())
+    logger.success(f"Version is correctly updated")
+    exit(0)
 
 
 if __name__ == "__main__":
     compare_versions()
 ```
 
-And the last step is to create a GitHub action that updates the version:
+And the last step is to create a GitHub action that validates the version:
 
 <TerminalOutput color="stone">
   /.github/workflow/fix_version.yaml
@@ -193,6 +190,10 @@ on:
       - dbt_northius/**
       - poetry.lock
       - pyproject.toml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   fix:
@@ -241,12 +242,16 @@ jobs:
           message: "Poetry minor version update"
 ```
 
+<Notice type="info" className="mt-6">
+  Notice that if there are multiple commits on the same PR the older runs will be canceled.
+  More info in <FancyLink linkText="Using concurrency and the default behavior" url="https://docs.github.com/en/enterprise-cloud@latest/actions/using-jobs/using-concurrency#example-using-concurrency-and-the-default-behavior" dark="true"/>
+</Notice>
+
 The way this works is by:
 
 1. Extracting the version in `main` branch
 2. Extracting the version from the current branch in the pull request
-3. If `current_version <= main_version`, then update
-4. The update will be done as a `minor` version increase and committed
+3. If `current_version <= main_version`, then fail
 
 ## 3. Automatically tag versions
 
