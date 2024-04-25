@@ -30,8 +30,6 @@ jobs:
         if: steps.changes.outputs.code == 'true'
         uses: actions/checkout@v3
         with:
-          # Those are needed because of https://github.com/EndBug/add-and-commit#working-with-prs
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: main
       - name: Get main version
         if: steps.changes.outputs.code == 'true'

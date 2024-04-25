@@ -1,7 +1,6 @@
 import click
 from loguru import logger
 from packaging import version
-from utils import set_output
 
 
 def check_versions_are_consecutive(version_current, version_main):
@@ -50,11 +49,12 @@ def compare_versions(version_current, version_main, project):
 
     validate_versions(version_current, version_main)
 
-    needs_update = version_current <= version_main
+    if version_current <= version_main:
+        logger.error("Version needs to be updated")
+        exit(1)
 
-    logger.info(f"Outcome {needs_update}")
-
-    set_output("NEEDS_UPDATE", str(needs_update).lower())
+    logger.success(f"Version is correctly updated")
+    exit(0)
 
 
 if __name__ == "__main__":
