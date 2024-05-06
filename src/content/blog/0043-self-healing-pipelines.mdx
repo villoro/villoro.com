@@ -19,13 +19,38 @@ In traditional pipelines, data processing typically focuses on the last batch, s
 While effective under normal circumstances, multiple failures can lead to tedious backfilling processes.
 This post delves into the concept of self-healing pipelines, which streamline operations by automatically backfilling failed executions, reducing the need for manual interventions.
 
-## 1. Daily processing
+## 1. Regular batch processing
+
+Let's imagine we have a daily pipeline that was running well until Friday (`2024-05-03`) when someone pushed a bug to `production`.
+You discover that mistake on Monday (`2024-05-06`) morning.
+Now you need to recover all missing data and that means you need to backfill 3 days. 
+
+![Backfill missing data](../../images/posts/2024/0043-backfill-missing-data.jpg)
+
+So you go to your orchestrator and schedule 3 jobs to extract the data for each day that failed.
+This works well but it has some drawbacks:
+
+1. You need to manually lunch the backfills
+2. Running 3 jobs instead of 1 can be less cost effective in some systems (like with spark)
 
 ## 2. Processing new data
 
-![Extract new data](../../images/posts/2024/0043-extract-new-data.jpg)
+The basic idea behind `Self-healing pipelines` is to always process any data that is **newer to the last extraction done**.
+In pseudo code that would be:
 
-### 2.1. Deduplication
+```sql
+source.last_modified_at > max(destination.last_modified_at)
+```
+
+Going back to the example, since the last correct extraction was done on the `2024-05-03`, in the next run we will process from there up until `2024-05-06`.
+
+<Notice type="warning">
+  **Important:** if you need to process a lot of days you might need to increase the resources and it might not work automatically unless you have some way of increasing them automatically.
+</Notice>
+
+### 2.1. Partitioning
+
+### 2.2. Deduplication
 
 ![Self-heal failed pipeline](../../images/posts/2024/0043-self-heal-failed-pipeline.jpg)
 
