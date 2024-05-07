@@ -3,10 +3,10 @@ slug: self-healing-pipelines
 title: Self-Healing Pipelines
 meta_title: Self-Healing Pipelines
 description: xxx
-date: 2024-05-02
+date: 2024-05-07
 image: "/images/blog/0043-self-healing-pipelines.jpg"
 tags: ["DE"]
-draft: false
+draft: true
 ---
 
 ## Table of Contents
@@ -22,7 +22,7 @@ This post delves into the concept of self-healing pipelines, which streamline op
 ## 1. Regular batch processing
 
 Let's imagine you have a daily pipeline that was running well until Friday (`2024-05-03`) when someone pushed a bug to production. 
-You discover that mistake on Monday (`2024-05-06`) morning.
+You discover the mistake on Monday (`2024-05-06`) morning.
 Now you need to recover all missing data, which means you need to backfill 3 days.
 
 ![Backfill missing data](../../images/posts/2024/0043-backfill-missing-data.jpg)
