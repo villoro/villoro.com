@@ -244,7 +244,6 @@ definitions:
     <<: *version
     work_pool: *subprocess-pool
     tags: ["type:prefect"]
-    schedule: {}
 ```
 
 You can read more about <FancyLink linkText="YAML alias nodes" url="https://yaml.org/spec/1.2.2/#71-alias-nodes" dark="true"/>.
@@ -266,8 +265,8 @@ With that, you can reuse the defaults like so:
   description: Export EMR history with a lambda
   entrypoint: src/lambdas/lambdas.py:emr_history
   tags: ["type:prefect", "group:lambda", "job:emr_history"]
-  schedule:
-    cron: "0 3 * * *"
+  schedules:
+    - cron: "0 3 * * *"
 ```
 <Notice type="info">
   Notice that you can overwrite the `defaults`.
