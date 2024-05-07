@@ -106,9 +106,239 @@ That can easily be replicated in `python` or other programming languages.
 
 ## 3. Code snippets
 
-### 3.1. SQL / DBT
+Now that we have all the concepts clear let's see how to implement it in `python` and `SQL`.
 
 ### 3.1. Python
+
+I use `spark` with `python` for extracting data for new sources.
+The imporant part here is to:
+
+1. Get the `max_datetime`
+2. Extract new data based on `max_datetime`
+3. Export it partitioned by `p_extracted_at`
+
+#### 3.1.1. Get `max_datetime`
+
+```python
+from datetime import datetime
+from datetime import timedelta
+from dateutil import parser
+
+from loguru import logger # or any other logger
+
+PARTITION_COL = "p_extracted_at"
+
+
+def table_exists(spark, tablename: str, db=None):
+    """Checks if a table exists"""
+    # Check and extract proper 'db' and 'tablename'
+    if db is None:
+        msg = "'tablename' must be like 'db.table' or 'iceberg.db.table' when db=None"
+        if tablename.startswith("iceberg."):
+            assert len(tablename.split(".")) == 3, msg
+            db, table = tablename.split(".")[-2:]
+        else:
+            assert len(tablename.split(".")) == 2, msg
+            db, table = tablename.split(".")
+    else:
+        msg = "When passing 'db' then 'tablename' cannot have a '.'"
+        assert "." not in tablename, msg
+        table = tablename
+
+    return spark.sql(f"SHOW TABLES IN {db} LIKE '{table}'").count() > 0
+
+def infer_max_datetime(
+    spark,
+    tablename,
+    filter_col,
+    lookup_days=7,
+    partition_col=PARTITION_COL,
+    as_datetime=True,
+):
+    """
+    Infers the 'max_date' of a table by checking the greater value inside the table.
+    """
+    logger.info(f"Infering 'max_date' for '{tablename}' ({filter_col=})")
+
+    if not table_exists(spark, tablename):
+        logger.warning(
+            f"Table '{tablename}' does not exist which should only happen at the first run."
+        )
+        return None
+
+    min_partition = (datetime.now() - timedelta(days=lookup_days)).isoformat()
+
+    logger.info(f"Querying with {min_partition=}")
+    sdf = spark.table(tablename).filter(f"'{partition_col}' >= '{min_partition}'")
+
+    min_dt_str = sdf.agg({filter_col: "max"}).collect()[0][0]
+    logger.info(f"Infered {min_dt_str=}")
+
+    if not min_dt_str:
+        logger.warning(f"max('{filter_col}') returned no values")
+        return None
+
+    if as_datetime:
+        min_dt = parser.parse(min_dt_str)
+        logger.info(f"Infered {min_dt=} for '{tablename}'")
+        return min_dt
+
+    return min_dt_str
+```
+<Notice type="info">
+  Notice that here we are querying a column `filter_col` (which usually will be `last_updated_at`).
+  Given that we the pipeline can fail and/or that we can do backfills that max value might not be in the latest partition.
+  This is way I recommend querying `N` days of data (7 by default) and getting the max from there.
+</Notice>
+
+#### 3.1.2. Extract new data and store it
+
+```python
+from datetime import datetime
+
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+
+PARTITION_COL = "p_extracted_at"
+TABLENAME = "db.table"
+
+def main():
+
+    spark = SparkSession.builder.appName("test").getOrCreate()
+    
+    # Get the max `last_updated_at`
+    max_dt = infer_max_datetime()
+
+    # Extract new data
+    sdf = get_data(where=f"WHERE last_updated_at >= {max_dt}")
+
+    # Add partition column
+    sdf = sdf.withColumn(PARTITION_COL, F.lit(datetime.now().isoformat()))
+
+    # Write the data
+    sdf.write.mode("append").format("parquet").saveAsTable(TABLENAME)
+
+    spark.stop()
+
+if __name__ == '__main__':
+    main()
+```
+<Notice type="info">
+  `get_data` is not defined since it's out of scope.
+  It's just a function that queries some external system.
+</Notice>
+
+### 3.2. DBT (SQL)
+
+I use `DBT` for transforming for creating the `silver` and `gold` layers.
+Those examples should explain how to:
+
+* Process only new data
+* Deduplicate
+
+#### 3.2.1. DBT macros
+
+With `DBT` I like to define 2 macros:
+
+* `row_number`. This is useful because in most tables I sort the windows with the same ways and I use the same key
+* `last_update`. This one is useful for getting the latest updated of the 'self' table (`this` in DBT)
+
+They can be defined with:
+
+```sql
+{%- macro row_number(keys='id', sorting='p_extracted_at DESC') -%}
+    ROW_NUMBER() OVER(PARTITION BY {{ keys }} ORDER BY {{ sorting }})
+{%- endmacro -%}
+
+{%- macro last_update(column, filter_expression=None, table=this) -%}
+    (
+        SELECT max({{ column }})
+        FROM {{ table }}
+    {%- if (filter_expression) -%}
+        WHERE {{ filter_expression }}
+    {%- endif -%}
+    )
+{%- endmacro -%}
+```
+
+And the documentation:
+
+```yaml
+version: 2
+
+macros:
+  - name: row_number
+    description: Gets the row_number which will be used for removing duplicates
+    arguments:
+      - name: keys
+        type: string
+        description: Column(s) used to define table unicity. Default `id`
+      - name: sorting
+        type: string
+        description: Column and direction used to sort the window. Default `p_extracted_at DESC`
+
+  - name: last_update
+    description: |
+      Returns the **last_update** from the `self` table.
+      This is useful for building smart incremental models where we only process the deltas that are not processed.
+
+      It would be used like:
+
+          SELECT *
+          FROM source
+          {% raw %}{% if is_incremental() -%}
+              WHERE p_extracted_at > {{ last_update('_extracted_at') }}
+          {%- endif %}{% endraw %}
+
+    arguments:
+      - name: column
+        type: string
+        description: Name of the column that contains the `last_update`
+```
+
+#### 3.2.2. DBT model
+
+Once you have the macros, the basic code for the model would look like:
+
+```sql
+WITH source AS (
+    SELECT *
+    FROM {{ ref('your_source_table') }}
+),
+
+latest_data_from_source AS (
+    SELECT
+        *,
+        {{ row_number() }} AS rn
+    FROM source
+    {% if is_incremental() -%} -- This helps reading only the new data
+        WHERE p_extracted_at > {{ last_update('_extracted_at') }}
+    {%- endif %}
+),
+
+deduplicated AS (
+    SELECT
+        ----------  ids
+        id,
+
+        ----------  add any other column here
+        other_column
+
+        ----------  metadata
+        p_extracted_at AS _extracted_at
+    FROM latest_data_from_source
+    WHERE rn = 1 -- This is for deduplication
+)
+
+SELECT *
+FROM deduplicated
+```
+
+<Notice type="warning" className="mt-6">
+  It's important that you set the proper `materialization`.
+  In general it should be `materialization=incremental` (see: <FancyLink linkText="DBT | Incremental models" url="https://docs.getdbt.com/docs/build/incremental-models"/>).
+  And you might also need to set up the incremental strategy. For example with <FancyLink linkText="DBT Athena" url="https://github.com/dbt-athena/dbt-athena"/> I set the `incremental_strategy: merge` and the `table_type: iceberg`.
+</Notice>
 
 ## 4. Handling schema changes
 
