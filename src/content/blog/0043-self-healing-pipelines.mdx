@@ -342,4 +342,82 @@ FROM deduplicated
 
 ## 4. Handling schema changes
 
-### 4.1. Handling type changes
+One last thing you might want to automatically handle are schema changes.
+You cannot handle all of them but you can easily adapt to:
+
+* Missing columns
+* New columns
+* Types changed
+
+<Notice type="info">
+  I only suggest you do that on `bronze` where you want to have as less errors as possible.
+</Notice>
+
+<Notice type="warning" className="mt-6">
+  Notice that if you implement some automatic handling of schema changes you might have inconsistent data that you will need to handle.
+  Do it at your own risk.
+</Notice>
+
+### 4.1. New or missing columns
+
+If you want to automatically handle missing columns you simply need to add them as `NULL` in the input dataframe.
+
+When working with `Delta` or `Iceberg` you can easily add columns without problems.
+But sometimes on the `bronze` you might be working with raw `parquet`.
+In that case, you will need to manually add the column to the catalog.
+
+You can do both things with the following code:
+ 
+```python
+def fix_missmatching_columns(spark, sdf, tablename):
+
+    if not table_exists(spark, tablename):
+        logger.warning(
+            f"'{tablename}' doesn't exist which should only happen at the first run"
+        )
+        return sdf
+
+    sdf_hist = spark.table(tablename)
+
+    # Get columns from the parquet table and current dataframe
+    columns_history = sdf_hist.columns
+    columns_current = sdf.columns
+
+    # See which ones are missing and the new ones
+    columns_new = set(columns_current) - set(columns_history)
+    columns_missing = set(columns_history) - set(columns_current)
+
+    if columns_new:
+        cols_to_add = [f"{x} {get_col_dtype(sdf, x)}" for x in columns_new]
+        cols_text = ", ".join(cols_to_add)
+
+        logger.info(
+            f"Adding to '{tablename}' [source] {len(columns_new)} "
+            f"new columns: {cols_to_add=}"
+        )
+
+        spark.sql(f"ALTER TABLE {tablename} ADD columns ({cols_text})")
+
+    if columns_missing:
+        cols = {x: get_col_dtype(sdf_hist, x) for x in columns_missing}
+
+        logger.warning(
+            f"There are {len(columns_missing)} missing columns in "
+            f"'{tablename}' [sdf]: {cols=}. Adding them as `NULL`."
+        )
+        sdf = sdf.select(
+            "*",
+            *[F.lit(None).cast(dtype).alias(name) for name, dtype in cols.items()],
+        )
+
+    if not columns_new and not columns_missing:
+        logger.debug(f"Columns match for '{tablename}'")
+
+    return sdf
+```
+
+### 4.2. Handling type changes
+
+If you experience multiple type changes in your tables and you want to automatically handle them I think that the best thing you can do is to convert all columns to `string`.
+Then on the `silver` layer you can apply the proper `type` you want by casting.
+This should ensure that you always extract data to `bronze` no matter what.
