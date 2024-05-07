@@ -21,54 +21,55 @@ This post delves into the concept of self-healing pipelines, which streamline op
 
 ## 1. Regular batch processing
 
-Let's imagine we have a daily pipeline that was running well until Friday (`2024-05-03`) when someone pushed a bug to `production`.
+Let's imagine you have a daily pipeline that was running well until Friday (`2024-05-03`) when someone pushed a bug to production. 
 You discover that mistake on Monday (`2024-05-06`) morning.
-Now you need to recover all missing data and that means you need to backfill 3 days. 
+Now you need to recover all missing data, which means you need to backfill 3 days.
 
 ![Backfill missing data](../../images/posts/2024/0043-backfill-missing-data.jpg)
 
-So you go to your orchestrator and schedule 3 jobs to extract the data for each day that failed.
-This works well but it has some drawbacks:
+To address this issue, you manually schedule three jobs in your orchestrator, each tasked with extracting the missing data for a specific day.
+However, this approach has some limitations:
 
-1. You need to manually lunch the backfills
-2. Running 3 jobs instead of 1 can be less cost effective in some systems (like with spark)
+1. **Manual Intervention**: Backfilling requires manual intervention to schedule the jobs, which can be time-consuming and prone to errors.
+2. **Cost Considerations**: Running three separate jobs for each day can be less cost-effective, especially in systems like Spark, where spinning up multiple jobs incurs additional overhead.
 
 ## 2. Processing new data
 
-The basic idea behind `Self-healing pipelines` is to always process any data that is **newer to the last extraction done**.
-In pseudo code that would be:
+The concept of `Self-healing pipelines`  revolves around processing data that is newer than the last successful extraction performed.
+In essence, the pipeline automatically identifies and handles data gaps or discrepancies by processing only the most recent data.
+
+Here's the logic in pseudo code:
 
 ```sql
 source.last_modified_at > max(destination.last_modified_at)
 ```
 
-Going back to the example, since the last correct extraction was done on the `2024-05-03`, in the next run we will process from there up until `2024-05-06`.
+> In simpler terms, the pipeline extracts data from the source if its last modification timestamp is greater than the maximum last modification timestamp in the destination.
+
+In the scenario described earlier, where the last correct extraction was performed on `2024-05-03`, the next run of the pipeline would process data from that date up until `2024-05-06`.
 
 <Notice type="warning">
-  **Important:** if you need to process a lot of days you might need to increase the resources and it might not work automatically unless you have some way of increasing them automatically.
+  **Important:** When processing a large number of days, it may be necessary to allocate additional resources.
+  Moreover, automatic scaling of resources might be required for seamless operation.
 </Notice>
 
 ### 2.1. Partitioning
 
-I like to structue the data lake in 3 layers as `databricks` suggest in <FancyLink linkText="Medallion Architecture" url="https://www.databricks.com/glossary/medallion-architecture"/>.
+Partitioning the data lake into three layers, as recommended by Databricks in their <FancyLink linkText="Medallion Architecture" url="https://www.databricks.com/glossary/medallion-architecture"/>, provides a structured approach to data management.
+Here are the layers:
 
-Those layers are:
-
-1. `bronze`, aka `raw` or `landing`
-2. `silver`
-3. `gold`
+1. **Bronze**: Also known as `raw` or `landing`, this layer contains the data in its original form, without any transformations. It serves as the initial landing place for all incoming data.
+2. **Silver**: The silver layer involves processing and cleaning the data from the bronze layer. Here, data quality checks and transformations are performed to prepare the data for further analysis.
+3. **Gold**: The gold layer represents the refined and curated data that is optimized for consumption by end-users or downstream applications. This layer typically contains aggregated, enriched, and business-ready datasets.
 
 ![Data Lake Layers](../../images/posts/2024/0043-data-lake-layers.jpg)
 
 #### 2.1.1. Partitions in `bronze`
 
-For the `bronze` layer I strongly suggest that you always partition by the extraction datetime.
-Since I like to add the `p_` preffix to the partition columns, that would be `p_exctracted_at`.
+Partitioning the `bronze` layer by the extraction datetime, typically labeled as `p_extracted_at`, offers several advantages:
 
-The advantages are:
-
-* **No need to write old partitions** (update or rewrite) when extracting new data
-* Easy to know when was the last extraction done and what data needs to be processed
+* **Avoidance of rewriting old partitions**: New data extractions can be appended without the need to update or rewrite existing partitions. This simplifies data ingestion and reduces the risk of inadvertently modifying historical data.
+* **Facilitation of tracking**: The partition column provides clear visibility into when the last extraction occurred and identifies which data needs processing. This makes it easier to monitor data freshness and manage incremental processing workflows effectively.
 
 #### 2.1.2. Partitions on `silver`/`gold`
 
@@ -81,20 +82,20 @@ The easiest way is to use the `MERGE INTO` option that both <FancyLink linkText=
 
 ### 2.2. Deduplication
 
-In the `bronze` layer we are extracting any row that had a change and we store it partition it by `p_extracted_at`.
-That means that if we try to process multiple `bronze` partitions we will likely have duplicates.
-To handle them we simply need to keep the latest entry.
+In the `bronze` layer, where data extraction occurs, partitioning by `p_extracted_at` is essential for efficient data management. However, this partitioning strategy can lead to duplicates when processing multiple `bronze` partitions. To address this issue, we implement deduplication by retaining only the latest entry for each unique identifier (`id`).
 
 As an example, let's imagine the following data:
 
 ![Self-heal failed pipeline](../../images/posts/2024/0043-self-heal-failed-pipeline.jpg)
 
-The idea is to define a `row_number (rn)` for each `id` in the table in a descending order based on `last_modified_at` field (if not present you can use `p_extracted_at`).
-With that you only need to keep all records that have `rn = 1` since the rest are duplicates.
+Here's an overview of the deduplication process:
+
+1. **Identify unique rows**: Use the `row_number()` function to assign a sequential number (`rn`) to each row within a partition, ordered by the `last_modified_at` field (or `p_extracted_at` if `last_modified_at` is unavailable). This function is applied in descending order, ensuring that the latest entry for each `id` receives `rn = 1`.
+2. **Filter duplicates**: Keep only the records where `rn = 1`, as they represent the latest version of each unique identifier. Discard any rows with `rn > 1`, as they are duplicates.
 
 #### 2.2.1. Deduplication when there is no `id` column
 
-If there is no `id` column you will need to create one.
+If there is no `id` column, you will need to create one.
 This is done by creating a `composite key` as described in <FancyLink linkText="DBT | Composite key" url="https://docs.getdbt.com/reference/resource-configs/unique_key#use-a-combination-of-two-columns-as-a-unique-key"/>.
 
 <Notice type="warning">
@@ -106,7 +107,7 @@ That can easily be replicated in `python` or other programming languages.
 
 ## 3. Code snippets
 
-Now that we have all the concepts clear let's see how to implement it in `python` and `SQL`.
+Now that we have all the concepts clear, let's see how to implement it in `python` and `SQL`.
 
 ### 3.1. Python
 
@@ -187,8 +188,8 @@ def infer_max_datetime(
 ```
 <Notice type="info">
   Notice that here we are querying a column `filter_col` (which usually will be `last_updated_at`).
-  Given that we the pipeline can fail and/or that we can do backfills that max value might not be in the latest partition.
-  This is way I recommend querying `N` days of data (7 by default) and getting the max from there.
+  Given that the pipeline can fail and/or that we can do backfills, that max value might not be in the latest partition.
+  This is why I recommend querying `N` days of data (7 by default) and getting the max from there.
 </Notice>
 
 #### 3.1.2. Extract new data and store it
@@ -224,13 +225,13 @@ if __name__ == '__main__':
     main()
 ```
 <Notice type="info">
-  `get_data` is not defined since it's out of scope.
+  `get_data`  is not defined since it's out of scope.
   It's just a function that queries some external system.
 </Notice>
 
 ### 3.2. DBT (SQL)
 
-I use `DBT` for transforming for creating the `silver` and `gold` layers.
+I use `DBT` for transforming and creating the `silver` and `gold` layers.
 Those examples should explain how to:
 
 * Process only new data
@@ -238,10 +239,10 @@ Those examples should explain how to:
 
 #### 3.2.1. DBT macros
 
-With `DBT` I like to define 2 macros:
+With `DBT`, I like to define 2 macros:
 
-* `row_number`. This is useful because in most tables I sort the windows with the same ways and I use the same key
-* `last_update`. This one is useful for getting the latest updated of the 'self' table (`this` in DBT)
+* `row_number`. This is useful because in most tables I sort the windows with the same ways and I use the same key.
+* `last_update`. This one is useful for getting the latest update of the 'self' table (`this` in DBT).
 
 They can be defined with:
 
@@ -336,8 +337,8 @@ FROM deduplicated
 
 <Notice type="warning" className="mt-6">
   It's important that you set the proper `materialization`.
-  In general it should be `materialization=incremental` (see: <FancyLink linkText="DBT | Incremental models" url="https://docs.getdbt.com/docs/build/incremental-models"/>).
-  And you might also need to set up the incremental strategy. For example with <FancyLink linkText="DBT Athena" url="https://github.com/dbt-athena/dbt-athena"/> I set the `incremental_strategy: merge` and the `table_type: iceberg`.
+  In general, it should be `materialization=incremental` (see: <FancyLink linkText="DBT | Incremental models" url="https://docs.getdbt.com/docs/build/incremental-models"/>).
+  And you might also need to set up the incremental strategy. For example, with <FancyLink linkText="DBT Athena" url="https://github.com/dbt-athena/dbt-athena"/> I set the `incremental_strategy: merge` and the `table_type: iceberg`.
 </Notice>
 
 ## 4. Handling schema changes
@@ -350,19 +351,18 @@ You cannot handle all of them but you can easily adapt to:
 * Types changed
 
 <Notice type="info">
-  I only suggest you do that on `bronze` where you want to have as less errors as possible.
+  I only suggest you do that on `bronze` where you want to have as fewer errors as possible.
 </Notice>
 
 <Notice type="warning" className="mt-6">
-  Notice that if you implement some automatic handling of schema changes you might have inconsistent data that you will need to handle.
-  Do it at your own risk.
+  Notice that if you implement some automatic handling of schema changes you might have inconsistent data that you will need to handle. Do it at your own risk.
 </Notice>
 
 ### 4.1. New or missing columns
 
-If you want to automatically handle missing columns you simply need to add them as `NULL` in the input dataframe.
+If you want to automatically handle missing columns, you simply need to add them as `NULL` in the input dataframe.
 
-When working with `Delta` or `Iceberg` you can easily add columns without problems.
+When working with `Delta` or `Iceberg`, you can easily add columns without problems.
 But sometimes on the `bronze` you might be working with raw `parquet`.
 In that case, you will need to manually add the column to the catalog.
 
@@ -418,6 +418,6 @@ def fix_missmatching_columns(spark, sdf, tablename):
 
 ### 4.2. Handling type changes
 
-If you experience multiple type changes in your tables and you want to automatically handle them I think that the best thing you can do is to convert all columns to `string`.
-Then on the `silver` layer you can apply the proper `type` you want by casting.
+If you experience multiple type changes in your tables and you want to automatically handle them, I think that the best thing you can do is to convert all columns to `string`.
+Then on the `silver` layer, you can apply the proper `type` you want by casting.
 This should ensure that you always extract data to `bronze` no matter what.
