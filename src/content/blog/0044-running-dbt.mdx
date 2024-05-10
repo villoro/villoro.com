@@ -16,17 +16,34 @@ draft: false
 
 ## 0. Motivation
 
-## 1. The pieces
+<FancyLink linkText="DBT" url="https://www.getdbt.com/"/> serves as a gateway for SQL practitioners to engage more deeply in data engineering tasks.
+While DBT Cloud offers a managed solution, budget constraints may lead to exploring self-hosting options.
+Leveraging <FancyLink linkText="AWS ECS" url="https://aws.amazon.com/en/ecs/" company="aws"/> (Fargate) aligns with our existing AWS infrastructure and offers cost-effective scalability.
+By self-hosting DBT on AWS ECS (Fargate), we gain better control and observability over our data transformation processes.
 
-### 1.1. DBT
+## 1. The components
 
-### 1.2. Docker
+In our setup, we combine `DBT`, `Docker`, and `AWS ECS (Fargate)` to streamline the execution of data transformation pipelines:
 
-### 1.3. ECS (Fargate)
+* **DBT** enables SQL practitioners to efficiently transform and model data.
+* **Docker** containerizes the necessary Python code for DBT, ensuring consistency and reproducibility.
+* **AWS ECS (Fargate)** orchestrates and executes Docker containers, providing a lightweight and serverless solution for running DBT.
+
+<Notice type="warning">
+  Teams using AWS EKS can replicate this setup with minimal effort, leveraging existing Kubernetes clusters.
+</Notice>
 
 ## 2. Options for handling packages in docker
 
 ## 3. Docker images
+
+https://docs.getdbt.com/reference/programmatic-invocations
+https://data-dive.com/deploy-dbt-on-aws-using-ecs-fargate-with-airflow-scheduling/
+https://medium.com/hashmapinc/deploying-and-running-dbt-on-aws-fargate-872db84065e4
+https://medium.com/hashmapinc/automate-code-deployment-with-aws-ec2-build-agents-for-your-azure-devops-pipelines-6636fe1c8e21
+https://www.freecodecamp.org/news/build-and-push-docker-images-to-aws-ecr/
+
+Diagram from https://campustraining.atlassian.net/browse/DI-1001?
 
 ### 3.1. Docker.base
 
