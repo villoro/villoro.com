@@ -21,6 +21,14 @@ While DBT Cloud offers a managed solution, budget constraints may lead to explor
 Leveraging <FancyLink linkText="AWS ECS" url="https://aws.amazon.com/en/ecs/" company="aws"/> (Fargate) aligns with our existing AWS infrastructure and offers cost-effective scalability.
 By self-hosting DBT on AWS ECS (Fargate), we gain better control and observability over our data transformation processes.
 
+When setting this up I got a lot of information and direction from those posts:
+
+* <FancyLink linkText="Running dbt-core in production on AWS using ECS Fargate and Airflow" url="https://data-dive.com/deploy-dbt-on-aws-using-ecs-fargate-with-airflow-scheduling/" company="default" dark="true"/>
+* <FancyLink linkText="Deploying and Running dbt on AWS Fargate" url="https://medium.com/hashmapinc/deploying-and-running-dbt-on-aws-fargate-872db84065e4" dark="true"/>
+
+However I still thing I have multiple improvements that I wanted to share such as how to handle it with `poetry`, integration with `prefect`, exporting `DBT` run results among other things.
+So this is why I'm documenting everything.
+
 ## 1. The components
 
 In our setup, we combine `DBT`, `Docker`, and `AWS ECS (Fargate)` to streamline the execution of data transformation pipelines:
@@ -33,17 +41,24 @@ In our setup, we combine `DBT`, `Docker`, and `AWS ECS (Fargate)` to streamline 
   Teams using AWS EKS can replicate this setup with minimal effort, leveraging existing Kubernetes clusters.
 </Notice>
 
+Here you can see a diagram of the overall architecture:
+
+![Backfill missing data](../../images/posts/2024/0044-dbt-architecture.jpg)
+
 ## 2. Options for handling packages in docker
+
+From the begining I wanted to have a simple `Docker` image that it is independant from the `DBT` code.
+This way changes to the `DBT` itself won't imply creating a new image and uploading it to `ECR`.
+
+So the solution is to create a `venv.tar.gz` file that contains all `DBT` code and that is downloaded at execution time.
+Those `venv` are versioned so that we can easily use older versions if needed.
+In order to decide which version to download and use I export the `pyproject.toml` which contains the `version` number.
+
+You can read more about it in <FancyLink linkText="Deploying and Running dbt on AWS Fargate" url="https://medium.com/hashmapinc/deploying-and-running-dbt-on-aws-fargate-872db84065e4" dark="true"/> (section `Docker Image`).
 
 ## 3. Docker images
 
-https://docs.getdbt.com/reference/programmatic-invocations
-https://data-dive.com/deploy-dbt-on-aws-using-ecs-fargate-with-airflow-scheduling/
-https://medium.com/hashmapinc/deploying-and-running-dbt-on-aws-fargate-872db84065e4
-https://medium.com/hashmapinc/automate-code-deployment-with-aws-ec2-build-agents-for-your-azure-devops-pipelines-6636fe1c8e21
-https://www.freecodecamp.org/news/build-and-push-docker-images-to-aws-ecr/
-
-Diagram from https://campustraining.atlassian.net/browse/DI-1001?
+* <FancyLink linkText="How to Build and Push Docker Images to AWS ECR" url="https://www.freecodecamp.org/news/build-and-push-docker-images-to-aws-ecr/"/>
 
 ### 3.1. Docker.base
 
@@ -338,12 +353,70 @@ echo 5. Running all DBT commands. Using args="$@"
 poetry run python run.py "$@"
 ```
 
-## 5. Integrating with Prefect
+## 5. CD
 
-### 5.1. Tasks
+```python
+import os
 
-### 5.2. Adding logs
+import boto3
+import click
+import utils as u
+from loguru import logger
 
-## 6. Exporting DBT results
 
-## 7. CI with pre-commit
+def upload_to_s3(bucket, origin, dest):
+    logger.info(f"Uploading from {origin=} to {dest=}")
+
+    s3_client = boto3.client("s3")
+    s3_client.upload_file(origin, bucket, dest)
+
+
+def upload_dbt_package(bucket, s3_dist, s3_venv):
+    logger.info(f"Exploring packages to upload")
+    for filename in os.listdir("dist"):
+        if filename.endswith(".tar.gz"):
+            path = s3_venv if filename.startswith("venv") else s3_dist
+            upload_to_s3(bucket, f"dist/{filename}", f"{path}/{filename}")
+
+
+@click.command()
+@click.option("--env", default="pro", help="Environment where code will be deployed")
+def upload_all(env):
+    aws_config = u.get_aws_config()
+
+    env = env.lower()
+    logger.info(f"Working on {env=}")
+    assert env in aws_config["s3_bucket"].keys()
+
+    logger.info(f"Extractings paths")
+    bucket = aws_config["s3_bucket"][env]
+    s3_code = aws_config["paths"]["s3_code"]
+    s3_dist = aws_config["paths"]["s3_dist"]
+    s3_venv = aws_config["paths"]["s3_venv"]
+
+    # Upload poetry config
+    upload_to_s3(bucket, "pyproject.toml", f"{s3_code}/pyproject.toml")
+    upload_to_s3(bucket, "poetry.lock", f"{s3_code}/poetry.lock")
+
+    # DBT config
+    profile = aws_config["filenames"]["profiles_by_env"]
+    upload_to_s3(bucket, profile.format(env=env), f"{s3_code}/profiles.yml")
+    upload_dbt_package(bucket, s3_dist, s3_venv)
+
+
+if __name__ == "__main__":
+    upload_all()
+```
+
+## 6. Running DBT
+https://docs.getdbt.com/reference/programmatic-invocations
+
+## 6. Integrating with Prefect
+
+### 6.1. Tasks
+
+### 6.2. Adding logs
+
+## 7. Exporting DBT results
+
+## 8. CI with pre-commit
