@@ -47,16 +47,303 @@ Diagram from https://campustraining.atlassian.net/browse/DI-1001?
 
 ### 3.1. Docker.base
 
+<TerminalOutput color="stone">
+  .github/docker/Dockerfile.base
+</TerminalOutput>
+```docker
+# Top level build args
+ARG BUILD_FOR=linux/amd64
+
+FROM --platform=${BUILD_FOR} python:3.10.7-slim-bullseye as base
+
+# Env vars + Args
+ARG POETRY_VERSION=1.6.1 # Should match CI config 
+ENV PYTHONIOENCODING=utf-8
+ENV LANG=C.UTF-8
+
+WORKDIR /usr/app/dbt/
+
+# System setup
+RUN apt-get update \
+  && apt-get dist-upgrade -y \
+  && apt-get install -y --no-install-recommends \
+    git \
+    ssh-client \
+    software-properties-common \
+    make \
+    build-essential \
+    ca-certificates \
+    libpq-dev \
+  && apt-get clean \
+  && rm -rf \
+    /var/lib/apt/lists/* \
+    /tmp/* \
+    /var/tmp/*
+
+# Update and install python packages
+RUN python -m pip install --upgrade \
+  pip \
+  setuptools \
+  wheel \
+  poetry==${POETRY_VERSION} \
+  boto3 \
+  loguru \
+  toml \
+  --no-cache-dir
+```
+
 ### 3.2. Docker.venv
+
+<TerminalOutput color="stone">
+  .github/docker/Dockerfile.venv
+</TerminalOutput>
+```docker
+FROM dbt/base as base
+
+ARG PACKAGE_VERSION
+
+# Copy the scripts needed for setting up the environment (and yes, all of them are needed...)
+COPY pyproject.toml .
+COPY poetry.lock .
+COPY README.md .
+COPY dbt_src dbt_src
+
+# Set up poetry and install dependencies
+RUN poetry config virtualenvs.in-project true && \
+    poetry install
+
+# Install 'dbt_northius' as a package
+RUN poetry build && \
+    poetry run pip install dist/*.whl
+
+# Create a '.tar.gz' with the virtual environment
+RUN poetry run venv-pack -o dist/venv_${PACKAGE_VERSION}.tar.gz
+
+# Export the '.tar.gz'
+FROM scratch AS export
+COPY --from=base /usr/app/dbt/dist/*.tar.gz /dist/
+```
 
 ### 3.3. Docker.ecs
 
-## 4. Integrating with Prefect
+<TerminalOutput color="stone">
+  .github/docker/Dockerfile.ecs
+</TerminalOutput>
+```docker
+FROM dbt/base
 
-### 4.1. Tasks
+# Instll prefect
+ARG PREFECT_VERSION=2.14.20 # Should match poetry.lock
+RUN python -m pip install prefect==${PREFECT_VERSION}
 
-### 4.2. Adding logs
+# Connect to prefect
+ARG PREFECT_API_URL # This should end with '/api'
+ENV PREFECT_API_URL=${PREFECT_API_URL}
 
-## 5. Exporting DBT results
+# Copy the scripts needed for setting up the environment
+COPY scripts .
 
-## 6. CI with pre-commit
+# This will download the needed files + install poetry environment + execute all DBT commands by default
+ENTRYPOINT ["/bin/bash", "./setup_and_run_dbt.sh"]
+```
+
+## 4. Scripts
+
+### 4.1. Download poetry config
+
+<TerminalOutput color="stone">
+  scripts/download_poetry_config.py
+</TerminalOutput>
+```python
+import tarfile
+
+import boto3
+import utils as u
+from loguru import logger
+
+# Should match 'pyproject.toml'
+S3_BUCKET = {
+    "634077897723": "nt-data-engineering-eu-west-1-634077897723-pre",
+    "162076964983": "nt-data-engineering-eu-west-1-162076964983-snd",
+    "742407267173": "nt-data-engineering-eu-west-1-742407267173-pro",
+}
+S3_CODE = "dbt/code"
+
+
+def download_pyproject(bucket):
+    pyproject = u.PYPROJECT_FILE
+    lock = u.LOCK_FILE
+    s3_client = boto3.client("s3")
+
+    logger.info(f"Downloading 's3://{bucket}/{S3_CODE}/{pyproject}'")
+    s3_client.download_file(bucket, f"{S3_CODE}/{pyproject}", pyproject)
+    logger.info(f"Downloading 's3://{bucket}/{S3_CODE}/{lock}'")
+    s3_client.download_file(bucket, f"{S3_CODE}/{lock}", lock)
+
+
+def venv_download_tar(bucket, s3_venv, filename):
+    s3_client = boto3.client("s3")
+    logger.info(f"Downloading 's3://{bucket}/{s3_venv}/{filename}'")
+    s3_client.download_file(bucket, f"{s3_venv}/{filename}", filename)
+
+
+def venv_extract_tar(local_venv, filename):
+    logger.info(f"Extracting '{filename}' to '{local_venv}'")
+    with tarfile.open(filename, "r:gz") as tar:
+        tar.extractall(local_venv)
+
+
+def download_all():
+    # Download 'pyproject.toml' asap
+    account = u.get_account()
+    bucket = S3_BUCKET[account]
+    download_pyproject(bucket)
+
+    # Then infer from 'pyproject.toml'
+    aws_config = u.get_aws_config()
+    logger.info(f"Extractings paths")
+    s3_dist = aws_config["paths"]["s3_dist"]
+    s3_venv = aws_config["paths"]["s3_venv"]
+    local_venv = aws_config["paths"]["local_venv"]
+
+    version = u.get_version_from_toml()
+    filename = aws_config["filenames"]["venv"].format(version=version)
+
+    # Finally download the tars
+    venv_download_tar(bucket, s3_venv, filename)
+    venv_extract_tar(local_venv, filename)
+
+
+if __name__ == "__main__":
+    download_all()
+```
+
+### 4.2. Download code
+
+<TerminalOutput color="stone">
+  scripts/download_code.py
+</TerminalOutput>
+```python
+import os
+import shutil
+import tarfile
+
+import boto3
+import toml
+import utils as u
+from loguru import logger
+from prefect import flow
+from prefect import get_run_logger
+from prefect import tags
+from prefect import task
+
+
+@task(name="dbt.config.dist.download_profiles")
+def dist_download_profiles(bucket, s3_code, profiles):
+    logger = get_run_logger()
+    logger.info(f"Downloading 's3://{bucket}/{s3_code}/{profiles}'")
+
+    s3_client = boto3.client("s3")
+    s3_client.download_file(bucket, f"{s3_code}/{profiles}", profiles)
+
+
+@task(name="dbt.config.dist.download_tar")
+def dist_download_tar(bucket, s3_dist, filename):
+    logger = get_run_logger()
+    logger.info(f"Downloading 's3://{bucket}/{s3_dist}/{filename}'")
+
+    s3_client = boto3.client("s3")
+    s3_client.download_file(bucket, f"{s3_dist}/{filename}", filename)
+
+
+@task(name="dbt.config.dist.extract_tar")
+def dist_extract_tar(filename):
+    logger = get_run_logger()
+    logger.info(f"Extracting '{filename}'")
+
+    with tarfile.open(filename, "r:gz") as tar:
+        tar.extractall()
+
+
+@task(name="dbt.config.dist.move_files")
+def move_files(filename, path_temp):
+    for filename in os.listdir(path_temp):
+        shutil.move(os.path.join(path_temp, filename), filename)
+
+
+@task(name="dbt.config.dist.clean_files")
+def clean_files(filename, path_temp):
+    logger = get_run_logger()
+    logger.info(f"Removing '{filename}'")
+    os.remove(filename)
+
+    path_to_delete = path_temp.split("/")[0]
+    logger.info(f"Removing '{path_to_delete}/'")
+    shutil.rmtree(path_to_delete)
+
+
+@flow(name="dbt.config.dist")
+def download_dist(version):
+    account = u.get_account()
+    aws_config = u.get_aws_config()
+
+    logger.info(f"Extractings paths and filenames from '{u.PYPROJECT_FILE}'")
+    env = aws_config["accounts"][account]
+    bucket = aws_config["s3_bucket"][env]
+    s3_code = aws_config["paths"]["s3_code"]
+    s3_dist = aws_config["paths"]["s3_dist"]
+    profiles = aws_config["filenames"]["profiles"]
+    dist = aws_config["filenames"]["dist"].format(version=version)
+    dist_temp = aws_config["filenames"]["dist_temp"].format(version=version)
+
+    dist_download_profiles(bucket, s3_code, profiles)
+    dist_download_tar(bucket, s3_dist, dist)
+    dist_extract_tar(dist)
+    move_files(dist, dist_temp)
+    clean_files(dist, dist_temp)
+
+
+def main():
+    u.ping_prefect()
+
+    version = u.get_version_from_toml()
+    run_tags = ["type:dbt.config", f"version:{version}"]
+
+    with tags(*run_tags):
+        logger.info(f"Downloading code with {run_tags=}")
+        logger.info("Running first prefect task inside docker")
+        download_dist(version)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+### 4.3. Setup and run DBT
+
+<TerminalOutput color="stone">
+  scripts/setup_and_run_dbt.sh
+</TerminalOutput>
+```sh
+echo "1. Downloading Poetry config"
+python download_poetry_config.py
+
+echo "2. Setting up Poetry"
+poetry config virtualenvs.in-project true
+
+echo "3. Downloading all Poetry code"
+poetry run python download_code.py
+
+echo 5. Running all DBT commands. Using args="$@"
+poetry run python run.py "$@"
+```
+
+## 5. Integrating with Prefect
+
+### 5.1. Tasks
+
+### 5.2. Adding logs
+
+## 6. Exporting DBT results
+
+## 7. CI with pre-commit
