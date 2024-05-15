@@ -1,6 +1,6 @@
 ---
-slug: running-dbt-with-aws-ecs
-title: Running DBT with AWS ECS
+slug: running-dbt-with-aws-ecs-fargate
+title: Running DBT with AWS ECS (Fargate)
 meta_title: Running DBT with AWS ECS
 description: Guide to setting up and running DBT on AWS ECS (Fargate), covering Dockerization, package handling, Docker images, integration with Prefect, exporting results, and CI with pre-commit.
 date: 2024-05-09
@@ -52,7 +52,7 @@ Here you can see a diagram of the overall architecture:
 
 ![Backfill missing data](../../images/posts/2024/0044-dbt-architecture.jpg)
 
-## 2. Options for handling packages in docker
+## 2. Handling packages in docker
 
 From the begining I wanted to have a simple `Docker` image that it is independant from the `DBT` code.
 This way changes to the `DBT` itself won't imply creating a new image and uploading it to `ECR`.
@@ -259,7 +259,7 @@ jobs:
   You need to set the `role ARN` (replace `xxx` in the code) needed for uploading the files to S3.
 </Notice>
 
-### 4.2. Upload all script
+### 4.2. `upload_all.py` script
 
 There are multiple ways the documents can be uploaded.
 Since I'm proficient with `python` I'm using it but you can take any alternative approach following a similar approach.
@@ -540,18 +540,471 @@ echo 5. Running all DBT commands. Using args="$@"
 poetry run python run.py "$@"
 ```
 
-<Notice type="danger" className="mt-6">
+<Notice type="info" className="mt-6">
   The `"$@"` is used to pass all arguments form the docker to the `run.py` script
 </Notice>
 
 ## 6. Running DBT
 
-<FancyLink linkText="Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations"/>
+We could be running DBT as a CLI but we wouldn't be able to:
+
+* Integrate with `Prefect`
+* Add custom logs for certain events
+* Export results as a table
+
+This is why I use <FancyLink linkText="Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations"/> instead.
+It boils down to calling `dbtRunner` such as:
+
+```python
+from dbt.cli.main import dbtRunner
+
+# Example call
+args = ["build", "--select", "tag:my_tag"]
+
+dbtRunner().invoke(args)
+```
 
 ## 6. Integrating with Prefect
 
+<Notice type="info">
+  Remember that you need to connect to prefect, more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>
+</Notice>
+
 ### 6.1. Tasks
+
+In order to have good observability I suggest having each DBT command as a `prefect` task.
+This is as simple as adding the `task` decorator, like:
+
+```python
+from dbt.cli.main import dbtRunner
+from prefect import task, flow
+
+@task
+def deps():
+    dbtRunner().invoke(["deps"])
+
+@task
+def build():
+    dbtRunner().invoke(["build"])
+
+@flow
+def run():
+    deps()
+    build()
+
+if __name__ == '__main__':
+    run()
+```
 
 ### 6.2. Adding logs
 
-## 7. Exporting DBT results
+One really useful DBT feature is the ability to registrer callbacks (<FancyLink linkText="Registering callbacks | Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations#registering-callbacks"/>).
+With them you can easily add custom logs.
+This is specially useful in order to send logs from `DBT` to `prefect`.
+To do so you basically need to do 2 things:
+
+1. Create a callback for handling the logs
+2. Set up the logger. Since it needs to be tied to a prefect `task` it's not straightforward
+
+#### 6.2.1. Create a `callback`
+
+The idea here is to catch information from the `DBT` events and send the log based on the level.
+
+<TerminalOutput color="stone">
+  dbt_src/utils.py
+</TerminalOutput>
+```python
+def log_callback(event_raw):
+    # In order to use 'prefect.logger' here we need it declared it as global (LOGGER)
+
+    event = event_raw.info
+
+    if (name := event.name) not in EVENTS_TO_LOG:
+        return None
+
+    level = event.level
+    msg = f"{event.msg} [{name}]"
+
+    if level == "error":
+        LOGGER.error(msg)
+    elif level == "warn":
+        LOGGER.warning(msg)
+    elif (level == "info") or (name == "CommandCompleted"):
+        LOGGER.info(msg)
+    else:
+        LOGGER.debug(msg)
+
+    return None
+```
+
+<Notice type="info">
+  In my case I wanted to have `CommandCompleted` as `info` instead of `debug`, but feel free to ignore that `if`.
+</Notice>
+
+In my opinion there are some events that I find redundant or not useful at all.
+This is way I restrict the callback to a subset of all the events present.
+Those are the ones I decided to log:
+
+<TerminalOutput color="stone">
+  dbt_src/utils.py
+</TerminalOutput>
+```python
+EVENTS_TO_LOG = [
+    "AdapterRegistered",
+    "CommandCompleted",
+    "ConcurrencyLine",
+    "EndOfRunSummary",
+    "FinishedRunningStats",
+    "FoundStats",
+    "HooksRunning",
+    "LogHookEndLine",
+    "LogHookStartLine",
+    "LogModelResult",
+    "LogStartLine",
+    "LogTestResult",
+    "MainReportVersion",
+    "NodeStart",
+    "RunResultError",
+    "SkippingDetails",
+    "StatsLine",
+    "UnusedResourceConfigPath",
+]
+```
+
+#### 6.2.2. Set up the logger
+
+You need to declare a **global** `logger` in a function that is called inside a prefect `task` or `flow`.
+
+<TerminalOutput color="stone">
+  dbt_src/utils.py
+</TerminalOutput>
+```python
+from prefect import get_run_logger
+
+LOGGER = None
+
+def run_dbt_command(args):
+
+    # In order to use 'prefect.logger' inside the 'dbt.callbacks' we need to declare it as global
+    global LOGGER
+    LOGGER = get_run_logger()
+
+    res = dbtRunner(callbacks=[log_callback]).invoke(args)
+    export_execution_and_run_results()
+```
+
+<Notice type="warning" className="mt-6">
+  Do not forget to add the `log_callback` to the `dbtRunner`
+</Notice>
+
+## 7. Exporting data
+
+I think that there are two things you might want to export:
+
+1. <FancyLink linkText="DBT docs" url="https://docs.getdbt.com/reference/resource-configs/docs"/> 
+2. <FancyLink linkText="DBT run results" url="https://docs.getdbt.com/reference/artifacts/run-results-json"/> 
+
+### 7.1. Docs
+
+The idea here is to combinte the following files into one:
+
+* `index.html`
+* `manifest.json`
+* `catalog.json`
+
+The solution I use is based on <FancyLink linkText="Export DBT documentation" url="https://github.com/dbt-labs/dbt-docs/issues/53#issuecomment-1011053807" dark="true"/>.
+
+<TerminalOutput color="stone">
+  dbt_src/docs.py
+</TerminalOutput>
+```python
+def merge_docs():
+    """
+    Merge 'index.html' with the needed 'manigest.json' and 'catalog.json'
+    so that it's easier to serve without needing to deal with CORS.
+
+    More info: https://github.com/dbt-labs/dbt-docs/issues/53#issuecomment-1011053807
+    """
+
+    aws_config = get_aws_config()
+    path_target = aws_config["paths"]["target"]
+    docs = aws_config["filenames"]["docs"]
+
+    logger.info("Reading 'index.html'")
+    with open(f"{path_target}/index.html", "r", encoding="utf8") as stream:
+        content = stream.read()
+
+    logger.info("Reading 'manifest.json'")
+    with open(f"{path_target}/manifest.json", "r", encoding="utf8") as stream:
+        json_manifest = json.dumps(json.loads(stream.read()))
+
+    logger.info("Reading 'catalog.json'")
+    with open(f"{path_target}/catalog.json", "r", encoding="utf8") as stream:
+        json_catalog = json.dumps(json.loads(stream.read()))
+
+    # Sometimes it has different content, using both options we have seen so far
+    content = content.replace(
+        'o=[i("manifest","manifest.json"+t),i("catalog","catalog.json"+t)]',
+        f"o=[{{label: 'manifest', data: {json_manifest}}},{{label: 'catalog', data: {json_catalog}}}]",
+    ).replace(
+        'n=[o("manifest","manifest.json"+t),o("catalog","catalog.json"+t)]',
+        f"n=[{{label: 'manifest', data: {json_manifest}}},{{label: 'catalog', data: {json_catalog}}}]",
+    )
+
+    logger.info(f"Writing '{path_target}/{docs}'")
+    with open(f"{path_target}/{docs}", "w", encoding="utf8") as stream:
+        stream.write(content)
+```
+
+<Notice type="success" className="mt-6">
+  Once the exported you simply need to upload the `docs` file into `S3`.
+</Notice>
+
+### 7.2. DBT run results
+
+The idea is to extract information about the `runs` and `run_results` from the `target/run_results.json` file.
+This is done with some `pandas` code and then exported to `glue` with `awswrangler`.
+Here is the code:
+
+<TerminalOutput color="stone">
+  dbt_src/utils.py
+</TerminalOutput>
+```python
+import pandas as pd
+import awswrangler as wr
+from prefect import get_run_logger
+
+RUN_RESULTS = "target/run_results.json"
+
+DATABASE = "metadata"
+TABLE_EXECUTION = "dbt_execution"
+TABLE_RUN_RESULTS = "dbt_run_results"
+
+def get_table_path(table):
+    """Get the table path"""
+    buckets = [x for x in wr.s3.list_buckets() if x.startswith(BUCKET_PREFIX)]
+    return f"s3://{buckets[0]}/{DB_PATH}/{table}"
+
+
+def export_to_glue(df, table, dtypes):
+    logger = get_run_logger()
+
+    path = get_table_path(table)
+    n_records = df.shape[0]
+    logger.info(f"Writing table to '{DATABASE}.{table}' ({path=}, {n_records=})")
+
+    df["p_extraction_date"] = date.today()
+
+    wr.s3.to_parquet(
+        df=df,
+        dataset=True,
+        database=DATABASE,
+        table=table,
+        path=path,
+        mode="append",
+        partition_cols=["p_extraction_date"],
+        dtype=dtypes,
+    )
+
+def export_execution(data):
+    logger = get_run_logger()
+
+    logger.info(f"Exporting '{TABLE_EXECUTION}'")
+    df = pd.DataFrame([{**TAGS, **data["metadata"], **data["args"]}])
+    df["elapsed_time"] = data["elapsed_time"]
+
+    # Drop some columns and force 'string' in some others
+    df = df.drop(columns=["env", "warn_error_options"])
+    dtypes = {
+        "select": "string",
+        "exclude": "string",
+        "vars": "string",
+        "resource_types": "string",
+    }
+    export_to_glue(df, TABLE_EXECUTION, dtypes)
+
+
+def export_run_results(data):
+    logger = get_run_logger()
+
+    logger.info(f"Exporting '{TABLE_RUN_RESULTS}'")
+    df = pd.DataFrame(data["results"])
+    df["invocation_id"] = data["metadata"]["invocation_id"]
+
+    if "compiled_code" in df.columns:
+        df["compiled_code"] = df["compiled_code"].str.strip()
+
+    # Force 'string' type in some columns
+    dtypes = {"message": "string", "failures": "int", "adapter_response": "string"}
+    export_to_glue(df, TABLE_RUN_RESULTS, dtypes)
+
+def export_execution_and_run_results():
+    logger = get_run_logger()
+
+    if run_is_ci():
+        logger.warning("Skipping 'run_results' export since we are in CI")
+        return None
+
+    logger.info("Running 'run_results' export")
+
+    with open(RUN_RESULTS) as stream:
+        data = json.load(stream)
+
+    export_execution(data)
+    export_run_results(data)
+```
+
+## 8. `run.py` complete scripts
+
+We have seen parts of the `run.py` but I think it's useful to see the complete code.
+The only missing part to describe is that I use <FancyLink linkText="click" url="https://github.com/pallets/click" dark="true"/>.
+With it I can catch the parameters passed to the `docker` so that they are later used by `DBT`.
+
+Here is the complete code:
+
+<TerminalOutput color="stone">
+  dbt_src/run.py
+</TerminalOutput>
+```python
+import click
+import utils
+from docs import merge_docs
+from docs import upload_to_s3
+from prefect import flow
+from prefect import get_run_logger
+from prefect import tags
+from prefect import task
+from prefect.blocks.notifications import SlackWebhook
+from utils import logger
+
+
+@task(name="dbt.clean")
+def clean():
+    """Clean temporal paths"""
+    utils.run_dbt_command(["clean"])
+
+
+@task(name="dbt.deps")
+def deps():
+    """Install DBT dependencies"""
+    utils.run_dbt_command(["deps"])
+
+
+@task(name="dbt.debug")
+def run_debug():
+    """Check for DBT problems"""
+    utils.run_dbt_command(["debug"])
+
+
+@task(name="dbt.docs.generate")
+def docs_generate():
+    """Generate DBT docs"""
+    utils.run_dbt_command(["docs", "generate"])
+
+
+@flow(name="dbt.docs")
+def docs(upload_docs):
+    """Create docs, merge them and upload them"""
+    logger = get_run_logger()
+
+    docs_generate()
+    merge_docs()
+
+    if upload_docs:
+        upload_to_s3()
+    else:
+        logger.warning("Skipping docs upload to S3. This should not happen in prod")
+
+
+@task(name="dbt.build")
+def build(target, select, exclude, full_refresh):
+    """Perform DBT build (seed + run + test)"""
+    command = ["build"]
+
+    if target:
+        command += ["--target", target]
+    if select:
+        command += ["--select", select]
+    if exclude:
+        command += ["--exclude", exclude]
+    if full_refresh:
+        command += ["--full-refresh"]
+
+    utils.run_dbt_command(command)
+
+
+@flow(name="dbt")
+def run_all(env, target, select, exclude, full_refresh, debug):
+    """Run all DBT commands"""
+
+    clean()
+    deps()
+
+    if debug:
+        run_debug()
+
+    docs(upload_docs=(env == "pro") and (select is None))
+    build(target, select, exclude, full_refresh)
+
+
+def notify_failure(env, exception):
+    if env == "pro":
+        slack = SlackWebhook.load("slack")
+        slack.notify(f"DBT failed: {exception}")
+
+
+@click.command()
+@click.option("--target", "-t", default=None, help="DBT target")
+@click.option("--select", "-s", default=None, help="Selected DBT models")
+@click.option("--exclude", "-e", default=None, help="Excluded DBT models")
+@click.option("--full_refresh", "--full-refresh", "-f", is_flag=True, default=False)
+@click.option("--debug", "-d", is_flag=True, default=False, help="If true do debug")
+def main(target, select, exclude, full_refresh, debug):
+    logger.info(f"Starting DBT project")
+
+    target_default, target_type = utils.get_target_info_from_profiles()
+
+    # Clean commands (in some cases it includes unwanted quotation marks)
+    select = select.strip('"') if select is not None else None
+    exclude = exclude.strip('"') if exclude is not None else None
+
+    if target_type != "duckdb":
+        utils.ping_prefect()
+        env = utils.get_env()
+    else:
+        env = "CI"
+
+    utils.TAGS = {
+        "type": "dbt",
+        "env": env,
+        "version": utils.get_project_version(),
+        "dbt_version": utils.get_dbt_version(),
+        "target": target or target_default,
+        "select": select,
+        "exclude": exclude,
+        "full_refresh": full_refresh,
+        "target_type": target_type,
+    }
+
+    run_tags = [f"{k}:{v}" for k, v in utils.TAGS.items()]
+    logger.info(f"Using {run_tags=}")
+
+    # This try catch is to let `fargate` know the process failed
+    with tags(*run_tags):
+        try:
+            run_all(env, target, select, exclude, full_refresh, debug)
+        except Exception as e:
+            notify_failure(env, e)
+            exit(1)
+
+    exit(0)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+<Notice type="warning" className="mt-6">
+  The `exit(0)` and `exit(1)` are necessary to let `ECS` know that outcome of the task.
+  Without this it would look like as if the task never fails.
+</Notice>
