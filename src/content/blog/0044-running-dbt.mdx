@@ -35,11 +35,18 @@ In our setup, we combine `DBT`, `Docker`, and `AWS ECS (Fargate)` to streamline 
 
 * **DBT** enables SQL practitioners to efficiently transform and model data.
 * **Docker** containerizes the necessary Python code for DBT, ensuring consistency and reproducibility.
-* **AWS ECS (Fargate)** orchestrates and executes Docker containers, providing a lightweight and serverless solution for running DBT.
+* **AWS ECS (Fargate)** executes Docker containers, providing a lightweight and serverless solution for running DBT.
 
 <Notice type="warning">
   Teams using AWS EKS can replicate this setup with minimal effort, leveraging existing Kubernetes clusters.
 </Notice>
+
+There are also some components that can be easily swapped by similar tools. They are:
+
+* **Prefect** as the orchestrator that runs scheduled jobs and provides observability
+* **Athena** as the query engine
+* **Github actions** for both Continuous Integration (CI) and Continous Delivery (CD)
+* **Glue** as the data catalog
 
 Here you can see a diagram of the overall architecture:
 
@@ -50,17 +57,30 @@ Here you can see a diagram of the overall architecture:
 From the begining I wanted to have a simple `Docker` image that it is independant from the `DBT` code.
 This way changes to the `DBT` itself won't imply creating a new image and uploading it to `ECR`.
 
-So the solution is to create a `venv.tar.gz` file that contains all `DBT` code and that is downloaded at execution time.
-Those `venv` are versioned so that we can easily use older versions if needed.
+So the solution is to create two `.tar.gz` files:
+
+* `package.tar.gz` file that contains all `DBT` code
+* `venv.tar.gz`: this is the virtual environment so that it does not need to install packages at runtime.
+
+Both files are downloaded at runtime and are versioned so that we can easily use older versions if needed.
 In order to decide which version to download and use I export the `pyproject.toml` which contains the `version` number.
 
 You can read more about it in <FancyLink linkText="Deploying and Running dbt on AWS Fargate" url="https://medium.com/hashmapinc/deploying-and-running-dbt-on-aws-fargate-872db84065e4" dark="true"/> (section `Docker Image`).
 
 ## 3. Docker images
 
-* <FancyLink linkText="How to Build and Push Docker Images to AWS ECR" url="https://www.freecodecamp.org/news/build-and-push-docker-images-to-aws-ecr/"/>
+With the described approach we have 3 docker images:
+
+* **Venv**: This is the image used for creating the `venv` that contains the `DBT` code
+* **ECS**: This is the one that will be run in `ECS (Fargate)`
+* **Base**: This image contains the shared code and packages between the other two dockers
+
+How to upload those images to `ECR` is out of the scope.
+In general I follow somothing similar to what is described in <FancyLink linkText="How to Build and Push Docker Images to AWS ECR" url="https://www.freecodecamp.org/news/build-and-push-docker-images-to-aws-ecr/"/>
 
 ### 3.1. Docker.base
+
+This base docker image simply installs python and some basic python packages.
 
 <TerminalOutput color="stone">
   .github/docker/Dockerfile.base
@@ -109,6 +129,9 @@ RUN python -m pip install --upgrade \
 
 ### 3.2. Docker.venv
 
+This image creates a virtual environment where it installs all DBT code.
+Then it packages that virutal environment into a `tar.gz` file.
+
 <TerminalOutput color="stone">
   .github/docker/Dockerfile.venv
 </TerminalOutput>
@@ -127,7 +150,7 @@ COPY dbt_src dbt_src
 RUN poetry config virtualenvs.in-project true && \
     poetry install
 
-# Install 'dbt_northius' as a package
+# Install 'dbt_src' as a package
 RUN poetry build && \
     poetry run pip install dist/*.whl
 
@@ -138,8 +161,20 @@ RUN poetry run venv-pack -o dist/venv_${PACKAGE_VERSION}.tar.gz
 FROM scratch AS export
 COPY --from=base /usr/app/dbt/dist/*.tar.gz /dist/
 ```
+<Notice type="warning">
+  We **do need** to copy `pyproject.toml`, `poetry.lock` and `README.md` for it to work.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  The `dbt_src` is the folder that contains the actual `DBT` code.
+  That means the `dbt_project.yml`; the `models`, `tests`, `macros` folders etc.
+</Notice>
 
 ### 3.3. Docker.ecs
+
+This is the image that will be run in `Fargate`.
+This is where I set up the connection to `prefect` (more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>).
+Also I export all the needed `scripts` that will later be used to download all `DBT` code.
 
 <TerminalOutput color="stone">
   .github/docker/Dockerfile.ecs
@@ -162,9 +197,149 @@ COPY scripts .
 ENTRYPOINT ["/bin/bash", "./setup_and_run_dbt.sh"]
 ```
 
-## 4. Scripts
+## 4. Continuous Delivery (CD)
 
-### 4.1. Download poetry config
+As mentioned before there are two `tar.gz` files.
+One with the virtual environment (`venv`) and another with the code (`dist`).
+The goal of `CD` is to create both and upload them to S3 together with the `pyproject.toml` and `profiles.yml` file.
+
+### 4.1. CD Pacakges github action
+
+```yaml
+name: CD Packages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - dbt_src/**
+      - profiles/**
+      - pyproject.toml
+      - poetry.lock
+
+jobs:
+  deploy_package_pro:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v4
+
+    - name: Install python dependencies
+      run: pip install boto3 click loguru toml
+
+    - name: Get current version
+      run: python .github/scripts/get_version.py --name=current
+
+    - name: Build package
+      run: |
+        docker build -f .github/docker/Dockerfile.base -t dbt/base .
+        docker build -f .github/docker/Dockerfile.venv --output . . --build-arg PACKAGE_VERSION=$VERSION_CURRENT
+
+    - name: Configure DevOps AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_ROLE_DATA }}
+        aws-region: eu-west-1
+    
+    - name: Configure DatalakePro AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: xxx # Set the role ARN here
+        aws-region: eu-west-1
+        role-chaining: true
+  
+    - name: Upload files to S3 PRO
+      run: python .github/scripts/upload_all.py --env pro
+```
+<Notice type="warning">
+  You need to set the `role ARN` (replace `xxx` in the code) needed for uploading the files to S3.
+</Notice>
+
+### 4.2. Upload all script
+
+There are multiple ways the documents can be uploaded.
+Since I'm proficient with `python` I'm using it but you can take any alternative approach following a similar approach.
+
+<TerminalOutput color="stone">
+  .github/scripts/upload_all.py
+</TerminalOutput>
+```python
+import os
+
+import boto3
+import click
+import utils as u
+from loguru import logger
+
+
+def upload_to_s3(bucket, origin, dest):
+    logger.info(f"Uploading from {origin=} to {dest=}")
+
+    s3_client = boto3.client("s3")
+    s3_client.upload_file(origin, bucket, dest)
+
+
+def upload_dbt_package(bucket, s3_dist, s3_venv):
+    logger.info(f"Exploring packages to upload")
+    for filename in os.listdir("dist"):
+        if filename.endswith(".tar.gz"):
+            path = s3_venv if filename.startswith("venv") else s3_dist
+            upload_to_s3(bucket, f"dist/{filename}", f"{path}/{filename}")
+
+
+@click.command()
+@click.option("--env", default="pro", help="Environment where code will be deployed")
+def upload_all(env):
+    aws_config = u.get_aws_config()
+
+    env = env.lower()
+    logger.info(f"Working on {env=}")
+    assert env in aws_config["s3_bucket"].keys()
+
+    logger.info(f"Extractings paths")
+    bucket = aws_config["s3_bucket"][env]
+    s3_code = aws_config["paths"]["s3_code"]
+    s3_dist = aws_config["paths"]["s3_dist"]
+    s3_venv = aws_config["paths"]["s3_venv"]
+
+    # Upload poetry config
+    upload_to_s3(bucket, "pyproject.toml", f"{s3_code}/pyproject.toml")
+    upload_to_s3(bucket, "poetry.lock", f"{s3_code}/poetry.lock")
+
+    # DBT config
+    profile = aws_config["filenames"]["profiles_by_env"]
+    upload_to_s3(bucket, profile.format(env=env), f"{s3_code}/profiles.yml")
+    upload_dbt_package(bucket, s3_dist, s3_venv)
+
+
+if __name__ == "__main__":
+    upload_all()
+```
+
+<Notice type="danger" className="mt-6">
+  I use the `pyproject.toml` file to store a lot of configuration such as `S3` paths.
+  I haven't included a snippet since most data is private but it should be easy to infer.
+</Notice>
+
+## 5. Scripts
+
+During runtime we will need to download all files created during the `CD`.
+This is done with the following 3 scripts:
+
+* `scripts/download_poetry_config.py`
+* `scripts/download_code.py`
+* `scripts/setup_and_run_dbt.sh`: Calls the previous scripts, configures the virtual environment and defines the entrypoint
+
+### 5.1. Download poetry config
+
+This script:
+
+1. Downloads the `pyproject.toml` 
+2. Downloads the `venv.tar.gz` and extracts it
 
 <TerminalOutput color="stone">
   scripts/download_poetry_config.py
@@ -217,7 +392,6 @@ def download_all():
     # Then infer from 'pyproject.toml'
     aws_config = u.get_aws_config()
     logger.info(f"Extractings paths")
-    s3_dist = aws_config["paths"]["s3_dist"]
     s3_venv = aws_config["paths"]["s3_venv"]
     local_venv = aws_config["paths"]["local_venv"]
 
@@ -233,7 +407,14 @@ if __name__ == "__main__":
     download_all()
 ```
 
-### 4.2. Download code
+### 5.2. Download code
+
+This script:
+
+1. Downloads the `profiles.yml`
+2. Downloads the `dist.tar.gz` and extracts it
+
+It is a separate script from the previous one because it uses the virtual environment from the previous script.
 
 <TerminalOutput color="stone">
   scripts/download_code.py
@@ -334,7 +515,13 @@ if __name__ == "__main__":
     main()
 ```
 
-### 4.3. Setup and run DBT
+### 5.3. Setup and run DBT
+
+This script:
+
+* Calls the other scripts
+* Configures the virtual environment
+* Calls the real `entrypoint` of the docker (more on that on the next section)
 
 <TerminalOutput color="stone">
   scripts/setup_and_run_dbt.sh
@@ -353,63 +540,13 @@ echo 5. Running all DBT commands. Using args="$@"
 poetry run python run.py "$@"
 ```
 
-## 5. CD
-
-```python
-import os
-
-import boto3
-import click
-import utils as u
-from loguru import logger
-
-
-def upload_to_s3(bucket, origin, dest):
-    logger.info(f"Uploading from {origin=} to {dest=}")
-
-    s3_client = boto3.client("s3")
-    s3_client.upload_file(origin, bucket, dest)
-
-
-def upload_dbt_package(bucket, s3_dist, s3_venv):
-    logger.info(f"Exploring packages to upload")
-    for filename in os.listdir("dist"):
-        if filename.endswith(".tar.gz"):
-            path = s3_venv if filename.startswith("venv") else s3_dist
-            upload_to_s3(bucket, f"dist/{filename}", f"{path}/{filename}")
-
-
-@click.command()
-@click.option("--env", default="pro", help="Environment where code will be deployed")
-def upload_all(env):
-    aws_config = u.get_aws_config()
-
-    env = env.lower()
-    logger.info(f"Working on {env=}")
-    assert env in aws_config["s3_bucket"].keys()
-
-    logger.info(f"Extractings paths")
-    bucket = aws_config["s3_bucket"][env]
-    s3_code = aws_config["paths"]["s3_code"]
-    s3_dist = aws_config["paths"]["s3_dist"]
-    s3_venv = aws_config["paths"]["s3_venv"]
-
-    # Upload poetry config
-    upload_to_s3(bucket, "pyproject.toml", f"{s3_code}/pyproject.toml")
-    upload_to_s3(bucket, "poetry.lock", f"{s3_code}/poetry.lock")
-
-    # DBT config
-    profile = aws_config["filenames"]["profiles_by_env"]
-    upload_to_s3(bucket, profile.format(env=env), f"{s3_code}/profiles.yml")
-    upload_dbt_package(bucket, s3_dist, s3_venv)
-
-
-if __name__ == "__main__":
-    upload_all()
-```
+<Notice type="danger" className="mt-6">
+  The `"$@"` is used to pass all arguments form the docker to the `run.py` script
+</Notice>
 
 ## 6. Running DBT
-https://docs.getdbt.com/reference/programmatic-invocations
+
+<FancyLink linkText="Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations"/>
 
 ## 6. Integrating with Prefect
 
@@ -418,5 +555,3 @@ https://docs.getdbt.com/reference/programmatic-invocations
 ### 6.2. Adding logs
 
 ## 7. Exporting DBT results
-
-## 8. CI with pre-commit
