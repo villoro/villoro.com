@@ -7,7 +7,7 @@ date: 2024-05-09
 image: "/images/blog/0044-dbt.png"
 image_dark: "/images/blog/0044-dbt-dark.png"
 tags: ["SQL", "DE", "AWS"]
-draft: false
+draft: true
 ---
 
 ## Table of Contents
@@ -36,7 +36,7 @@ In our setup, we combine `DBT`, `Docker`, and `AWS ECS (Fargate)` to streamline 
 * **Docker** containerizes the necessary Python code for DBT, ensuring consistency and reproducibility.
 * **AWS ECS (Fargate)** executes Docker containers, providing a lightweight and serverless solution for running DBT.
 
-<Notice type="warning">
+<Notice type="success">
   Teams using AWS EKS can replicate this setup with minimal effort, leveraging existing Kubernetes clusters.
 </Notice>
 
