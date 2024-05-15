@@ -560,13 +560,13 @@ args = ["build", "--select", "tag:my_tag"]
 dbtRunner().invoke(args)
 ```
 
-## 6. Integrating with Prefect
+## 7. Integrating with Prefect
 
 <Notice type="info">
   Remember that you need to connect to Prefect. For more information, visit <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>
 </Notice>
 
-### 6.1. Tasks
+### 7.1. Tasks
 
 For better observability, I recommend defining each DBT command as a Prefect task. This involves adding the `@task` decorator, like so:
 
@@ -591,7 +591,7 @@ if __name__ == '__main__':
     run()
 ```
 
-### 6.2. Adding logs
+### 7.2. Adding logs
 
 A valuable feature of DBT is the ability to register callbacks (<FancyLink linkText="Registering callbacks | Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations#registering-callbacks"/>).
 With callbacks, you can easily add custom logs, particularly handy for sending logs from DBT to Prefect. To achieve this, you need to:
@@ -599,7 +599,7 @@ With callbacks, you can easily add custom logs, particularly handy for sending l
 1. Create a callback function to handle the logs.
 2. Set up the logger. However, this isn't straightforward as it needs to be tied to a Prefect task.
 
-#### 6.2.1. Create a `callback`
+#### 7.2.1. Create a `callback`
 
 The concept here involves capturing information from the DBT events and sending the log based on the severity level.
 
@@ -664,7 +664,7 @@ EVENTS_TO_LOG = [
 ]
 ```
 
-#### 6.2.2. Set up the logger
+#### 7.2.2. Set up the logger
 
 To set up the logger, you need to declare a **global** `logger` in a function that is called inside a prefect `task` or `flow`.
 
@@ -690,14 +690,14 @@ def run_dbt_command(args):
   Do not forget to add the `log_callback` to the `dbtRunner`.
 </Notice>
 
-## 7. Exporting data
+## 8. Exporting data
 
 There are two things you might want to export:
 
 1. <FancyLink linkText="DBT docs" url="https://docs.getdbt.com/reference/resource-configs/docs"/> 
 2. <FancyLink linkText="DBT run results" url="https://docs.getdbt.com/reference/artifacts/run-results-json"/> 
 
-### 7.1. Docs
+### 8.1. Docs
 
 The idea here is to combine the following files into one:
 
@@ -753,7 +753,7 @@ def merge_docs():
   Once exported, you simply need to upload the `docs` file into `S3`.
 </Notice>
 
-### 7.2. DBT run results
+### 8.2. DBT run results
 
 The idea is to extract information about the `runs` and `run_results` from the `target/run_results.json` file.
 This is done with some `pandas` code and then exported to `glue` with `awswrangler`.
@@ -847,7 +847,7 @@ def export_execution_and_run_results():
     export_run_results(data)
 ```
 
-## 8. `run.py` complete scripts
+## 9. `run.py` complete scripts
 
 We've seen parts of the `run.py`, but I think it's useful to see the complete code.
 The only missing part to describe is that I use <FancyLink linkText="click" url="https://github.com/pallets/click" dark="true"/>.
