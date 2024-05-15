@@ -21,13 +21,12 @@ While DBT Cloud offers a managed solution, budget constraints may lead to explor
 Leveraging <FancyLink linkText="AWS ECS" url="https://aws.amazon.com/en/ecs/" company="aws"/> (Fargate) aligns with our existing AWS infrastructure and offers cost-effective scalability.
 By self-hosting DBT on AWS ECS (Fargate), we gain better control and observability over our data transformation processes.
 
-When setting this up I got a lot of information and direction from those posts:
+When setting this up, I got a lot of information and direction from these posts:
 
 * <FancyLink linkText="Running dbt-core in production on AWS using ECS Fargate and Airflow" url="https://data-dive.com/deploy-dbt-on-aws-using-ecs-fargate-with-airflow-scheduling/" company="default" dark="true"/>
 * <FancyLink linkText="Deploying and Running dbt on AWS Fargate" url="https://medium.com/hashmapinc/deploying-and-running-dbt-on-aws-fargate-872db84065e4" dark="true"/>
 
-However I still thing I have multiple improvements that I wanted to share such as how to handle it with `poetry`, integration with `prefect`, exporting `DBT` run results among other things.
-So this is why I'm documenting everything.
+However, I still think I have multiple improvements to share, such as handling it with `poetry`, integrating with `prefect`, exporting DBT run results, among other things. This is why I'm documenting everything.
 
 ## 1. The components
 
@@ -45,7 +44,7 @@ There are also some components that can be easily swapped by similar tools. They
 
 * **Prefect** as the orchestrator that runs scheduled jobs and provides observability
 * **Athena** as the query engine
-* **Github actions** for both Continuous Integration (CI) and Continous Delivery (CD)
+* **Github actions** for both Continuous Integration (CI) and Continuous Delivery (CD)
 * **Glue** as the data catalog
 
 Here you can see a diagram of the overall architecture:
@@ -54,33 +53,33 @@ Here you can see a diagram of the overall architecture:
 
 ## 2. Handling packages in docker
 
-From the begining I wanted to have a simple `Docker` image that it is independant from the `DBT` code.
-This way changes to the `DBT` itself won't imply creating a new image and uploading it to `ECR`.
+From the beginning, I wanted to have a simple Docker image that is independent of the DBT code.
+This way, changes to DBT itself won't require creating a new image and uploading it to ECR.
 
-So the solution is to create two `.tar.gz` files:
+The solution is to create two `.tar.gz` files:
 
-* `package.tar.gz` file that contains all `DBT` code
-* `venv.tar.gz`: this is the virtual environment so that it does not need to install packages at runtime.
+* `package.tar.gz`: contains all DBT code
+* `venv.tar.gz`: contains the virtual environment, so packages don't need to be installed at runtime
 
-Both files are downloaded at runtime and are versioned so that we can easily use older versions if needed.
-In order to decide which version to download and use I export the `pyproject.toml` which contains the `version` number.
+Both files are downloaded at runtime and are versioned, allowing us to use older versions if needed.
+To decide which version to download and use, I export the `pyproject.toml`, which contains the `version` number.
 
 You can read more about it in <FancyLink linkText="Deploying and Running dbt on AWS Fargate" url="https://medium.com/hashmapinc/deploying-and-running-dbt-on-aws-fargate-872db84065e4" dark="true"/> (section `Docker Image`).
 
 ## 3. Docker images
 
-With the described approach we have 3 docker images:
+With this approach, we have three Docker images:
 
-* **Venv**: This is the image used for creating the `venv` that contains the `DBT` code
-* **ECS**: This is the one that will be run in `ECS (Fargate)`
-* **Base**: This image contains the shared code and packages between the other two dockers
+* **Venv**: Used for creating the virtual environment and for packaging the code
+* **ECS**: Runs in `ECS (Fargate)`
+* **Base**: Contains shared code and packages for the other two images.
 
-How to upload those images to `ECR` is out of the scope.
-In general I follow somothing similar to what is described in <FancyLink linkText="How to Build and Push Docker Images to AWS ECR" url="https://www.freecodecamp.org/news/build-and-push-docker-images-to-aws-ecr/"/>
+How to upload these images to ECR is out of scope.
+For guidance, refer to <FancyLink linkText="How to Build and Push Docker Images to AWS ECR" url="https://www.freecodecamp.org/news/build-and-push-docker-images-to-aws-ecr/"/>
 
 ### 3.1. Docker.base
 
-This base docker image simply installs python and some basic python packages.
+This base Docker image installs Python and some basic Python packages.
 
 <TerminalOutput color="stone">
   .github/docker/Dockerfile.base
@@ -129,8 +128,8 @@ RUN python -m pip install --upgrade \
 
 ### 3.2. Docker.venv
 
-This image creates a virtual environment where it installs all DBT code.
-Then it packages that virutal environment into a `tar.gz` file.
+This image creates a virtual environment with all dependencies.
+It also packages all DBT code. Finally, it exports both as a `.tar.gz` file.
 
 <TerminalOutput color="stone">
   .github/docker/Dockerfile.venv
@@ -162,19 +161,18 @@ FROM scratch AS export
 COPY --from=base /usr/app/dbt/dist/*.tar.gz /dist/
 ```
 <Notice type="warning">
-  We **do need** to copy `pyproject.toml`, `poetry.lock` and `README.md` for it to work.
+  We **do need** to copy `pyproject.toml`, `poetry.lock`, and `README.md` for it to work.
 </Notice>
 
 <Notice type="info" className="mt-6">
-  The `dbt_src` is the folder that contains the actual `DBT` code.
-  That means the `dbt_project.yml`; the `models`, `tests`, `macros` folders etc.
+  The `dbt_src` is the folder that contains the actual `DBT` code. That includes `dbt_project.yml`, `models`, `tests`, `macros` folders, etc.
 </Notice>
 
 ### 3.3. Docker.ecs
 
-This is the image that will be run in `Fargate`.
-This is where I set up the connection to `prefect` (more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>).
-Also I export all the needed `scripts` that will later be used to download all `DBT` code.
+This image runs in `Fargate`.
+Here, I set up the connection to `prefect` (more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>).
+I also export all the needed scripts to download all DBT code.
 
 <TerminalOutput color="stone">
   .github/docker/Dockerfile.ecs
@@ -199,9 +197,8 @@ ENTRYPOINT ["/bin/bash", "./setup_and_run_dbt.sh"]
 
 ## 4. Continuous Delivery (CD)
 
-As mentioned before there are two `tar.gz` files.
-One with the virtual environment (`venv`) and another with the code (`dist`).
-The goal of `CD` is to create both and upload them to S3 together with the `pyproject.toml` and `profiles.yml` file.
+As mentioned before, there are two `tar.gz` files: one with the virtual environment (`venv`) and another with the code (`dist`).
+The goal of `CD` is to create both and upload them to S3, along with the `pyproject.toml` and `profiles.yml` files.
 
 ### 4.1. CD Pacakges github action
 
@@ -262,7 +259,7 @@ jobs:
 ### 4.2. `upload_all.py` script
 
 There are multiple ways the documents can be uploaded.
-Since I'm proficient with `python` I'm using it but you can take any alternative approach following a similar approach.
+Since I'm proficient with python I'm using it, but you can use any alternative approach following a similar process.
 
 <TerminalOutput color="stone">
   .github/scripts/upload_all.py
@@ -322,23 +319,23 @@ if __name__ == "__main__":
 
 <Notice type="danger" className="mt-6">
   I use the `pyproject.toml` file to store a lot of configuration such as `S3` paths.
-  I haven't included a snippet since most data is private but it should be easy to infer.
+  I haven't included a snippet since most data is private, but it should be easy to infer.
 </Notice>
 
 ## 5. Scripts
 
-During runtime we will need to download all files created during the `CD`.
-This is done with the following 3 scripts:
+During runtime, we need to download all files created during the CD process.
+This is done with the following three scripts:
 
 * `scripts/download_poetry_config.py`
 * `scripts/download_code.py`
-* `scripts/setup_and_run_dbt.sh`: Calls the previous scripts, configures the virtual environment and defines the entrypoint
+* `scripts/setup_and_run_dbt.sh`
 
 ### 5.1. Download poetry config
 
 This script:
 
-1. Downloads the `pyproject.toml` 
+1. Downloads the `pyproject.toml`
 2. Downloads the `venv.tar.gz` and extracts it
 
 <TerminalOutput color="stone">
@@ -414,7 +411,7 @@ This script:
 1. Downloads the `profiles.yml`
 2. Downloads the `dist.tar.gz` and extracts it
 
-It is a separate script from the previous one because it uses the virtual environment from the previous script.
+It is a separate script because it uses the virtual environment set up by the previous script.
 
 <TerminalOutput color="stone">
   scripts/download_code.py
@@ -521,7 +518,7 @@ This script:
 
 * Calls the other scripts
 * Configures the virtual environment
-* Calls the real `entrypoint` of the docker (more on that on the next section)
+* Calls the real `entrypoint` of the Docker container (more on that in the next section)
 
 <TerminalOutput color="stone">
   scripts/setup_and_run_dbt.sh
@@ -541,19 +538,18 @@ poetry run python run.py "$@"
 ```
 
 <Notice type="info" className="mt-6">
-  The `"$@"` is used to pass all arguments form the docker to the `run.py` script
+  The `"$@"` is used to pass all arguments from the Docker container to the `run.py` script.
 </Notice>
 
 ## 6. Running DBT
 
-We could be running DBT as a CLI but we wouldn't be able to:
+While running DBT as a CLI is an option, it limits our ability to:
 
-* Integrate with `Prefect`
+* Integrate with Prefect
 * Add custom logs for certain events
 * Export results as a table
 
-This is why I use <FancyLink linkText="Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations"/> instead.
-It boils down to calling `dbtRunner` such as:
+This is why I prefer to use <FancyLink linkText="Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations"/> instead. It involves calling `dbtRunner`, like so:
 
 ```python
 from dbt.cli.main import dbtRunner
@@ -567,13 +563,12 @@ dbtRunner().invoke(args)
 ## 6. Integrating with Prefect
 
 <Notice type="info">
-  Remember that you need to connect to prefect, more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>
+  Remember that you need to connect to Prefect. For more information, visit <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>
 </Notice>
 
 ### 6.1. Tasks
 
-In order to have good observability I suggest having each DBT command as a `prefect` task.
-This is as simple as adding the `task` decorator, like:
+For better observability, I recommend defining each DBT command as a Prefect task. This involves adding the `@task` decorator, like so:
 
 ```python
 from dbt.cli.main import dbtRunner
@@ -598,17 +593,15 @@ if __name__ == '__main__':
 
 ### 6.2. Adding logs
 
-One really useful DBT feature is the ability to registrer callbacks (<FancyLink linkText="Registering callbacks | Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations#registering-callbacks"/>).
-With them you can easily add custom logs.
-This is specially useful in order to send logs from `DBT` to `prefect`.
-To do so you basically need to do 2 things:
+A valuable feature of DBT is the ability to register callbacks (<FancyLink linkText="Registering callbacks | Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations#registering-callbacks"/>).
+With callbacks, you can easily add custom logs, particularly handy for sending logs from DBT to Prefect. To achieve this, you need to:
 
-1. Create a callback for handling the logs
-2. Set up the logger. Since it needs to be tied to a prefect `task` it's not straightforward
+1. Create a callback function to handle the logs.
+2. Set up the logger. However, this isn't straightforward as it needs to be tied to a Prefect task.
 
 #### 6.2.1. Create a `callback`
 
-The idea here is to catch information from the `DBT` events and send the log based on the level.
+The concept here involves capturing information from the DBT events and sending the log based on the severity level.
 
 <TerminalOutput color="stone">
   dbt_src/utils.py
@@ -638,12 +631,12 @@ def log_callback(event_raw):
 ```
 
 <Notice type="info">
-  In my case I wanted to have `CommandCompleted` as `info` instead of `debug`, but feel free to ignore that `if`.
+  In my case, I wanted to have `CommandCompleted` as `info` instead of `debug`, but feel free to ignore that `if` statement.
 </Notice>
 
-In my opinion there are some events that I find redundant or not useful at all.
-This is way I restrict the callback to a subset of all the events present.
-Those are the ones I decided to log:
+In my opinion, some events are redundant or not useful at all.
+Therefore, I restrict the callback to a subset of all the events available.
+Here are the events I decided to log:
 
 <TerminalOutput color="stone">
   dbt_src/utils.py
@@ -673,7 +666,7 @@ EVENTS_TO_LOG = [
 
 #### 6.2.2. Set up the logger
 
-You need to declare a **global** `logger` in a function that is called inside a prefect `task` or `flow`.
+To set up the logger, you need to declare a **global** `logger` in a function that is called inside a prefect `task` or `flow`.
 
 <TerminalOutput color="stone">
   dbt_src/utils.py
@@ -694,19 +687,19 @@ def run_dbt_command(args):
 ```
 
 <Notice type="warning" className="mt-6">
-  Do not forget to add the `log_callback` to the `dbtRunner`
+  Do not forget to add the `log_callback` to the `dbtRunner`.
 </Notice>
 
 ## 7. Exporting data
 
-I think that there are two things you might want to export:
+There are two things you might want to export:
 
 1. <FancyLink linkText="DBT docs" url="https://docs.getdbt.com/reference/resource-configs/docs"/> 
 2. <FancyLink linkText="DBT run results" url="https://docs.getdbt.com/reference/artifacts/run-results-json"/> 
 
 ### 7.1. Docs
 
-The idea here is to combinte the following files into one:
+The idea here is to combine the following files into one:
 
 * `index.html`
 * `manifest.json`
@@ -757,7 +750,7 @@ def merge_docs():
 ```
 
 <Notice type="success" className="mt-6">
-  Once the exported you simply need to upload the `docs` file into `S3`.
+  Once exported, you simply need to upload the `docs` file into `S3`.
 </Notice>
 
 ### 7.2. DBT run results
@@ -856,9 +849,9 @@ def export_execution_and_run_results():
 
 ## 8. `run.py` complete scripts
 
-We have seen parts of the `run.py` but I think it's useful to see the complete code.
+We've seen parts of the `run.py`, but I think it's useful to see the complete code.
 The only missing part to describe is that I use <FancyLink linkText="click" url="https://github.com/pallets/click" dark="true"/>.
-With it I can catch the parameters passed to the `docker` so that they are later used by `DBT`.
+With it, I can catch the parameters passed to the `docker` so that they are later used by `DBT`.
 
 Here is the complete code:
 
@@ -1005,6 +998,6 @@ if __name__ == "__main__":
 ```
 
 <Notice type="warning" className="mt-6">
-  The `exit(0)` and `exit(1)` are necessary to let `ECS` know that outcome of the task.
-  Without this it would look like as if the task never fails.
+  The `exit(0)` and `exit(1)` are necessary to let `ECS` know the outcome of the task.
+  Without this, it would appear as if the task never fails.
 </Notice>
