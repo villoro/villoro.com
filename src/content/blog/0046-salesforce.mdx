@@ -15,3 +15,70 @@ draft: false
 
 ## 0. Motivation
 
+## 1. Simple Salesforce
+
+https://github.com/simple-salesforce/simple-salesforce
+
+## 2. Querying options
+
+### 2.1. Get Entity
+
+`sf.Contact.get('003e0000003GuNXAA0')`
+
+### 2.2. query and query_all
+
+https://simple-salesforce.readthedocs.io/en/latest/user_guide/queries.html
+
+`sf.query("SELECT Id, Email, ParentAccount.Name FROM Contact WHERE LastName = 'Jones'")`
+`sf.query_all("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")`
+
+### 2.3. query_all_iter
+
+```python
+data = sf.query_all_iter("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
+for row in data:
+  process(row)
+```
+
+### 2.4. Bulk
+
+```python
+query = 'SELECT Id, Name FROM Account'
+
+# generator on the results page
+fetch_results = sf.bulk.Account.query_all(query, lazy_operation=True)
+
+# the generator provides the list of results for every call to next()
+all_results = []
+for list_results in fetch_results:
+  all_results.extend(list_results)
+```
+
+### 2.5. Bulk2
+
+```python
+query = 'SELECT Id, Name FROM Account LIMIT 100000'
+
+results = sf.bulk2.Account.query(
+    query, max_records=50000, column_delimiter="COMM", line_ending="LF"
+)
+for i, data in enumerate(results):
+    with open(f"results/part-{1}.csv", "w") as bos:
+        bos.write(data)
+```
+
+## 3. Query limits
+
+### 3.1. Batches
+
+### 3.2. Max days per query
+
+## 4. Types of columns
+
+### 4.1. Primitive columns
+
+### 4.2. Reference columns
+
+### 4.3. Calculated columns
+
+## 5. Query including external changes
