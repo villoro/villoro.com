@@ -3,7 +3,7 @@ slug: extracting-data-salesforce-python
 title: Extracting data from Salesforce with Python
 meta_title: Extracting data from Salesforce
 description: xx
-date: 2024-05-22
+date: 2024-05-24
 image: "/images/blog/0046-salesforce.jpg"
 tags: ["Python", "DE"]
 draft: false
@@ -82,3 +82,17 @@ for i, data in enumerate(results):
 ### 4.3. Calculated columns
 
 ## 5. Query including external changes
+
+| name             | calculated | calculatedFormula | type      | referenceTo     | relationshipName                                                |
+|------------------|------------|-------------------|-----------|-----------------|-----------------------------------------------------------------|
+| CreatedById      | False      |                   | reference | [User]          | <span style="background-color:PaleGreen;">CreatedBy</span>      |
+| LastModifiedById | False      |                   | reference | [User]          | <span style="background-color:PaleGreen;">LastModifiedBy</span> |
+| User__c          | False      |                   | reference | [User]          | <span style="background-color:Salmon;">User__r</span>           |
+| Delegation__c    | False      |                   | reference | [Delegation__c] | <span style="background-color:PaleGreen;">Delegation__r</span>  |
+| Id               | False      |                   | id        |                 |                                                                 |
+| IsDeleted        | False      |                   | boolean   |                 |                                                                 |
+| Name             | False      |                   | string    |                 |                                                                 |
+| CreatedDate      | False      |                   | datetime  |                 |                                                                 |
+| LastModifiedDate | False      |                   | datetime  |                 |                                                                 |
+| SystemModstamp   | False      |                   | datetime  |                 |                                                                 |
+| UserName__c      | True       | <span style="background-color:Salmon;">User__r</span>.FirstName &amp; ' ' &amp; <span style="background-color:Salmon;">User__r</span>.LastName | string | | |
