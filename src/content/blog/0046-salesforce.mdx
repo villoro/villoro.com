@@ -75,24 +75,78 @@ for i, data in enumerate(results):
 
 ## 4. Types of columns
 
+Columns in Salesforce are flexible and they can contain different types of data.
+I like to classify columns in three types:
+
+1. **Primitive columns**: those show information about the entity itself.
+2. **Reference columns**: those are links to other tables, similar to a join.
+3. **Calculated columns**: those are formulas based on other fields. Those fields can be from referenced tables.
+
 ### 4.1. Primitive columns
+
+Those are the basic type of columns. They show information about the entity itself.
+For example, if we are working with the `User` table, it will have some primitive columns like:
+
+* `firstname`: the name of the user (string)
+* `age`: how old the user is (int)
 
 ### 4.2. Reference columns
 
+Those columns are references to other tables.
+Under the hood they behave similarly to a `join` in SQL.
+
+The 2 important parts of reference columns are:
+
+* `referenceTo`: this shows to which entity the column refers to
+* `relationshipName`: the name that entity will have. Think of it as the alias after a join
+
+Here you have a sample of reference columns:
+
+| name             | type      | referenceTo     | relationshipName |
+|------------------|-----------|-----------------|------------------|
+| CreatedById      | reference | [User]          | CreatedBy        |
+| LastModifiedById | reference | [User]          | LastModifiedBy   |
+| Delegation__c    | reference | [Delegation__c] | Delegation__r    |
+| User__c          | reference | [User]          | User__r          |
+
 ### 4.3. Calculated columns
+
+Those columns are populated at query time based on a formula.
+For example, in the `User` table we could have `firstName` and `lastName` as primitive columns and then `fullName` defined as `FirstName & ’ ’ & LastName`.
+
+<Notice type="warning">
+  Calculated columns can use information from `referenced` entities!
+</Notice>
+
+Let's imagine the we have the `Order` table which has those columns (among others):
+
+| name             | type      | referenceTo | relationshipName                                      |
+|------------------|-----------|-------------|-------------------------------------------------------|
+| CreatedById      | reference | [User]      | CreatedBy                                             |
+| LastModifiedById | reference | [User]      | LastModifiedBy                                        |
+| User__c          | reference | [User]      | <span style="background-color:yellow;">User__r</span> |
+
+We could have here a **calculated** column called `fullName` with the following formula: `User__r.FirstName & ’ ’ & User__r.LastName`.
+
+In that case, `fullName` will have information based on the table `Users` and not the `Orders`.
+
+<Notice type="error">
+  When extracting data those columns are very dangerous since **changes in the referenced table does not modify the `LastModifiedDate` from the main table**.
+  In the example above, we would see a different `fullName` if `User.FirstName` is modified but the `Order` table will have the same `LastModifiedDate` as before, since the `Order` table hasn't been modified. This is dangerous for data extractions.
+</Notice>
 
 ## 5. Query including external changes
 
 | name             | calculated | calculatedFormula | type      | referenceTo     | relationshipName                                                |
 |------------------|------------|-------------------|-----------|-----------------|-----------------------------------------------------------------|
+| Id               | False      |                   | id        |                 |                                                                 |
 | CreatedById      | False      |                   | reference | [User]          | <span style="background-color:PaleGreen;">CreatedBy</span>      |
 | LastModifiedById | False      |                   | reference | [User]          | <span style="background-color:PaleGreen;">LastModifiedBy</span> |
-| User__c          | False      |                   | reference | [User]          | <span style="background-color:Salmon;">User__r</span>           |
 | Delegation__c    | False      |                   | reference | [Delegation__c] | <span style="background-color:PaleGreen;">Delegation__r</span>  |
-| Id               | False      |                   | id        |                 |                                                                 |
+| User__c          | False      |                   | reference | [User]          | <span style="background-color:Salmon;">User__r</span>           |
+| UserName__c      | True       | <span style="background-color:Salmon;">User__r</span>.FirstName &amp; ' ' &amp; <span style="background-color:Salmon;">User__r</span>.LastName | string | | |
 | IsDeleted        | False      |                   | boolean   |                 |                                                                 |
 | Name             | False      |                   | string    |                 |                                                                 |
 | CreatedDate      | False      |                   | datetime  |                 |                                                                 |
 | LastModifiedDate | False      |                   | datetime  |                 |                                                                 |
 | SystemModstamp   | False      |                   | datetime  |                 |                                                                 |
-| UserName__c      | True       | <span style="background-color:Salmon;">User__r</span>.FirstName &amp; ' ' &amp; <span style="background-color:Salmon;">User__r</span>.LastName | string | | |
