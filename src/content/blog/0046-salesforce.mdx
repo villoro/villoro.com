@@ -17,44 +17,108 @@ draft: false
 
 ## 1. Simple Salesforce
 
-https://github.com/simple-salesforce/simple-salesforce
+There are multiple ways of querying Salesforce data with python.
+I like using <FancyLink linkText="Simple Salesforce" url="https://github.com/simple-salesforce/simple-salesforce" dark="true"/> because as it's name suggest it makes it quite simple to extract data.
+
+We aware that in the <FancyLink linkText="Official documentation | Simple Salesforce" url="https://simple-salesforce.readthedocs.io/en/latest/"/> there are a lot of missing functions.
+So I suggest you also take a look at the github readme.
+
+To start with it, you need to instanciate `Salesforce` as follows
+
+```python
+from simple_salesforce import Salesforce
+
+sf = Salesforce(
+    username="your_username",
+    password="your_password",
+    consumer_key="your_consumer_key",
+    consumer_secret="your_consumer_secret",
+)
+```
+<Notice type="warning">
+  Make sure to change all strings with proper values
+</Notice>
+
+### 1.1. Querying and `__getattr__`
+
+This is the most simple query you can do:
+
+```python
+sf.Contact.get('003e0000003GuNXAA0')
+```
+
+Notice that we are querying the entity `Contact` and that to do so you need to access the `Contact` attribute from the `sf` object.
+That makes pipelines a little bit more complex than needed, but you can use `__getattr__("name")` to get the attribute in a programatic way from the entity name.
+As an example, both statements do the same:
+
+```python
+sf.Contact.get('003e0000003GuNXAA0')
+
+sf.__getattr__("Contact").get('003e0000003GuNXAA0')
+```
+
+<Notice type="success" className="mt-6">
+  That can be applied almost everywhere in this post
+</Notice>
 
 ## 2. Querying options
 
-### 2.1. Get Entity
+There are multiple ways of getting data from Salesforce using <FancyLink linkText="Simple Salesforce" url="https://github.com/simple-salesforce/simple-salesforce" dark="true"/> library.
+Here is a detailed overview of all of them:
+
+|                             | get | query | query_all | query_all_iter | bulk.query_all | bulk2.query |
+|-----------------------------|-----|-------|-----------|----------------|----------------|-------------|
+| Batch Querying              | ❌ | ✔️    | ✔️       | ✔️             | ✔️            | ✔️          |
+| No need of pagination       | -   | ❌   | ✔️        | ✔️            | ✔️             | ✔️         |
+| Iterable (no memory errors) | -   | ❌   | ❌        | ✔️            | ✔️            | ✔️          |
+| Result as python object     | ✔️ | ✔️    | ✔️       | ✔️             | ✔️            | ❌          |
+| Includes deleted            | ❌ | ✔️    | ✔️       | ✔️             | ✔️            | ❌          |
+
+<Notice type="info">
+  I would recommend using either `query_all_iter` or `bulk.query_all`.
+</Notice>
+
+### 2.1. Entity get
 
 `sf.Contact.get('003e0000003GuNXAA0')`
 
-### 2.2. query and query_all
+### 2.2. query
 
 https://simple-salesforce.readthedocs.io/en/latest/user_guide/queries.html
 
-`sf.query("SELECT Id, Email, ParentAccount.Name FROM Contact WHERE LastName = 'Jones'")`
-`sf.query_all("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")`
+```python
+sf.query("SELECT Id, Email, ParentAccount.Name FROM Contact WHERE LastName = 'Jones'")
+```
 
-### 2.3. query_all_iter
+### 2.3. query_all
+
+```python
+sf.query_all("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
+```
+
+### 2.4. query_all_iter
 
 ```python
 data = sf.query_all_iter("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
+
 for row in data:
-  process(row)
+    process(row)
 ```
 
-### 2.4. Bulk
+### 2.5. Bulk
 
 ```python
 query = 'SELECT Id, Name FROM Account'
 
 # generator on the results page
-fetch_results = sf.bulk.Account.query_all(query, lazy_operation=True)
+data = sf.bulk.Account.query_all(query, lazy_operation=True)
 
 # the generator provides the list of results for every call to next()
-all_results = []
-for list_results in fetch_results:
-  all_results.extend(list_results)
+for row in data:
+    process(row)
 ```
 
-### 2.5. Bulk2
+### 2.6. Bulk2
 
 ```python
 query = 'SELECT Id, Name FROM Account LIMIT 100000'
@@ -62,6 +126,7 @@ query = 'SELECT Id, Name FROM Account LIMIT 100000'
 results = sf.bulk2.Account.query(
     query, max_records=50000, column_delimiter="COMM", line_ending="LF"
 )
+
 for i, data in enumerate(results):
     with open(f"results/part-{1}.csv", "w") as bos:
         bos.write(data)
