@@ -80,35 +80,70 @@ Here is a detailed overview of all of them:
 
 ### 2.1. Entity get
 
-`sf.Contact.get('003e0000003GuNXAA0')`
+You can use the `get` method to retrive a single entity:
+
+```python
+sf.Contact.get('003e0000003GuNXAA0')
+```
+
+While useful for getting a value it's not suited for exporing large number of rows.
 
 ### 2.2. query
 
-https://simple-salesforce.readthedocs.io/en/latest/user_guide/queries.html
+You can use `sf.query` to retrive multiple rows at the same time.
+The number of records you can get is limited and if your query exceeds them you will need to call `sf.query_more`.
+
+You can do that with the following code:
 
 ```python
-sf.query("SELECT Id, Email, ParentAccount.Name FROM Contact WHERE LastName = 'Jones'")
+sf.query("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
+
+# The previous call will have: "nextRecordsUrl" : "/services/data/v26.0/query/01gD0000002HU6KIAW-2000
+sf.query_more("01gD0000002HU6KIAW-2000")
 ```
 
+You can read more about it in <FancyLink linkText="Queries | Simple Salesforce" url="https://simple-salesforce.readthedocs.io/en/latest/user_guide/queries.html"/>.
+
+<Notice type="warning">
+  I don't suggest using this option since there are others that are easier to use without needing to deal with the `sf.query_more` option.
+</Notice>
+
 ### 2.3. query_all
+
+This method is the same as before but it returns all results as a python object:
 
 ```python
 sf.query_all("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
 ```
 
+<Notice type="warning">
+  The problem with that is that you can easily get `Out of Memory (OOM)` errors when trying to bring a lot of data into memory.
+</Notice>
+
 ### 2.4. query_all_iter
 
+This works similarly to the previous methods but the result is an iterator.
+This way you can process each row at a time and avoid `Out of Memory (OOM)` errors.
+
+It would work like:
+
 ```python
-data = sf.query_all_iter("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
+data = sf.query_all_iter("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'", include_deleted=True)
 
 for row in data:
     process(row)
 ```
 
+Under the hood it manages to get the records in bulk.
+You can notice this because when you try to query a lot of data the first row will take longer than the rest.
+
 ### 2.5. Bulk
 
+Based on my testing the `bulk` option works almost exactly as the previous one.
+You can call it with:
+
 ```python
-query = 'SELECT Id, Name FROM Account'
+query = "SELECT Id, Name FROM Account"
 
 # generator on the results page
 data = sf.bulk.Account.query_all(query, lazy_operation=True)
@@ -120,8 +155,10 @@ for row in data:
 
 ### 2.6. Bulk2
 
+Finally there is also the `bulk2` option.
+
 ```python
-query = 'SELECT Id, Name FROM Account LIMIT 100000'
+query = "SELECT Id, Name FROM Account"
 
 results = sf.bulk2.Account.query(
     query, max_records=50000, column_delimiter="COMM", line_ending="LF"
@@ -131,6 +168,16 @@ for i, data in enumerate(results):
     with open(f"results/part-{1}.csv", "w") as bos:
         bos.write(data)
 ```
+
+With this one the iterator returns batches of the asked size (`max_records`).
+One important caveat is that the result is a python string similar to a `csv`.
+
+<Notice type="warning">
+  That means extra work for parsing that result, such as handling problems with separators, encodings issues, extra I/O operations etc.
+</Notice>
+
+For that reason I'd suggest trying it only of all the other methods are not fast enough.
+Since it's not the case for my, I'm not using this option.
 
 ## 3. Query limits
 
