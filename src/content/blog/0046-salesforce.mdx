@@ -220,11 +220,116 @@ One important caveat is that the result is a python string similar to a `csv`.
 When testing, I saw around a 20% performance improvement compared to `bulk`.
 Given that it's not high I think it's not worth the effort.
 
-## 3. Query limits
+## 3. Avoiding timeouts and Out of Memory errors
 
-### 3.1. Batches
+After some months of extracting data from salesforce I've noticed that there are a couple of tricks that can make the pipeline more resilient.
+Those are:
 
-### 3.2. Max days per query
+1. Exporting data in chunks
+2. Splitting the query (batches)
+
+Also I think it helps to always query only data that has been updated, more info at <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/"/>.
+
+### 3.1. Chunks
+
+This one is quite straightforward. For tables that can potentially have a lot of data I like exporting records in chunks.
+The chunk size can be adjusted after doing some queries to get a sense of the querying speed.
+Afterwards I like setting the chunk size so that each chunk takes a similar amount of time (5 min in my case).
+
+That is done with a `for/else` statement inside a function that can be called iteratibly:
+
+```python
+from time import time
+from loguru import logger
+
+DATA = sf.query_all_iter(query, include_deleted=True)
+CHUNK_NUM = 0
+ALL_DONE = False
+
+def fetch_one_chunk(max_rows_per_chunk=100_000):
+    t0 = time()
+    out = []
+    for i, row in enumerate(DATA):
+        if (CHUNK_NUM == 0) and (i == 0):
+            logger.info(
+                f"First row extracted in {round(time() - t0, 2)} seconds"
+            )
+
+        out.append(row)
+
+        if max_rows_per_chunk and (i + 1 == max_rows_per_chunk):
+            break
+    else:
+        logger.info(f"There are no more records")
+        ALL_DONE = True
+
+    CHUNK_NUM += 1
+
+    return out
+```
+
+Then you can do something like:
+
+```python
+MAX_ITERATIONS = 200
+
+for chunk_num in range(MAX_ITERATIONS):
+    data = fetch_one_chunk()
+    export_data(data)
+```
+
+This is helpful since:
+
+* It avoids Out of Memory (OOM) errors
+* Helps getting progress on long queries that can fail
+
+### 3.2. Batches
+
+In some cases trying to do a query whose result will be a lot of data can lead to a timeout.
+Based on experience I've seen that if the first row cannot be extracted in 2 minuts an exception will be raised by `simple_salesforce`.
+In order to avoid those timeouts we can split the query into multiple queries.
+To do so we define the `max_days_per_batch` parameter.
+Then we can do multiple queries where each batch has that defined length.
+
+This is the function that gets the batches:
+
+```python
+from datetime import timedelta
+from math import ceil
+
+from loguru import logger
+
+def get_dates_batches(min_date, max_date, max_days_per_batch=None):
+
+    if (min_date is None) or (max_date is None):
+        logger.info(f"No need of batches since one date is None")
+        return [(min_date, max_date)]
+
+    logger.debug(
+        f"Removing timezone info so that both 'min_date' and 'max_date' are compatible"
+    )
+    min_date = min_date.replace(tzinfo=None)
+    max_date = max_date.replace(tzinfo=None)
+    logger.info(f"After cleaning values: {min_date=}, {max_date=}")
+
+    # Check if batches are needed
+    if not max_days_per_batch:
+        logger.info(f"No need of batches for this entity (max_days_per_batch=None)")
+        return [(min_date, max_date)]
+
+    # Finally calculate the batches
+    total_days = (max_date - min_date) / timedelta(days=1)
+    n_batches = ceil(total_days / max_days_per_batch)
+
+    chunks = []
+    start_date = min_date
+    for x in range(n_batches):
+        end_date = min(start_date + timedelta(days=max_days_per_batch), max_date)
+        chunks.append([start_date, end_date])
+        start_date += timedelta(days=max_days_per_batch)
+
+    return chunks
+```
 
 ## 4. Types of fields
 
