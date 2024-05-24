@@ -428,6 +428,13 @@ That is useful since you can access properties with `column.property`, like `col
 
 ## 5. Query including external changes
 
+The compound fields can be calculated based on external entities.
+Since an update on that related entity does not change the `LastModifiedDate` of the principal entity.
+
+Let's see this in with an example:
+
+![Problem with external fields](../../images/posts/2024/0046-salesforce_external_fields.jpg)
+
 | name             | calculated | calculatedFormula | type      | referenceTo     | relationshipName                                                |
 |------------------|------------|-------------------|-----------|-----------------|-----------------------------------------------------------------|
 | Id               | False      |                   | id        |                 |                                                                 |
