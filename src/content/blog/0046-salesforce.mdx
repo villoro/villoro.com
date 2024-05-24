@@ -73,10 +73,14 @@ Here is a detailed overview of all of them:
 | Iterable (no memory errors) | -   | ❌   | ❌        | ✔️            | ⚠️            | ✔️          |
 | Result as python object     | ✔️ | ✔️    | ✔️       | ✔️             | ✔️            | ❌          |
 | Includes deleted            | ❌ | ✔️    | ✔️       | ✔️             | ✔️            | ❌          |
-| Can query compound data     | -   | ✔️   | ✔️       | ✔️             | ❌            | ❌          |
+| Can query compound data (*) | -   | ✔️   | ✔️       | ✔️             | ❌            | ❌          |
 
-<Notice type="info">
-  I would recommend using either `query_all_iter` or `bulk.query_all`.
+<Notice type="warning">
+  (\*) More info about compound data in section 4.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  I would recommend using either `query_all_iter`.
 </Notice>
 
 ### 2.1. Entity get
@@ -147,9 +151,24 @@ You can notice this because when you try to query a lot of data the first row wi
 
 ### 2.5. Bulk
 
-Based on my testing the `bulk` option works almost exactly as the previous one.
-You can call it with:
+There is two ways of querying with `bulk`, the regular one and the lazy operation.
+The first one works similarly to `query_all_iter` where you can iterate over the results (no OOM errors).
+The lazy one is like `query_all` which brings evertying as one batch. 
 
+Here is the regular call:
+
+```python
+query = "SELECT Id, Name FROM Account"
+
+# generator on the results page
+data = sf.bulk.Account.query_all(query)
+
+# the generator provides the list of results for every call to next()
+for row in data:
+    process(row)
+```
+
+And this is how to call it lazilly:
 ```python
 query = "SELECT Id, Name FROM Account"
 
@@ -157,9 +176,17 @@ query = "SELECT Id, Name FROM Account"
 data = sf.bulk.Account.query_all(query, lazy_operation=True)
 
 # the generator provides the list of results for every call to next()
-for row in data:
-    process(row)
+for chunk in data:
+    process(chunk)
 ```
+<Notice type="info">
+  Notice that `chunk` contains all rows
+</Notice>
+
+<Notice type="warning">
+  This function is consistently **2 to 3 times faster** than `query_all_iter`.
+  However since it cannot extract compound fields it would make extraction more complex, since you would need to recreate all that logic in the datalake.
+</Notice>
 
 ### 2.6. Bulk2
 
@@ -184,8 +211,8 @@ One important caveat is that the result is a python string similar to a `csv`.
   That means extra work for parsing that result, such as handling problems with separators, encodings issues, extra I/O operations etc.
 </Notice>
 
-For that reason I'd suggest trying it only of all the other methods are not fast enough.
-Since it's not the case for my, I'm not using this option.
+When testing, I saw around a 20% performance improvement compared to `bulk`.
+Given that it's not high I think it's not worth the effort.
 
 ## 3. Query limits
 
