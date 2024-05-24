@@ -288,6 +288,39 @@ In that case, `fullName` will have information based on the table `Users` and no
   In the example above, we would see a different `fullName` if `User.FirstName` is modified but the `Order` table will have the same `LastModifiedDate` as before, since the `Order` table hasn't been modified. This is dangerous for data extractions.
 </Notice>
 
+### 4.4. Getting fields info
+
+With `sf.Entity.describe()` you can get the fields definition as a `dict`.
+You can then transform that into a `pandas` dataframe so that it is easier to view with:
+
+```python
+import pandas as pd
+
+data = sf.__getattr__("entity_name").describe()
+df = pd.DataFrame(data["fields"]).set_index("name")
+```
+
+Alternativelly you can also use <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/>.
+You can get the attributes you want with:
+
+```python
+from pydantic import BaseModel
+from typing import List, Optional
+
+class Column(BaseModel):
+    name: str
+    type: str
+    calculated: bool
+    calculatedFormula: Optional[str]
+    referenceTo: Optional[List[str]]
+    relationshipName: Optional[str]
+
+data = sf.__getattr__(self.entity).describe()
+columns = [Column(**x) for x in data["fields"]]
+```
+
+That is useful since you can access properties with `column.property`, like `column.calculatedFormula`.
+
 ## 5. Query including external changes
 
 | name             | calculated | calculatedFormula | type      | referenceTo     | relationshipName                                                |
