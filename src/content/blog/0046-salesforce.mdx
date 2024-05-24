@@ -44,17 +44,17 @@ sf = Salesforce(
 This is the most simple query you can do:
 
 ```python
-sf.Contact.get('003e0000003GuNXAA0')
+sf.Account.get('003e0000003GuNXAA0')
 ```
 
-Notice that we are querying the entity `Contact` and that to do so you need to access the `Contact` attribute from the `sf` object.
+Notice that we are querying the entity `Account` and that to do so you need to access the `Account` attribute from the `sf` object.
 That makes pipelines a little bit more complex than needed, but you can use `__getattr__("name")` to get the attribute in a programatic way from the entity name.
 As an example, both statements do the same:
 
 ```python
-sf.Contact.get('003e0000003GuNXAA0')
+sf.Account.get('003e0000003GuNXAA0')
 
-sf.__getattr__("Contact").get('003e0000003GuNXAA0')
+sf.__getattr__("Account").get('003e0000003GuNXAA0')
 ```
 
 <Notice type="success" className="mt-6">
@@ -70,9 +70,10 @@ Here is a detailed overview of all of them:
 |-----------------------------|-----|-------|-----------|----------------|----------------|-------------|
 | Batch Querying              | ❌ | ✔️    | ✔️       | ✔️             | ✔️            | ✔️          |
 | No need of pagination       | -   | ❌   | ✔️        | ✔️            | ✔️             | ✔️         |
-| Iterable (no memory errors) | -   | ❌   | ❌        | ✔️            | ✔️            | ✔️          |
+| Iterable (no memory errors) | -   | ❌   | ❌        | ✔️            | ⚠️            | ✔️          |
 | Result as python object     | ✔️ | ✔️    | ✔️       | ✔️             | ✔️            | ❌          |
 | Includes deleted            | ❌ | ✔️    | ✔️       | ✔️             | ✔️            | ❌          |
+| Can query compound data     | -   | ✔️   | ✔️       | ✔️             | ❌            | ❌          |
 
 <Notice type="info">
   I would recommend using either `query_all_iter` or `bulk.query_all`.
@@ -83,10 +84,12 @@ Here is a detailed overview of all of them:
 You can use the `get` method to retrive a single entity:
 
 ```python
-sf.Contact.get('003e0000003GuNXAA0')
+sf.Account.get('003e0000003GuNXAA0')
 ```
 
-While useful for getting a value it's not suited for exporing large number of rows.
+<Notice type="warning">
+  While useful for getting a value it's not suited for exporing large number of rows.
+</Notice>
 
 ### 2.2. query
 
@@ -96,7 +99,7 @@ The number of records you can get is limited and if your query exceeds them you 
 You can do that with the following code:
 
 ```python
-sf.query("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
+sf.query("SELECT Id, Name FROM Account")
 
 # The previous call will have: "nextRecordsUrl" : "/services/data/v26.0/query/01gD0000002HU6KIAW-2000
 sf.query_more("01gD0000002HU6KIAW-2000")
@@ -113,7 +116,7 @@ You can read more about it in <FancyLink linkText="Queries | Simple Salesforce" 
 This method is the same as before but it returns all results as a python object:
 
 ```python
-sf.query_all("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
+sf.query_all("SELECT Id, Name FROM Account")
 ```
 
 <Notice type="warning">
@@ -128,7 +131,8 @@ This way you can process each row at a time and avoid `Out of Memory (OOM)` erro
 It would work like:
 
 ```python
-data = sf.query_all_iter("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'", include_deleted=True)
+query = "SELECT Id, Name FROM Account"
+data = sf.query_all_iter(, include_deleted=True)
 
 for row in data:
     process(row)
@@ -136,6 +140,10 @@ for row in data:
 
 Under the hood it manages to get the records in bulk.
 You can notice this because when you try to query a lot of data the first row will take longer than the rest.
+
+<Notice type="warning">
+  This is the method I recommend using
+</Notice>
 
 ### 2.5. Bulk
 
@@ -185,34 +193,34 @@ Since it's not the case for my, I'm not using this option.
 
 ### 3.2. Max days per query
 
-## 4. Types of columns
+## 4. Types of fields
 
-Columns in Salesforce are flexible and they can contain different types of data.
-I like to classify columns in three types:
+Fields (or Columns) in Salesforce are flexible and they can contain different types of data.
+I like to classify fields in three types:
 
-1. **Primitive columns**: those show information about the entity itself.
-2. **Reference columns**: those are links to other tables, similar to a join.
-3. **Calculated columns**: those are formulas based on other fields. Those fields can be from referenced tables.
+1. **Primitive fields**: those show information about the entity itself.
+2. **Reference fields**: those are links to other tables, similar to a join.
+3. **Compound fields**: those are formulas based on other fields. Those fields can be from referenced tables.
 
-### 4.1. Primitive columns
+### 4.1. Primitive fields
 
-Those are the basic type of columns. They show information about the entity itself.
-For example, if we are working with the `User` table, it will have some primitive columns like:
+Those are the basic type of fields. They show information about the entity itself.
+For example, if we are working with the `User` table, it will have some primitive fields like:
 
 * `firstname`: the name of the user (string)
 * `age`: how old the user is (int)
 
-### 4.2. Reference columns
+### 4.2. Reference fields
 
-Those columns are references to other tables.
+Those fields are references to other tables.
 Under the hood they behave similarly to a `join` in SQL.
 
-The 2 important parts of reference columns are:
+The 2 important parts of reference fields are:
 
-* `referenceTo`: this shows to which entity the column refers to
+* `referenceTo`: this shows to which entity the field refers to
 * `relationshipName`: the name that entity will have. Think of it as the alias after a join
 
-Here you have a sample of reference columns:
+Here you have a sample of reference fields:
 
 | name             | type      | referenceTo     | relationshipName |
 |------------------|-----------|-----------------|------------------|
@@ -221,16 +229,16 @@ Here you have a sample of reference columns:
 | Delegation__c    | reference | [Delegation__c] | Delegation__r    |
 | User__c          | reference | [User]          | User__r          |
 
-### 4.3. Calculated columns
+### 4.3. Compound fields (Calculated fields)
 
-Those columns are populated at query time based on a formula.
-For example, in the `User` table we could have `firstName` and `lastName` as primitive columns and then `fullName` defined as `FirstName & ’ ’ & LastName`.
+Those fields are populated at query time based on a formula.
+For example, in the `User` table we could have `firstName` and `lastName` as primitive fields and then `fullName` defined as `FirstName & ’ ’ & LastName`. More info at <FancyLink linkText="Compound fields" url="https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/compound_fields.htm"/>.
 
 <Notice type="warning">
-  Calculated columns can use information from `referenced` entities!
+  Compound fields can use information from `referenced` entities!
 </Notice>
 
-Let's imagine the we have the `Order` table which has those columns (among others):
+Let's imagine the we have the `Order` table which has those fields (among others):
 
 | name             | type      | referenceTo | relationshipName                                      |
 |------------------|-----------|-------------|-------------------------------------------------------|
@@ -238,12 +246,12 @@ Let's imagine the we have the `Order` table which has those columns (among other
 | LastModifiedById | reference | [User]      | LastModifiedBy                                        |
 | User__c          | reference | [User]      | <span style="background-color:yellow;">User__r</span> |
 
-We could have here a **calculated** column called `fullName` with the following formula: `User__r.FirstName & ’ ’ & User__r.LastName`.
+We could have here a **calculated** field called `fullName` with the following formula: `User__r.FirstName & ’ ’ & User__r.LastName`.
 
 In that case, `fullName` will have information based on the table `Users` and not the `Orders`.
 
 <Notice type="error">
-  When extracting data those columns are very dangerous since **changes in the referenced table does not modify the `LastModifiedDate` from the main table**.
+  When extracting data those fields are very dangerous since **changes in the referenced table does not modify the `LastModifiedDate` from the main table**.
   In the example above, we would see a different `fullName` if `User.FirstName` is modified but the `Order` table will have the same `LastModifiedDate` as before, since the `Order` table hasn't been modified. This is dangerous for data extractions.
 </Notice>
 
