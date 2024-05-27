@@ -227,23 +227,23 @@ However, one important caveat is that the result is a Python string similar to a
 During testing, I observed around a 20% performance improvement compared to `bulk`.
 However, given that it's not a significant improvement, I believe it's not worth the effort.
 
-## 3. Avoiding timeouts and Out of Memory errors
+## 3. Avoiding Timeouts and Out of Memory Errors
 
-After some months of extracting data from salesforce I've noticed that there are a couple of tricks that can make the pipeline more resilient.
-Those are:
+After extracting data from Salesforce for several months, I've discovered a couple of tricks to make the pipeline more resilient. These include:
 
-1. Exporting data in chunks
-2. Splitting the query (batches)
+1. Exporting data in chunks.
+2. Splitting the query into batches.
 
-Also I think it helps to always query only data that has been updated, more info at <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
+Additionally, I've found it beneficial to always query only the data that has been updated.
+You can find more information about this approach in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
 
 ### 3.1. Chunks
 
-This one is quite straightforward. For tables that can potentially have a lot of data I like exporting records in chunks.
-The chunk size can be adjusted after doing some queries to get a sense of the querying speed.
-Afterwards I like setting the chunk size so that each chunk takes a similar amount of time (5 min in my case).
+Exporting data in chunks is a straightforward method. For tables that may contain a large amount of data, I prefer exporting records in smaller, manageable chunks.
+The chunk size can be adjusted based on query speed observations.
+Typically, I set the chunk size so that each chunk takes a similar amount of time to process (e.g., 5 minutes).
 
-That is done with a `for/else` statement inside a function that can be called iteratibly:
+Here's an example using a function that can be called iteratively:
 
 ```python
 from time import time
@@ -275,7 +275,7 @@ def fetch_one_chunk(max_rows_per_chunk=100_000):
     return out
 ```
 
-Then you can do something like:
+You can then use this function within a loop to process each chunk:
 
 ```python
 MAX_ITERATIONS = 200
@@ -285,31 +285,29 @@ for chunk_num in range(MAX_ITERATIONS):
     export_data(data)
 ```
 
-This is helpful since:
+This approach helps to:
 
-* It avoids Out of Memory (OOM) errors
-* Helps getting progress on long queries that can fail
+* Avoid Out of Memory (OOM) errors.
+* Provide progress updates for long-running queries that may fail.
 
 ### 3.2. Batches
 
-In some cases trying to do a query whose result will be a lot of data can lead to a timeout.
-Based on experience I've seen that if the first row cannot be extracted in 2 minuts an exception will be raised by `simple_salesforce`.
-In order to avoid those timeouts we can split the query into multiple queries.
-To do so we define the `max_days_per_batch` parameter.
-Then we can do multiple queries where each batch has that defined length.
+Attempting to query a large amount of data in one go can sometimes lead to timeouts.
+Based on my experience, if the first row cannot be extracted within 2 minutes, `simple_salesforce` will raise an exception.
+To prevent such timeouts, I recommend splitting the query into multiple batches.
+This is achieved by defining the `max_days_per_batch` parameter and then performing multiple queries, each with a specified batch length.
 
-This is the function that gets the batches:
+Here's a function to generate batches:
 
 ```python
 from datetime import timedelta
 from math import ceil
-
 from loguru import logger
 
 def get_dates_batches(min_date, max_date, max_days_per_batch=None):
 
     if (min_date is None) or (max_date is None):
-        logger.info(f"No need of batches since one date is None")
+        logger.info(f"No need for batches since one date is None")
         return [(min_date, max_date)]
 
     logger.debug(
@@ -321,10 +319,10 @@ def get_dates_batches(min_date, max_date, max_days_per_batch=None):
 
     # Check if batches are needed
     if not max_days_per_batch:
-        logger.info(f"No need of batches for this entity (max_days_per_batch=None)")
+        logger.info(f"No need for batches for this entity (max_days_per_batch=None)")
         return [(min_date, max_date)]
 
-    # Finally calculate the batches
+    # Calculate batches
     total_days = (max_date - min_date) / timedelta(days=1)
     n_batches = ceil(total_days / max_days_per_batch)
 
@@ -338,34 +336,31 @@ def get_dates_batches(min_date, max_date, max_days_per_batch=None):
     return chunks
 ```
 
-## 4. Types of fields
+## 4. Types of Fields
 
-Fields (or Columns) in Salesforce are flexible and they can contain different types of data.
-I like to classify fields in three types:
+Fields (or Columns) in Salesforce are flexible and can contain different types of data. I classify fields into three types:
 
-1. **Primitive fields**: those show information about the entity itself.
-2. **Reference fields**: those are links to other tables, similar to a join.
-3. **Compound fields**: those are formulas based on other fields. Those fields can be from referenced tables.
+1. **Primitive fields**: These provide information about the entity itself.
+2. **Reference fields**: These are links to other tables, similar to a join.
+3. **Compound fields**: These are formulas based on other fields, including fields from referenced tables.
 
-### 4.1. Primitive fields
+### 4.1. Primitive Fields
 
-Those are the basic type of fields. They show information about the entity itself.
-For example, if we are working with the `User` table, it will have some primitive fields like:
+Primitive fields are the basic type of fields, providing information about the entity itself.
+For example, in the `User` table, primitive fields might include:
 
-* `firstname`: the name of the user (string)
-* `age`: how old the user is (int)
+* `firstname`: The user's first name (string).
+* `age`: The user's age (integer).
 
-### 4.2. Reference fields
+### 4.2. Reference Fields
 
-Those fields are references to other tables.
-Under the hood they behave similarly to a `join` in SQL.
+Reference fields are links to other tables and behave similarly to a **join** in SQL.
+The two important parts of reference fields are:
 
-The 2 important parts of reference fields are:
+* `referenceTo`: Indicates which entity the field refers to.
+* `relationshipName`: The name assigned to the relationship.
 
-* `referenceTo`: this shows to which entity the field refers to
-* `relationshipName`: the name that entity will have. Think of it as the alias after a join
-
-Here you have a sample of reference fields:
+Here are examples of reference fields:
 
 | name             | type      | referenceTo     | relationshipName |
 |------------------|-----------|-----------------|------------------|
@@ -374,36 +369,31 @@ Here you have a sample of reference fields:
 | Delegation__c    | reference | [Delegation__c] | Delegation__r    |
 | User__c          | reference | [User]          | User__r          |
 
-### 4.3. Compound fields (Calculated fields)
+### 4.3. Compound Fields (Calculated Fields)
 
-Those fields are populated at query time based on a formula.
-For example, in the `User` table we could have `firstName` and `lastName` as primitive fields and then `fullName` defined as `FirstName & ’ ’ & LastName`. More info at <FancyLink linkText="Compound fields" url="https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/compound_fields.htm"/>.
+Compound fields are populated at query time based on a formula.
+For example, in the `User` table, we might have `firstName` and `lastName` as primitive fields, with `fullName` defined as `FirstName & ’ ’ & LastName`. More information about compound fields can be found in <FancyLink linkText="Compound fields" url="https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/compound_fields.htm"/>.
 
 <Notice type="warning">
   Compound fields can use information from `referenced` entities!
 </Notice>
 
-Let's imagine the we have the `Order` table which has those fields (among others):
+Consider an example where the `Order` table has fields such as `CreatedById`, `LastModifiedById`, and `User__c`.
+We could have a calculated field called `fullName` with the formula `User__r.FirstName & ' ' & User__r.LastName`.
 
-| name             | type      | referenceTo | relationshipName                                      |
-|------------------|-----------|-------------|-------------------------------------------------------|
-| CreatedById      | reference | [User]      | CreatedBy                                             |
-| LastModifiedById | reference | [User]      | LastModifiedBy                                        |
-| User__c          | reference | [User]      | <span style="background-color:yellow;">User__r</span> |
-
-We could have here a **calculated** field called `fullName` with the following formula: `User__r.FirstName & ’ ’ & User__r.LastName`.
-
-In that case, `fullName` will have information based on the table `Users` and not the `Orders`.
+When extracting data, compound fields are risky because:
 
 <Notice type="error">
-  When extracting data those fields are very dangerous since **changes in the referenced table does not modify the `LastModifiedDate` from the main table**.
-  In the example above, we would see a different `fullName` if `User.FirstName` is modified but the `Order` table will have the same `LastModifiedDate` as before, since the `Order` table hasn't been modified. This is dangerous for data extractions.
+  Changes in the referenced table do not modify the `LastModifiedDate` from the main table.
 </Notice>
 
-### 4.4. Getting fields info
+In the example above, modifying `User.FirstName` would result in a different `fullName`, but the `Order` table's `LastModifiedDate` would remain unchanged.
+This can lead to incorrect data extraction.
 
-With `sf.Entity.describe()` you can get the fields definition as a `dict`.
-You can then transform that into a `pandas` dataframe so that it is easier to view with:
+### 4.4. Retrieving Field Information
+
+You can use `sf.Entity.describe()` to retrieve field definitions as a dictionary.
+This can be transformed into a Pandas DataFrame for easier viewing:
 
 ```python
 import pandas as pd
@@ -412,8 +402,7 @@ data = sf.__getattr__("entity_name").describe()
 df = pd.DataFrame(data["fields"]).set_index("name")
 ```
 
-Alternativelly you can also use <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/>.
-You can get the attributes you want with:
+Alternatively, you can use <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> to define the attributes you want:
 
 ```python
 from pydantic import BaseModel
@@ -425,33 +414,28 @@ class Column(BaseModel):
     calculated: bool
     calculatedFormula: Optional[str]
     referenceTo: Optional[List[str]]
-    relationshipName: Optional[str]
-
-data = sf.__getattr__(self.entity).describe()
-columns = [Column(**x) for x in data["fields"]]
+    relationship
 ```
 
-That is useful since you can access properties with `column.property`, like `column.calculatedFormula`.
-
-## 5. Query including external changes
+## 5. Querying with External Changes
 
 ### 5.1. The problem
 
-The compound fields can be calculated based on external entities.
-Since an update on that related entity does not change the `LastModifiedDate` of the principal entity.
+Compound fields can be calculated based on external entities.
+However, an update on the related entity does not change the `LastModifiedDate` of the main entity.
+This poses a challenge when querying data.
 
-Let's see this in with an example where we want to query `Delegation` which depends on the `User` entity:
+Let's illustrate this problem with an example where we want to query the `Delegation` entity, which depends on the `User` entity:
 
 ![Problem with external fields](../../images/posts/2024/0046-salesforce_external_fields.jpg)
 
 ### 5.2. The solution
 
-In order to avoid problems with that scenario we need to filter the `LastModifiedDate` of both entities.
+To address this issue, we need to filter the `LastModifiedDate` of both entities when querying.
+To automate this process, we can retrieve all fields of type `reference` and check if their `relationshipName` is used in any `calculatedFormula`.
+If so, we include that related entity in the query.
 
-To automate that, we need to retrive all fields that are of `type="reference"`.
-Then we can check if the `relationshipName` is used in any `calculatedFormula` since if that happens it means we need to include that entity in the query.
-
-As an example:
+For example, if we have the following fields:
 
 | name             | calculated | calculatedFormula | type      | referenceTo     | relationshipName                                                |
 |------------------|------------|-------------------|-----------|-----------------|-----------------------------------------------------------------|
@@ -467,8 +451,7 @@ As an example:
 | LastModifiedDate | False      |                   | datetime  |                 |                                                                 |
 | SystemModstamp   | False      |                   | datetime  |                 |                                                                 |
 
-Here we see that `CreatedBy`, `LastModifiedBy` and `Delegation__r` are not used in any `calculatedFormula`.
-Then `User__r` is used in `UserName__c` formula, so we need to also query any User that might have been modified.
+In this example, `CreatedBy`, `LastModifiedBy`, and `Delegation__r` are not used in any `calculatedFormula`. However, `User__r` is used in the formula for `UserName__c`, so we need to query the `User` entity as well.
 
 So in that case we would do a query like:
 
@@ -493,26 +476,26 @@ WHERE (LastModifiedDate >= {min_date} AND LastModifiedDate < {max_date})
   You should replace `{min_date}` and `{max_date}` with datetimes with the format `%Y-%m-%dT%H:%M:%SZ` (do not include any `"` or `'`).
 </Notice>
 
-#### 5.2.1. Deciding date ranges
+#### 5.2.1. Deciding Date Ranges
 
-In regular runs I always query between the last extraction (`max(LastUpdateDate)` from the table where the export will be stored) up until `datetime.now()`.
-More info about that at <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
+In regular runs, I query data from the last extraction (`max(LastUpdateDate)` from the table where the export will be stored) up until the current datetime (`datetime.now()`).
+More information about this approach can be found in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
 
 <Notice type="warning">
-  Between the query creation and the actual execution some time might happend.
-  In order to not lose records we need to set `max_date` as a filter and discard records that are modified afterwards. 
+  Between the query creation and the execution, some time may pass.
+  To ensure we don't lose records, we need to set `max_date` as a filter and discard records that are modified afterwards. 
 </Notice>
 
-See the example below for better clarification
+For example:
 
 ![Problem with max date](../../images/posts/2024/0046-salesforce_date_ranges.jpg)
 
-So when dealing with external entities, we will only include set the `min_date` since that date won't be used for the next execution to decide the next `min_date`.
+When dealing with external entities, we only include the `min_date` since that date won't be used for the next execution to determine the next `min_date`.
 
-### 5.3. Automatically detecting related entities
+### 5.3. Automatically Detecting Related Entities
 
-The idea here is that for all `relationshipName` entires in an entity to look and see if we find that in the `calculatedFormula` of any other field.
-We can do that with using regexs:
+To automate the detection of related entities, we can search for `relationshipName` entries in an entity and check if they are found in the `calculatedFormula` of any other field.
+This can be achieved using regular expressions:
 
 ```python
 import re
@@ -545,13 +528,16 @@ def get_referenced_entities(entity):
                     )
                     continue
 
-                out[col.relationshipName] = self._get_filter_col(col.referenceTo)
+                out[col.relationshipName] = "LastModifiedDate"
 
     if out:
         logger.info(f"{entity=} has references with '{out}'")
 
     return out
 ```
+
+This function retrieves all fields of type `reference`, extracts their `relationshipName`, and checks if it appears in any `calculatedFormula`.
+If found, it adds the related entity to the query.
 
 ## 6. Bonus: Final code
 
