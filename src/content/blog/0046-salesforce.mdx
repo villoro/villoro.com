@@ -26,13 +26,13 @@ My goal is to help you get the data you need from Salesforce for your own projec
 
 ## 1. Simple Salesforce
 
-There are multiple ways of querying Salesforce data with python.
-I like using <FancyLink linkText="Simple Salesforce" url="https://github.com/simple-salesforce/simple-salesforce" dark="true"/> because as it's name suggest it makes it quite simple to extract data.
+There are multiple ways of querying Salesforce data with Python.
+I prefer using <FancyLink linkText="Simple Salesforce" url="https://github.com/simple-salesforce/simple-salesforce" dark="true"/> because, as the name suggests, it simplifies the data extraction process.
 
-We aware that in the <FancyLink linkText="Official documentation | Simple Salesforce" url="https://simple-salesforce.readthedocs.io/en/latest/"/> there are a lot of missing functions.
-So I suggest you also take a look at the github readme.
+It's worth noting that the <FancyLink linkText="Official documentation | Simple Salesforce" url="https://simple-salesforce.readthedocs.io/en/latest/"/> may have some missing functions.
+So, I recommend also checking the GitHub readme for additional information.
 
-To start with it, you need to instanciate `Salesforce` as follows
+To begin, you'll need to instantiate the Salesforce object as follows:
 
 ```python
 from simple_salesforce import Salesforce
@@ -45,20 +45,20 @@ sf = Salesforce(
 )
 ```
 <Notice type="warning">
-  Make sure to change all strings with proper values
+  Please ensure that you replace all the placeholder strings with the appropriate values.
 </Notice>
 
 ### 1.1. Querying and `__getattr__`
 
-This is the most simple query you can do:
+This is the simplest query you can execute:
 
 ```python
 sf.Account.get('003e0000003GuNXAA0')
 ```
 
-Notice that we are querying the entity `Account` and that to do so you need to access the `Account` attribute from the `sf` object.
-That makes pipelines a little bit more complex than needed, but you can use `__getattr__("name")` to get the attribute in a programatic way from the entity name.
-As an example, both statements do the same:
+Note that we're querying the `Account` entity, and to do so, you need to access the `Account` attribute from the `sf` object.
+This adds a bit of complexity to the pipeline. However, you can use the `__getattr__("name")` method to programmatically access attributes based on the entity name.
+For example, both of these statements do the same thing:
 
 ```python
 sf.Account.get('003e0000003GuNXAA0')
@@ -67,13 +67,13 @@ sf.__getattr__("Account").get('003e0000003GuNXAA0')
 ```
 
 <Notice type="success" className="mt-6">
-  That can be applied almost everywhere in this post
+  You'll find that this approach can be applied throughout this post.
 </Notice>
 
 ## 2. Querying options
 
-There are multiple ways of getting data from Salesforce using <FancyLink linkText="Simple Salesforce" url="https://github.com/simple-salesforce/simple-salesforce" dark="true"/> library.
-Here is a detailed overview of all of them:
+There are various methods available for retrieving data from Salesforce using the <FancyLink linkText="Simple Salesforce" url="https://github.com/simple-salesforce/simple-salesforce" dark="true"/> library.
+Here's a detailed overview of each:
 
 |                             | get | query | query_all | query_all_iter | bulk.query_all | bulk2.query |
 |-----------------------------|-----|-------|-----------|----------------|----------------|-------------|
@@ -88,7 +88,7 @@ Here is a detailed overview of all of them:
   (\*) More info about compound data in section 4.
 </Notice>
 
-And here you can see the query time of each method using the same query:
+You can also view the query time of each method using the same query.
 
 <canvas id="sf_querying_times" style="width:100%;height:300px;"></canvas>
 
@@ -98,22 +98,22 @@ And here you can see the query time of each method using the same query:
 
 ### 2.1. Entity get
 
-You can use the `get` method to retrive a single entity:
+You can use the `get` method to retrieve a single entity:
 
 ```python
 sf.Account.get('003e0000003GuNXAA0')
 ```
 
 <Notice type="warning">
-  While useful for getting a value it's not suited for exporing large number of rows.
+  While useful for retrieving a single value, it's not suitable for exporting a large number of rows.
 </Notice>
 
 ### 2.2. query
 
-You can use `sf.query` to retrive multiple rows at the same time.
-The number of records you can get is limited and if your query exceeds them you will need to call `sf.query_more`.
+You can use `sf.query` to retrieve multiple rows at once.
+However, there's a limit on the number of records you can fetch. If your query exceeds this limit, you'll need to use `sf.query_more`.
 
-You can do that with the following code:
+Here's an example:
 
 ```python
 sf.query("SELECT Id, Name FROM Account")
@@ -122,53 +122,53 @@ sf.query("SELECT Id, Name FROM Account")
 sf.query_more("01gD0000002HU6KIAW-2000")
 ```
 
-You can read more about it in <FancyLink linkText="Queries | Simple Salesforce" url="https://simple-salesforce.readthedocs.io/en/latest/user_guide/queries.html"/>.
+You can find more information about this in the <FancyLink linkText="Queries | Simple Salesforce" url="https://simple-salesforce.readthedocs.io/en/latest/user_guide/queries.html"/> documentation.
 
 <Notice type="warning">
-  I don't suggest using this option since there are others that are easier to use without needing to deal with the `sf.query_more` option.
+  I don't suggest using this option since there are easier methods available that don't require dealing with the `sf.query_more` option.
 </Notice>
 
 ### 2.3. query_all
 
-This method is the same as before but it returns all results as a python object:
+This method is similar to `query`, but it returns all results as a Python object:
 
 ```python
 sf.query_all("SELECT Id, Name FROM Account")
 ```
 
 <Notice type="warning">
-  The problem with that is that you can easily get `Out of Memory (OOM)` errors when trying to bring a lot of data into memory.
+  The problem with this approach is that you can easily encounter `Out of Memory (OOM)` errors when attempting to load a large amount of data into memory.
 </Notice>
 
 ### 2.4. query_all_iter
 
-This works similarly to the previous methods but the result is an iterator.
-This way you can process each row at a time and avoid `Out of Memory (OOM)` errors.
+This works similarly to the previous methods, but the result is an iterator.
+This allows you to process each row one at a time and avoid `Out of Memory (OOM)` errors.
 
-It would work like:
+Here's how it works:
 
 ```python
 query = "SELECT Id, Name FROM Account"
-data = sf.query_all_iter(, include_deleted=True)
+data = sf.query_all_iter(query, include_deleted=True)
 
 for row in data:
     process(row)
 ```
 
-Under the hood it manages to get the records in bulk.
-You can notice this because when you try to query a lot of data the first row will take longer than the rest.
+Under the hood, it fetches records in bulk.
+You may notice that the first row takes longer to retrieve than the rest when querying a large amount of data.
 
-<Notice type="warning">
-  This is the method I recommend using
+<Notice type="success">
+  This is the method I recommend using.
 </Notice>
 
 ### 2.5. Bulk
 
-There is two ways of querying with `bulk`, the regular one and the lazy operation.
-The first one works similarly to `query_all_iter` where you can iterate over the results (no OOM errors).
-The lazy one is like `query_all` which brings evertying as one batch. 
+There are two ways of querying with `bulk`: the regular one and the lazy operation.
+The regular method works similarly to `query_all_iter`, allowing you to iterate over the results without encountering OOM errors.
+The lazy method, on the other hand, is similar to `query_all`, fetching everything in one batch.
 
-Here is the regular call:
+Here's how the regular call works:
 
 ```python
 query = "SELECT Id, Name FROM Account"
@@ -181,7 +181,8 @@ for row in data:
     process(row)
 ```
 
-And this is how to call it lazilly:
+And here's how to call it lazily:
+
 ```python
 query = "SELECT Id, Name FROM Account"
 
@@ -193,17 +194,16 @@ for chunk in data:
     process(chunk)
 ```
 <Notice type="info">
-  Notice that `chunk` contains all rows
+  Note that `chunk` contains all rows.
 </Notice>
-
 <Notice type="warning">
   This function is consistently **2 to 3 times faster** than `query_all_iter`.
-  However since it cannot extract compound fields it would make extraction more complex, since you would need to recreate all that logic in the datalake.
+  However, since it cannot extract compound fields, it would make extraction more complex, as you would need to recreate all that logic in the data lake.
 </Notice>
 
 ### 2.6. Bulk2
 
-Finally there is also the `bulk2` option.
+Finally, there's also the `bulk2` option.
 
 ```python
 query = "SELECT Id, Name FROM Account"
@@ -217,15 +217,15 @@ for i, data in enumerate(results):
         bos.write(data)
 ```
 
-With this one the iterator returns batches of the asked size (`max_records`).
-One important caveat is that the result is a python string similar to a `csv`.
+With this method, the iterator returns batches of the requested size (`max_records`).
+However, one important caveat is that the result is a Python string similar to a CSV.
 
 <Notice type="warning">
-  That means extra work for parsing that result, such as handling problems with separators, encodings issues, extra I/O operations etc.
+  This means extra work for parsing the result, such as handling problems with separators, encoding issues, extra I/O operations, etc.
 </Notice>
 
-When testing, I saw around a 20% performance improvement compared to `bulk`.
-Given that it's not high I think it's not worth the effort.
+During testing, I observed around a 20% performance improvement compared to `bulk`.
+However, given that it's not a significant improvement, I believe it's not worth the effort.
 
 ## 3. Avoiding timeouts and Out of Memory errors
 
