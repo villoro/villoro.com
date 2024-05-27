@@ -546,3 +546,360 @@ def get_referenced_entities(entity):
     return out
 ```
 
+## 6. Final code
+
+Here you can see the final code that is explained during the post
+
+### 6.1. Salesforce connector class
+
+This is the code for querying salesforce:
+
+<TerminalOutput color="stone">
+  sf_connector.py
+</TerminalOutput>
+```python
+import re
+from datetime import datetime
+from datetime import timedelta
+from time import time
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from simple_salesforce import Salesforce
+from simple_salesforce.exceptions import SalesforceMalformedRequest
+from prefect import get_run_logger
+
+
+TYPE_REFRENCE = "reference"
+REGEX_RELATION = r"\b{relationship}\.\b"
+
+FILTER_COL = "LastModifiedDate"
+MARGIN_HOURS = 6
+SF_DT_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
+
+class Column(BaseModel):
+    name: str
+    type: str
+    calculated: bool
+    calculatedFormula: Optional[str]
+    referenceTo: Optional[List[str]]
+    relationshipName: Optional[str]
+
+
+class SalesForceConnector:
+    def __init__(
+        self,
+        secret,
+        entity,
+        filter_col=None,
+        max_rows_per_chunk=None,
+        query_referenced_entities=True,
+    ):
+        self.logger = get_run_logger()
+        self.logger.debug(f"Initializing Salesforce Connector for '{entity}'")
+
+        self._sf = Salesforce(
+            username=secret["username"],
+            password=secret["password"],
+            consumer_key=secret["consumer_key"],
+            consumer_secret=secret["consumer_secret"],
+        )
+
+        self.entity = entity
+        self.filter_col = filter_col
+        self.max_rows_per_chunk = max_rows_per_chunk
+        self.query_referenced_entities = query_referenced_entities
+        self.data = None
+
+    def _get_raw_fields(self, entity=None):
+        if entity is None:
+            entity = self.entity
+
+        return self._sf.__getattr__(self.entity).describe()["fields"]
+
+    def get_all_columns(self, entity=None):
+        raw_fields = self._get_raw_fields(entity)
+        return [x["name"] for x in raw_fields if x["name"] != "attributes"]
+
+    def get_date_columns(self, entity=None):
+        raw_fields = self._get_raw_fields(entity)
+        return [x["name"] for x in raw_fields if x["type"] in ["date", "datetime"]]
+
+    def _get_filter_col(self, entities):
+        """
+        Since all referenced entities have 'LastModifiedDate' as the filter column
+        right now we just return that. In the future we might want to inspect the entity
+        and then see what column can be used for filtering
+        """
+        msg = "References to multiple entities not allowed"
+        assert len(entities) == 1, msg
+        return FILTER_COL
+
+    def get_referenced_entities(self):
+        cols = [Column(**x) for x in self._get_raw_fields()]
+
+        formulas = [
+            col.calculatedFormula
+            for col in cols
+            if col.calculated and (col.calculatedFormula is not None)
+        ]
+
+        out = {}
+        for col in cols:
+            if col.type != TYPE_REFRENCE:
+                continue
+
+            regex = re.compile(REGEX_RELATION.format(relationship=col.relationshipName))
+            for formula in formulas:
+                if regex.search(formula):
+                    # In 'Lead' there is 'OwnerId' which is throwing errors
+                    if len(col.referenceTo) > 1:
+                        self.logger.warning(
+                            f"Excluding {col=} since it has multiple 'referenceTo'"
+                        )
+                        continue
+
+                    out[col.relationshipName] = self._get_filter_col(col.referenceTo)
+
+        if out:
+            self.logger.info(f"{self.entity=} has references with '{out}'")
+
+        return out
+
+    def _get_referenced_entities_filter(self, min_date):
+        out = ""
+        for entity, col in self.get_referenced_entities().items():
+            out += f" OR ({entity}.{col} >= {min_date:{SF_DT_FORMAT}})"
+        return out
+
+    def _construct_query(self, min_date=None, max_date=None):
+        cols = ",".join(self.get_all_columns())
+        query = f"SELECT {cols} FROM {self.entity}"
+
+        filter_col = self.filter_col
+        if not filter_col:
+            return query
+
+        date_cols = self.get_date_columns()
+        msg = f"You can only use a date column for filtering ({date_cols})"
+        assert filter_col and (filter_col in date_cols), msg
+
+        msg = "'max_date' cannot be None. It should default to 'datetime.now()'"
+        assert max_date is not None, msg
+
+        if min_date:
+            query += f" WHERE ({filter_col} >= {min_date:{SF_DT_FORMAT}}"
+            query += f" AND {filter_col} < {max_date:{SF_DT_FORMAT}})"
+
+            if self.query_referenced_entities:
+                query += self._get_referenced_entities_filter(min_date)
+
+        if not min_date:
+            query += f" WHERE ({filter_col} < {max_date:{SF_DT_FORMAT}})"
+
+        query += f" ORDER BY {filter_col} ASC"
+        return query
+
+    def query_lazy(
+        self, min_date=None, max_date=None, query=None, include_deleted=True
+    ):
+        """
+        Queries salesforce for the given entity.
+        The dates can be `datetime` or `date` and it will work for both.
+        It will store a generator called `self.data`.
+        Then it is expected to call `sf.fetch_in_chunks`
+        """
+
+        if not query:
+            query = self._construct_query(min_date, max_date)
+
+        # Prepare values for 'fetch_one_chunk'
+        self.logger.info(f"Querying all (lazy) with {query=}")
+        self.data = self._sf.query_all_iter(query, include_deleted=include_deleted)
+        self.chunk_num = 0
+        self.all_done = False
+
+    def _fetch_one_chunk(self):
+        """Internal function to extract a chunk"""
+
+        t0 = time()
+        out = []
+        for i, row in enumerate(self.data):
+            if (self.chunk_num == 0) and (i == 0):
+                self.logger.info(
+                    f"First row extracted in {round(time() - t0, 2)} seconds"
+                )
+
+            out.append(row)
+
+            if self.max_rows_per_chunk and (i + 1 == self.max_rows_per_chunk):
+                break
+        else:
+            self.logger.info(f"There are no more records for '{self.entity}'")
+            self.all_done = True
+
+        return out
+
+    def fetch_one_chunk(self):
+        """Fetches records in chunks. Must be called after `sf.query_lazy`"""
+
+        if self.data is None:
+            self.logger.error(
+                "You must first call 'sf.query_lazy' before fetching chunks"
+            )
+            return None
+
+        if self.all_done:
+            return []
+
+        chunk_msg = f"[Chunk {self.chunk_num + 1}]"
+        self.logger.info(f"{chunk_msg} Querying {self.entity=}")
+
+        t0 = time()
+        try:
+            out = self._fetch_one_chunk()
+        except SalesforceMalformedRequest as e:
+            self.logger.error(
+                f"{chunk_msg} Query failed after {round(time() - t0, 2)} seconds: {e}"
+            )
+            raise e
+
+        msg = (
+            f"✔ {chunk_msg} {len(out)} records extracted "
+            f"for {self.entity=} in {round(time() - t0, 2)} seconds"
+        )
+        # If possible show first and last value to have a sense of the progress
+        if out and self.filter_col:
+            first_val = out[0][self.filter_col][:19]  # Crop to seconds
+            last_val = out[-1][self.filter_col][:19]  # Crop to seconds
+            msg += f" ({first_val=}, {last_val=})"
+
+        self.logger.info(msg)
+        self.chunk_num += 1
+
+        return out
+```
+
+### 6.2. Saleforce export
+
+This is the python file that calls the queries and exports them:
+
+<TerminalOutput color="stone">
+  sf_export.py
+</TerminalOutput>
+```python
+from datetime import datetime
+from pathlib import Path
+from typing import List
+
+import yaml
+from prefect import get_run_logger
+from prefect import task
+from pydantic import BaseModel
+from pydantic import computed_field
+from pyspark.sql import functions as F
+from pyspark.sql import types as T
+
+from common.dates import get_dates_batches
+from common.secrets import get_secret
+from common.spark import get_spark_session
+
+from sf_connector import SalesForceConnector
+from sf_connector import SF_DT_FORMAT
+
+
+def get_tables():
+    """[Out of scope] Retrives a list of the tables to export"""
+    raise NotImplementedError
+
+
+def infer_min_datetime(spark, tablename, filter_col):
+    """[Out of scope] This should give the `max(filter_col)` from the destinationt table"""
+    raise NotImplementedError
+
+
+def export_records(
+    spark, records, cols, tablename, files_per_partition, filter_col=None, max_date=None
+):
+    """[Out of scope] Here you should defined how to create a dataframe and export it"""
+    raise NotImplementedError
+
+def process_one_table(spark, secret, table, params):
+    logger = get_run_logger()
+    sf = SalesForceConnector(
+        secret,
+        table.entity,
+        table.filter_col,
+        max_rows_per_chunk=table.max_rows_per_chunk,
+        query_referenced_entities=params.query_referenced_entities,
+    )
+    cols = sf.get_all_columns()
+
+    # Infer 'min_date' if needed
+    min_date = params.min_date
+    if not min_date:
+        min_date = infer_min_datetime(spark, table.table_out, table.filter_col)
+
+    # Since querying everything sometimes gives a timeout
+    #   we will do batches (which will query in multiple chunks)
+    batches = get_dates_batches(min_date, params.max_date, table.max_days_per_batch)
+    if len(batches) > 1:
+        logger.info(f"Processing in {len(batches)} batches to avoid timeouts")
+
+    for batch_num, (start_date, end_date) in enumerate(batches):
+        if len(batches) > 1:
+            logger.info(f"Starting batch {batch_num + 1}")
+
+        # Prepare generator
+        sf.query_lazy(start_date, end_date)
+
+        # Extract in chunks
+        for chunk_num in range(params.max_iterations_per_table):
+            records = sf.fetch_one_chunk()
+
+            if len(records) == 0:
+                if chunk_num == 0:
+                    logger.warning(
+                        f"There are no records for '{table.entity}' WHERE "
+                        f"'{table.filter_col}' BETWEEN '{start_date}' AND '{end_date}'. "
+                        "Skipping dataframe creation and writing."
+                    )
+
+                break
+
+            export_records(
+                spark,
+                records,
+                cols,
+                table.table_out,
+                files_per_partition=params.files_per_partition,
+                filter_col=table.filter_col,
+                max_date=params.max_date,
+            )
+
+        else:
+            logger.error(
+                f"Extractions didn't finish for '{table.entity}' after extracting "
+                f"{params.max_iterations_per_table * table.max_rows_per_chunk} rows "
+                f"[{params.max_iterations_per_table} iterations of {table.max_rows_per_chunk} rows]"
+            )
+
+
+def main(params):
+    logger = get_run_logger()
+    spark = get_spark_session(params.entrypoint)
+    secret = get_secret(params.secret_name)
+
+    tables = get_tables()
+
+    for i, table in enumerate(tables):
+        logger.info(f"[Table {i + 1}/{len(tables)}] Processing '{table.table_out}'")
+        process_one_table(spark, secret, table, params)
+
+    spark.stop()
+```
+<Notice type="warning">
+  There are some functions that are not defined (such as `get_tables`, `infer_min_datetime` and `export_records`) since they are out of the scope of this post.
+</Notice>
