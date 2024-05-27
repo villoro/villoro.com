@@ -2,7 +2,7 @@
 slug: extracting-data-salesforce-python
 title: Extracting data from Salesforce with Python
 meta_title: Extracting data from Salesforce
-description: xx
+description: The post serves as a comprehensive guide to extracting data from Salesforce using Python, focusing on the Simple Salesforce library. It covers various querying options, strategies to avoid timeouts and memory errors, and insights into different types of fields within Salesforce. Additionally, it provides practical code examples and recommendations for effective data extraction.
 date: 2024-05-24
 image: "/images/blog/0046-salesforce.jpg"
 tags: ["Python", "DE"]
@@ -16,6 +16,13 @@ draft: false
 [TOC]
 
 ## 0. Motivation
+
+I've spent a lot of time figuring out how to get data from Salesforce using Python.
+Along the way, I faced many challenges and learned a lot.
+Now, I want to share what I've learned to help others.
+This post is a guide to extracting data from Salesforce with Python.
+I'll explain things step by step, give examples, and offer tips to make it easier for you.
+My goal is to help you get the data you need from Salesforce for your own projects.
 
 ## 1. Simple Salesforce
 
@@ -546,7 +553,7 @@ def get_referenced_entities(entity):
     return out
 ```
 
-## 6. Final code
+## 6. Bonus: Final code
 
 Here you can see the final code that is explained during the post
 
