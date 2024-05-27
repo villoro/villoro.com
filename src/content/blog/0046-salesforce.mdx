@@ -228,7 +228,7 @@ Those are:
 1. Exporting data in chunks
 2. Splitting the query (batches)
 
-Also I think it helps to always query only data that has been updated, more info at <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/"/>.
+Also I think it helps to always query only data that has been updated, more info at <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
 
 ### 3.1. Chunks
 
@@ -428,12 +428,23 @@ That is useful since you can access properties with `column.property`, like `col
 
 ## 5. Query including external changes
 
+### 5.1. The problem
+
 The compound fields can be calculated based on external entities.
 Since an update on that related entity does not change the `LastModifiedDate` of the principal entity.
 
-Let's see this in with an example:
+Let's see this in with an example where we want to query `Delegation` which depends on the `User` entity:
 
 ![Problem with external fields](../../images/posts/2024/0046-salesforce_external_fields.jpg)
+
+### 5.2. The solution
+
+In order to avoid problems with that scenario we need to filter the `LastModifiedDate` of both entities.
+
+To automate that, we need to retrive all fields that are of `type="reference"`.
+Then we can check if the `relationshipName` is used in any `calculatedFormula` since if that happens it means we need to include that entity in the query.
+
+As an example:
 
 | name             | calculated | calculatedFormula | type      | referenceTo     | relationshipName                                                |
 |------------------|------------|-------------------|-----------|-----------------|-----------------------------------------------------------------|
@@ -448,3 +459,90 @@ Let's see this in with an example:
 | CreatedDate      | False      |                   | datetime  |                 |                                                                 |
 | LastModifiedDate | False      |                   | datetime  |                 |                                                                 |
 | SystemModstamp   | False      |                   | datetime  |                 |                                                                 |
+
+Here we see that `CreatedBy`, `LastModifiedBy` and `Delegation__r` are not used in any `calculatedFormula`.
+Then `User__r` is used in `UserName__c` formula, so we need to also query any User that might have been modified.
+
+So in that case we would do a query like:
+
+```sql
+SELECT
+    Id,
+    CreatedById,
+    LastModifiedById,
+    Delegation__c,
+    User__c,
+    UserName__c,
+    IsDeleted,
+    Name,
+    CreatedDate,
+    LastModifiedDate,
+    SystemModstamp
+FROM Delegation
+WHERE (LastModifiedDate >= {min_date} AND LastModifiedDate < {max_date})
+    OR (User__r.LastModifiedDate >= {min_date})
+```
+<Notice type="warning">
+  You should replace `{min_date}` and `{max_date}` with datetimes with the format `%Y-%m-%dT%H:%M:%SZ` (do not include any `"` or `'`).
+</Notice>
+
+#### 5.2.1. Deciding date ranges
+
+In regular runs I always query between the last extraction (`max(LastUpdateDate)` from the table where the export will be stored) up until `datetime.now()`.
+More info about that at <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
+
+<Notice type="warning">
+  Between the query creation and the actual execution some time might happend.
+  In order to not lose records we need to set `max_date` as a filter and discard records that are modified afterwards. 
+</Notice>
+
+See the example below for better clarification
+
+![Problem with max date](../../images/posts/2024/0046-salesforce_date_ranges.jpg)
+
+So when dealing with external entities, we will only include set the `min_date` since that date won't be used for the next execution to decide the next `min_date`.
+
+### 5.3. Automatically detecting related entities
+
+The idea here is that for all `relationshipName` entires in an entity to look and see if we find that in the `calculatedFormula` of any other field.
+We can do that with using regexs:
+
+```python
+import re
+
+REGEX_RELATION = r"\b{relationship}\.\b"
+
+def get_referenced_entities(entity):
+
+    fields = sf.__getattr__(entity).describe()["fields"]
+    cols = [Column(**x) for x in fields] # More info in section 4.4
+
+    formulas = [
+        col.calculatedFormula
+        for col in cols
+        if col.calculated and (col.calculatedFormula is not None)
+    ]
+
+    out = {}
+    for col in cols:
+        if col.type != TYPE_REFRENCE:
+            continue
+
+        regex = re.compile(REGEX_RELATION.format(relationship=col.relationshipName))
+        for formula in formulas:
+            if regex.search(formula):
+                # In 'Lead' there is 'OwnerId' which is throwing errors
+                if len(col.referenceTo) > 1:
+                    logger.warning(
+                        f"Excluding {col=} since it has multiple 'referenceTo'"
+                    )
+                    continue
+
+                out[col.relationshipName] = self._get_filter_col(col.referenceTo)
+
+    if out:
+        logger.info(f"{entity=} has references with '{out}'")
+
+    return out
+```
+
