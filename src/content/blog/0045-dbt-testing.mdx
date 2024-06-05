@@ -47,7 +47,7 @@ profiles_dir = ./.github/
   Feel free to change the setting such as the excluded rules.
 </Notice>
 
-Notice that we are using `duckdb` dialect and that we need to set a couple of directories:
+Notice that we are using <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/> as the dialect and that we need to set a couple of directories:
 1. project_dir: with the root of the DBT project
 2. profiles_dir: with the path where a DBT profile can be found (only for linting purpouses).
 
@@ -60,7 +60,7 @@ And here is the very simple profile I use:
 # This file is only used so that `pre-commit` can properly work
 #   (for sqlfluff)
 
-dbt_northius:
+dbt_src:
   outputs:
     dev:
       type: duckdb
@@ -114,17 +114,292 @@ Here we are using 2 jobs:
   I prefer having botht the fixing capabilities and better failures information.
 </Notice>
 
-## 2. Testing data
+## 2. Smoke testing with DuckDB
 
-### 2.1. Export CSVs
+The testing strategy I've seen in most DBT projects is to rely on users to manually run DBT to validate that the code works.
+This is problematic since users might not run those tests (specially first time contributors).
 
-### 2.2. Manual SQLs
+In order to have some guarantees over the DBT code we can do **smoke testing** using <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>.
+The idea is to have some testing data (it can either be anonimized prod data or syntethic data) so that we can run DBT using <FancyLink linkText="DBT - DuckDB" url="https://github.com/duckdb/dbt-duckdb" dark="true"/>.
+That can be automated to run at every Pull Request so that we have some guarantees about the code.
 
-## 3. Running dbt-duckdb
+## 3. Testing data
 
-## 4. Integrating with other SQL engines
+The idea is to have some files that define each table and to have a script that exports all of that into a `duckdb` file that can be used for DBT.
 
-## 5. Continuous Integration (CI)
+It should be something like
+
+```plaintext
+- testing_data
+  ├── schema_1
+  │   ├── table_1
+  │   ├── table_2
+  │   ├── ...
+  │   └── table_N
+  ├── schema_2
+  │   ├── table_1
+  │   ├── ...
+  │   └── table_N
+  └── ...
+```
+
+### 3.1. Export CSVs
+
+The simplest way of exporting data into duckdb is by a CSV file.
+
+That file can later be imported with something like:
+
+```sql
+CREATE TABLE "{db}"."{table}"
+AS SELECT *
+FROM read_csv('{path}/{table}.csv', header=True)
+```
+
+See <FancyLink linkText="CSV - DuckDB" url="https://duckdb.org/docs/data/csv/overview" dark="true"/> for more information about `read_csv`.
+
+### 3.2. Manual SQLs
+
+There are some cases where the `read_csv` doesn't work as expected.
+This has happened to me mostly when I have non primitive types such as `MAP`, `STRUCT` and/or `JSON` in one column.
+
+To handle such cases I define a `sql` file with:
+
+1. Manual table creation
+2. Manual inserts for some testing data
+
+As an example, it would be something like this:
+
+```sql
+CREATE TABLE bronze__metadata.emr_history
+(
+    applicationId VARCHAR,
+    jobRunId VARCHAR,
+    name VARCHAR,
+    createdAt TIMESTAMP,
+    updatedAt TIMESTAMP,    
+    executionRole VARCHAR,
+    state VARCHAR,
+    stateDetails VARCHAR,
+    totalResourceUtilization STRUCT(
+        vCPUHour DECIMAL(10, 3),
+        memoryGBHour DECIMAL(10, 3),
+        storageGBHour DECIMAL(10, 3)
+    ),
+    networkConfiguration STRUCT(
+        subnetIds VARCHAR[],
+        securityGroupIds VARCHAR[]
+    ),
+    totalExecutionDurationSeconds BIGINT,
+    executionTimeoutMinutes BIGINT,
+    billedResourceUtilization STRUCT(
+        vCPUHour DECIMAL(10, 3),
+        memoryGBHour DECIMAL(10, 3),
+        storageGBHour DECIMAL(10, 3)
+    ),
+    event_params MAP(
+        VARCHAR,
+        STRUCT(
+            string_value VARCHAR,
+            int_value BIGINT,
+            double_value DOUBLE
+        )
+    ),
+    p_extracted_at VARCHAR
+);
+
+INSERT INTO bronze__metadata.emr_history VALUES (
+    '00fdi6bg3i758g0p', -- applicationId
+    '00fginrueqgga00q', -- jobRunId
+    'v7__crm.export-clone', -- name
+    TIMESTAMP '2024-01-26 08:57:44.507', -- createdAt
+    TIMESTAMP '2024-01-26 09:22:24.045', -- updatedAt
+    'arn:aws:iam::634077897723:role/AmazonEMR-ExecutionRole-1685085488821', -- executionRole
+    'SUCCESS', -- state
+    NULL, -- stateDetails
+    {
+        'vCPUHour': 3.559,
+        'memoryGBHour': 17.794,
+        'storageGBHour': 17.794
+    }, -- totalResourceUtilization
+    {
+        'subnetIds': ['subnet-0075f5bbf95862c10'],
+        'securityGroupIds': ['sg-09ba4721cd92f7230']
+    }, -- networkConfiguration
+    1338, -- totalExecutionDurationSeconds
+    360, -- executionTimeoutMinutes
+    {
+        'vCPUHour': 3.559,
+        'memoryGBHour': 14.236,
+        'storageGBHour': 0.0
+    }, -- billedResourceUtilization
+    MAP {
+        'plataforma': {'string_value': 'landing', 'int_value': NULL, 'double_value': NULL}, 
+        'subtipo_formulario': {'string_value': 'si', 'int_value': NULL, 'double_value': NULL}
+    }, -- event_params
+    '2024-01-31T13:00:39.571930' -- p_extracted_at
+);
+```
+
+<Notice type="info">
+  In this example you can see how to create most types such as `STRUCT`, `MAP` and `ARRAYS`.
+</Notice>
+
+### 3.3. Generate testing data script
+
+In order to export all that data I use a script that:
+
+1. Inspects everything in the `testing_data` folder
+2. Loads all `csv`
+3. Runs all `sql` files
+
+The script is the following:
+
+```python
+import os
+import re
+import shutil
+import sys
+
+import duckdb
+from loguru import logger
+
+PATH_DBT = "dbt_src"
+
+DUCK_DB = f"{PATH_DBT}/awsdatacatalog.duckdb"
+PATH_DATA = "testing_data"
+
+PROFILES_IN = "profiles/profiles.ci.yml"
+PROFILES_OUT = f"{PATH_DBT}/profiles.yml"
+
+IMPORT_STATEMENT = """
+CREATE TABLE "{db}"."{table}"
+AS SELECT *
+FROM read_csv_auto('{path}/{table}.csv', header=True)
+"""
+
+
+def remove_database_if_exists():
+    if os.path.exists(DUCK_DB):
+        logger.info(f"{DUCK_DB=} already exists, removing it")
+        os.remove(DUCK_DB)
+
+
+def get_databases_with_tables():
+    logger.info("Reading local data to infer databases and tables to import")
+    out_csv = {}
+    out_sql = {}
+    count_tables = 0
+
+    for db in os.listdir(PATH_DATA):
+        if "." in db:
+            continue
+
+        logger.info(f"Reading {db=}")
+        csv = {}
+        sql = {}
+        for path, _, filenames in os.walk(f"{PATH_DATA}/{db}"):
+            for filename in filenames:
+                table, extension = filename.split(".")
+
+                if extension == "csv":
+                    csv[table] = path
+
+                if extension == "sql":
+                    with open(f"{path}/{filename}") as stream:
+                        data = stream.read()
+
+                    # Split queries and remove whitespaces
+                    sql[f"{db}.{table}"] = [x.strip() for x in data.split(";") if x]
+
+        logger.debug(f"There are {len(csv)} csv in {db=}")
+        logger.debug(f"There are {len(sql)} sql in {db=}")
+        out_csv[db] = csv
+        out_sql[db] = sql
+        count_tables += len(csv) + len(sql)
+
+    count_dbs = len(set(out_csv).union(set(out_sql)))
+    logger.success(f"{count_dbs} databases (with {count_tables} tables) where scanned")
+    return out_csv, out_sql
+
+
+def export_csv_tables(con, data):
+    logger.info(f"Exporting all 'csv' tables in {DUCK_DB=}")
+
+    for db, tables in data.items():
+        if not tables:
+            continue
+
+        logger.info(f"Creating schema '{db}'")
+        con.sql(f'CREATE SCHEMA "{db}"')
+
+        logger.info(f"Creating all {len(tables)} tables in {db=}")
+        for table, path in tables.items():
+            logger.debug(f"* Creating table '{db}.{table}'")
+            con.sql(IMPORT_STATEMENT.format(db=db, table=table, path=path))
+
+    logger.success(f"All 'csv' tables exported to {DUCK_DB=}")
+
+
+def export_sql_tables(con, data):
+    logger.info(f"Exporting all 'sql' tables in {DUCK_DB=}")
+
+    for db, tables in data.items():
+        if not tables:
+            continue
+
+        logger.info(f"Creating all {len(tables)} tables in {db=}")
+
+        for table, queries in tables.items():
+            logger.debug(f"Running {len(queries)} queries for '{db}.{table}'")
+
+            for query in queries:
+                if not query:
+                    continue
+
+                query_preview = re.sub(" +", " ", query.replace("\n", " "))[:100]
+                logger.debug(f"* Running query='{query_preview}...'")
+                con.sql(query)
+
+    logger.success(f"All 'sql' tables exported to {DUCK_DB=}")
+
+
+def copy_profiles_file():
+    if "win" in sys.platform:
+        logger.warning(
+            "Skipping copying 'profiles.yml' since you are on windows (not in a github action)"
+        )
+
+    else:
+        logger.info(f"Copying '{PROFILES_IN}' to '{PROFILES_OUT}'")
+        shutil.copy2(PROFILES_IN, PROFILES_OUT)
+
+
+def main():
+    remove_database_if_exists()
+    data_csv, data_sql = get_databases_with_tables()
+
+    with duckdb.connect(DUCK_DB) as con:
+        export_csv_tables(con, data_csv)
+        export_sql_tables(con, data_sql)
+
+    copy_profiles_file()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+## 4. Running dbt-duckdb
+
+In order to do the smoke test, you can run DBT the same way you run it in production.
+That could be `dbt build --select xx --exclude yy` or using a python script as described in <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
+
+There might be some models or tests that you don't want to test during CI (such as testing data freshness).
+To handle that I use the `no_test` tag and pass `--exclude tag:no_test` when running DBT.
+
+## 5. Integrating with other SQL engines
+
+## 6. Continuous Integration (CI)
 
 ```yaml
 name: CI
