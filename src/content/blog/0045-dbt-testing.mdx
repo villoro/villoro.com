@@ -25,12 +25,12 @@ This guide will cover setting up a SQL linter with Sqlfluff, automating testing 
 
 ## 1. SQL Linter
 
-The idea is to have a SQL Linter that helps getting well format SQL code with a unify style inside the repo.
-As the linter I recommend using <FancyLink linkText="Sqlfluff" url="https://github.com/sqlfluff/sqlfluff" dark="true"/>.
+The idea is to have a SQL linter that helps get well-formatted SQL code with a unified style inside the repo.
+As the linter, I recommend using <FancyLink linkText="Sqlfluff" url="https://github.com/sqlfluff/sqlfluff" dark="true"/>.
 
 ### 1.1. Integrating it with DBT
 
-In order to be able to parse correctly DBT code (specially the templating part) we need to set it up properly.
+To correctly parse DBT code (especially the templating part), we need to set it up properly.
 The easiest way is to create the `.sqlfluff` file in the repo root as follows:
 
 <TerminalOutput color="stone">
@@ -52,12 +52,13 @@ profiles_dir = ./.github/
 ```
 
 <Notice type="info">
-  Feel free to change the setting such as the excluded rules.
+  Feel free to change the settings such as the excluded rules.
 </Notice>
 
 Notice that we are using DuckDB as the dialect and that we need to set a couple of directories:
-1. project_dir: with the root of the DBT project
-2. profiles_dir: with the path where a DBT profile can be found (only for linting purpouses).
+
+1. `project_dir`: with the root of the DBT project
+2. `profiles_dir`: with the path where a DBT profile can be found (only for linting purposes).
 
 And here is the very simple profile I use:
 
@@ -79,14 +80,14 @@ If needed, you can exclude some paths using the `.sqlfluffignore` file as mentio
 
 ### 1.2. Automatic testing with pre-commit
 
-With pre-commit you can run the linter before each commit.
+With pre-commit, you can run the linter before each commit.
 More info about it in <FancyLink linkText="pre-commit" url="https://villoro.com/blog/pre-commit/" dark="true"/>.
 
 <Notice type="warning">
-  The liniting job takes between some seconds up to some minutes. You must decide if you are willing to spend that time prior to each commit to ensure proper linted SQL code. If not, do not set `pre-commit`.
+  The linting job takes between a few seconds to a few minutes. You must decide if you are willing to spend that time prior to each commit to ensure properly linted SQL code. If not, do not set `pre-commit`.
 </Notice>
 
-To set up `sqlfluff` you only need to add those lines to the `.pre-commit-config.yaml` file:
+To set up `sqlfluff`, you only need to add these lines to the `.pre-commit-config.yaml` file:
 
 <TerminalOutput color="stone">
   .pre-commit-config.yaml
@@ -114,28 +115,28 @@ repos:
 
 Here we are using 2 jobs:
 
-1. sqlfluff-lint: this gives better information about the failures
-2. sqlfluff-fix: this tries to fix the errors. It doesn't always succed.
+1. `sqlfluff-lint`: this gives better information about the failures.
+2. `sqlfluff-fix`: this tries to fix the errors. It doesn't always succeed.
 
 <Notice type="warning">
-  If you want to make it faster you can keep only one of the 2 jobs.
-  I prefer having botht the fixing capabilities and better failures information.
+  If you want to make it faster, you can keep only one of the 2 jobs.
+  I prefer having both the fixing capabilities and better failure information.
 </Notice>
 
 ## 2. Smoke testing with DuckDB
 
 The testing strategy I've seen in most DBT projects is to rely on users to manually run DBT to validate that the code works.
-This is problematic since users might not run those tests (specially first time contributors).
+This is problematic since users might not run those tests (especially first-time contributors).
 
-In order to have some guarantees over the DBT code we can do **smoke testing** using <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>.
-The idea is to have some testing data (it can either be anonimized prod data or syntethic data) so that we can run DBT using <FancyLink linkText="dbt-duckdb" url="https://github.com/duckdb/dbt-duckdb" dark="true"/>.
-That can be automated to run at every Pull Request so that we have some guarantees about the code.
+To have some guarantees over the DBT code, we can do **smoke testing** using <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>.
+The idea is to have some testing data (it can either be anonymized prod data or synthetic data) so that we can run DBT using <FancyLink linkText="dbt-duckdb" url="https://github.com/duckdb/dbt-duckdb" dark="true"/>.
+This can be automated to run at every pull request, ensuring some guarantees about the code.
 
 ## 3. Testing data
 
-The idea is to have some files that define each table and to have a script that exports all of that into a `duckdb` file that can be used for DBT.
+The idea is to have some files that define each table and to have a script that exports all of that into a duckdb file that can be used for DBT.
 
-It should be something like
+It should be something like:
 
 ```plaintext
 - testing_data
@@ -168,9 +169,9 @@ See <FancyLink linkText="CSV - DuckDB" url="https://duckdb.org/docs/data/csv/ove
 ### 3.2. Manual SQLs
 
 There are some cases where the `read_csv` doesn't work as expected.
-This has happened to me mostly when I have non primitive types such as `MAP`, `STRUCT` and/or `JSON` in one column.
+This has happened to me mostly when I have non-primitive types such as `MAP`, `STRUCT`, and/or `JSON` in one column.
 
-To handle such cases I define a `sql` file with:
+To handle such cases, I define a `sql` file with:
 
 1. Manual table creation
 2. Manual inserts for some testing data
@@ -247,14 +248,13 @@ INSERT INTO bronze__metadata.emr_history VALUES (
     '2024-01-31T13:00:39.571930' -- p_extracted_at
 );
 ```
-
 <Notice type="info">
-  In this example you can see how to create most types such as `STRUCT`, `MAP` and `ARRAYS`.
+  In this example, you can see how to create most types such as `STRUCT`, `MAP`, and `ARRAYS`.
 </Notice>
 
 ### 3.3. Generate testing data script
 
-In order to export all that data I use a script that:
+To export all that data, I use a script that:
 
 1. Inspects everything in the `testing_data` folder
 2. Loads all `csv`
@@ -402,11 +402,11 @@ if __name__ == "__main__":
 
 ## 4. Running dbt-duckdb
 
-In order to do the smoke test, you can run DBT the same way you run it in production.
-That could be `dbt build --select xx --exclude yy` or using a python script as described in <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
+To do the smoke test, you can run DBT the same way you run it in production.
+That could be `dbt build --select xx --exclude yy` or using a Python script as described in <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
 
 There might be some models or tests that you don't want to test during CI (such as testing data freshness).
-To handle that I use the `no_test` tag and pass `--exclude tag:no_test` when running DBT.
+To handle that, I use the `no_test` tag and pass `--exclude tag:no_test` when running DBT.
 
 ### 4.1. In memory vs working with a file
 
@@ -415,12 +415,12 @@ To handle that I use the `no_test` tag and pass `--exclude tag:no_test` when run
 1. With a `duckdb` file
 2. In `memory`
 
-Option 1 is the simplest given that we have a `duckdb` file with the testing data.
-With this option each model run will be exported in the `duckdb` file.
+Option 1 is the simplest given that we have a duckdb file with the testing data.
+With this option, each model run will be exported in the duckdb file.
 This is very useful when debugging since you can do manual queries to inspect the results and/or manually retry failed queries.
 
-However this way of working implies I/O operations which makes DBT run sequencially and not in parallel.
-In order to speed this up, we can run DBT in memory and attach a file for the testing data.
+However, this way of working implies I/O operations which makes DBT run sequentially and not in parallel.
+To speed this up, we can run DBT in memory and attach a file for the testing data.
 This is what I recommend doing during CI.
 
 Here is how you would declare both profiles:
@@ -444,21 +444,21 @@ dbt_northius:
     # Other profiles go here, such as PRE and PRO
 ```
 <Notice type="warning">
-  The naming for `awsdatacatalog.duckdb` is for compatibility with Athena, more on that on the next section.
+  The naming for `awsdatacatalog.duckdb` is for compatibility with Athena, more on that in the next section.
 </Notice>
 
 ### 4.3. Duckdb filename
 
-You might wonder why the duckdb file is called `awsdatacatalog.duckdb` and behind that name there is a very interesting trick.
-In production I'm using Athena (see <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>) and there the default catalog is called `awsdatacatalog`.
-If you want to query a the table `athena_history` inside `bronze__metadata` schema you can either do:
+You might wonder why the duckdb file is called `awsdatacatalog.duckdb`, and behind that name, there is a very interesting trick.
+In production, I'm using Athena (see <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>) and there the default catalog is called `awsdatacatalog`.
+If you want to query the table `athena_history` inside the `bronze__metadata` schema you can either do:
 
 ```sql
 SELECT * FROM bronze__metadata.athena_history
 SELECT * FROM awsdatacatalog.bronze__metadata.athena_history
 ```
 
-That allow us to define the DBT sources like:
+That allows us to define the DBT sources like:
 
 ```yaml
 sources:
@@ -474,8 +474,8 @@ sources:
       - name: raw_files
 ```
 
-So queries using `source(xx)` will have the preffix `awsdatacatalog` and queries using `ref(xx)` will not have it.
-With duckdb that implies that `source(xx)` will be read from the `awsdatacatalog.duckdb` file and `ref(xx)` will be run in memory.
+So queries using `source(xx)` will have the prefix `awsdatacatalog` and queries using `ref(xx)` will not have it.
+With duckdb, that implies that `source(xx)` will be read from the `awsdatacatalog.duckdb` file and `ref(xx)` will be run in memory.
 
 <Notice type="success">
   Running duckdb in memory is **~8x faster** based on my current project with around 1000 models.
@@ -483,8 +483,8 @@ With duckdb that implies that `source(xx)` will be read from the `awsdatacatalog
 
 ## 5. Continuous Integration (CI)
 
-Once you are able to run DBT locally with DuckDB you can set up the Continuous Integration (CI) job.
-With that it will run at each commit done in a pull request.
+Once you are able to run DBT locally with DuckDB, you can set up the Continuous Integration (CI) job.
+With that, it will run at each commit done in a pull request.
 
 ```yaml
 name: CI
@@ -537,13 +537,12 @@ jobs:
 ## 6. Integrating with other SQL engines
 
 You probably will use another engine in production instead of duckdb.
-In my case I use <FancyLink linkText="dbt-athena" url="https://github.com/dbt-athena/dbt-athena" dark="true"/>.
+In my case, I use <FancyLink linkText="dbt-athena" url="https://github.com/dbt-athena/dbt-athena" dark="true"/>.
 The problem with that is that some SQL functions will be different and you will need to adapt your code so that it works with both engines.
 
-The way to solve that problem is with DBT macros that do different things based on the engine (or dbt adapter) you are using.
-You can do that by calling `adapter.type()`.
+The way to solve that problem is with DBT macros that do different things based on the engine (or dbt adapter) you are using. You can do that by calling `adapter.type()`.
 
-For example, imagine you want to get the last element of an array column. In duckdb you can do `last` but in Athena you should do `last_value`.
+For example, imagine you want to get the last element of an array column. In duckdb, you can do `last` but in Athena, you should do `last_value`.
 By defining the `last` macro you could handle that difference:
 
 ```sql
@@ -556,9 +555,9 @@ By defining the `last` macro you could handle that difference:
 {%- endmacro -%}
 ```
 
-Another situation that you might need to handle different is when you want to run table maintainance operations such as `OPTIMIZE` for <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/>.
+Another situation that you might need to handle differently is when you want to run table maintenance operations such as `OPTIMIZE` for <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/>.
 
-That kind of operations are usually done with a `post-hook` (see <FancyLink linkText="DBT | pre-hook & post-hook" url="https://docs.getdbt.com/reference/resource-configs/pre-hook-post-hook"/>).
+That kind of operation is usually done with a `post-hook` (see <FancyLink linkText="DBT | pre-hook & post-hook" url="https://docs.getdbt.com/reference/resource-configs/pre-hook-post-hook"/>).
 
 So insted of adding the `optimize` there like:
 
