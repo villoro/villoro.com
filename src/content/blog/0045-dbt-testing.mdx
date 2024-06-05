@@ -254,6 +254,9 @@ In order to export all that data I use a script that:
 
 The script is the following:
 
+<TerminalOutput color="stone">
+  .github/scripts/create_duck_db.py
+</TerminalOutput>
 ```python
 import os
 import re
@@ -265,7 +268,7 @@ from loguru import logger
 
 PATH_DBT = "dbt_src"
 
-DUCK_DB = f"{PATH_DBT}/awsdatacatalog.duckdb"
+DUCK_DB = f"{PATH_DBT}/awsdatacatalog.duckdb" # The name is for compatibility with Athena
 PATH_DATA = "testing_data"
 
 PROFILES_IN = "profiles/profiles.ci.yml"
@@ -397,9 +400,83 @@ That could be `dbt build --select xx --exclude yy` or using a python script as d
 There might be some models or tests that you don't want to test during CI (such as testing data freshness).
 To handle that I use the `no_test` tag and pass `--exclude tag:no_test` when running DBT.
 
-## 5. Integrating with other SQL engines
+### 4.1. In memory vs working with a file
 
-## 6. Continuous Integration (CI)
+<FancyLink linkText="DBT - DuckDB" url="https://github.com/duckdb/dbt-duckdb" dark="true"/> can run in 2 ways:
+
+1. With a `duckdb` file
+2. In `memory`
+
+Option 1 is the simplest given that we have a `duckdb` file with the testing data.
+With this option each model run will be exported in the `duckdb` file.
+This is very useful when debugging since you can do manual queries to inspect the results and/or manually retry failed queries.
+
+However this way of working implies I/O operations which makes DBT run sequencially and not in parallel.
+In order to speed this up, we can run DBT in memory and attach a file for the testing data.
+This is what I recommend doing during CI.
+
+Here is how you would declare both profiles:
+
+```yaml
+dbt_northius:
+  target: villoro_ci
+  outputs:
+    villoro_ci:
+      type: duckdb
+      path: ":memory:"
+      attach:
+        - path: awsdatacatalog.duckdb # The name is for compatibility with Athena
+          alias: ""
+
+    villoro_sequencial_ci:
+      type: duckdb
+      path: awsdatacatalog.duckdb # The name is for compatibility with Athena
+
+
+    # Other profiles go here, such as PRE and PRO
+```
+<Notice type="warning">
+  The naming for `awsdatacatalog.duckdb` is for compatibility with Athena, more on that on the next section.
+</Notice>
+
+### 4.3. Duckdb filename
+
+You might wonder why the duckdb file is called `awsdatacatalog.duckdb` and behind that name there is a very interesting trick.
+In production I'm using Athena (see <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>) and there the default catalog is called `awsdatacatalog`.
+If you want to query a the table `athena_history` inside `bronze__metadata` schema you can either do:
+
+```sql
+SELECT * FROM bronze__metadata.athena_history
+SELECT * FROM awsdatacatalog.bronze__metadata.athena_history
+```
+
+That allow us to define the DBT sources like:
+
+```yaml
+sources:
+  - name: nt_bronze__metadata
+    database: awsdatacatalog # Needed for duckdb compatibility
+    tags: ["metadata"]
+    description: Raw metadata tables
+    tables:
+      - name: athena_history
+      - name: dbt_execution
+      - name: dbt_run_results
+      - name: emr_history
+      - name: raw_files
+```
+
+So queries using `source(xx)` will have the preffix `awsdatacatalog` and queries using `ref(xx)` will not have it.
+With duckdb that implies that `source(xx)` will be read from the `awsdatacatalog.duckdb` file and `ref(xx)` will be run in memory.
+
+<Notice type="success">
+  Running duckdb in memory is **~8x faster** based on my current project with around 1000 models.
+</Notice>
+
+## 5. Continuous Integration (CI)
+
+Once you are able to run DBT locally with DuckDB you can set up the Continuous Integration (CI) job.
+With that it will run at each commit done in a pull request.
 
 ```yaml
 name: CI
@@ -444,3 +521,9 @@ jobs:
         cd dbt_src
         poetry run python run.py --exclude tag:no_test
 ```
+
+<Notice type="info" className="mt-6">
+  Remember to set this test as a mandatory prerequisite for merging PRs into the `main` branch.
+</Notice>
+
+## 6. Integrating with other SQL engines
