@@ -15,6 +15,14 @@ draft: false
 
 ## 0. Intro
 
+In our previous post, we discussed how to self-host DBT on AWS ECS (Fargate) for cost-effective scalability and better control over data transformation processes.
+If you haven't read that post, see <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
+This time, we'll take it a step further by diving into testing DBT projects with DuckDB, ensuring the quality and consistency of your SQL code.
+
+<FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>, an embedded analytical database, offers a fast, lightweight SQL engine, perfect for testing DBT models.
+By integrating SQL linting, smoke testing, and automation, we can maintain high-quality DBT projects.
+This guide will cover setting up a SQL linter with Sqlfluff, automating testing with pre-commit hooks, and creating a streamlined continuous integration (CI) pipeline.
+
 ## 1. SQL Linter
 
 The idea is to have a SQL Linter that helps getting well format SQL code with a unify style inside the repo.
@@ -47,7 +55,7 @@ profiles_dir = ./.github/
   Feel free to change the setting such as the excluded rules.
 </Notice>
 
-Notice that we are using <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/> as the dialect and that we need to set a couple of directories:
+Notice that we are using DuckDB as the dialect and that we need to set a couple of directories:
 1. project_dir: with the root of the DBT project
 2. profiles_dir: with the path where a DBT profile can be found (only for linting purpouses).
 
@@ -277,7 +285,7 @@ PROFILES_OUT = f"{PATH_DBT}/profiles.yml"
 IMPORT_STATEMENT = """
 CREATE TABLE "{db}"."{table}"
 AS SELECT *
-FROM read_csv_auto('{path}/{table}.csv', header=True)
+FROM read_csv('{path}/{table}.csv', header=True)
 """
 
 
@@ -548,11 +556,21 @@ By defining the `last` macro you could handle that difference:
 {%- endmacro -%}
 ```
 
-Another situation that you might need to handle different is when you want to run table maintainance operations such as `OPTIMIZE` for <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/"/>.
+Another situation that you might need to handle different is when you want to run table maintainance operations such as `OPTIMIZE` for <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/>.
 
 That kind of operations are usually done with a `post-hook` (see <FancyLink linkText="DBT | pre-hook & post-hook" url="https://docs.getdbt.com/reference/resource-configs/pre-hook-post-hook"/>).
 
-So insted of adding the `optimize` there, you should first define a macro:
+So insted of adding the `optimize` there like:
+
+```sql
+{{
+  config(
+    post_hook = "OPTIMIZE {{ this }} REWRITE DATA USING BIN_PACK;"
+  )
+}}
+```
+
+You should first define a macro:
 
 ```sql
 {%- macro optimize(table=this) -%}
@@ -571,3 +589,14 @@ Then you can simply call it with:
 +post-hook:
   - "{{ optimize() }}"
 ```
+
+## 7. Conclusion
+
+Testing is a critical part of any data engineering workflow, and integrating DBT with DuckDB for testing can significantly enhance the reliability of your data transformation processes.
+By setting up SQL linting, automating tests with pre-commit hooks, and establishing a CI pipeline, you can ensure that your DBT models are robust and error-free.
+
+In this post, we've shown how to leverage DuckDB for efficient testing and provided detailed steps to implement these practices in your DBT projects.
+By following these guidelines, you can maintain high standards for your SQL code and improve the overall quality of your data workflows.
+
+We hope you find this guide helpful and encourage you to explore these testing strategies to keep your DBT projects running smoothly.
+As always, feel free to share your feedback or any questions you might have. Happy testing!
