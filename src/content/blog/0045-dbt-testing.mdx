@@ -3,9 +3,9 @@ slug: dbt-testing-duckdb
 title: DBT testing with DuckDB
 meta_title: DBT testing with DuckDB
 description: xx
-date: 2024-05-16
+date: 2024-06-05
 image: "/images/blog/0045-dbt-testing.jpg"
-tags: ["SQL", "DE", "AWS"]
+tags: ["SQL", "DE"]
 draft: false
 ---
 
@@ -13,5 +13,159 @@ draft: false
 
 [TOC]
 
-## 0. Motivation
+## 0. Intro
 
+## 1. SQL Linter
+
+The idea is to have a SQL Linter that helps getting well format SQL code with a unify style inside the repo.
+As the linter I recommend using <FancyLink linkText="Sqlfluff" url="https://github.com/sqlfluff/sqlfluff" dark="true"/>.
+
+### 1.1. Integrating it with DBT
+
+In order to be able to parse correctly DBT code (specially the templating part) we need to set it up properly.
+The easiest way is to create the `.sqlfluff` file in the repo root as follows:
+
+<TerminalOutput color="stone">
+  .sqlfluff
+</TerminalOutput>
+```toml
+[sqlfluff]
+dialect = duckdb
+templater = dbt
+runaway_limit = 10
+max_line_length = 100
+indent_unit = space
+exclude_rules = RF01, RF03, ST06, AL09
+warnings = None
+
+[sqlfluff:templater:dbt]
+project_dir = ./dbt_src/
+profiles_dir = ./.github/
+```
+
+<Notice type="info">
+  Feel free to change the setting such as the excluded rules.
+</Notice>
+
+Notice that we are using `duckdb` dialect and that we need to set a couple of directories:
+1. project_dir: with the root of the DBT project
+2. profiles_dir: with the path where a DBT profile can be found (only for linting purpouses).
+
+And here is the very simple profile I use:
+
+<TerminalOutput color="stone">
+  ./dbt_src/profiles.yml
+</TerminalOutput>
+```yaml
+# This file is only used so that `pre-commit` can properly work
+#   (for sqlfluff)
+
+dbt_northius:
+  outputs:
+    dev:
+      type: duckdb
+  target: dev
+```
+
+If needed, you can exclude some paths using the `.sqlfluffignore` file as mentioned in <FancyLink linkText="Sqlfluff Configuration" url="https://docs.sqlfluff.com/en/stable/configuration.html#installation-configuration" company="readthedocs"/>
+
+### 1.2. Automatic testing with pre-commit
+
+With pre-commit you can run the linter before each commit.
+More info about it in <FancyLink linkText="pre-commit" url="https://villoro.com/blog/pre-commit/" dark="true"/>.
+
+<Notice type="warning">
+  The liniting job takes between some seconds up to some minutes. You must decide if you are willing to spend that time prior to each commit to ensure proper linted SQL code. If not, do not set `pre-commit`.
+</Notice>
+
+To set up `sqlfluff` you only need to add those lines to the `.pre-commit-config.yaml` file:
+
+<TerminalOutput color="stone">
+  .pre-commit-config.yaml
+</TerminalOutput>
+```yaml
+repos:
+
+# SQL linter
+- repo: https://github.com/sqlfluff/sqlfluff
+  rev: 3.0.6
+  hooks:
+  - id: sqlfluff-lint
+    entry: sqlfluff lint --processes 0 --disable-progress-bar
+    additional_dependencies: [ # Should match what we have in prod
+      'dbt-duckdb==1.6.2',
+      'sqlfluff-templater-dbt==3.0.6'
+    ]
+  - id: sqlfluff-fix
+    entry: sqlfluff fix --show-lint-violations --processes 0 --disable-progress-bar
+    additional_dependencies: [ # Should match what we have in prod
+      'dbt-duckdb==1.6.2',
+      'sqlfluff-templater-dbt==3.0.6'
+    ]
+```
+
+Here we are using 2 jobs:
+
+1. sqlfluff-lint: this gives better information about the failures
+2. sqlfluff-fix: this tries to fix the errors. It doesn't always succed.
+
+<Notice type="warning">
+  If you want to make it faster you can keep only one of the 2 jobs.
+  I prefer having botht the fixing capabilities and better failures information.
+</Notice>
+
+## 2. Testing data
+
+### 2.1. Export CSVs
+
+### 2.2. Manual SQLs
+
+## 3. Running dbt-duckdb
+
+## 4. Integrating with other SQL engines
+
+## 5. Continuous Integration (CI)
+
+```yaml
+name: CI
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dbt_all:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          dbt:
+            - 'dbt_src/**'
+            - 'testing_data/**'
+
+    - uses: actions/setup-python@v4
+      if: steps.changes.outputs.dbt == 'true'
+
+    - name: Install poetry
+      if: steps.changes.outputs.dbt == 'true'
+      run: pip install poetry==1.6.1 # Should match .github/docker/Dockerfile.base
+    - name: Install dependencies
+      if: steps.changes.outputs.dbt == 'true'
+      run: poetry install
+
+    - name: Create duckdb DB
+      if: steps.changes.outputs.dbt == 'true'
+      run: poetry run python .github/scripts/create_duck_db.py
+
+    - name: Test pipeline
+      if: steps.changes.outputs.dbt == 'true'
+      run: |
+        cd dbt_src
+        poetry run python run.py --exclude tag:no_test
+```
