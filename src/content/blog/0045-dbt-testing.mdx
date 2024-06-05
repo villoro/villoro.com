@@ -120,7 +120,7 @@ The testing strategy I've seen in most DBT projects is to rely on users to manua
 This is problematic since users might not run those tests (specially first time contributors).
 
 In order to have some guarantees over the DBT code we can do **smoke testing** using <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>.
-The idea is to have some testing data (it can either be anonimized prod data or syntethic data) so that we can run DBT using <FancyLink linkText="DBT - DuckDB" url="https://github.com/duckdb/dbt-duckdb" dark="true"/>.
+The idea is to have some testing data (it can either be anonimized prod data or syntethic data) so that we can run DBT using <FancyLink linkText="dbt-duckdb" url="https://github.com/duckdb/dbt-duckdb" dark="true"/>.
 That can be automated to run at every Pull Request so that we have some guarantees about the code.
 
 ## 3. Testing data
@@ -402,7 +402,7 @@ To handle that I use the `no_test` tag and pass `--exclude tag:no_test` when run
 
 ### 4.1. In memory vs working with a file
 
-<FancyLink linkText="DBT - DuckDB" url="https://github.com/duckdb/dbt-duckdb" dark="true"/> can run in 2 ways:
+<FancyLink linkText="dbt-duckdb" url="https://github.com/duckdb/dbt-duckdb" dark="true"/> can run in 2 ways:
 
 1. With a `duckdb` file
 2. In `memory`
@@ -527,3 +527,47 @@ jobs:
 </Notice>
 
 ## 6. Integrating with other SQL engines
+
+You probably will use another engine in production instead of duckdb.
+In my case I use <FancyLink linkText="dbt-athena" url="https://github.com/dbt-athena/dbt-athena" dark="true"/>.
+The problem with that is that some SQL functions will be different and you will need to adapt your code so that it works with both engines.
+
+The way to solve that problem is with DBT macros that do different things based on the engine (or dbt adapter) you are using.
+You can do that by calling `adapter.type()`.
+
+For example, imagine you want to get the last element of an array column. In duckdb you can do `last` but in Athena you should do `last_value`.
+By defining the `last` macro you could handle that difference:
+
+```sql
+{%- macro last(column) -%}
+    {%- if (adapter.type() == "athena") -%}
+        last_value({{ column }})
+    {%- else -%}
+        last({{ column }})
+    {%- endif -%}
+{%- endmacro -%}
+```
+
+Another situation that you might need to handle different is when you want to run table maintainance operations such as `OPTIMIZE` for <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/"/>.
+
+That kind of operations are usually done with a `post-hook` (see <FancyLink linkText="DBT | pre-hook & post-hook" url="https://docs.getdbt.com/reference/resource-configs/pre-hook-post-hook"/>).
+
+So insted of adding the `optimize` there, you should first define a macro:
+
+```sql
+{%- macro optimize(table=this) -%}
+    {%- if (adapter.type() == "athena")
+        and (model.config.table_type == "iceberg")
+        and (model.config.materialized != "view")
+    -%}
+        OPTIMIZE {{ table }} REWRITE DATA USING BIN_PACK;
+    {%- endif -%}
+{%- endmacro -%}
+```
+
+Then you can simply call it with:
+
+```yaml
++post-hook:
+  - "{{ optimize() }}"
+```
