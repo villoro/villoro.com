@@ -541,25 +541,31 @@ If found, it adds the related entity to the query.
 
 ### 5.4. Data size
 
-With this new approach you will download rows whenever:
+With this new approach, you will download rows whenever:
 
-1. They have changed
-2. An external entity that is used in a formula has changed
+1. They have changed.
+2. An external entity used in a formula has changed.
 
-On the second scenario you don't have an easy way to distinguish if the change is on a filed that is used on the formulas or on other fields.
-That means that you will consistenly download more data that what is really needed.
+In the second scenario, you don't have an easy way to distinguish if the change is in a field used in the formulas or in other fields.
+This means that you will consistently download more data than is really needed.
 
-In general this is not a problem but in some cases it can lead to too much data being downloaded.
-For example, let's imagine we are querying `orders` and that there is calculated field that uses the `products` entity. The `orders` table is really big but there are no massive changes to entries there. However we have very few `products`, so any change in one of them will lead to a lot of `orders` being download. That can greatly slow down the extractions since a lot of data will be extracted.
+In general, this is not a problem, but in some cases, it can lead to too much data being downloaded.
+For example, let's imagine we are querying `orders` and there is a calculated field that uses the `products` entity.
+The `orders` table is very large, but there are no massive changes to entries there.
+However, we have very few `products`, so any change in one of them will lead to many `orders` being downloaded.
+That can greatly slow down the extractions since a lot of data will be extracted.
 
 <Notice type="warning">
   Be careful with the amount of data you need to extract when doing compound queries.
 </Notice>
 
-And it could be even worse. As an example, we have an automated process that updates all products at night. That means that we need to download all `orders` daily. The solution we found here was to disable some external entities (such as `products` in `orders`) and remember to not rely on fields in the `orders` table that derive from `product`, since we don't have a way to guarantee that they are acurate. Other alternatives could be:
+It could be even worse. For instance, we have an automated process that updates all products at night.
+That means we need to download all `orders` daily.
+The solution we found here was to disable some external entities (such as `products` in `orders`) and remember not to rely on fields in the `orders` table that derive from `product`, since we don't have a way to guarantee their accuracy.
+Other alternatives could be:
 
-* Letting the long process run and assume the cost
-* Triggering the pipeline more frequently, which could led to smaller batches
+* Letting the long process run and assuming the cost.
+* Triggering the pipeline more frequently, which could lead to smaller batches.
 
 ## 6. Bonus: Final code
 
