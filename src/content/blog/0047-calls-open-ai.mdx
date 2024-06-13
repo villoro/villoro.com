@@ -160,23 +160,132 @@ from loguru import logger
 
 MIN_SECONDS = 5 # Adjust if needed
 
-t0 = time.monotonic()
-duration_seconds = get_duration(file)
 
-if duration_seconds > MIN_SECONDS:
-    transcription = transcribe_audio(client, file)
-    trans_time = time.monotonic() - t0
-    logger.info(f"Successfully transcribed {filename=} in {trans_time:.2f} seconds")
-else:
-    logger.info(
-        f"Skipping transcription for {filename=}, "
-        f"{duration_seconds=:.2f} is less than {MIN_SECONDS=}"
-    )
+def process_file(client, s3, filename):
+    logger.info(f"Processing {filename=}")
+
+    t0 = time.monotonic()
+    file = get_file(s3, filename)
+    duration_seconds = get_duration(file)
+
+    if duration_seconds > MIN_SECONDS:
+        transcription = transcribe_audio(client, file)
+        trans_time = time.monotonic() - t0
+        logger.info(f"Successfully transcribed {filename=} in {trans_time:.2f} seconds")
+    else:
+        logger.info(
+            f"Skipping transcription for {filename=}, "
+            f"{duration_seconds=:.2f} is less than {MIN_SECONDS=}"
+        )
+
+    return transcription
 ```
 
 ## 3. Adding metadata
 
+I think that is always really useful to have some metadata whenever doing operations in the datalake.
+It will be specially useful when debugging issues.
+
+That can easily be done with <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/>.
+The idea is to create `model` for each file we process.
+
+Here is how you can define the model:
+
+```python
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+
+class Transcription(BaseModel):
+    filename: str
+    duration_seconds: float
+    transcription: Optional[str] = None
+    transcription_time: Optional[float] = None
+    transcribed_at: datetime = datetime.now()
+```
+
+With that, we can add this to the `process_file` function:
+
+<TerminalOutput color="stone">
+  process_file
+</TerminalOutput>
+```python
+    return Transcription(
+        filename=filename,
+        duration_seconds=duration_seconds,
+        transcription=transcription,
+        transcription_time=trans_time,
+    )
+```
+
 ## 4. Processing the outputs
+
+Right now we have seen how to process one file.
+For now we can process multiple files with a single `for` loop like:
+
+```python
+results = []
+for file in files:
+    result = await process_file(client, s3, file)
+    results.append(result)
+```
+
+`results` will be a `list` of `Transcription` pydantic models.
+We can easily transform that to a `pandas` dataframe with:
+
+```python
+df = pd.DataFrame([x.dict() for x in results])
+df["p_extracted_at"] = datetime.now()
+```
+<Notice type="warning">
+  As usual, we add the `p_extracted_at` column as the partition column. You can read more about this in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>
+</Notice>
+
+### 4.1. Exporting the dataframe
+
+Here we can use <FancyLink linkText="AWSwrangler" url="https://github.com/aws/aws-sdk-pandas" dark="true"/> to export the result as a table. This can be done with the following functions:
+
+```python
+import awswrangler as wr
+from loguru import logger
+
+def get_table_path(bucket_prefix, db_path, table):
+    """Get the table path"""
+    buckets = [x for x in wr.s3.list_buckets() if x.startswith(bucket_prefix)]
+    return f"s3://{buckets[0]}/{db_path}/{table}"
+
+def write_parquet(
+    df,
+    database,
+    table,
+    bucket_prefix,
+    mode="append",
+    partition_col=PARTITION_COL,
+    session=None,
+):
+    n_records = df.shape[0]
+
+    db_path = database.split("__")[1]
+    path = get_table_path(bucket_prefix=bucket_prefix, db_path=db_path, table=table)
+
+    logger.info(f"Writing {n_records} rows to table '{database}.{table}' ({path=})")
+
+    kwargs = {}
+    if session is not None:
+        kwargs["boto3_session"] = session
+
+    wr.s3.to_parquet(
+        df=df,
+        dataset=True,
+        database=database,
+        table=table,
+        path=path,
+        mode=mode,
+        partition_cols=[partition_col],
+        **kwargs,
+    )
+```
 
 ## 5. Concurrent Async calls
 
