@@ -39,7 +39,6 @@ from openai import OpenAI
 s3 = boto3.client("s3")
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-file_path = "s3//your_bucket/your/file/path.mp3"
 
 def get_file(s3_uri):
     # Extract bucket and filename
@@ -50,8 +49,11 @@ def get_file(s3_uri):
     file.name = s3_uri # Needed so that it knows the extension (mp3 mostly)
     return file
 
-file = get_file(file_path)
-client.audio.transcriptions.create(model="whisper-1", file=file)
+def transcribe_audio(client, file)
+    return client.audio.transcriptions.create(model="whisper-1", file=file)
+
+file = get_file("s3//your_bucket/your/file/path.mp3")
+transcription = transcribe_audio(client, file)
 ```
 <Notice type="warning">
   You will need to adapt the `file_path` and make sure to have the `OPENAI_API_KEY`. Alternativelly you can retrive the secret from somewhere else.
@@ -107,17 +109,77 @@ Here is the complete transcription:
 {transcription}
 ```"""
 
-messages = [{
-    "role": "user",
-    "content": PROMPT.format(transcription=transcription),
-}]
+def extract_info(transcription)
+    messages = [{
+        "role": "user",
+        "content": PROMPT.format(transcription=transcription),
+    }]
 
-chat_completion = client.chat.completions.create(
-    model="gpt-4o", messages=messages,
-)
+    chat_completion = client.chat.completions.create(
+        model="gpt-4o", messages=messages,
+    )
 
-chat_completion.choices[0].message.content
+    return chat_completion.choices[0].message.content
+
+extract_info("your transcription goes here")
 ````
 <Notice type="warning">
   Remember to pass the `transcription` from the previous step.
 </Notice>
+
+## 2. Handling invalid calls
+
+When processing the first calls, I noticed that we had a lot of super short calls where no transcription could be extracted.
+Trying to transcribe those calls is a waste of resources.
+
+To solve that I used <FancyLink linkText="Mutagen" url="https://github.com/quodlibet/mutagen" dark="true"/> to extract the audio length with:
+
+```python
+from mutagen.mp3 import HeaderNotFoundError
+from mutagen.mp3 import MP3
+
+def get_duration(file):
+    """Get duration of the audio file using mutagen"""
+    try:
+        audio = MP3(file)
+        duration_seconds = audio.info.length
+    except HeaderNotFoundError:
+        logger = get_run_logger()
+        logger.error(f"Unable to read the duration of the file: {file.name}")
+        duration_seconds = -1
+
+    file.seek(0)  # Reset file pointer after reading
+    return duration_seconds
+```
+
+Once extracted, I could only transcribe if the audio length was greater than a minimum value with:
+
+```python
+import time
+from loguru import logger
+
+MIN_SECONDS = 5 # Adjust if needed
+
+t0 = time.monotonic()
+duration_seconds = get_duration(file)
+
+if duration_seconds > MIN_SECONDS:
+    transcription = transcribe_audio(client, file)
+    trans_time = time.monotonic() - t0
+    logger.info(f"Successfully transcribed {filename=} in {trans_time:.2f} seconds")
+else:
+    logger.info(
+        f"Skipping transcription for {filename=}, "
+        f"{duration_seconds=:.2f} is less than {MIN_SECONDS=}"
+    )
+```
+
+## 3. Adding metadata
+
+## 4. Processing the outputs
+
+## 5. Concurrent Async calls
+
+### 5.1. Doing async calls
+
+### 5.2. Rate limiter
