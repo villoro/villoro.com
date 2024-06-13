@@ -1,0 +1,123 @@
+---
+slug: process-calls-open-ai
+title: Process Calls with Open AI
+meta_title: Process Calls with Open AI
+description: xx
+date: 2024-06-13
+image: "/images/blog/0047-process-calls-openai.jpg"
+tags: ["Python", "DE", "AI"]
+draft: false
+---
+
+## Table of Contents
+
+[TOC]
+
+## 0. Motivation
+
+At work we wanted to extract information from calls done using a CTI. This way we can improve the service we offer by getting insights from the call and by providing suggestions to agents. We can do that using different OpenAI models.
+
+## 1. Extracting information with OpenAI
+
+At the time of writing `ChatGPT 4o` is not able to process multimodal information. That means that we cannot pass an audio together with text to extract insights. To do so, we need to do it with 2 steps:
+
+1. Transcribing the call with `whisper`
+2. Extracting insights with `ChatGPT`
+
+We will do it using <FancyLink linkText="OpenAI python" url="https://github.com/openai/openai-python" dark="true"/> package.
+
+### 1.1. Using `Whisper` to transcribe the call
+
+With `whisper` we can transcribe an audio file easily.
+It can be done with:
+
+```python
+import io
+import boto3
+from openai import OpenAI
+
+s3 = boto3.client("s3")
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+file_path = "s3//your_bucket/your/file/path.mp3"
+
+def get_file(s3_uri):
+    # Extract bucket and filename
+    bucket, filename = s3_uri.replace("s3://", "").split("/", 1)
+
+    obj = s3.get_object(Bucket=bucket, Key=filename)
+    file = io.BytesIO(obj["Body"].read())
+    file.name = s3_uri # Needed so that it knows the extension (mp3 mostly)
+    return file
+
+file = get_file(file_path)
+client.audio.transcriptions.create(model="whisper-1", file=file)
+```
+<Notice type="warning">
+  You will need to adapt the `file_path` and make sure to have the `OPENAI_API_KEY`. Alternativelly you can retrive the secret from somewhere else.
+</Notice>
+
+This code assumes that the file is stored in `S3` but it can easily be adapted for local files or for other cloud providers.
+
+### 1.2. Using `ChatGPT` to extract insights
+
+To extract information you can do a regular call to `ChatGPT`.
+The key here is to use a prompt that asks for a `json` with any content you want.
+Also, you can provide a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that the output should follow.
+
+<Notice type="info">
+  There is a lot of prompt engineering that you can do here, but this is out of the scope of this post.
+</Notice>
+
+So you can extract the information with:
+
+````python
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+PROMPT = """
+I want you to extract information about a transcribed call. I want the output to be *only* a `json` with the following information:
+
+* sentiment: positive/negative
+* summary: a short summary of the call
+* is_answered: true if the person who was being called answered the call else false
+* successul_sale: true if the agent was able to sell a course
+* improvements: improvements ideas for the agent that was doing the call
+* failure_reason: in case there was no sale, the reason why. If there was a sale, leave it as `None` or empty
+
+That json must be parsable with the following `pydantic` model:
+
+```python
+from pydantic import BaseModel
+from typing import List, Optional, Literal
+
+class CallAnalysis(BaseModel):
+    sentiment: Literal['positive', 'negative']
+    summary: str
+    is_answered: bool
+    successful_sale: bool
+    improvements: List[str]
+    failure_reason: Optional[str] = None
+```
+
+Here is the complete transcription:
+
+```plaintext
+{transcription}
+```"""
+
+messages = [{
+    "role": "user",
+    "content": PROMPT.format(transcription=transcription),
+}]
+
+chat_completion = client.chat.completions.create(
+    model="gpt-4o", messages=messages,
+)
+
+chat_completion.choices[0].message.content
+````
+<Notice type="warning">
+  Remember to pass the `transcription` from the previous step.
+</Notice>
