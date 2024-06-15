@@ -39,3 +39,70 @@ After this it will:
 2. Format the USB
 3. Add all needed files to the drive and make it bootable
 
+## 3. Install windows
+
+### 3.1. Select appropiate region for no bloatware
+
+Select `English (World)` or `English (Europe)` for the `Time and Currency forma` setting.
+
+See: https://pureinfotech.com/install-windows-11-without-bloatware-apps/
+
+### 3.2. Clean the disk
+
+After you have selected the region, you will need to decide where to install windows.
+I like to go to the `Custom: Install Windows only (advanced)`. With that I can make sure to do a clean install
+
+> Important, this will delete all files in the disk you select.
+
+Select the disk where you want to install windows. If needed, delete the existing partitions and create a new one.
+
+## 4. Set up windows
+ 
+Here we want to create a local account.
+
+**DO NOT CREATE A MICROSOFT ACCOUNT**
+
+https://www.tomshardware.com/how-to/install-windows-11-without-microsoft-account
+
+
+### 4.1. OOBEREGION 'error'
+
+If you see the `OOBEREGION` 'error' don't panic. It just means that windows is unable to determine which bloatware to install, just skip that step.
+
+### 4.2. Disable internet
+
+When it asks for a internet connection, hit `SHIFT` + `F10`. A command will appear. Then just write:
+
+```sh
+OOBE\BYPASSNRO
+```
+
+This will force a reboot and the internet connection will no longer be required.
+
+After the reboot make sure to skip the `OOBEREGION` 'error' again and select the keyboard layout.
+
+When it asks about the internet connection, select `I don't have interent`. Even after selecting that option it will try to convince you to set up a Microsoft account. Just select the `Continue with limited setup`.
+
+From there, you can set up a username and you will have your local account.
+
+## 5. Install programs
+
+Once you are inside windows, you can connect to the internet so that you can start downloading everything you need.
+
+Here everyone has different preferences but there is a way to get the most common programs and install them all at once. Just go to https://ninite.com/ and select the programs you want. Once done, hit `Get Your Ninite` to download an `exe` file that will install them all.
+
+### 5.1. Change the default browser (if wanted)
+
+I don't like `Edge`.
+
+One app that I always download is https://brave.com/.
+
+## 6. Windows updates
+
+Windows updates take a lot of time to install and some times can go wrong. So I think it's best that you download all updates you can so that you have the computer as udpated as possible.
+
+## 7. Check startup apps
+
+Here you might want to disable apps that you don't use so that the computer loads faster. For example you might not be using `Onedrive` (which is installed even if you do the `English (world)` trick) and in that case it would be better to disable it.
+
+To do so open the `Task Manager` and go to `Startup apps`
