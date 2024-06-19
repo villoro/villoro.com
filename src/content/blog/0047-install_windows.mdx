@@ -20,20 +20,29 @@ xxx
 
 ## 1. Download Windows
 
-Go to https://www.microsoft.com/software-download/windows11
+You can easily download windows from microft website.
+At this stage you don't need a windows lincense.
 
-Select `Create Windows 11 Installation Media` to download the `MediaCreationTool.exe`.
+To download it you should:
+
+1. Go to <FancyLink linkText="Download Windows 11" url="https://www.microsoft.com/software-download/windows11"/>.
+2. Select `Create Windows 11 Installation Media` to download the `MediaCreationTool.exe`.
+
 This will allow you to create a bootable USB.
 
 ## 2. Create bootable USB
 
-Use the MediaCreationTool to create a bootable USB.
+Use the `MediaCreationTool` to create a bootable USB.
 
 1. Select language and edition
 2. Select `USB flash drive`
 3. Select desired USB drive
 
-After this it will:
+<Notice type="warning">
+  **Important**: All content on the selected USB drive **will be deleted**
+</Notice>
+
+This will trigger:
 
 1. Download needed files to install windows
 2. Format the USB
@@ -41,29 +50,34 @@ After this it will:
 
 ## 3. Install windows
 
-### 3.1. Select appropiate region for no bloatware
+What we want to do is to avoid is geting bloatware (as much as possible) when installing windows.
 
-Select `English (World)` or `English (Europe)` for the `Time and Currency forma` setting.
+This can be done by select `English (World)` or `English (Europe)` for the `Time and Currency forma` setting.
 
-See: https://pureinfotech.com/install-windows-11-without-bloatware-apps/
+For more info see: <FancyLink linkText="How to install Windows 11 without bloatware apps" url="https://pureinfotech.com/install-windows-11-without-bloatware-apps/" company="default" dark="true"/>.
 
-### 3.2. Clean the disk
+### 3.1. Clean the disk
 
 After you have selected the region, you will need to decide where to install windows.
 I like to go to the `Custom: Install Windows only (advanced)`. With that I can make sure to do a clean install
 
-> Important, this will delete all files in the disk you select.
+<Notice type="warning">
+  **Important**: This will **delete all files** in the disk you select.
+</Notice>
 
 Select the disk where you want to install windows. If needed, delete the existing partitions and create a new one.
 
 ## 4. Set up windows
  
-Here we want to create a local account.
+Here we want to create a local account. This is because:
 
-**DO NOT CREATE A MICROSOFT ACCOUNT**
+1. **Offline Access**: Local accounts are offline, meaning they do not require an internet connection to set up or use, providing greater control and security.
+2. **Privacy Protection**: Local accounts do not require sending personal data to Microsoft, ensuring that your data remains solely on your device.
+3. **Simpler Management**: As local accounts are stored only on the device, they are simpler to manage without the need for syncing across multiple devices.
 
-https://www.tomshardware.com/how-to/install-windows-11-without-microsoft-account
+Given that you might be installing windows for another user, I think this is the way to go.
 
+We will be following this guide <FancyLink linkText="How to Install Windows 11 Without a Microsoft Account" url="https://www.tomshardware.com/how-to/install-windows-11-without-microsoft-account" company="default" dark="true"/>
 
 ### 4.1. OOBEREGION 'error'
 
@@ -89,26 +103,31 @@ From there, you can set up a username and you will have your local account.
 
 Once you are inside windows, you can connect to the internet so that you can start downloading everything you need.
 
-Here everyone has different preferences but there is a way to get the most common programs and install them all at once. Just go to https://ninite.com/ and select the programs you want. Once done, hit `Get Your Ninite` to download an `exe` file that will install them all.
+Here everyone has different preferences but there is a way to get the most common programs and install them all at once.
+Just go to  <FancyLink linkText="ninite.com" url="https://ninite.com/"/> and select the programs you want.
+Once done, hit `Get Your Ninite` to download an `exe` file that will install them all.
 
 ### 5.1. Change the default browser (if wanted)
 
-I don't like `Edge`.
+I don't like `Edge`. And you might not like it too.
+You can download any internet browser you want but I suggest you try <FancyLink linkText="Brave" url="https://ninite.com/"/>.
 
-One app that I always download is https://brave.com/.
+It's the only browser that has a built in ad blocker which is quite useful for faster loading times and privacy.
 
 ## 6. Set up Windows
 
 ### 6.1. Windows updates
 
-Windows updates take a lot of time to install and some times can go wrong. So I think it's best that you download all updates you can so that you have the computer as udpated as possible.
+Windows updates take a lot of time to install and some times can go wrong.
+So I think it's best that you download all updates you can so that you have the computer as udpated as possible.
+This will usually require multiple restarts.
 
 ### 6.2. Activate Windows
 
 There are some computers that have a working windows key. I don't really know how it works, but in some cases you don't need to activate it.
 If that's not your case, I strongly suggest you activate windows so that you can get security updates.
 
-I would strongly suggest you don't use online activators that could change things on your computer. You might end up having problems. If you really want to go with the cheapest route, you could try one of the website with keys and at least you will know that you didn't install shady things. 
+I would strongly suggest you don't use online activators that could change things on your computer. You might end up having big problems. If you really want to go with the cheapest route, you could try one of the website with keys and at least you will know that you didn't install shady things.
 
 ## 7. Configure the computer
 
@@ -137,3 +156,18 @@ The most common ones I have needed to install are:
 * Graphic card
 
 Here the best think you can do is to google your computer model and go to the official website of the brand and download anything you need.
+
+## 8. [Optional] Set up DNS
+
+Finally, you might want to change DNS. This will allow you to:
+
+* Faster Resolution: Quicker response times.
+* Reliability: More stable under heavy traffic.
+* Reduced tracking: Less monitoring of user activity.
+* Bypass Restrictions: Prevents ISPs (Internet Service Providers) from blocking websites. 
+
+You can read how to do it at: <FancyLink linkText="Change your DNS | Windows" url="https://developers.google.com/speed/public-dns/docs/using#windows"/>
+
+I recomend using `1.1.1.1` (or `one.one.one.one`, which is exactly the same).
+You can read more about this in: https://www.cloudflare.com/learning/dns/what-is-1.1.1.1/
+But feel free to set any DNS you like.
