@@ -23,10 +23,10 @@ This guide serves as a comprehensive resource for anyone looking to perform a cl
 
 ## 1. Download Windows
 
-You can easily download windows from microft website.
-At this stage you don't need a windows lincense.
+You can easily download Windows from Microsoft's website.
+At this stage, you don't need a Windows license.
 
-To download it you should:
+To download it, you should:
 
 1. Go to <FancyLink linkText="Download Windows 11" url="https://www.microsoft.com/software-download/windows11"/>.
 2. Select `Create Windows 11 Installation Media` to download the `MediaCreationTool.exe`.
@@ -37,128 +37,141 @@ This will allow you to create a bootable USB.
 
 Use the `MediaCreationTool` to create a bootable USB.
 
-1. Select language and edition
-2. Select `USB flash drive`
-3. Select desired USB drive
+1. Select language and edition.
+2. Select `USB flash drive`.
+3. Select the desired USB drive.
 
 <Notice type="warning">
-  **Important**: All content on the selected USB drive **will be deleted**
+  **Important**: All content on the selected USB drive **will be deleted**.
 </Notice>
 
 This will trigger:
 
-1. Download needed files to install windows
-2. Format the USB
-3. Add all needed files to the drive and make it bootable
+1. Downloading the necessary files to install Windows.
+2. Formatting the USB.
+3. Adding all needed files to the drive and making it bootable.
 
-## 3. Install windows
+## 3. Install Windows
 
-What we want to do is to avoid is geting bloatware (as much as possible) when installing windows.
+What we want to avoid is getting bloatware (as much as possible) when installing Windows.
 
-This can be done by select `English (World)` or `English (Europe)` for the `Time and Currency forma` setting.
+This can be done by selecting `English (World)` or `English (Europe)` for the `Time and Currency` format setting.
 
-For more info see: <FancyLink linkText="How to install Windows 11 without bloatware apps" url="https://pureinfotech.com/install-windows-11-without-bloatware-apps/" company="default" dark="true"/>.
+For more info, see: <FancyLink linkText="How to install Windows 11 without bloatware apps" url="https://pureinfotech.com/install-windows-11-without-bloatware-apps/" company="default" dark="true"/>.
 
-### 3.1. Clean the disk
+### 3.1. Clean the Disk
 
-After you have selected the region, you will need to decide where to install windows.
-I like to go to the `Custom: Install Windows only (advanced)`. With that I can make sure to do a clean install
+After you have selected the region, you will need to decide where to install Windows.
+I like to go to the `Custom: Install Windows only (advanced)` option. With that, I can make sure to do a clean install.
 
 <Notice type="warning">
-  **Important**: This will **delete all files** in the disk you select.
+  **Important**: This will **delete all files** on the disk you select.
 </Notice>
 
-Select the disk where you want to install windows. If needed, delete the existing partitions and create a new one.
+Select the disk where you want to install Windows. If needed, delete the existing partitions and create a new one.
 
 ## 4. Set up windows
  
-Here we want to create a local account. This is because:
+Here, we want to create a local account. This is because:
 
 1. **Offline Access**: Local accounts are offline, meaning they do not require an internet connection to set up or use, providing greater control and security.
 2. **Privacy Protection**: Local accounts do not require sending personal data to Microsoft, ensuring that your data remains solely on your device.
 3. **Simpler Management**: As local accounts are stored only on the device, they are simpler to manage without the need for syncing across multiple devices.
 
-Given that you might be installing windows for another user, I think this is the way to go.
+Given that you might be installing Windows for another user, I think this is the way to go.
 
-We will be following this guide <FancyLink linkText="How to Install Windows 11 Without a Microsoft Account" url="https://www.tomshardware.com/how-to/install-windows-11-without-microsoft-account" company="default" dark="true"/>
+We will be following this guide: <FancyLink linkText="How to Install Windows 11 Without a Microsoft Account" url="https://www.tomshardware.com/how-to/install-windows-11-without-microsoft-account" company="default" dark="true"/>.
 
-### 4.1. OOBEREGION 'error'
+### 4.1. OOBEREGION 'Error'
 
-If you see the `OOBEREGION` 'error' don't panic. It just means that windows is unable to determine which bloatware to install, just skip that step.
+If you see the OOBEREGION error, don't panic.
+It just means that Windows is unable to determine which bloatware to install. Just skip that step.
 
-### 4.2. Disable internet
+<Notice type="success">
+  It's not an error. It means no bloatware will be installed.
+</Notice>
 
-When it asks for a internet connection, hit `SHIFT` + `F10`. A command will appear. Then just write:
+### 4.2. Disable Internet
+
+When it asks for an internet connection, hit `SHIFT` + `F10`. A command prompt will appear. Then just write:
 
 ```sh
 OOBE\BYPASSNRO
 ```
 
-This will force a reboot and the internet connection will no longer be required.
+This will force a reboot, and the internet connection will no longer be required.
 
-After the reboot make sure to skip the `OOBEREGION` 'error' again and select the keyboard layout.
+After the reboot, make sure to skip the `OOBEREGION` error again and select the keyboard layout.
 
-When it asks about the internet connection, select `I don't have interent`. Even after selecting that option it will try to convince you to set up a Microsoft account. Just select the `Continue with limited setup`.
+When it asks about the internet connection, select `I don't have internet`. Even after selecting that option, it will try to convince you to set up a Microsoft account. Just select `Continue with limited setup`.
 
 From there, you can set up a username and you will have your local account.
 
-## 5. Install programs
+## 5. Install Programs
 
-Once you are inside windows, you can connect to the internet so that you can start downloading everything you need.
+Once you are inside Windows, you can connect to the internet to start downloading everything you need.
 
-Here everyone has different preferences but there is a way to get the most common programs and install them all at once.
-Just go to  <FancyLink linkText="ninite.com" url="https://ninite.com/"/> and select the programs you want.
-Once done, hit `Get Your Ninite` to download an `exe` file that will install them all.
+Everyone has different preferences, but there is a way to get the most common programs and install them all at once. Just go to <FancyLink linkText="ninite.com" url="https://ninite.com/"/> and select the programs you want.
+Once done, hit `Get Your Ninite` to download an `ninite.exe` file that will install them all.
 
-### 5.1. Change the default browser (if wanted)
+### 5.1. Change the Default Browser (if desired)
 
-I don't like `Edge`. And you might not like it too.
-You can download any internet browser you want but I suggest you try <FancyLink linkText="Brave" url="https://brave.com/"/>.
+I don't like Edge, and you might not like it either.
+You can download any internet browser you want, but I suggest you try <FancyLink linkText="Brave" url="https://brave.com/"/>.
 
-It's the only browser that has a built in ad blocker which is quite useful for faster loading times and privacy.
+It's the only browser that has a built-in ad blocker, which is quite useful for faster loading times and privacy.
 
 ## 6. Set up Windows
 
 ### 6.1. Windows updates
 
-Windows updates take a lot of time to install and some times can go wrong.
-So I think it's best that you download all updates you can so that you have the computer as udpated as possible.
+Windows updates take a lot of time to install and sometimes can go wrong.
+So, I think it's best that you download all updates you can so that your computer is as updated as possible.
 This will usually require multiple restarts.
 
 ### 6.2. Activate Windows
 
-There are some computers that have a working windows key. I don't really know how it works, but in some cases you don't need to activate it.
-If that's not your case, I strongly suggest you activate windows so that you can get security updates.
+There are some computers that have a working Windows key.
+I don't really know how it works, but in some cases, you don't need to activate it.
+If that's not your case, I strongly suggest you activate Windows so that you can get security updates.
 
-I would strongly suggest you don't use online activators that could change things on your computer. You might end up having big problems. If you really want to go with the cheapest route, you could try one of the website with keys and at least you will know that you didn't install shady things.
+I would strongly suggest you don't use online activators that could change things on your computer.
+You might end up having big problems.
+If you really want to go the cheapest route, you could try one of the websites with keys, and at least you will know that you didn't install shady things.
 
-## 7. Configure the computer
+<Notice type="warning">
+  Do not use online activators.
+</Notice>
 
-### 7.1 Check startup apps
+## 7. Configure the Computer
 
-Here you might want to disable apps that you don't use so that the computer loads faster. For example you might not be using `Onedrive` (which is installed even if you do the `English (world)` trick) and in that case it would be better to disable it.
+### 7.1 Check Startup Apps
 
-To do so open the `Task Manager` and go to `Startup apps`
+Here you might want to disable apps that you don't use so that the computer loads faster.
+For example, you might not be using `OneDrive` (which is installed even if you do the `English (world)` trick), and in that case, it would be better to disable it.
 
-### 7.2. Set the timezone
+To do so, open the `Task Manager` and go to `Startup apps`.
 
-The only problem with selecting `English (World)` is that you problably won't have the correct timezone.
-Just right click the windows clock and go to `Adjust date and time`
+### 7.2. Set the Timezone
 
-### 7.3. Set correct windows language
+The only problem with selecting `English (World)` is that you probably won't have the correct timezone.
+Just right-click the Windows clock and go to `Adjust date and time`.
 
-If needed, change the windows language to whatever you want.
+### 7.3. Set Correct Windows Language
 
-### 7.4. Install drivers
+If needed, change the Windows language to whatever you want.
 
-On modern computers you might not need to do it. But if you are installing windows on an old computer you might need to install some drivers.
+### 7.4. Install Drivers
+
+On modern computers, you might not need to do it.
+But if you are installing Windows on an old computer, you might need to install some drivers.
 The most common ones I have needed to install are:
 
 * Internet
 * Bluetooth
 * Graphic card
 
-Here the best think you can do is to google your computer model and go to the official website of the brand and download anything you need.
+Here, the best thing you can do is to Google your computer model and go to the official website of the brand and download anything you need.
 
 ## 8. [Optional] Set up DNS
 
@@ -166,11 +179,11 @@ Finally, you might want to change DNS. This will allow you to:
 
 * Faster Resolution: Quicker response times.
 * Reliability: More stable under heavy traffic.
-* Reduced tracking: Less monitoring of user activity.
-* Bypass Restrictions: Prevents ISPs (Internet Service Providers) from blocking websites. 
+* Reduced Tracking: Less monitoring of user activity.
+* Bypass Restrictions: Prevents ISPs (Internet Service Providers) from blocking websites.
 
-You can read how to do it at: <FancyLink linkText="Change your DNS | Windows" url="https://developers.google.com/speed/public-dns/docs/using#windows"/>
+You can read how to do it at: <FancyLink linkText="Change your DNS | Windows" url="https://developers.google.com/speed/public-dns/docs/using#windows"/>.
 
-I recomend using `1.1.1.1` (or `one.one.one.one`, which is exactly the same).
-You can read more about this in: <FancyLink linkText="What is 1.1.1.1?" url="https://www.cloudflare.com/learning/dns/what-is-1.1.1.1/"/>
+I recommend using `1.1.1.1` (or `one.one.one.one`, which is exactly the same).
+You can read more about this in: <FancyLink linkText="What is 1.1.1.1?" url="https://www.cloudflare.com/learning/dns/what-is-1.1.1.1/"/>.
 But feel free to set any DNS you like.
