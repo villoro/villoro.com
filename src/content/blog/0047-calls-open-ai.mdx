@@ -1,0 +1,294 @@
+---
+slug: process-calls-open-ai
+title: Process Calls with Open AI
+meta_title: Process Calls with Open AI
+description: xx
+date: 2024-06-21
+image: "/images/blog/0047-process-calls-openai.jpg"
+tags: ["Python", "DE", "AI"]
+draft: true
+---
+
+## Table of Contents
+
+[TOC]
+
+## 0. Motivation
+
+At work we wanted to extract information from calls done using a CTI. This way we can improve the service we offer by getting insights from the call and by providing suggestions to agents. We can do that using different OpenAI models.
+
+## 1. Extracting information with OpenAI
+
+At the time of writing `ChatGPT 4o` is not able to process multimodal information. That means that we cannot pass an audio together with text to extract insights. To do so, we need to do it with 2 steps:
+
+1. Transcribing the call with `whisper`
+2. Extracting insights with `ChatGPT`
+
+We will do it using <FancyLink linkText="OpenAI python" url="https://github.com/openai/openai-python" dark="true"/> package.
+
+### 1.1. Using `Whisper` to transcribe the call
+
+With `whisper` we can transcribe an audio file easily.
+It can be done with:
+
+```python
+import io
+import boto3
+from openai import OpenAI
+
+s3 = boto3.client("s3")
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+
+def get_file(s3_uri):
+    # Extract bucket and filename
+    bucket, filename = s3_uri.replace("s3://", "").split("/", 1)
+
+    obj = s3.get_object(Bucket=bucket, Key=filename)
+    file = io.BytesIO(obj["Body"].read())
+    file.name = s3_uri # Needed so that it knows the extension (mp3 mostly)
+    return file
+
+def transcribe_audio(client, file)
+    return client.audio.transcriptions.create(model="whisper-1", file=file)
+
+file = get_file("s3//your_bucket/your/file/path.mp3")
+transcription = transcribe_audio(client, file)
+```
+<Notice type="warning">
+  You will need to adapt the `file_path` and make sure to have the `OPENAI_API_KEY`. Alternativelly you can retrive the secret from somewhere else.
+</Notice>
+
+This code assumes that the file is stored in `S3` but it can easily be adapted for local files or for other cloud providers.
+
+### 1.2. Using `ChatGPT` to extract insights
+
+To extract information you can do a regular call to `ChatGPT`.
+The key here is to use a prompt that asks for a `json` with any content you want.
+Also, you can provide a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that the output should follow.
+
+<Notice type="info">
+  There is a lot of prompt engineering that you can do here, but this is out of the scope of this post.
+</Notice>
+
+So you can extract the information with:
+
+````python
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+PROMPT = """
+I want you to extract information about a transcribed call. I want the output to be *only* a `json` with the following information:
+
+* sentiment: positive/negative
+* summary: a short summary of the call
+* is_answered: true if the person who was being called answered the call else false
+* successul_sale: true if the agent was able to sell a course
+* improvements: improvements ideas for the agent that was doing the call
+* failure_reason: in case there was no sale, the reason why. If there was a sale, leave it as `None` or empty
+
+That json must be parsable with the following `pydantic` model:
+
+```python
+from pydantic import BaseModel
+from typing import List, Optional, Literal
+
+class CallAnalysis(BaseModel):
+    sentiment: Literal['positive', 'negative']
+    summary: str
+    is_answered: bool
+    successful_sale: bool
+    improvements: List[str]
+    failure_reason: Optional[str] = None
+```
+
+Here is the complete transcription:
+
+```plaintext
+{transcription}
+```"""
+
+def extract_info(transcription)
+    messages = [{
+        "role": "user",
+        "content": PROMPT.format(transcription=transcription),
+    }]
+
+    chat_completion = client.chat.completions.create(
+        model="gpt-4o", messages=messages,
+    )
+
+    return chat_completion.choices[0].message.content
+
+extract_info("your transcription goes here")
+````
+<Notice type="warning">
+  Remember to pass the `transcription` from the previous step.
+</Notice>
+
+## 2. Handling invalid calls
+
+When processing the first calls, I noticed that we had a lot of super short calls where no transcription could be extracted.
+Trying to transcribe those calls is a waste of resources.
+
+To solve that I used <FancyLink linkText="Mutagen" url="https://github.com/quodlibet/mutagen" dark="true"/> to extract the audio length with:
+
+```python
+from mutagen.mp3 import HeaderNotFoundError
+from mutagen.mp3 import MP3
+
+def get_duration(file):
+    """Get duration of the audio file using mutagen"""
+    try:
+        audio = MP3(file)
+        duration_seconds = audio.info.length
+    except HeaderNotFoundError:
+        logger = get_run_logger()
+        logger.error(f"Unable to read the duration of the file: {file.name}")
+        duration_seconds = -1
+
+    file.seek(0)  # Reset file pointer after reading
+    return duration_seconds
+```
+
+Once extracted, I could only transcribe if the audio length was greater than a minimum value with:
+
+```python
+import time
+from loguru import logger
+
+MIN_SECONDS = 5 # Adjust if needed
+
+
+def process_file(client, s3, filename):
+    logger.info(f"Processing {filename=}")
+
+    t0 = time.monotonic()
+    file = get_file(s3, filename)
+    duration_seconds = get_duration(file)
+
+    if duration_seconds > MIN_SECONDS:
+        transcription = transcribe_audio(client, file)
+        trans_time = time.monotonic() - t0
+        logger.info(f"Successfully transcribed {filename=} in {trans_time:.2f} seconds")
+    else:
+        logger.info(
+            f"Skipping transcription for {filename=}, "
+            f"{duration_seconds=:.2f} is less than {MIN_SECONDS=}"
+        )
+
+    return transcription
+```
+
+## 3. Adding metadata
+
+I think that is always really useful to have some metadata whenever doing operations in the datalake.
+It will be specially useful when debugging issues.
+
+That can easily be done with <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/>.
+The idea is to create `model` for each file we process.
+
+Here is how you can define the model:
+
+```python
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+
+class Transcription(BaseModel):
+    filename: str
+    duration_seconds: float
+    transcription: Optional[str] = None
+    transcription_time: Optional[float] = None
+    transcribed_at: datetime = datetime.now()
+```
+
+With that, we can add this to the `process_file` function:
+
+<TerminalOutput color="stone">
+  process_file
+</TerminalOutput>
+```python
+    return Transcription(
+        filename=filename,
+        duration_seconds=duration_seconds,
+        transcription=transcription,
+        transcription_time=trans_time,
+    )
+```
+
+## 4. Processing the outputs
+
+Right now we have seen how to process one file.
+For now we can process multiple files with a single `for` loop like:
+
+```python
+results = []
+for file in files:
+    result = await process_file(client, s3, file)
+    results.append(result)
+```
+
+`results` will be a `list` of `Transcription` pydantic models.
+We can easily transform that to a `pandas` dataframe with:
+
+```python
+df = pd.DataFrame([x.dict() for x in results])
+df["p_extracted_at"] = datetime.now()
+```
+<Notice type="warning">
+  As usual, we add the `p_extracted_at` column as the partition column. You can read more about this in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>
+</Notice>
+
+### 4.1. Exporting the dataframe
+
+Here we can use <FancyLink linkText="AWSwrangler" url="https://github.com/aws/aws-sdk-pandas" dark="true"/> to export the result as a table. This can be done with the following functions:
+
+```python
+import awswrangler as wr
+from loguru import logger
+
+def get_table_path(bucket_prefix, db_path, table):
+    """Get the table path"""
+    buckets = [x for x in wr.s3.list_buckets() if x.startswith(bucket_prefix)]
+    return f"s3://{buckets[0]}/{db_path}/{table}"
+
+def write_parquet(
+    df,
+    database,
+    table,
+    bucket_prefix,
+    mode="append",
+    partition_col=PARTITION_COL,
+    session=None,
+):
+    n_records = df.shape[0]
+
+    db_path = database.split("__")[1]
+    path = get_table_path(bucket_prefix=bucket_prefix, db_path=db_path, table=table)
+
+    logger.info(f"Writing {n_records} rows to table '{database}.{table}' ({path=})")
+
+    kwargs = {}
+    if session is not None:
+        kwargs["boto3_session"] = session
+
+    wr.s3.to_parquet(
+        df=df,
+        dataset=True,
+        database=database,
+        table=table,
+        path=path,
+        mode=mode,
+        partition_cols=[partition_col],
+        **kwargs,
+    )
+```
+
+## 5. Concurrent Async calls
+
+### 5.1. Doing async calls
+
+### 5.2. Rate limiter
