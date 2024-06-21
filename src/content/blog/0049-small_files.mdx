@@ -1,0 +1,51 @@
+---
+slug: solve-problem-small-files-data-lake
+title: Solve the probem with small files in the Data Lake
+meta_title: Solve the probem with small files in the Data Lake
+description: xx
+date: 2024-06-21
+image: "/images/blog/0049-handling-small-files.jpg"
+tags: ["DE"]
+draft: false
+---
+
+## Table of Contents
+
+[TOC]
+
+## 0. Motivation
+
+## 1. What's the problem
+
+Partitions less than 1 GB bad: https://www.linkedin.com/pulse/delta-lake-optimisation-guide-deenar-toraskar/
+
+### 1.1. Performance
+
+4x based on https://medium.com/@satadru1998/%EF%B8%8F-fixing-the-small-file-problem-in-data-lake-with-spark-2cc9fbb86796
+
+### 1.2. Costs
+
+10x Glovo
+
+## 2. Good file size
+
+1 GB: https://delta.io/blog/2023-01-25-delta-lake-small-file-compaction-optimize/
+100 MB to 10 GB: https://duckdb.org/docs/guides/performance/file_formats.html#parquet-file-sizes
+
+## 3. How to avoid it?
+
+### 3.1. General approach
+
+### 3.2. Spark
+
+### 3.3. Athena with DBT
+
+## 4. Good partitioning
+
+## 5. How to track the problem
+
+## 6. Fixing the problem
+
+### 6.1. Iceberg
+
+### 6.2. Delta
