@@ -32,7 +32,7 @@ const totalPages: number = Math.ceil(sortedPosts.length / config.settings.pagina
 const currentPosts = sortedPosts.slice(0, config.settings.pagination);
 ---
 
-<Base title={"Tag " + tag}>
+<Base title={"Tag: " + tag}>
   <section class="section pt-6 md:pt-14">
     <BlogTags />
     
@@ -48,7 +48,7 @@ const currentPosts = sortedPosts.slice(0, config.settings.pagination);
         }
       </div>
       <Pagination
-        section={blog_folder}
+        section={`tags/${tag}`}
         currentPage={1}
         totalPages={totalPages}
       />
