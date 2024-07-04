@@ -4,52 +4,60 @@ import BlogCard from "@/components/BlogCard.astro";
 import BlogTags from "@/components/BlogTags.astro";
 import Pagination from "@/components/Pagination.astro";
 import Base from "@/layouts/Base.astro";
+import { fetchAndSortPosts } from "@/lib/blogUtils.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getTaxonomy } from "@/lib/taxonomyParser.astro";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
+
 const { blog_folder } = config.settings;
 
 // get static paths for all tags
 export async function getStaticPaths() {
-  const FOLDER = "blog";
-  const tags = await getTaxonomy(FOLDER, "tags");
+  const { blog_folder } = (await import('@/config/config.json')).settings;
+  const tags = await getTaxonomy(blog_folder, "tags");
+  const paths = [];
 
-  return tags.map((tag) => {
-    return {
-      params: { tag },
-    };
-  });
+  for (const tag of tags) {
+    const items = await getSinglePage(blog_folder);
+    const filteredItems = taxonomyFilter(items, "tags", tag);
+    const totalPages = Math.ceil(filteredItems.length / config.settings.pagination);
+
+    for (let i = 1; i <= totalPages; i++) {
+      paths.push({ params: { tag, slug: i.toString() } });
+    }
+  }
+
+  return paths;
 }
 
-const { tag } = Astro.params;
-
-// get items by tag
+const { tag, slug } = Astro.params;
 const items = await getSinglePage(blog_folder);
 const filterByTags = taxonomyFilter(items, "tags", tag!);
 const sortedPosts = sortByDate(filterByTags);
-const totalPages: number = Math.ceil(sortedPosts.length / config.settings.pagination);
-const currentPosts = sortedPosts.slice(0, config.settings.pagination);
+const totalPages = Math.ceil(sortedPosts.length / config.settings.pagination);
+const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
+const indexOfLastPost = currentPage * config.settings.pagination;
+const indexOfFirstPost = indexOfLastPost - config.settings.pagination;
+const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
 ---
 
-<Base title={"Tag: " + tag}>
+<Base title={`Tag: ${tag}`}>
   <section class="section pt-6 md:pt-14">
     <BlogTags />
     
     <!-- Posts -->
     <div class="container">
       <div class="row">
-        {
-          currentPosts.map((item, index) => (
-            <div class="mb-14 md:col-6 lg:col-4" key={index}>
-              <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
-            </div>
-          ))
-        }
+        {currentPosts.map((item, index) => (
+          <div class="mb-14 md:col-6 lg:col-4" key={index}>
+            <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
+          </div>
+        ))}
       </div>
       <Pagination
         section={`tags/${tag}`}
-        currentPage={1}
+        currentPage={currentPage}
         totalPages={totalPages}
       />
     </div>
