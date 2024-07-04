@@ -2,6 +2,7 @@
 import config from "@/config/config.json";
 import BlogCard from "@/components/BlogCard.astro";
 import BlogTags from "@/components/BlogTags.astro";
+import Pagination from "@/components/Pagination.astro";
 import Base from "@/layouts/Base.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
@@ -27,6 +28,8 @@ const { tag } = Astro.params;
 const items = await getSinglePage(blog_folder);
 const filterByTags = taxonomyFilter(items, "tags", tag!);
 const sortedPosts = sortByDate(filterByTags);
+const totalPages: number = Math.ceil(sortedPosts.length / config.settings.pagination);
+const currentPosts = sortedPosts.slice(0, config.settings.pagination);
 ---
 
 <Base title={"Tag " + tag}>
@@ -37,13 +40,18 @@ const sortedPosts = sortByDate(filterByTags);
     <div class="container">
       <div class="row">
         {
-          sortedPosts.map((item, index) => (
+          currentPosts.map((item, index) => (
             <div class="mb-14 md:col-6 lg:col-4" key={index}>
               <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
             </div>
           ))
         }
       </div>
+      <Pagination
+        section={blog_folder}
+        currentPage={1}
+        totalPages={totalPages}
+      />
     </div>
   </section>
 </Base>
