@@ -14,7 +14,9 @@ import meImage from "../images/me.png";
 
 <Base title={title} meta_title={meta_title} description={description}>
   <Parallax imageName={image}>
-    <h1 class="text-white dark:text-darkmode-primary text-center text-4xl md:text-6xl">{markdownify(title)}</h1>
+    <h1 class="text-white dark:text-darkmode-primary text-center text-4xl md:text-6xl">
+      {markdownify(title)}
+    </h1>
   </Parallax>
 
   <section class="section-sm bg-gradient">
