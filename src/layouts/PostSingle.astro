@@ -28,28 +28,21 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 
         <h1 set:html={markdownify(title)} class="h2 mb-4" />
 
-        <BlogDetails
-          date={date}
-          category={category}
-          tags={tags}
-          className="btn-primary"
-        />
+        <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
 
-        {
-          image && (
-            <div class="mb-10">
-              <ImageMod
-                src={image}
-                height={500}
-                width={1200}
-                alt={title}
-                class="w-full rounded"
-                format="webp"
-                loading="eager"
-              />
-            </div>
-          )
-        }
+        {image && (
+          <div class="mb-10">
+            <ImageMod
+              src={image}
+              height={500}
+              width={1200}
+              alt={title}
+              class="w-full rounded"
+              format="webp"
+              loading="eager"
+            />
+          </div>
+        )}
 
         <div class="content mb-10">
           <Content />
@@ -74,12 +67,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
           <div class="md:col-4">
             <div class="flex items-center justify-center">
               <h5 class="mr-3">Share :</h5>
-              <Share
-                className="social-icons"
-                title={title}
-                description={description}
-                slug={post.slug}
-              />
+              <Share className="social-icons" title={title} description={description} slug={post.slug} />
             </div>
           </div>
         </div>
@@ -114,13 +102,11 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     <div class="section pb-0">
       <h2 class="h3 mb-12 text-center">Related Posts</h2>
       <div class="row justify-center">
-        {
-          similarPosts.map((post) => (
-            <div class="sm:col-4">
-              <BlogCard data={post} loading="lazy" />
-            </div>
-          ))
-        }
+        {similarPosts.map((post) => (
+          <div class="sm:col-4">
+            <BlogCard data={post} loading="lazy" />
+          </div>
+        ))}
       </div>
     </div>
   </div>

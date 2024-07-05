@@ -2,8 +2,7 @@
 import config from "@/config/config.json";
 import ImageMod from "./ImageMod.astro";
 
-const { src, srcDarkmode }: { src?: string; srcDarkmode?: string } =
-  Astro.props;
+const { src, srcDarkmode } = Astro.props;
 const {
   logo,
   logo_darkmode,
@@ -11,55 +10,46 @@ const {
   logo_height,
   logo_text,
   title,
-}: {
-  logo: string;
-  logo_darkmode: string;
-  logo_width: any;
-  logo_height: any;
-  logo_text: string;
-  title: string;
 } = config.site;
 
-const { theme_switcher }: { theme_switcher: boolean } = config.settings;
+const { theme_switcher } = config.settings;
 ---
 
 <a href="/" class="navbar-brand inline-block">
-  {
-    src || srcDarkmode || logo || logo_darkmode ? (
-      <>
+  {src || srcDarkmode || logo || logo_darkmode ? (
+    <>
+      <ImageMod
+        src={src ? src : logo}
+        class={`inline-block ${theme_switcher && "dark:hidden"}`}
+        width={logo_width.replace("px", "") * 2}
+        height={logo_height.replace("px", "") * 2}
+        alt={title}
+        style={{
+          height: `${logo_height.replace("px", "")}px`,
+          width: `${logo_width.replace("px", "")}px`,
+        }}
+        format="webp"
+        loading="eager"
+      />
+      {theme_switcher && (
         <ImageMod
-          src={src ? src : logo}
-          class={`inline-block ${theme_switcher && "dark:hidden"}`}
+          src={srcDarkmode ? srcDarkmode : logo_darkmode}
+          class="hidden dark:inline-block"
           width={logo_width.replace("px", "") * 2}
           height={logo_height.replace("px", "") * 2}
           alt={title}
           style={{
-            height: logo_height.replace("px", "") + "px",
-            width: logo_width.replace("px", "") + "px",
+            height: `${logo_height.replace("px", "")}px`,
+            width: `${logo_width.replace("px", "")}px`,
           }}
           format="webp"
-          loading="eager"
+          loading="lazy-preload"
         />
-        {theme_switcher && (
-          <ImageMod
-            src={srcDarkmode ? srcDarkmode : logo_darkmode}
-            class={"hidden dark:inline-block"}
-            width={logo_width.replace("px", "") * 2}
-            height={logo_height.replace("px", "") * 2}
-            alt={title}
-            style={{
-              height: logo_height.replace("px", "") + "px",
-              width: logo_width.replace("px", "") + "px",
-            }}
-            format="webp"
-            loading="lazy-preload"
-          />
-        )}
-      </>
-    ) : logo_text ? (
-      logo_text
-    ) : (
-      title
-    )
-  }
+      )}
+    </>
+  ) : logo_text ? (
+    logo_text
+  ) : (
+    title
+  )}
 </a>

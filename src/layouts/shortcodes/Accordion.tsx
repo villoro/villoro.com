@@ -12,7 +12,7 @@ const Accordion = ({
   const [show, setShow] = useState(false);
 
   return (
-    <div className={`accordion ${show && "active"} ${className}`}>
+    <div className={`accordion ${show ? "active" : ""} ${className || ""}`}>
       <button className="accordion-header" onClick={() => setShow(!show)}>
         {title}
         <svg

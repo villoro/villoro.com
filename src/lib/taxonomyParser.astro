@@ -2,18 +2,17 @@
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { slugify } from "@/lib/utils/textConverter";
 
-// get taxonomy from frontmatter
 export const getTaxonomy = async (collection: any, name: string, slugifyTags: boolean = true) => {
   const singlePages = await getSinglePage(collection);
 
-  let taxonomies = [];
+  let taxonomies: string[] = [];
   singlePages.forEach((page) => {
     const category = page.data[name];
     if (Array.isArray(category)) {
       category.forEach((item) => {
         taxonomies.push(slugifyTags ? slugify(item) : item);
       });
-    } else if (typeof category === 'string') {
+    } else if (typeof category === "string") {
       taxonomies.push(slugifyTags ? slugify(category) : category);
     }
   });
@@ -21,18 +20,17 @@ export const getTaxonomy = async (collection: any, name: string, slugifyTags: bo
   return [...new Set(taxonomies)];
 };
 
-// get all taxonomies from frontmatter
 export const getAllTaxonomy = async (collection: any, name: string, slugifyTags: boolean = true) => {
   const singlePages = await getSinglePage(collection);
 
-  let taxonomies = [];
+  let taxonomies: string[] = [];
   singlePages.forEach((page) => {
     const category = page.data[name];
     if (Array.isArray(category)) {
       category.forEach((item) => {
         taxonomies.push(slugifyTags ? slugify(item) : item);
       });
-    } else if (typeof category === 'string') {
+    } else if (typeof category === "string") {
       taxonomies.push(slugifyTags ? slugify(category) : category);
     }
   });

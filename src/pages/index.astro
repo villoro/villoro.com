@@ -12,7 +12,7 @@ import { FaGear } from "react-icons/fa6";
 const homepage = await getEntry("homepage", "-index");
 const { banner, slogan, companies, blog } = homepage.data;
 
-import { Image } from 'astro:assets';
+import { Image } from "astro:assets";
 
 const { blog_folder } = config.settings;
 
@@ -22,15 +22,13 @@ const latestPosts = sortedPosts.slice(0, config.settings.num_latest_posts);
 
 const importImage = async (imageName, darkMode = false) => {
   if (darkMode) {
-    const darkModeImageName = `${imageName}_dark`; // Add "_dark" suffix for dark mode image
+    const darkModeImageName = `${imageName}_dark`;
     try {
-      // Try importing dark mode image
       const { default: darkModeImage } = await import(`../images/companies/${darkModeImageName}.png`);
       return darkModeImage;
     } catch (error) {}
   }
-  
-  // If dark mode is false or dark mode image not found, import original image
+
   const { default: originalImage } = await import(`../images/companies/${imageName}.png`);
   return originalImage;
 };
@@ -38,14 +36,9 @@ const importImage = async (imageName, darkMode = false) => {
 
 <Base>
   <!-- Banner -->
-  <Parallax 
-    imageName={banner.image}
-  >
+  <Parallax imageName={banner.image}>
     <div class="text-center md:col-10 lg:col-7">
-      <h1
-        set:html={markdownify(banner.title)}
-        class="mb-4 text-white dark:text-darkmode-primary text-h3 lg:text-h1"
-      />
+      <h1 set:html={markdownify(banner.title)} class="mb-4 text-white dark:text-darkmode-primary text-h3 lg:text-h1" />
       <p set:html={markdownify(banner.content)} class="mb-8" />
     </div>
   </Parallax>
@@ -66,22 +59,17 @@ const importImage = async (imageName, darkMode = false) => {
   <section class="section p-6 lg:p-14">
     <div class="container">
       <div class="flex justify-center text-center pb-16">
-        <h1
-          set:html={markdownify(blog.title)}
-          class="text-h3 lg:text-h1 lg:text-h2 mr-6"
-        />
+        <h1 set:html={markdownify(blog.title)} class="text-h3 lg:text-h1 lg:text-h2 mr-6" />
         <a class="btn btn-primary lg:mt-1 lg:text-xl" href={blog_folder}>
           {blog.button}
         </a>
       </div>
       <div class="row">
-        {
-          latestPosts.map((item, index) => (
-            <div class="sm:mb-8 sm:col-4" key={index}>
-              <BlogCard data={item} loading="lazy" />
-            </div>
-          ))
-        }
+        {latestPosts.map((item, index) => (
+          <div class="sm:mb-8 sm:col-4" key={index}>
+            <BlogCard data={item} loading="lazy" />
+          </div>
+        ))}
       </div>
     </div>
   </section>
@@ -90,15 +78,11 @@ const importImage = async (imageName, darkMode = false) => {
   <section class="section bg-theme-light dark:bg-darkmode-theme-light p-6 lg:p-14">
     <div class="container">
       <div class="text-center">
-        <h1
-          set:html={markdownify(companies.title)}
-          class="mb-16 text-h4 lg:text-h2"
-        />
+        <h1 set:html={markdownify(companies.title)} class="mb-16 text-h4 lg:text-h2" />
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 lg:gap-8">
-        {companies.logos.map(async company => {
+        {companies.logos.map(async (company) => {
           const { name, image, link } = company;
-          // Dynamically import the image based on the company's name and dark mode setting
           const lightImage = await importImage(image);
           const darkImage = await importImage(image, true);
 

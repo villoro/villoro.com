@@ -36,9 +36,8 @@ export interface Props {
   canonical?: string;
 }
 
-// distructure frontmatters
-const { title, meta_title, description, image, noindex, canonical } =
-  Astro.props;
+// destructure frontmatters
+const { title, meta_title, description, image, noindex, canonical } = Astro.props;
 ---
 
 <!doctype html>
@@ -49,16 +48,8 @@ const { title, meta_title, description, image, noindex, canonical } =
     <!-- theme meta -->
     <meta name="theme-name" content="astroplate" />
     <meta name="msapplication-TileColor" content="#000000" />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: light)"
-      content="#fff"
-    />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: dark)"
-      content="#000"
-    />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
     <meta name="generator" content={Astro.generator} />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
@@ -66,7 +57,7 @@ const { title, meta_title, description, image, noindex, canonical } =
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-08V17G7ZDD"></script>
     <script>
       /* Only track the page when it is in the main domain. No develop.villoro.com or localhost */
-      if (window.location.host==="villoro.com" || window.location.host==="www.villoro.com") {
+      if (window.location.host === "villoro.com" || window.location.host === "www.villoro.com") {
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
@@ -100,15 +91,10 @@ const { title, meta_title, description, image, noindex, canonical } =
     />
 
     <!-- responsive meta -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=5"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
 
     <!-- title -->
-    <title>
-      {plainify(meta_title ? meta_title : title ? title : config.site.title)}
-    </title>
+    <title>{plainify(meta_title ? meta_title : title ? title : config.site.title)}</title>
 
     <!-- canonical url -->
     {canonical && <link rel="canonical" href={canonical} item-prop="url" />}
@@ -117,12 +103,7 @@ const { title, meta_title, description, image, noindex, canonical } =
     {noindex && <meta name="robots" content="noindex,nofollow" />}
 
     <!-- meta-description -->
-    <meta
-      name="description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
+    <meta name="description" content={plainify(description ? description : config.metadata.meta_description)} />
 
     <ViewTransitions />
 
@@ -130,57 +111,24 @@ const { title, meta_title, description, image, noindex, canonical } =
     <meta name="author" content={config.metadata.meta_author} />
 
     <!-- og-title -->
-    <meta
-      property="og:title"
-      content={plainify(
-        meta_title ? meta_title : title ? title : config.site.title,
-      )}
-    />
+    <meta property="og:title" content={plainify(meta_title ? meta_title : title ? title : config.site.title)} />
 
     <!-- og-description -->
-    <meta
-      property="og:description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
+    <meta property="og:description" content={plainify(description ? description : config.metadata.meta_description)} />
     <meta property="og:type" content="website" />
-    <meta
-      property="og:url"
-      content={`${config.site.base_url}/${Astro.url.pathname.replace("/", "")}`}
-    />
+    <meta property="og:url" content={`${config.site.base_url}/${Astro.url.pathname.replace("/", "")}`} />
 
     <!-- twitter-title -->
-    <meta
-      name="twitter:title"
-      content={plainify(
-        meta_title ? meta_title : title ? title : config.site.title,
-      )}
-    />
+    <meta name="twitter:title" content={plainify(meta_title ? meta_title : title ? title : config.site.title)} />
 
     <!-- twitter-description -->
-    <meta
-      name="twitter:description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
+    <meta name="twitter:description" content={plainify(description ? description : config.metadata.meta_description)} />
 
     <!-- og-image -->
-    <meta
-      property="og:image"
-      content={`${config.site.base_url}${
-        image ? image : config.metadata.meta_image
-      }`}
-    />
+    <meta property="og:image" content={`${config.site.base_url}${image ? image : config.metadata.meta_image}`} />
 
     <!-- twitter-image -->
-    <meta
-      name="twitter:image"
-      content={`${config.site.base_url}${
-        image ? image : config.metadata.meta_image
-      }`}
-    />
+    <meta name="twitter:image" content={`${config.site.base_url}${image ? image : config.metadata.meta_image}`} />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
