@@ -10,7 +10,7 @@ const blogCollection = defineCollection({
     image: z.string().optional(),
     image_dark: z.string().optional(),
     author: z.string().default("Admin"),
-    categories: z.array(z.string()).default(["Others"]),
+    category: z.string().default("Others"),
     tags: z.array(z.string()).default(["Others"]),
     draft: z.boolean().optional(),
   }),
