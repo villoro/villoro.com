@@ -1,16 +1,11 @@
 ---
 import config from "@/config/config.json";
-import { humanize, slugify } from "@/lib/utils/textConverter";
-import dateFormat from "@/lib/utils/dateFormat";
+import BlogDetails from "@/components/BlogDetails.astro";
 import ImageMod from "./ImageMod.astro";
-import { FaRegClock, FaFolder } from "react-icons/fa";
-import { categoryMetadata } from "@/lib/categoryMetadata";
 
 const { blog_folder } = config.settings;
 const { data, loading } = Astro.props;
 const { title, image, image_dark, date, category } = data.data;
-
-const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
 
 <div class="bg-body dark:bg-darkmode-body">
@@ -45,19 +40,11 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
       {title}
     </h4>
   </a>
-  <ul class="flex flex-wrap items-center mb-4">
-    <li class="mb-4 mr-4 inline-flex items-center">
-      <FaRegClock className="mr-1 -mt-1 inline-block" />
-      {dateFormat(date)}
-    </li>
-    <li class="mb-4 mr-4 inline-flex items-center">
-      <FaFolder className="md:ml-4 mr-2 -mt-1 inline-block" />
-      <a
-        class={`inline-block px-2 py-1 bg-theme-light hover:bg-primary hover:text-white dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark`}
-        href={`/categories/${slugify(category)}`}
-      >
-        {metadata.name}
-      </a>
-    </li>
-  </ul>
+  
+  <!-- Pass null for tags as they are not to be displayed in BlogCard -->
+  <BlogDetails
+    date={date}
+    category={category}
+    tags={null}
+  />
 </div>

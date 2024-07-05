@@ -4,7 +4,7 @@ import { humanize, slugify } from "@/lib/utils/textConverter";
 import { FaRegClock, FaTag, FaFolder } from "react-icons/fa";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 
-const { date, tags, category, className } = Astro.props;
+const { date, tags, category } = Astro.props;
 
 const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
@@ -23,15 +23,14 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
       {metadata.name}
     </a>
   </li>
-  <li class="mb-4 mr-4 inline-flex items-center">
-    <FaTag className="md:ml-4 mr-1 -mt-1 inline-block" />
-    {tags && tags.length > 0 && tags.map((tag: string) => (
-      <a
-        class={`m-1 px-2 py-1 ${className}`} 
-        href={`/tags/${slugify(tag)}`}
-      >
-        {humanize(tag)}
-      </a>
-    ))}
-  </li>
+  {tags && tags.length > 0 && (
+    <li class="mb-4 mr-4 inline-flex items-center">
+      <FaTag className="md:ml-4 mr-1 -mt-1 inline-block" />
+      {tags.map((tag: string) => (
+        <a class={`m-1 px-2 py-1 btn-primary`} href={`/tags/${slugify(tag)}`}>
+          {humanize(tag)}
+        </a>
+      ))}
+    </li>
+  )}
 </ul>
