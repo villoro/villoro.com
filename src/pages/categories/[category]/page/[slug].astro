@@ -1,0 +1,65 @@
+---
+import config from "@/config/config.json";
+import BlogCard from "@/components/BlogCard.astro";
+import BlogCategories from "@/components/BlogCategories.astro";
+import Pagination from "@/components/Pagination.astro";
+import Base from "@/layouts/Base.astro";
+import { fetchAndSortPosts } from "@/lib/blogUtils.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import { sortByDate } from "@/lib/utils/sortFunctions";
+import { getTaxonomy } from "@/lib/taxonomyParser.astro";
+import taxonomyFilter from "@/lib/utils/taxonomyFilter";
+
+const { blog_folder } = config.settings;
+
+// get static paths for all categories
+export async function getStaticPaths() {
+  const { blog_folder } = (await import('@/config/config.json')).settings;
+  const categories = await getTaxonomy(blog_folder, "category");
+  const paths = [];
+
+  for (const category of categories) {
+    const items = await getSinglePage(blog_folder);
+    const filteredItems = taxonomyFilter(items, "category", category);
+    const totalPages = Math.ceil(filteredItems.length / config.settings.pagination);
+
+    for (let i = 1; i <= totalPages; i++) {
+      paths.push({ params: { category, slug: i.toString() } });
+    }
+  }
+
+  return paths;
+}
+
+const { category, slug } = Astro.params;
+const items = await getSinglePage(blog_folder);
+const filterByCategory = taxonomyFilter(items, "category", category!);
+const sortedPosts = sortByDate(filterByCategory);
+const totalPages = Math.ceil(sortedPosts.length / config.settings.pagination);
+const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
+const indexOfLastPost = currentPage * config.settings.pagination;
+const indexOfFirstPost = indexOfLastPost - config.settings.pagination;
+const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
+---
+
+<Base title={`Category: ${category}`}>
+  <section class="section pt-6 md:pt-14">
+    <BlogCategories />
+    
+    <!-- Posts -->
+    <div class="container">
+      <div class="row">
+        {currentPosts.map((item, index) => (
+          <div class="mb-14 md:col-6 lg:col-4" key={index}>
+            <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
+          </div>
+        ))}
+      </div>
+      <Pagination
+        section={`categories/${category}`}
+        currentPage={currentPage}
+        totalPages={totalPages}
+      />
+    </div>
+  </section>
+</Base>
