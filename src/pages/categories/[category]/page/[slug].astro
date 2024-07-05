@@ -12,29 +12,29 @@ import taxonomyFilter from "@/lib/utils/taxonomyFilter";
 
 const { blog_folder } = config.settings;
 
-// get static paths for all tags
+// get static paths for all categories
 export async function getStaticPaths() {
   const { blog_folder } = (await import('@/config/config.json')).settings;
-  const tags = await getTaxonomy(blog_folder, "tags");
+  const categories = await getTaxonomy(blog_folder, "category");
   const paths = [];
 
-  for (const tag of tags) {
+  for (const category of categories) {
     const items = await getSinglePage(blog_folder);
-    const filteredItems = taxonomyFilter(items, "tags", tag);
+    const filteredItems = taxonomyFilter(items, "category", category);
     const totalPages = Math.ceil(filteredItems.length / config.settings.pagination);
 
     for (let i = 1; i <= totalPages; i++) {
-      paths.push({ params: { tag, slug: i.toString() } });
+      paths.push({ params: { category, slug: i.toString() } });
     }
   }
 
   return paths;
 }
 
-const { tag, slug } = Astro.params;
+const { category, slug } = Astro.params;
 const items = await getSinglePage(blog_folder);
-const filterByTags = taxonomyFilter(items, "tags", tag!);
-const sortedPosts = sortByDate(filterByTags);
+const filterByCategory = taxonomyFilter(items, "category", category!);
+const sortedPosts = sortByDate(filterByCategory);
 const totalPages = Math.ceil(sortedPosts.length / config.settings.pagination);
 const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
 const indexOfLastPost = currentPage * config.settings.pagination;
@@ -42,7 +42,7 @@ const indexOfFirstPost = indexOfLastPost - config.settings.pagination;
 const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
 ---
 
-<Base title={`Tag: ${tag}`}>
+<Base title={`Category: ${category}`}>
   <section class="section pt-6 md:pt-14">
     <BlogCategories />
     
@@ -56,7 +56,7 @@ const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
         ))}
       </div>
       <Pagination
-        section={`tags/${tag}`}
+        section={`categories/${category}`}
         currentPage={currentPage}
         totalPages={totalPages}
       />

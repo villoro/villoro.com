@@ -1,26 +1,36 @@
 ---
 import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, slugify } from "@/lib/utils/textConverter";
-import { FaRegClock, FaTag } from "react-icons/fa";
-const { date, tags, className } = Astro.props;
+import { FaRegClock, FaTag, FaFolder } from "react-icons/fa";
+import { categoryMetadata } from "@/lib/categoryMetadata";
+
+const { date, tags, category } = Astro.props;
+
+const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
 
-<ul>
-  <li class="mb-4 mr-4 inline-block">
+<ul class="flex flex-wrap items-center">
+  <li class="mb-4 mr-4 inline-flex items-center">
     <FaRegClock className="mr-1 -mt-1 inline-block" />
     {dateFormat(date)}
   </li>
-  <li class="mb-4 mr-4 inline-block">
-    <FaTag className="md:ml-4 -mt-1 inline-block" />
-    {
-      tags && tags.length > 0 && tags.map((tag: string) => (
-        <a
-          class={`m-1 px-2 py-1 ${className}`} 
-          href={`/tags/${slugify(tag)}`}
-        >
+  <li class="mb-4 mr-4 inline-flex items-center">
+    <FaFolder className="md:ml-4 mr-2 -mt-1 inline-block" />
+    <a
+      class={`inline-block px-2 py-1 bg-theme-light hover:bg-primary hover:text-white dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark`}
+      href={`/categories/${slugify(category)}`}
+    >
+      {metadata.name}
+    </a>
+  </li>
+  {tags && tags.length > 0 && (
+    <li class="mb-4 mr-4 inline-flex items-center">
+      <FaTag className="md:ml-4 mr-1 -mt-1 inline-block" />
+      {tags.map((tag: string) => (
+        <a class={`m-1 px-2 py-1 btn-primary`} href={`/tags/${slugify(tag)}`}>
           {humanize(tag)}
         </a>
-      ))
-    }
-  </li>
+      ))}
+    </li>
+  )}
 </ul>

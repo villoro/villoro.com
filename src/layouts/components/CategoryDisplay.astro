@@ -1,0 +1,11 @@
+---
+import { categoryMetadata } from "@/lib/categoryMetadata";
+
+// Get the props
+const { category } = Astro.props;
+
+// Get the metadata for the category
+const metadata = categoryMetadata[category] || { name: category };
+---
+
+{metadata.name}
