@@ -7,6 +7,7 @@ import { getSinglePage } from "@/lib/contentParser.astro";
 import similarItems from "@/lib/utils/similarItems";
 import { markdownify } from "@/lib/utils/textConverter";
 import ImageMod from "./components/ImageMod.astro";
+import { categoryMetadata } from "@/lib/categoryMetadata";
 
 const { blog_folder, similar_items_length } = config.settings;
 const { post } = Astro.props;
@@ -14,7 +15,9 @@ const { post } = Astro.props;
 const posts = await getSinglePage(blog_folder);
 const similarPosts = similarItems(post, posts, similar_items_length);
 const { Content } = await post.render();
-const { title, description, image, date, tags } = post.data;
+const { title, description, image, date, tags, category } = post.data;
+
+const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
 
 <section class="section pt-7">
@@ -23,9 +26,10 @@ const { title, description, image, date, tags } = post.data;
       <article class="lg:col-10">
 
         <h1 set:html={markdownify(title)} class="h2 mb-4" />
-        
+
         <BlogDetails
           date={date}
+          category={category}
           tags={tags}
           className="btn-primary"
         />
