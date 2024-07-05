@@ -8,6 +8,7 @@ import similarItems from "@/lib/utils/similarItems";
 import { markdownify } from "@/lib/utils/textConverter";
 import ImageMod from "./components/ImageMod.astro";
 import { categoryMetadata } from "@/lib/categoryMetadata";
+import { humanize } from "@/lib/utils/textConverter";
 
 const { blog_folder, similar_items_length } = config.settings;
 const { post } = Astro.props;
