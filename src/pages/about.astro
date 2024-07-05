@@ -1,6 +1,6 @@
 ---
 import Base from "@/layouts/Base.astro";
-import ParallaxTemporal from "@/components/ParallaxTemporal.astro";
+import Parallax from "@/components/Parallax.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import { getEntry } from "astro:content";
 
@@ -13,9 +13,9 @@ import meImage from "../images/me.png";
 ---
 
 <Base title={title} meta_title={meta_title} description={description}>
-  <ParallaxTemporal imageName={image}>
+  <Parallax imageName={image}>
     <h1 class="text-white dark:text-darkmode-primary text-center text-4xl md:text-6xl">{markdownify(title)}</h1>
-  </ParallaxTemporal>
+  </Parallax>
 
   <section class="section-sm bg-gradient">
     <div class="container">
