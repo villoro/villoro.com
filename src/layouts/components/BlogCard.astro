@@ -10,41 +10,32 @@ const { title, image, image_dark, date, category } = data.data;
 
 <div class="bg-body dark:bg-darkmode-body">
   <a href={`/${blog_folder}/${data.slug}`}>
-    {
-      image && (
-        <>
+    {image && (
+      <>
+        <ImageMod
+          src={image}
+          class={`mb-6 w-full rounded ${image_dark ? 'dark:hidden' : ''}`}
+          width={480}
+          height={360}
+          alt={title}
+          format="webp"
+          loading={loading}
+        />
+        {image_dark && (
           <ImageMod
-            src={image}
-            class={`mb-6 w-full rounded ${image_dark ? 'dark:hidden' : ''}`}
+            src={image_dark}
+            class="mb-6 w-full rounded hidden dark:inline-block"
             width={480}
             height={360}
             alt={title}
             format="webp"
-            loading={loading}
+            loading="lazy-preload"
           />
-          {image_dark && (
-            <ImageMod
-              src={image_dark}
-              class={`mb-6 w-full rounded hidden dark:inline-block`}
-              width={480}
-              height={360}
-              alt={title}
-              format="webp"
-              loading="lazy-preload"
-            />
-          )}
-        </>
-      )
-    }
-    <h4 class="mb-3 hover:text-primary dark:hover:text-darkmode-primary">
-      {title}
-    </h4>
+        )}
+      </>
+    )}
+    <h4 class="mb-3 hover:text-primary dark:hover:text-darkmode-primary">{title}</h4>
   </a>
-  
-  <!-- Pass null for tags as they are not to be displayed in BlogCard -->
-  <BlogDetails
-    date={date}
-    category={category}
-    tags={null}
-  />
+
+  <BlogDetails date={date} category={category} tags={null} />
 </div>

@@ -4,9 +4,8 @@ const useTheme = (): string => {
   const [themeValue, setThemeValue] = useState("");
 
   useEffect(() => {
-    setThemeValue(
-      document.documentElement.classList.contains("dark") ? "dark" : "light",
-    );
+    const currentTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    setThemeValue(currentTheme);
   }, []);
 
   return themeValue;
