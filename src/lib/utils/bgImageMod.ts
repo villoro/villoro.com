@@ -1,11 +1,16 @@
 import { getImage } from "astro:assets";
 
-const bgImageMod = async (src: string, format?: "auto" | "avif" | "jpeg" | "png" | "svg" | "webp") => {
+const bgImageMod = async (
+  src: string,
+  format?: "auto" | "avif" | "jpeg" | "png" | "svg" | "webp"
+) => {
   src = `/public${src}`;
   const images = import.meta.glob("/public/images/**/*.{jpeg,jpg,png,gif}");
 
   if (!src || !images[src]) {
-    console.error(`\x1b[31mImage not found - ${src}.\x1b[0m Make sure the image is in the /public/images folder.`);
+    console.error(
+      `\x1b[31mImage not found - ${src}.\x1b[0m Make sure the image is in the /public/images folder.`
+    );
     return "";
   }
 

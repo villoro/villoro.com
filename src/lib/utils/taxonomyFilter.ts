@@ -5,7 +5,7 @@ const taxonomyFilter = (posts: any[], name: string, key: string) =>
     const fieldValue = post.data[name];
     if (Array.isArray(fieldValue)) {
       return fieldValue.map((name: string) => slugify(name)).includes(key);
-    } else if (typeof fieldValue === 'string') {
+    } else if (typeof fieldValue === "string") {
       return slugify(fieldValue) === key;
     }
     return false;

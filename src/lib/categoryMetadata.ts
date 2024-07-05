@@ -6,5 +6,5 @@ export const categoryMetadata = {
   tools: { name: "🛠️ Tools/Utils" },
   AI: { name: "🤖 ML/AI" },
   git: { name: "🔀 GIT" },
-  others: { name: "📦 Others" }
+  others: { name: "📦 Others" },
 };
