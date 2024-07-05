@@ -6,8 +6,8 @@ import { getSinglePage } from "@/lib/contentParser.astro";
 
 const { blog_folder } = config.settings;
 
-const allTags = await getAllTaxonomy(blog_folder, "tags", false);
-const tags = await getTaxonomy(blog_folder, "tags", false);
+const allTags = await getAllTaxonomy(blog_folder, "category", false);
+const tags = await getTaxonomy(blog_folder, "category", false);
 
 const posts = await getSinglePage(blog_folder);
 ---
