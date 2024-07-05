@@ -5,7 +5,7 @@ import ImageMod from "./ImageMod.astro";
 
 const { blog_folder } = config.settings;
 const { data, loading } = Astro.props;
-const { title, image, image_dark, date, tags } = data.data;
+const { title, image, image_dark, date, category } = data.data;
 ---
 
 <div class="bg-body dark:bg-darkmode-body">
@@ -40,10 +40,11 @@ const { title, image, image_dark, date, tags } = data.data;
       {title}
     </h4>
   </a>
-
+  
+  <!-- Pass null for tags as they are not to be displayed in BlogCard -->
   <BlogDetails
     date={date}
-    tags={tags}
-    className="bg-theme-light hover:bg-primary hover:text-white dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark"
+    category={category}
+    tags={null}
   />
 </div>

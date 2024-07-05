@@ -1,0 +1,49 @@
+---
+import config from "@/config/config.json";
+import { getAllTaxonomy, getTaxonomy } from "@/lib/taxonomyParser.astro";
+import { slugify } from "@/lib/utils/textConverter";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import CategoryDisplay from "@/components/CategoryDisplay.astro";
+import { categoryMetadata } from "@/lib/categoryMetadata";
+
+const { blog_folder } = config.settings;
+
+const allCategories = await getAllTaxonomy(blog_folder, "category", false);
+const categories = await getTaxonomy(blog_folder, "category", false);
+
+const posts = await getSinglePage(blog_folder);
+---
+
+<nav class="categories-nav text-center mb-8 md:mb-16">
+  <div class="container mx-auto px-4">
+    <ul class="flex flex-wrap justify-center gap-x-2 gap-y-4 md:gap-y-6">
+      <li class="category-item">
+        <a
+          href={`/${blog_folder}`}
+          class="category-link bg-theme-light px-2 md:px-4 py-1 md:py-2 md:text-lg text-dark dark:bg-darkmode-theme-light dark:text-darkmode-dark hover:bg-primary hover:text-white dark:hover:bg-darkmode-primary dark:hover:text-dark"
+        >
+          All
+          <span class="md:ml-2 rounded">
+            ({posts.length})
+          </span>
+        </a>
+      </li>
+      {categories.map((category: string) => {
+        const count = allCategories.filter((c) => c === category).length;
+        return (
+          <li class="category-item" key={category}>
+            <a
+              href={`/categories/${slugify(category)}`}
+              class="category-link bg-theme-light px-2 md:px-4 py-1 md:py-2 md:text-lg text-dark dark:bg-darkmode-theme-light dark:text-darkmode-dark hover:bg-primary hover:text-white dark:hover:bg-darkmode-primary dark:hover:text-dark"
+            >
+              <CategoryDisplay category={category} />
+              <span class="md:ml-2 rounded">
+                ({count})
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</nav>

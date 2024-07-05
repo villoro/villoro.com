@@ -1,7 +1,7 @@
 ---
 import config from "@/config/config.json";
 import BlogCard from "@/components/BlogCard.astro";
-import BlogTags from "@/components/BlogTags.astro";
+import BlogCategories from "@/components/BlogCategories.astro";
 import Pagination from "@/components/Pagination.astro";
 import Base from "@/layouts/Base.astro";
 import { getEntry } from "astro:content";
@@ -20,7 +20,7 @@ const { currentPosts, totalPages } = await fetchAndSortPosts(blog_folder, 1, con
   description={postIndex.data.description}
 >
   <section class="section pt-6 md:pt-14">
-    <BlogTags />
+    <BlogCategories />
 
     <!-- Posts -->
     <div class="container">
