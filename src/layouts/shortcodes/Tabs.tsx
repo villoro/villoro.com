@@ -16,16 +16,11 @@ const Tabs = ({ children }: { children: React.ReactElement }) => {
   }, [active]);
 
   const tabLinks = Array.from(
-    children.props.value.matchAll(
-      /<div\s+data-name="([^"]+)"[^>]*>(.*?)<\/div>/gs,
-    ),
-    (match: RegExpMatchArray) => ({ name: match[1], children: match[0] }),
+    children.props.value.matchAll(/<div\s+data-name="([^"]+)"[^>]*>(.*?)<\/div>/gs),
+    (match: RegExpMatchArray) => ({ name: match[1], children: match[0] })
   );
 
-  const handleKeyDown = (
-    event: React.KeyboardEvent<EventTarget>,
-    index: number,
-  ) => {
+  const handleKeyDown = (event: React.KeyboardEvent<EventTarget>, index: number) => {
     if (event.key === "Enter" || event.key === " ") {
       setActive(index);
     } else if (event.key === "ArrowRight") {
@@ -38,22 +33,20 @@ const Tabs = ({ children }: { children: React.ReactElement }) => {
   return (
     <div className="tab">
       <ul className="tab-nav">
-        {tabLinks.map(
-          (item: { name: string; children: string }, index: number) => (
-            <li
-              key={index}
-              className={`tab-nav-item ${index === active && "active"}`}
-              role="tab"
-              tabIndex={index === active ? 0 : -1}
-              onKeyDown={(event) => handleKeyDown(event, index)}
-              onClick={() => setActive(index)}
-              //@ts-ignore
-              ref={(ref) => (tabRefs.current[index] = ref)}
-            >
-              {item.name}
-            </li>
-          ),
-        )}
+        {tabLinks.map((item: { name: string; children: string }, index: number) => (
+          <li
+            key={index}
+            className={`tab-nav-item ${index === active ? "active" : ""}`}
+            role="tab"
+            tabIndex={index === active ? 0 : -1}
+            onKeyDown={(event) => handleKeyDown(event, index)}
+            onClick={() => setActive(index)}
+            //@ts-ignore
+            ref={(ref) => (tabRefs.current[index] = ref)}
+          >
+            {item.name}
+          </li>
+        ))}
       </ul>
       {tabLinks.map((item: { name: string; children: string }, i: number) => (
         <div
