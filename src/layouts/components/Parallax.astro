@@ -78,30 +78,35 @@ const highResImage = `${basePath}.jpg`; // High resolution image path
 </style>
 
 <script>
+  document.addEventListener('astro:after-swap', () => {
+    const parallaxElements = document.querySelectorAll('.parallax');
+    parallaxElements.forEach(parallax => {
+      const highResImage = parallax.getAttribute('data-high-res-image');
+      
+      const img = new Image();
+      img.src = highResImage;
+      img.onload = () => {
+        parallax.style.backgroundImage = `url(${highResImage})`;
+      };
+      img.onerror = () => {
+        console.error(`Failed to load high-resolution image: ${highResImage}`);
+      };
+    });
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
-    const parallax = document.querySelector('.parallax');
-    const highResImage = parallax.getAttribute('data-high-res-image');
-    
-    const observerCallback = (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const img = new Image();
-          img.src = highResImage;
-          img.onload = () => {
-            parallax.style.backgroundImage = `url(${highResImage})`;
-          };
-          observer.disconnect();
-        }
-      });
-    };
-
-    const observerOptions = {
-      root: null,
-      rootMargin: '0px',
-      threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-    observer.observe(parallax);
+    const parallaxElements = document.querySelectorAll('.parallax');
+    parallaxElements.forEach(parallax => {
+      const highResImage = parallax.getAttribute('data-high-res-image');
+      
+      const img = new Image();
+      img.src = highResImage;
+      img.onload = () => {
+        parallax.style.backgroundImage = `url(${highResImage})`;
+      };
+      img.onerror = () => {
+        console.error(`Failed to load high-resolution image: ${highResImage}`);
+      };
+    });
   });
 </script>
