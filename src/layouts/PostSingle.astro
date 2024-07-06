@@ -18,8 +18,8 @@ const { post } = Astro.props;
 
 const posts = await getSinglePage(blog_folder);
 const similarPosts = similarItems(post, posts, similar_items_length);
-const { Content } = await post.render();
-const { title, description, image, date, tags, category, headings, slug } = post.data;
+const { Content, headings } = await post.render();
+const { title, description, image, date, tags, category, slug } = post.data;
 
 const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
