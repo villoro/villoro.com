@@ -78,35 +78,24 @@ const highResImage = `${basePath}.jpg`; // High resolution image path
 </style>
 
 <script>
-  document.addEventListener('astro:after-swap', () => {
-    const parallaxElements = document.querySelectorAll('.parallax');
-    parallaxElements.forEach(parallax => {
-      const highResImage = parallax.getAttribute('data-high-res-image');
-      
-      const img = new Image();
-      img.src = highResImage;
-      img.onload = () => {
-        parallax.style.backgroundImage = `url(${highResImage})`;
-      };
-      img.onerror = () => {
-        console.error(`Failed to load high-resolution image: ${highResImage}`);
-      };
-    });
-  });
+  function loadHighResImage() {
+    const parallax = document.querySelector('.parallax');
+    const highResImage = parallax.getAttribute('data-high-res-image');
+    const img = new Image();
+    img.src = highResImage;
+    img.onload = () => {
+      parallax.style.backgroundImage = `url(${highResImage})`;
+    };
+    img.onerror = () => {
+      console.error(`Failed to load high-resolution image: ${highResImage}`);
+    };
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
-    const parallaxElements = document.querySelectorAll('.parallax');
-    parallaxElements.forEach(parallax => {
-      const highResImage = parallax.getAttribute('data-high-res-image');
-      
-      const img = new Image();
-      img.src = highResImage;
-      img.onload = () => {
-        parallax.style.backgroundImage = `url(${highResImage})`;
-      };
-      img.onerror = () => {
-        console.error(`Failed to load high-resolution image: ${highResImage}`);
-      };
-    });
+    loadHighResImage();
+  });
+
+  document.addEventListener('astro:after-swap', () => {
+    loadHighResImage();
   });
 </script>
