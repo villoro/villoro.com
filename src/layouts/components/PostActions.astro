@@ -1,0 +1,30 @@
+---
+import config from "@/config/config.json";
+import Share from "@/components/Share.astro";
+
+const { title, description, slug } = Astro.props;
+---
+
+<div class="row items-center justify-center">
+  <!-- Buy me a coffee -->
+  <div class="md:col-4 flex items-center justify-center mb-6 md:mb-0">
+    <a href="https://www.buymeacoffee.com/villoro">
+      <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=villoro&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" />
+    </a>
+  </div>
+
+  <!-- Subscribe -->
+  <div class="md:col-4 flex items-center justify-center mb-6 md:mb-0">
+    <a class="btn btn-primary lg:mt-1 lg:text-xl" href={config.subscribe.link}>
+      {config.subscribe.title}
+    </a>
+  </div>
+
+  <!-- Share social -->
+  <div class="md:col-4">
+    <div class="flex items-center justify-center">
+      <h5 class="mr-3">Share :</h5>
+      <Share className="social-icons" title={title} description={description} slug={slug} />
+    </div>
+  </div>
+</div>
