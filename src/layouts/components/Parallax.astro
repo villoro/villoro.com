@@ -1,9 +1,15 @@
 ---
 const { imageName } = Astro.props;
 const basePath = `/images/parallax/${imageName}`;
+const lowResImage = `${basePath}__small.jpg`;  // Low resolution image path
+const highResImage = `${basePath}.jpg`; // High resolution image path
 ---
 
-<div class="parallax bg-cover bg-center min-h-screen flex items-center justify-center text-white dark:text-darkmode-primary">
+<div
+  class="parallax bg-cover bg-center min-h-screen flex items-center justify-center text-white dark:text-darkmode-primary"
+  style={`background-image: url(${lowResImage});`}
+  data-high-res-image={highResImage}
+>
   <slot />
 </div>
 
@@ -15,6 +21,7 @@ const basePath = `/images/parallax/${imageName}`;
     background-repeat: no-repeat;
     background-position: top; /* Center the background image */
     background-size: 120% auto;
+    transition: background-image 0.5s ease-in-out;
   }
 
   /* Disable parallax effect on mobile devices */
@@ -26,7 +33,6 @@ const basePath = `/images/parallax/${imageName}`;
 
   @media (max-width: 330px) {
     .parallax {
-      background-image: url("/images/parallax/me_thinking__330.jpg");
       background-size: 150% auto;
       min-height: 100px;
     }
@@ -34,7 +40,6 @@ const basePath = `/images/parallax/${imageName}`;
 
   @media (min-width: 330px) and (max-width: 640px) {
     .parallax {
-      background-image: url("/images/parallax/me_thinking__640.jpg");
       background-size: 150% auto;
       min-height: 250px;
     }
@@ -42,37 +47,48 @@ const basePath = `/images/parallax/${imageName}`;
 
   @media (min-width: 640px) and (max-width: 768px) {
     .parallax {
-      background-image: url("/images/parallax/me_thinking__768.jpg");
       min-height: 350px;
     }
   }
 
   @media (min-width: 768px) and (max-width: 1024px) {
     .parallax {
-      background-image: url("/images/parallax/me_thinking__1024.jpg");
       min-height: 480px;
     }
   }
 
   @media (min-width: 1024px) and (max-width: 1280px) {
     .parallax {
-      background-image: url("/images/parallax/me_thinking__1280.jpg");
       min-height: 600px;
     }
   }
 
   @media (min-width: 1280px) and (max-width: 1536px) {
     .parallax {
-      background-image: url("/images/parallax/me_thinking__1536.jpg");
       min-height: 700px;
     }
   }
 
   @media (min-width: 1536px) {
     .parallax {
-      background-image: url("/images/parallax/me_thinking__2000.jpg");
       background-size: 100% auto;
       min-height: 800px;
     }
   }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const parallax = document.querySelector('.parallax');
+    const highResImage = parallax.getAttribute('data-high-res-image');
+    
+    const img = new Image();
+    img.src = highResImage;
+    img.onload = () => {
+      parallax.style.backgroundImage = `url(${highResImage})`;
+    };
+    img.onerror = () => {
+      console.error(`Failed to load high-resolution image: ${highResImage}`);
+    };
+  });
+</script>
