@@ -24,47 +24,49 @@ const { title, description, image, date, tags, category, slug } = post.data;
 const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
 
-<section class="section pt-7">
-  <div class="container relative">
-    <div class="row justify-center">
-      <!-- TOC for large screens -->
-      <div class="hidden lg:block lg:fixed lg:top-20 lg:right-0 lg:w-64 lg:h-full lg:overflow-y-auto lg:p-4 lg:bg-gray-100 lg:dark:bg-gray-800">
-        <TOC headings={headings} />
-      </div>
-
-      <article class="lg:col-10">
-        <h1 set:html={markdownify(title)} class="h2 mb-4" />
-
-        <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
-
-        {image && (
-          <div class="mb-10">
-            <ImageMod
-              src={image}
-              height={500}
-              width={1200}
-              alt={title}
-              class="w-full rounded"
-              format="webp"
-              loading="eager"
-            />
-          </div>
-        )}
-
-        <!-- TOC for small screens -->
-        <div class="block lg:hidden mb-10">
-          <TOC headings={headings} />
-        </div>
-
-        <div class="content mb-10">
-          <Content />
-        </div>
-      </article>
-
+<div class="relative">
+  <div class="grid grid-cols-1 lg:grid-cols-12">
+    <!-- TOC for large screens -->
+    <div class="hidden p-6 lg:block lg:col-span-3 lg:bg-theme-light lg:dark:bg-darkmode-theme-light">
+      <TOC headings={headings} />
     </div>
 
-    <PostActions title={title} description={description} slug={slug} />
-    <GiscusComments />
-    <RelatedPosts currentPost={post} />
+    <section class="section container pt-7 lg:col-span-9">
+      <div class="2xl:col-10">
+        <article class="">
+          <h1 set:html={markdownify(title)} class="h2 mb-4" />
+
+          <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
+
+          {image && (
+            <div class="mb-10">
+              <ImageMod
+                src={image}
+                height={500}
+                width={1200}
+                alt={title}
+                class="w-full rounded"
+                format="webp"
+                loading="eager"
+              />
+            </div>
+          )}
+
+          <!-- TOC for small screens -->
+          <div class="block lg:hidden mb-10">
+            <TOC headings={headings} />
+          </div>
+
+          <div class="content mb-10">
+            <Content />
+          </div>
+        </article>
+
+        <PostActions title={title} description={description} slug={slug} />
+        <GiscusComments />
+        <RelatedPosts currentPost={post} />
+
+      </div>
+    </section>
   </div>
-</section>
+</div>
