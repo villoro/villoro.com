@@ -27,7 +27,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 <div class="relative">
   <div class="grid grid-cols-1 lg:grid-cols-12">
     <!-- TOC for large screens -->
-    <div class="hidden p-6 lg:block lg:col-span-3 lg:bg-theme-light lg:dark:bg-darkmode-theme-light">
+    <div id="toc-container" class="hidden lg:block lg:col-span-3 lg:bg-theme-light lg:dark:bg-darkmode-theme-light lg:sticky lg:top-[67px] lg:overflow-y-auto">
       <TOC headings={headings} />
     </div>
 
@@ -65,8 +65,22 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
         <PostActions title={title} description={description} slug={slug} />
         <GiscusComments />
         <RelatedPosts currentPost={post} />
-
       </div>
     </section>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tocContainer = document.getElementById('toc-container');
+    const headerHeight = document.querySelector('.header').offsetHeight;
+
+    function adjustTOCHeight() {
+      const availableHeight = window.innerHeight - headerHeight;
+      tocContainer.style.height = `${availableHeight}px`;
+    }
+
+    adjustTOCHeight();
+    window.addEventListener('resize', adjustTOCHeight);
+  });
+</script>
