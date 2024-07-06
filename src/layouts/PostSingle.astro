@@ -1,13 +1,14 @@
 ---
 import config from "@/config/config.json";
-import BlogCard from "@/components/BlogCard.astro";
 import Share from "@/components/Share.astro";
 import BlogDetails from "@/components/BlogDetails.astro";
+import ImageMod from "@/components/ImageMod.astro";
 import TOC from "@/components/TOC.astro";
+import GiscusComments from "@/components/GiscusComments.astro";
+import RelatedPosts from "@/components/RelatedPosts.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import similarItems from "@/lib/utils/similarItems";
 import { markdownify } from "@/lib/utils/textConverter";
-import ImageMod from "./components/ImageMod.astro";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 import { humanize } from "@/lib/utils/textConverter";
 
@@ -16,8 +17,8 @@ const { post } = Astro.props;
 
 const posts = await getSinglePage(blog_folder);
 const similarPosts = similarItems(post, posts, similar_items_length);
-const { Content, headings } = await post.render();
-const { title, description, image, date, tags, category } = post.data;
+const { Content } = await post.render();
+const { title, description, image, date, tags, category, headings } = post.data;
 
 const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
@@ -44,7 +45,10 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
           </div>
         )}
 
-        <TOC headings={headings} />
+        <!-- TOC -->
+        <div class="mb-10">
+          <TOC headings={headings} />
+        </div>
 
         <div class="content mb-10">
           <Content />
@@ -76,39 +80,8 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
       </article>
     </div>
 
-    <!-- Comments with https://giscus.app/ -->
-    <div class="row justify-center pt-10">
-      <div class="lg:col-10">
-        <script
-          src="https://giscus.app/client.js"
-          data-repo="villoro/villoro.com"
-          data-repo-id="MDEwOlJlcG9zaXRvcnkxNTQxODUxMDA="
-          data-category="Announcements"
-          data-category-id="DIC_kwDOCTCtjM4CedzP"
-          data-mapping="pathname"
-          data-strict="0"
-          data-reactions-enabled="1"
-          data-emit-metadata="0"
-          data-input-position="top"
-          data-theme="preferred_color_scheme"
-          data-lang="en"
-          data-loading="lazy"
-          crossorigin="anonymous"
-          async
-        ></script>
-      </div>
-    </div>
+    <GiscusComments />
 
-    <!-- Related posts -->
-    <div class="section pb-0">
-      <h2 class="h3 mb-12 text-center">Related Posts</h2>
-      <div class="row justify-center">
-        {similarPosts.map((post) => (
-          <div class="sm:col-4">
-            <BlogCard data={post} loading="lazy" />
-          </div>
-        ))}
-      </div>
-    </div>
+    <RelatedPosts similarPosts={similarPosts} />
   </div>
 </section>

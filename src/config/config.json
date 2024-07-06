@@ -36,5 +36,12 @@
 
   "footer": {
     "email": "arnau@villoro.com"
+  },
+
+  "giscus": {
+    "repo": "villoro/villoro.com",
+    "repoId": "MDEwOlJlcG9zaXRvcnkxNTQxODUxMDA=",
+    "category": "Announcements",
+    "categoryId": "DIC_kwDOCTCtjM4CedzP"
   }
 }

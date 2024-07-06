@@ -1,0 +1,16 @@
+---
+import BlogCard from "@/components/BlogCard.astro";
+
+const { similarPosts } = Astro.props;
+---
+
+<div class="section pb-0">
+  <h2 class="h3 mb-12 text-center">Related Posts</h2>
+  <div class="row justify-center">
+    {similarPosts.map((post) => (
+      <div class="sm:col-4">
+        <BlogCard data={post} loading="lazy" />
+      </div>
+    ))}
+  </div>
+</div>
