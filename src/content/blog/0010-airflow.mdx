@@ -11,11 +11,9 @@ tags: [Tools, Orchestration, Tutorial, Setup]
 draft: false
 ---
 
+## 0. Intro
+
 Apache Airflow is a platform to programmatically author, schedule and monitor workflows. The airflow scheduler executes your tasks on an array of workers following the specified dependencies.
-
-## Table of Contents
-
-[TOC]
 
 ## 1. Why Airflow?
 People usually need to execute some tasks periodically. One common solution is to use <FancyLink linkText="Cron" url="https://es.wikipedia.org/wiki/Cron_(Unix)" dark="true"/> wich is a good solution for simple tasks. But the more tasks you need to schedule the more problems I will have, specially if there are dependencies between one another.

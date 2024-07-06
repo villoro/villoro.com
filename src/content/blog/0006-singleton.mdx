@@ -10,11 +10,9 @@ tags: [Python]
 draft: false
 ---
 
+## 0. Intro
+
 Python classes are very useful but sometimes they lack some features that might be very useful.
-
-## Table of Contents
-
-[TOC]
 
 ## 1. The problem
 Let's imagine you want to create a class that have some data. This class will also have a sync function to update the data. As an example let's create two loader instances of the same class.
@@ -144,7 +142,7 @@ loader2.get_value()
   \> 1
 </TerminalOutput>
 
-### 3.2. Mixing the two methods
+### 3.1. Mixing the two methods
 
 Be careful, you probably don't want to mix both types of variable assignments because it can yield unexpected results. Let's take the following example:
 
