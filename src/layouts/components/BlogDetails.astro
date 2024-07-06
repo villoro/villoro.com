@@ -1,7 +1,7 @@
 ---
 import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, slugify } from "@/lib/utils/textConverter";
-import { FaRegClock, FaTag, FaFolder } from "react-icons/fa";
+import { FaRegCalendar, FaTag, FaFolder } from "react-icons/fa";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 
 const { date, tags, category } = Astro.props;
@@ -11,7 +11,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 
 <ul class="flex flex-wrap items-center">
   <li class="mb-4 mr-4 inline-flex items-center">
-    <FaRegClock className="mr-1 -mt-1 inline-block" />
+    <FaRegCalendar className="mr-1 -mt-1 inline-block" />
     {dateFormat(date)}
   </li>
   <li class="mb-4 mr-4 inline-flex items-center">

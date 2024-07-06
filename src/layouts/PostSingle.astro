@@ -27,7 +27,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 <div class="relative">
   <div class="grid grid-cols-1 lg:grid-cols-12">
     <!-- TOC for large screens -->
-    <div id="toc-container" class="hidden lg:block lg:col-span-3 lg:bg-theme-light lg:dark:bg-darkmode-theme-light lg:sticky lg:overflow-y-auto">
+    <div id="toc-container" class="px-6 hidden lg:block lg:col-span-3 lg:bg-theme-light lg:dark:bg-darkmode-theme-light lg:sticky lg:overflow-y-auto">
       <TOC headings={headings} />
     </div>
 
@@ -71,29 +71,33 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  function adjustTOCHeight() {
     const tocContainer = document.getElementById('toc-container');
     const header = document.querySelector('.header');
     const footer = document.querySelector('footer');
+    
+    const headerHeight = header.offsetHeight;
+    const footerTop = footer.getBoundingClientRect().top;
+    const windowHeight = window.innerHeight;
+    const availableHeight = windowHeight - headerHeight;
 
-    function adjustTOCHeight() {
-      const headerHeight = header.offsetHeight;
-      const footerTop = footer.getBoundingClientRect().top;
-      const windowHeight = window.innerHeight;
-      const availableHeight = windowHeight - headerHeight;
+    tocContainer.style.top = `${headerHeight}px`;
+    tocContainer.style.maxHeight = `${availableHeight}px`;
 
-      tocContainer.style.top = `${headerHeight}px`;
-      tocContainer.style.maxHeight = `${availableHeight}px`;
-      
-      if (footerTop < windowHeight) {
-        tocContainer.style.height = `${footerTop - headerHeight}px`;
-      } else {
-        tocContainer.style.height = `${availableHeight}px`;
-      }
+    if (footerTop < windowHeight) {
+      tocContainer.style.height = `${footerTop - headerHeight}px`;
+    } else {
+      tocContainer.style.height = `${availableHeight}px`;
     }
+  }
 
+  document.addEventListener('DOMContentLoaded', () => {
     adjustTOCHeight();
     window.addEventListener('resize', adjustTOCHeight);
     window.addEventListener('scroll', adjustTOCHeight);
+  });
+
+  document.addEventListener('astro:after-swap', () => {
+    adjustTOCHeight();
   });
 </script>
