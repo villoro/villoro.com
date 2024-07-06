@@ -43,5 +43,9 @@
     "repoId": "MDEwOlJlcG9zaXRvcnkxNTQxODUxMDA=",
     "category": "Announcements",
     "categoryId": "DIC_kwDOCTCtjM4CedzP"
+  },
+
+  "blog": {
+    "toc": "Table of Contents"
   }
 }
