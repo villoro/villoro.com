@@ -33,7 +33,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 
     <section class="section container pt-7 lg:col-span-9">
       <div class="2xl:col-10">
-        <article class="">
+        <article>
           <h1 set:html={markdownify(title)} class="h2 mb-4" />
 
           <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
