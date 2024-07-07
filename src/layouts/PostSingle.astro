@@ -71,74 +71,89 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 </div>
 
 <script>
-  const header = document.querySelector('.header');
-  const footer = document.querySelector('footer');
-  const tocContainer = document.querySelector('#toc-container');
-  const headerHeight = header.offsetHeight;
-  const extraMargin = 48; // This ensures that section titles are visible
-
-  function isLargeScreen() {
-    return window.innerWidth >= 1024; // 1024 is the minimum for tailwind 'lg'
-  }
-
-  function adjustTOCHeight() {
-    if (!isLargeScreen()) return;
-
-    const footerTop = footer.getBoundingClientRect().top;
-    const windowHeight = window.innerHeight;
-    const availableHeight = windowHeight - headerHeight;
-    const tocHeight = footerTop < windowHeight ? footerTop - headerHeight : availableHeight;
-
-    tocContainer.style.top = `${headerHeight}px`;
-    tocContainer.style.maxHeight = `${availableHeight}px`;
-    tocContainer.style.height = `${tocHeight}px`;
-  }
-
-  function addIntersectionObserver() {
-    if (!isLargeScreen()) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const heading = entry.target.querySelector('h2, h3, h4, h5');
-        if (!heading) return;
-        const id = heading.getAttribute('id');
-
-        const links = document.querySelectorAll(`nav.toc li a[href="#${id}"]`);
-        links.forEach(link => {
-          if (entry.isIntersecting) {
-            link.classList.add('active');
-          } else {
-            link.classList.remove('active');
-          }
-        });
-      });
-    }, {
-      rootMargin: `-${headerHeight}px 0px 0px 0px`,
-      threshold: 0.01
-    });
-
-    document.querySelectorAll('.article-content section').forEach((section) => {
-      observer.observe(section);
-    });
-  }
-
-  function handleTocClick(event) {
-    if (event.target.tagName === 'A') {
-      event.preventDefault();
-      const targetId = event.target.getAttribute('href').substring(1);
-      const targetElement = document.getElementById(targetId);
-
-      window.scrollTo({
-        top: targetElement.offsetTop - headerHeight + extraMargin,
-        behavior: 'smooth'
-      });
-
-      // Update URL hash without jumping to section
-      history.pushState(null, '', `#${targetId}`);
-    }
-  }
-
   function setupTOC() {
+    const tocContainer = document.querySelector('#toc-container');
+    if (!tocContainer) {
+      removeTOCListeners();
+      return; // Exit if toc-container is not present
+    }
+
+    const header = document.querySelector('.header');
+    const footer = document.querySelector('footer');
+    const headerHeight = header.offsetHeight;
+    const extraMargin = 48; // This ensures that section titles are visible
+
+    function isLargeScreen() {
+      return window.innerWidth >= 1024; // 1024 is the minimum for tailwind 'lg'
+    }
+
+    function adjustTOCHeight() {
+      if (!isLargeScreen()) return;
+
+      console.log("Adjusting TOC height");
+
+      const footerTop = footer.getBoundingClientRect().top;
+      const windowHeight = window.innerHeight;
+      const availableHeight = windowHeight - headerHeight;
+      const tocHeight = footerTop < windowHeight ? footerTop - headerHeight : availableHeight;
+
+      tocContainer.style.top = `${headerHeight}px`;
+      tocContainer.style.maxHeight = `${availableHeight}px`;
+      tocContainer.style.height = `${tocHeight}px`;
+    }
+
+    function addIntersectionObserver() {
+      if (!isLargeScreen()) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const heading = entry.target.querySelector('h2, h3, h4, h5');
+          if (!heading) return;
+          const id = heading.getAttribute('id');
+
+          const links = document.querySelectorAll(`nav.toc li a[href="#${id}"]`);
+          links.forEach(link => {
+            if (entry.isIntersecting) {
+              link.classList.add('active');
+            } else {
+              link.classList.remove('active');
+            }
+          });
+        });
+      }, {
+        rootMargin: `-${headerHeight}px 0px 0px 0px`,
+        threshold: 0.01
+      });
+
+      document.querySelectorAll('.article-content section').forEach((section) => {
+        observer.observe(section);
+      });
+    }
+
+    function handleTocClick(event) {
+      if (event.target.tagName === 'A') {
+        event.preventDefault();
+        const targetId = event.target.getAttribute('href').substring(1);
+        const targetElement = document.getElementById(targetId);
+
+        window.scrollTo({
+          top: targetElement.offsetTop - headerHeight + extraMargin,
+          behavior: 'smooth'
+        });
+
+        // Update URL hash without jumping to section
+        history.pushState(null, '', `#${targetId}`);
+      }
+    }
+
+    function removeTOCListeners() {
+      window.removeEventListener('resize', adjustTOCHeight);
+      window.removeEventListener('scroll', adjustTOCHeight);
+      document.querySelectorAll('nav.toc').forEach(toc => {
+        toc.removeEventListener('click', handleTocClick);
+      });
+    }
+
     adjustTOCHeight();
     window.addEventListener('resize', adjustTOCHeight);
     window.addEventListener('scroll', adjustTOCHeight);
@@ -149,7 +164,6 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     });
   }
 
-  document.addEventListener('DOMContentLoaded', setupTOC);
   document.addEventListener('astro:after-swap', setupTOC);
   document.addEventListener('astro:page-load', setupTOC);
 </script>
