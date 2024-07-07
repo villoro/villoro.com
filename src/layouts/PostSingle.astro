@@ -92,6 +92,8 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
   }
 
   function addIntersectionObserver() {
+    const header = document.querySelector('.header');
+    const headerHeight = header.offsetHeight;
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const heading = entry.target.querySelector('h2, h3, h4, h5');
@@ -108,8 +110,8 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
         }
       });
     }, {
-      rootMargin: '0px 0px -80% 0px', // Adjust as necessary
-      threshold: [0.1, 0.9]
+      rootMargin: `-${headerHeight}px 0px 0px 0px`,
+      threshold: 0.01
     });
 
     document.querySelectorAll('.article-content section').forEach((section) => {
