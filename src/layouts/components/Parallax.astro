@@ -1,5 +1,11 @@
 ---
 const { imageName } = Astro.props;
+/*
+I have been unable to pass the imageName to the `background-image: url`
+The only option that worked is hardcoding. This is why there is a ParallaxHome and ParallaxAbout...
+
+I hope I can fix this in the future
+*/
 ---
 
 <div
@@ -20,6 +26,7 @@ const { imageName } = Astro.props;
 
   @media (max-width: 330px) {
     .parallax {
+      background-image: url("/images/parallax/me_thinking__330.jpg");
       background-size: 150% auto;
       min-height: 100px;
     }
@@ -27,6 +34,7 @@ const { imageName } = Astro.props;
 
   @media (min-width: 330px) and (max-width: 640px) {
     .parallax {
+      background-image: url("/images/parallax/me_thinking__640.jpg");
       background-size: 150% auto;
       min-height: 250px;
     }
@@ -34,76 +42,37 @@ const { imageName } = Astro.props;
 
   @media (min-width: 640px) and (max-width: 768px) {
     .parallax {
+      background-image: url("/images/parallax/me_thinking__768.jpg");
       min-height: 350px;
     }
   }
 
   @media (min-width: 768px) and (max-width: 1024px) {
     .parallax {
+      background-image: url("/images/parallax/me_thinking__1024.jpg");
       min-height: 480px;
     }
   }
 
   @media (min-width: 1024px) and (max-width: 1280px) {
     .parallax {
+      background-image: url("/images/parallax/me_thinking__1280.jpg");
       min-height: 600px;
     }
   }
 
   @media (min-width: 1280px) and (max-width: 1536px) {
     .parallax {
+      background-image: url("/images/parallax/me_thinking__1536.jpg");
       min-height: 700px;
     }
   }
 
   @media (min-width: 1536px) {
     .parallax {
+      background-image: url("/images/parallax/me_thinking__2000.jpg");
       background-size: 100% auto;
       min-height: 800px;
-    }
-  }
-
-  /* This shouldn't be that hardcoded. Maybe a switch case could help */
-
-  @media (max-width: 330px) {
-    .parallax {
-      background-image: url("images/parallax/me_thinking__330.jpg");
-    }
-  }
-
-  @media (min-width: 330px) and (max-width: 640px) {
-    .parallax {
-      background-image: url("images/parallax/me_thinking__640.jpg");
-    }
-  }
-
-  @media (min-width: 640px) and (max-width: 768px) {
-    .parallax {
-      background-image: url("images/parallax/me_thinking__768.jpg");
-    }
-  }
-
-  @media (min-width: 768px) and (max-width: 1024px) {
-    .parallax {
-      background-image: url("images/parallax/me_thinking__1024.jpg");
-    }
-  }
-
-  @media (min-width: 1024px) and (max-width: 1280px) {
-    .parallax {
-      background-image: url("images/parallax/me_thinking__1280.jpg");
-    }
-  }
-
-  @media (min-width: 1280px) and (max-width: 1536px) {
-    .parallax {
-      background-image: url("images/parallax/me_thinking__1536.jpg");
-    }
-  }
-
-  @media (min-width: 1536px) {
-    .parallax {
-      background-image: url("images/parallax/me_thinking__2000.jpg");
     }
   }
 </style>
