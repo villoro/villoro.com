@@ -75,7 +75,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
   const footer = document.querySelector('footer');
   const tocContainers = document.querySelectorAll('#toc-container');
   const headerHeight = header.offsetHeight;
-  const extraMargin = 42; // This ensures that section titles are visible
+  const extraMargin = 48; // This ensures that section titles are visible
 
   function isLargeScreen() {
     return window.innerWidth >= 1024; // 1024 is the minimum for tailwind 'lg'
