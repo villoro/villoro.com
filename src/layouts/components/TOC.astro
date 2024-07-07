@@ -29,7 +29,7 @@ const HeadingTag = `h${level}`;
 ---
 
 <nav class="toc mb-10">
-  <HeadingTag>{config.blog.toc}</HeadingTag>
+  <HeadingTag>{config.toc.title}</HeadingTag>
   <ul>
     {toc.map((heading) => (
       <TOCHeading heading={heading} />

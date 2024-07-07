@@ -78,7 +78,6 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     const header = document.querySelector('.header');
     const footer = document.querySelector('footer');
     const headerHeight = header.offsetHeight;
-    const extraMargin = 48; // This ensures that section titles are visible
 
     function isLargeScreen() {
       return window.innerWidth >= 1024; // 1024 is the minimum for tailwind 'lg'
@@ -86,8 +85,6 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 
     function adjustTOCHeight() {
       if (!isLargeScreen()) return;
-
-      console.log("Adjusting TOC height");
 
       const footerTop = footer.getBoundingClientRect().top;
       const windowHeight = window.innerHeight;
@@ -134,7 +131,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
         const targetElement = document.getElementById(targetId);
 
         window.scrollTo({
-          top: targetElement.offsetTop - headerHeight + extraMargin
+          top: targetElement.offsetTop - headerHeight + config.toc.extraMargin
         });
 
         // Update URL hash without jumping to section
@@ -143,13 +140,14 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     }
 
     adjustTOCHeight();
-    window.addEventListener('resize', adjustTOCHeight);
-    window.addEventListener('scroll', adjustTOCHeight);
     addIntersectionObserver();
 
     document.querySelectorAll('nav.toc').forEach(toc => {
       toc.addEventListener('click', handleTocClick);
     });
+
+    window.addEventListener('resize', adjustTOCHeight);
+    window.addEventListener('scroll', adjustTOCHeight);
   }
 
   document.addEventListener('astro:after-swap', setupTOC);
