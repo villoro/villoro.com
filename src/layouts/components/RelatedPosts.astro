@@ -1,0 +1,23 @@
+---
+import config from "@/config/config.json";
+import BlogCard from "@/components/BlogCard.astro";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import similarItems from "@/lib/utils/similarItems";
+
+const { blog_folder, similar_items_length } = config.settings;
+const { currentPost } = Astro.props;
+
+const posts = await getSinglePage(blog_folder);
+const similarPosts = similarItems(currentPost, posts, similar_items_length);
+---
+
+<div class="section pb-0">
+  <h2 class="h3 mb-12 text-center">Related Posts</h2>
+  <div class="row justify-center">
+    {similarPosts.map((post) => (
+      <div class="sm:col-4">
+        <BlogCard data={post} loading="lazy" />
+      </div>
+    ))}
+  </div>
+</div>

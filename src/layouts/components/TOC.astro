@@ -1,0 +1,38 @@
+---
+import TOCHeading from './TOCHeading.astro';
+
+const { headings } = Astro.props;
+
+const toc = buildHierarchy(headings);
+
+function buildHierarchy(headings: any) {
+  const toc: any[] = [];
+  const parentHeadings = new Map();
+
+  if (!headings)
+    return toc;
+
+  headings.forEach((h: any) => {
+    const heading = { ...h, subheadings: [] };
+    parentHeadings.set(heading.depth, heading);
+    if (heading.depth === 2) {
+      toc.push(heading);
+    } else {
+      parentHeadings.get(heading.depth - 1).subheadings.push(heading);
+    }
+  });
+
+  return toc;
+}
+---
+
+<nav class="toc-container content">
+  <h2 class="toc-title">Table of Contents</h2>
+  {toc && toc.length > 0 && (
+    <ul class="toc-list">
+      {toc.map((heading) => (
+        <TOCHeading heading={heading} />
+      ))}
+    </ul>
+  )}
+</nav>

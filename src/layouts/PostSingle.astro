@@ -1,12 +1,15 @@
 ---
 import config from "@/config/config.json";
-import BlogCard from "@/components/BlogCard.astro";
 import Share from "@/components/Share.astro";
 import BlogDetails from "@/components/BlogDetails.astro";
+import ImageMod from "@/components/ImageMod.astro";
+import TOC from "@/components/TOC.astro";
+import GiscusComments from "@/components/GiscusComments.astro";
+import RelatedPosts from "@/components/RelatedPosts.astro";
+import PostActions from "@/components/PostActions.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import similarItems from "@/lib/utils/similarItems";
 import { markdownify } from "@/lib/utils/textConverter";
-import ImageMod from "./components/ImageMod.astro";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 import { humanize } from "@/lib/utils/textConverter";
 
@@ -15,8 +18,8 @@ const { post } = Astro.props;
 
 const posts = await getSinglePage(blog_folder);
 const similarPosts = similarItems(post, posts, similar_items_length);
-const { Content } = await post.render();
-const { title, description, image, date, tags, category } = post.data;
+const { Content, headings } = await post.render();
+const { title, description, image, date, tags, category, slug } = post.data;
 
 const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
@@ -25,7 +28,6 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
   <div class="container">
     <div class="row justify-center">
       <article class="lg:col-10">
-
         <h1 set:html={markdownify(title)} class="h2 mb-4" />
 
         <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
@@ -44,70 +46,19 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
           </div>
         )}
 
+        <!-- TOC -->
+        <div class="mb-10">
+          <TOC headings={headings} />
+        </div>
+
         <div class="content mb-10">
           <Content />
         </div>
-
-        <div class="row items-center justify-center">
-          <!-- Buy me a coffee -->
-          <div class="md:col-4 flex items-center justify-center mb-6 md:mb-0">
-            <a href="https://www.buymeacoffee.com/villoro">
-              <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=villoro&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" />
-            </a>
-          </div>
-
-          <!-- Subscribe -->
-          <div class="md:col-4 flex items-center justify-center mb-6 md:mb-0">
-            <a class="btn btn-primary lg:mt-1 lg:text-xl" href={config.subscribe.link}>
-              {config.subscribe.title}
-            </a>
-          </div>
-
-          <!-- Share social -->
-          <div class="md:col-4">
-            <div class="flex items-center justify-center">
-              <h5 class="mr-3">Share :</h5>
-              <Share className="social-icons" title={title} description={description} slug={post.slug} />
-            </div>
-          </div>
-        </div>
-
       </article>
     </div>
 
-    <!-- Comments with https://giscus.app/ -->
-    <div class="row justify-center pt-10">
-      <div class="lg:col-10">
-        <script
-          src="https://giscus.app/client.js"
-          data-repo="villoro/villoro.com"
-          data-repo-id="MDEwOlJlcG9zaXRvcnkxNTQxODUxMDA="
-          data-category="Announcements"
-          data-category-id="DIC_kwDOCTCtjM4CedzP"
-          data-mapping="pathname"
-          data-strict="0"
-          data-reactions-enabled="1"
-          data-emit-metadata="0"
-          data-input-position="top"
-          data-theme="preferred_color_scheme"
-          data-lang="en"
-          data-loading="lazy"
-          crossorigin="anonymous"
-          async
-        ></script>
-      </div>
-    </div>
-
-    <!-- Related posts -->
-    <div class="section pb-0">
-      <h2 class="h3 mb-12 text-center">Related Posts</h2>
-      <div class="row justify-center">
-        {similarPosts.map((post) => (
-          <div class="sm:col-4">
-            <BlogCard data={post} loading="lazy" />
-          </div>
-        ))}
-      </div>
-    </div>
+    <PostActions title={title} description={description} slug={slug} />
+    <GiscusComments />
+    <RelatedPosts currentPost={post} />
   </div>
 </section>

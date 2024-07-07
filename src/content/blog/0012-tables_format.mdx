@@ -12,13 +12,11 @@ draft: false
 
 <script type="module" src="/js/posts/0012-plots-tables-format.js"></script>
 
+## 0. Intro
+
 When working with **pandas** people usually need to store one or more tables. There are a lot of different formats to do that. In this post I am going to compare the performance between them.
 
-## Table of Contents
-
-[TOC]
-
-## How test will be done
+## 1. How test will be done
 To do the tests I downloaded 3 datasets of different sizes:
 
 <div class="flex justify-center">
@@ -38,10 +36,10 @@ The formats that I will test are:
 * pickle
 * xlsx
 
-## Test 1: Simple test
+## 2. Test 1: Simple test
 First of all I will check how they perform without changing any parameters. I will do 100 iterations with the small dataset and 10 with the medium one.
 
-### Size small and iterations 100 with all extensions
+### 2.1. Size small and iterations 100 with all extensions
 
 First of all the average reading/writing times for each format.
 
@@ -52,7 +50,7 @@ First of all the average reading/writing times for each format.
 </Notice>
 
 
-### Size medium and iterations 10 with all extensions
+### 2.2. Size medium and iterations 10 with all extensions
 
 <canvas id="chart_s1_i10_time" style="width:100%;height:300px;"></canvas>
 
@@ -66,7 +64,7 @@ With the medium dataframe the results are very similar.
 
 Regarding the file size both `xlsx` and `parquet` outperform the rest. If you look the pandas documentation you will see that **all extensions except `xlsx` and `feather` allow different types of compression.** Also `parquet` uses a more agresive compression by default. We need to test the formats and the different compressions.
 
-## Test 2: Include compressions
+## 3. Test 2: Include compressions
 
 This time each extensions will be tested using all posible compressions. The results are:
 
@@ -107,7 +105,7 @@ It is not clear which formats and compressions work best. Let's plot reading/wri
   **csv** underperforms compared to the other formats
 </Notice>
 
-## Test 3: Using the big table
+## 4. Test 3: Using the big table
 
 For this test I will only use the best formats from the previous test. Those are:
 
@@ -146,7 +144,7 @@ With a file of this size it is clear that **parquet** is the best option. For co
   `parquet` is the best for big tables.
 </Notice>
 
-## Conlusions
+## 5. Conlusions
 
 1. `Excel` is only useful for **small** files when you are planning to open with an Excel program.
 2. `csv` performs poorly
