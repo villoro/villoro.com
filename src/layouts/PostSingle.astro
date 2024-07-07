@@ -77,7 +77,13 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
   const headerHeight = header.offsetHeight;
   const extraMargin = 42; // This ensures that section titles are visible
 
+  function isLargeScreen() {
+    return window.innerWidth >= 1024; // 1024 is the minimum for tailwind 'lg'
+  }
+
   function adjustTOCHeight() {
+    if (!isLargeScreen()) return;
+
     const footerTop = footer.getBoundingClientRect().top;
     const windowHeight = window.innerHeight;
     const availableHeight = windowHeight - headerHeight;
@@ -95,6 +101,8 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
   }
 
   function addIntersectionObserver() {
+    if (!isLargeScreen()) return;
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const heading = entry.target.querySelector('h2, h3, h4, h5');
@@ -156,4 +164,3 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     });
   });
 </script>
-
