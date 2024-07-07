@@ -144,7 +144,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function setupTOC() {
     adjustTOCHeight();
     window.addEventListener('resize', adjustTOCHeight);
     window.addEventListener('scroll', adjustTOCHeight);
@@ -153,14 +153,9 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     document.querySelectorAll('nav.toc').forEach(toc => {
       toc.addEventListener('click', handleTocClick);
     });
-  });
+  }
 
-  document.addEventListener('astro:after-swap', () => {
-    adjustTOCHeight();
-    addIntersectionObserver();
-
-    document.querySelectorAll('nav.toc').forEach(toc => {
-      toc.addEventListener('click', handleTocClick);
-    });
-  });
+  document.addEventListener('DOMContentLoaded', setupTOC);
+  document.addEventListener('astro:after-swap', setupTOC);
+  document.addEventListener('astro:page-load', setupTOC);
 </script>
