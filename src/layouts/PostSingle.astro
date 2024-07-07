@@ -33,7 +33,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 
     <section class="section container py-7 lg:col-span-9">
       <div class="2xl:col-10">
-        <article>
+        <article class="article-content">
           <h1 set:html={markdownify(title)} class="h2 mb-4" />
 
           <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
@@ -91,13 +91,41 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     }
   }
 
+  function addIntersectionObserver() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const heading = entry.target.querySelector('h2, h3, h4, h5');
+        if (!heading) return;
+        const id = heading.getAttribute('id');
+
+        const link = document.querySelector(`nav.toc li a[href="#${id}"]`);
+        if (!link) return;
+
+        if (entry.isIntersecting) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }, {
+      rootMargin: '0px 0px -80% 0px', // Adjust as necessary
+      threshold: [0.1, 0.9]
+    });
+
+    document.querySelectorAll('.article-content section').forEach((section) => {
+      observer.observe(section);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     adjustTOCHeight();
     window.addEventListener('resize', adjustTOCHeight);
     window.addEventListener('scroll', adjustTOCHeight);
+    addIntersectionObserver();
   });
 
   document.addEventListener('astro:after-swap', () => {
     adjustTOCHeight();
+    addIntersectionObserver();
   });
 </script>

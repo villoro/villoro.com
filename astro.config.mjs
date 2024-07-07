@@ -6,6 +6,7 @@ import AutoImport from "astro-auto-import";
 import { defineConfig, squooshImageService } from "astro/config";
 import remarkCollapse from "remark-collapse";
 import remarkToc from "remark-toc";
+import sectionize from "@hbsnow/rehype-sectionize";
 import config from "./src/config/config.json";
 
 // https://astro.build/config
@@ -49,6 +50,7 @@ export default defineConfig({
         },
       ],
     ],
+    rehypePlugins: [sectionize], // Add the plugin here
     shikiConfig: {
       theme: "monokai",
       wrap: true,
