@@ -24,41 +24,80 @@ const { title, description, image, date, tags, category, slug } = post.data;
 const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
 
-<section class="section pt-7">
-  <div class="container">
-    <div class="row justify-center">
-      <article class="lg:col-10">
-        <h1 set:html={markdownify(title)} class="h2 mb-4" />
-
-        <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
-
-        {image && (
-          <div class="mb-10">
-            <ImageMod
-              src={image}
-              height={500}
-              width={1200}
-              alt={title}
-              class="w-full rounded"
-              format="webp"
-              loading="eager"
-            />
-          </div>
-        )}
-
-        <!-- TOC -->
-        <div class="mb-10">
-          <TOC headings={headings} />
-        </div>
-
-        <div class="content mb-10">
-          <Content />
-        </div>
-      </article>
+<div class="relative">
+  <div class="grid grid-cols-1 lg:grid-cols-12">
+    <!-- TOC for large screens -->
+    <div id="toc-container" class="px-6 hidden lg:block lg:col-span-3 lg:bg-theme-light lg:dark:bg-darkmode-theme-light lg:sticky lg:overflow-y-auto">
+      <TOC headings={headings} />
     </div>
 
-    <PostActions title={title} description={description} slug={slug} />
-    <GiscusComments />
-    <RelatedPosts currentPost={post} />
+    <section class="section container py-7 lg:col-span-9">
+      <div class="2xl:col-10">
+        <article>
+          <h1 set:html={markdownify(title)} class="h2 mb-4" />
+
+          <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
+
+          {image && (
+            <div class="mb-10">
+              <ImageMod
+                src={image}
+                height={500}
+                width={1200}
+                alt={title}
+                class="w-full rounded"
+                format="webp"
+                loading="eager"
+              />
+            </div>
+          )}
+
+          <!-- TOC for small screens -->
+          <div class="block lg:hidden mb-10">
+            <TOC headings={headings} />
+          </div>
+
+          <div class="content mb-10">
+            <Content />
+          </div>
+        </article>
+
+        <PostActions title={title} description={description} slug={slug} />
+        <GiscusComments />
+        <RelatedPosts currentPost={post} />
+      </div>
+    </section>
   </div>
-</section>
+</div>
+
+<script>
+  function adjustTOCHeight() {
+    const tocContainer = document.getElementById('toc-container');
+    const header = document.querySelector('.header');
+    const footer = document.querySelector('footer');
+    
+    const headerHeight = header.offsetHeight;
+    const footerTop = footer.getBoundingClientRect().top;
+    const windowHeight = window.innerHeight;
+    const availableHeight = windowHeight - headerHeight;
+
+    tocContainer.style.top = `${headerHeight}px`;
+    tocContainer.style.maxHeight = `${availableHeight}px`;
+
+    if (footerTop < windowHeight) {
+      tocContainer.style.height = `${footerTop - headerHeight}px`;
+    } else {
+      tocContainer.style.height = `${availableHeight}px`;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    adjustTOCHeight();
+    window.addEventListener('resize', adjustTOCHeight);
+    window.addEventListener('scroll', adjustTOCHeight);
+  });
+
+  document.addEventListener('astro:after-swap', () => {
+    adjustTOCHeight();
+  });
+</script>
