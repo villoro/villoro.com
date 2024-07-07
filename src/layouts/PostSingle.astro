@@ -53,7 +53,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
           )}
 
           <!-- TOC for small screens -->
-          <div id="toc-container" class="block lg:hidden mb-10">
+          <div class="block lg:hidden mb-10">
             <TOC headings={headings} />
           </div>
 
@@ -73,7 +73,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 <script>
   const header = document.querySelector('.header');
   const footer = document.querySelector('footer');
-  const tocContainers = document.querySelectorAll('#toc-container');
+  const tocContainer = document.querySelector('#toc-container');
   const headerHeight = header.offsetHeight;
   const extraMargin = 48; // This ensures that section titles are visible
 
@@ -87,17 +87,11 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     const footerTop = footer.getBoundingClientRect().top;
     const windowHeight = window.innerHeight;
     const availableHeight = windowHeight - headerHeight;
+    const tocHeight = footerTop < windowHeight ? footerTop - headerHeight : availableHeight;
 
-    tocContainers.forEach(tocContainer => {
-      tocContainer.style.top = `${headerHeight}px`;
-      tocContainer.style.maxHeight = `${availableHeight}px`;
-
-      if (footerTop < windowHeight) {
-        tocContainer.style.height = `${footerTop - headerHeight}px`;
-      } else {
-        tocContainer.style.height = `${availableHeight}px`;
-      }
-    });
+    tocContainer.style.top = `${headerHeight}px`;
+    tocContainer.style.maxHeight = `${availableHeight}px`;
+    tocContainer.style.height = `${tocHeight}px`;
   }
 
   function addIntersectionObserver() {
