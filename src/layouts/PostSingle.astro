@@ -33,7 +33,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 
     <section class="section container py-7 lg:col-span-9">
       <div class="2xl:col-10">
-        <article>
+        <article class="article-content">
           <h1 set:html={markdownify(title)} class="h2 mb-4" />
 
           <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
@@ -53,7 +53,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
           )}
 
           <!-- TOC for small screens -->
-          <div class="block lg:hidden mb-10">
+          <div id="toc-container" class="block lg:hidden mb-10">
             <TOC headings={headings} />
           </div>
 
@@ -71,33 +71,91 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 </div>
 
 <script>
+  const header = document.querySelector('.header');
+  const footer = document.querySelector('footer');
+  const tocContainers = document.querySelectorAll('#toc-container');
+  const headerHeight = header.offsetHeight;
+  const extraMargin = 48; // This ensures that section titles are visible
+
+  function isLargeScreen() {
+    return window.innerWidth >= 1024; // 1024 is the minimum for tailwind 'lg'
+  }
+
   function adjustTOCHeight() {
-    const tocContainer = document.getElementById('toc-container');
-    const header = document.querySelector('.header');
-    const footer = document.querySelector('footer');
-    
-    const headerHeight = header.offsetHeight;
+    if (!isLargeScreen()) return;
+
     const footerTop = footer.getBoundingClientRect().top;
     const windowHeight = window.innerHeight;
     const availableHeight = windowHeight - headerHeight;
 
-    tocContainer.style.top = `${headerHeight}px`;
-    tocContainer.style.maxHeight = `${availableHeight}px`;
+    tocContainers.forEach(tocContainer => {
+      tocContainer.style.top = `${headerHeight}px`;
+      tocContainer.style.maxHeight = `${availableHeight}px`;
 
-    if (footerTop < windowHeight) {
-      tocContainer.style.height = `${footerTop - headerHeight}px`;
-    } else {
-      tocContainer.style.height = `${availableHeight}px`;
+      if (footerTop < windowHeight) {
+        tocContainer.style.height = `${footerTop - headerHeight}px`;
+      } else {
+        tocContainer.style.height = `${availableHeight}px`;
+      }
+    });
+  }
+
+  function addIntersectionObserver() {
+    if (!isLargeScreen()) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const heading = entry.target.querySelector('h2, h3, h4, h5');
+        if (!heading) return;
+        const id = heading.getAttribute('id');
+
+        const links = document.querySelectorAll(`nav.toc li a[href="#${id}"]`);
+        links.forEach(link => {
+          if (entry.isIntersecting) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      });
+    }, {
+      rootMargin: `-${headerHeight}px 0px 0px 0px`,
+      threshold: 0.01
+    });
+
+    document.querySelectorAll('.article-content section').forEach((section) => {
+      observer.observe(section);
+    });
+  }
+
+  function handleTocClick(event) {
+    if (event.target.tagName === 'A') {
+      event.preventDefault();
+      const targetId = event.target.getAttribute('href').substring(1);
+      const targetElement = document.getElementById(targetId);
+
+      window.scrollTo({
+        top: targetElement.offsetTop - headerHeight + extraMargin,
+        behavior: 'smooth'
+      });
+
+      // Update URL hash without jumping to section
+      history.pushState(null, '', `#${targetId}`);
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function setupTOC() {
     adjustTOCHeight();
     window.addEventListener('resize', adjustTOCHeight);
     window.addEventListener('scroll', adjustTOCHeight);
-  });
+    addIntersectionObserver();
 
-  document.addEventListener('astro:after-swap', () => {
-    adjustTOCHeight();
-  });
+    document.querySelectorAll('nav.toc').forEach(toc => {
+      toc.addEventListener('click', handleTocClick);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', setupTOC);
+  document.addEventListener('astro:after-swap', setupTOC);
+  document.addEventListener('astro:page-load', setupTOC);
 </script>

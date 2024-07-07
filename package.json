@@ -1,7 +1,7 @@
 {
   "name": "villoro",
-  "version": "2.5.0",
-  "description": "Gestkom web page",
+  "version": "2.5.1",
+  "description": "My personal website",
   "author": "Arnau Villoro <arnau@villoro.com>",
   "license": "MIT",
   "packageManager": "yarn@1.22.19",
@@ -37,6 +37,7 @@
     "remark-toc": "^9.0.0"
   },
   "devDependencies": {
+    "@hbsnow/rehype-sectionize": "^1.0.7",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
     "@types/marked": "^5.0.2",
