@@ -60,7 +60,7 @@ input#nav-toggle:checked ~ #nav-menu {
   @apply inline-flex;
 
   label {
-    @apply relative inline-block h-4 w-6 cursor-pointer rounded-2xl bg-border lg:w-10;
+    @apply relative inline-block h-4 w-6 cursor-pointer rounded-2xl bg-border lg:w-10 bg-primary dark:bg-darkmode-primary;
   }
 
   input {
