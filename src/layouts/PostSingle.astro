@@ -71,12 +71,12 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 </div>
 
 <script>
+  const header = document.querySelector('.header');
+  const footer = document.querySelector('footer');
+  const tocContainer = document.getElementById('toc-container');
+  const headerHeight = header.offsetHeight;
+
   function adjustTOCHeight() {
-    const tocContainer = document.getElementById('toc-container');
-    const header = document.querySelector('.header');
-    const footer = document.querySelector('footer');
-    
-    const headerHeight = header.offsetHeight;
     const footerTop = footer.getBoundingClientRect().top;
     const windowHeight = window.innerHeight;
     const availableHeight = windowHeight - headerHeight;
@@ -92,8 +92,6 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
   }
 
   function addIntersectionObserver() {
-    const header = document.querySelector('.header');
-    const headerHeight = header.offsetHeight;
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const heading = entry.target.querySelector('h2, h3, h4, h5');
@@ -131,3 +129,4 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     addIntersectionObserver();
   });
 </script>
+
