@@ -2,7 +2,7 @@
 import config from "@/config/config.json";
 import TOCHeading from './TOCHeading.astro';
 
-const { headings } = Astro.props;
+const { headings, level = 2 } = Astro.props;
 
 const toc = buildHierarchy(headings);
 
@@ -24,10 +24,12 @@ function buildHierarchy(headings) {
 
   return toc;
 }
+
+const HeadingTag = `h${level}`;
 ---
 
 <nav class="toc mb-10">
-  <h2>{config.blog.toc}</h2>
+  <HeadingTag>{config.blog.toc}</HeadingTag>
   <ul>
     {toc.map((heading) => (
       <TOCHeading heading={heading} />

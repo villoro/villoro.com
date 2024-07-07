@@ -179,22 +179,22 @@
   @apply mb-10;
 
   a {
-    @apply underline text-dark hover:text-primary dark:text-darkmode-light hover:dark:text-darkmode-primary;
+    @apply hover:text-primary hover:dark:text-darkmode-primary;
   }
 
-  h2 {
+  h1, h2, h3, h4, h5, h6 {
     @apply mb-[.3em] mt-[.6em];
   }
 
   ul {
-    @apply list-disc pl-5;
+    @apply list-disc pl-7;
   }
 
   li {
     @apply mb-2;
 
     ul {
-      @apply mt-1;
+      @apply mt-1 pl-5;
     }
 
     li {
