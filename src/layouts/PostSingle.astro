@@ -53,7 +53,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
           )}
 
           <!-- TOC for small screens -->
-          <div class="block lg:hidden mb-10">
+          <div id="toc-container" class="block lg:hidden mb-10">
             <TOC headings={headings} />
           </div>
 
@@ -75,6 +75,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
   const footer = document.querySelector('footer');
   const tocContainer = document.getElementById('toc-container');
   const headerHeight = header.offsetHeight;
+  const extraMargin = 42; // This ensures that section titles are visible
 
   function adjustTOCHeight() {
     const footerTop = footer.getBoundingClientRect().top;
@@ -117,16 +118,35 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     });
   }
 
+  function handleTocClick(event) {
+    if (event.target.tagName === 'A') {
+      event.preventDefault();
+      const targetId = event.target.getAttribute('href').substring(1);
+      const targetElement = document.getElementById(targetId);
+
+      window.scrollTo({
+        top: targetElement.offsetTop - headerHeight + extraMargin,
+        behavior: 'smooth'
+      });
+
+      // Update URL hash without jumping to section
+      history.pushState(null, '', `#${targetId}`);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     adjustTOCHeight();
     window.addEventListener('resize', adjustTOCHeight);
     window.addEventListener('scroll', adjustTOCHeight);
     addIntersectionObserver();
+
+    document.querySelector('nav.toc').addEventListener('click', handleTocClick);
   });
 
   document.addEventListener('astro:after-swap', () => {
     adjustTOCHeight();
     addIntersectionObserver();
+
+    document.querySelector('nav.toc').addEventListener('click', handleTocClick);
   });
 </script>
-
