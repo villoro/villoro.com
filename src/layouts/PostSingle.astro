@@ -73,7 +73,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 <script>
   const header = document.querySelector('.header');
   const footer = document.querySelector('footer');
-  const tocContainer = document.getElementById('toc-container');
+  const tocContainers = document.querySelectorAll('#toc-container');
   const headerHeight = header.offsetHeight;
   const extraMargin = 42; // This ensures that section titles are visible
 
@@ -82,14 +82,16 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     const windowHeight = window.innerHeight;
     const availableHeight = windowHeight - headerHeight;
 
-    tocContainer.style.top = `${headerHeight}px`;
-    tocContainer.style.maxHeight = `${availableHeight}px`;
+    tocContainers.forEach(tocContainer => {
+      tocContainer.style.top = `${headerHeight}px`;
+      tocContainer.style.maxHeight = `${availableHeight}px`;
 
-    if (footerTop < windowHeight) {
-      tocContainer.style.height = `${footerTop - headerHeight}px`;
-    } else {
-      tocContainer.style.height = `${availableHeight}px`;
-    }
+      if (footerTop < windowHeight) {
+        tocContainer.style.height = `${footerTop - headerHeight}px`;
+      } else {
+        tocContainer.style.height = `${availableHeight}px`;
+      }
+    });
   }
 
   function addIntersectionObserver() {
@@ -99,14 +101,14 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
         if (!heading) return;
         const id = heading.getAttribute('id');
 
-        const link = document.querySelector(`nav.toc li a[href="#${id}"]`);
-        if (!link) return;
-
-        if (entry.isIntersecting) {
-          link.classList.add('active');
-        } else {
-          link.classList.remove('active');
-        }
+        const links = document.querySelectorAll(`nav.toc li a[href="#${id}"]`);
+        links.forEach(link => {
+          if (entry.isIntersecting) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
       });
     }, {
       rootMargin: `-${headerHeight}px 0px 0px 0px`,
@@ -140,13 +142,18 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     window.addEventListener('scroll', adjustTOCHeight);
     addIntersectionObserver();
 
-    document.querySelector('nav.toc').addEventListener('click', handleTocClick);
+    document.querySelectorAll('nav.toc').forEach(toc => {
+      toc.addEventListener('click', handleTocClick);
+    });
   });
 
   document.addEventListener('astro:after-swap', () => {
     adjustTOCHeight();
     addIntersectionObserver();
 
-    document.querySelector('nav.toc').addEventListener('click', handleTocClick);
+    document.querySelectorAll('nav.toc').forEach(toc => {
+      toc.addEventListener('click', handleTocClick);
+    });
   });
 </script>
+
