@@ -73,10 +73,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 <script>
   function setupTOC() {
     const tocContainer = document.querySelector('#toc-container');
-    if (!tocContainer) {
-      removeTOCListeners();
-      return; // Exit if toc-container is not present
-    }
+    if (!tocContainer) return;
 
     const header = document.querySelector('.header');
     const footer = document.querySelector('footer');
@@ -137,21 +134,12 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
         const targetElement = document.getElementById(targetId);
 
         window.scrollTo({
-          top: targetElement.offsetTop - headerHeight + extraMargin,
-          behavior: 'smooth'
+          top: targetElement.offsetTop - headerHeight + extraMargin
         });
 
         // Update URL hash without jumping to section
         history.pushState(null, '', `#${targetId}`);
       }
-    }
-
-    function removeTOCListeners() {
-      window.removeEventListener('resize', adjustTOCHeight);
-      window.removeEventListener('scroll', adjustTOCHeight);
-      document.querySelectorAll('nav.toc').forEach(toc => {
-        toc.removeEventListener('click', handleTocClick);
-      });
     }
 
     adjustTOCHeight();
