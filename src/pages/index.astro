@@ -1,7 +1,7 @@
 ---
 import config from "@/config/config.json";
 import Base from "@/layouts/Base.astro";
-import Parallax from "@/components/Parallax.astro";
+import ParallaxHome from "@/components/ParallaxHome.astro";
 import BlogCard from "@/components/BlogCard.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import { sortByDate } from "@/lib/utils/sortFunctions";
@@ -36,12 +36,12 @@ const importImage = async (imageName, darkMode = false) => {
 
 <Base>
   <!-- Banner -->
-  <Parallax imageName={banner.image}>
+  <ParallaxHome imageName={banner.image}>
     <div class="text-center md:col-10 lg:col-7">
       <h1 set:html={markdownify(banner.title)} class="mb-4 text-white dark:text-darkmode-primary text-h3 lg:text-h1" />
       <p set:html={markdownify(banner.content)} class="mb-8" />
     </div>
-  </Parallax>
+  </ParallaxHome>
 
   <!-- Slogan -->
   <section class="section p-6 lg:p-14 bg-primary dark:bg-darkmode-primary">

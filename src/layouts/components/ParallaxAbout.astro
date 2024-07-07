@@ -1,0 +1,78 @@
+---
+const { imageName } = Astro.props;
+/*
+I have been unable to pass the imageName to the `background-image: url`
+The only option that worked is hardcoding. This is why there is a ParallaxHome and ParallaxAbout...
+
+I hope I can fix this in the future
+*/
+---
+
+<div
+  class="parallax bg-cover bg-center min-h-screen flex items-center justify-center text-white dark:text-darkmode-primary"
+>
+  <slot />
+</div>
+
+<style>
+  /* Parallax effect */
+  .parallax {
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top; /* Center the background image */
+    background-size: 120% auto;
+  }
+
+  @media (max-width: 330px) {
+    .parallax {
+      background-image: url("/images/parallax/me_cnn__330.jpg");
+      background-size: 150% auto;
+      min-height: 100px;
+    }
+  }
+
+  @media (min-width: 330px) and (max-width: 640px) {
+    .parallax {
+      background-image: url("/images/parallax/me_cnn__640.jpg");
+      background-size: 150% auto;
+      min-height: 250px;
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 768px) {
+    .parallax {
+      background-image: url("/images/parallax/me_cnn__768.jpg");
+      min-height: 350px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .parallax {
+      background-image: url("/images/parallax/me_cnn__1024.jpg");
+      min-height: 480px;
+    }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1280px) {
+    .parallax {
+      background-image: url("/images/parallax/me_cnn__1280.jpg");
+      min-height: 600px;
+    }
+  }
+
+  @media (min-width: 1280px) and (max-width: 1536px) {
+    .parallax {
+      background-image: url("/images/parallax/me_cnn__1536.jpg");
+      min-height: 700px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .parallax {
+      background-image: url("/images/parallax/me_cnn__2000.jpg");
+      background-size: 100% auto;
+      min-height: 800px;
+    }
+  }
+</style>
