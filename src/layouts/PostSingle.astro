@@ -78,6 +78,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
     const header = document.querySelector('.header');
     const footer = document.querySelector('footer');
     const headerHeight = header.offsetHeight;
+    const extraMargin = 48; // This ensures that section titles are visible
 
     function isLargeScreen() {
       return window.innerWidth >= 1024; // 1024 is the minimum for tailwind 'lg'
@@ -131,7 +132,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
         const targetElement = document.getElementById(targetId);
 
         window.scrollTo({
-          top: targetElement.offsetTop - headerHeight + config.toc.extraMargin
+          top: targetElement.offsetTop - headerHeight + extraMargin
         });
 
         // Update URL hash without jumping to section

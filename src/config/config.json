@@ -45,8 +45,7 @@
     "categoryId": "DIC_kwDOCTCtjM4CedzP"
   },
 
-  "toc": {
-    "title": "Table of Contents",
-    "extraMargin": 48
+  "blog": {
+    "toc": "Table of Contents"
   }
 }
