@@ -174,3 +174,32 @@
     @apply my-2 text-black dark:text-white
   }
 }
+
+.toc {
+  @apply mb-10;
+
+  a {
+    @apply underline text-dark hover:text-primary dark:text-darkmode-light hover:dark:text-darkmode-primary;
+  }
+
+  h2 {
+    @apply mb-[.3em] mt-[.6em];
+  }
+
+  ul {
+    @apply list-disc pl-5;
+  }
+
+  li {
+    @apply mb-2;
+
+    ul {
+      @apply mt-1;
+    }
+
+    li {
+      @apply mb-1;
+    }
+  }
+}
+
