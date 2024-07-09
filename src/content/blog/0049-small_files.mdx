@@ -7,18 +7,18 @@ date: 2024-07-05
 image: "/images/blog/0049-handling-small-files.jpg"
 category: DE
 tags: ["DE", "Performance", "Spark"]
-draft: true
+draft: false
 ---
 
 ## 0. Motivation
 
 ## 1. What's the problem
 
-Partitions less than 1 GB bad: https://www.linkedin.com/pulse/delta-lake-optimisation-guide-deenar-toraskar/
+Partitions less than 1 GB bad: <FancyLink linkText="Delta Lake Optimisation Guide" url="https://www.linkedin.com/pulse/delta-lake-optimisation-guide-deenar-toraskar/"/>
 
 ### 1.1. Performance
 
-4x based on https://medium.com/@satadru1998/%EF%B8%8F-fixing-the-small-file-problem-in-data-lake-with-spark-2cc9fbb86796
+4x based on <FancyLink linkText="Fixing the Small File Problem in Data Lake with Spark" url="https://medium.com/@satadru1998/%EF%B8%8F-fixing-the-small-file-problem-in-data-lake-with-spark-2cc9fbb86796" dark="true"/>
 
 ### 1.2. Costs
 
@@ -26,8 +26,8 @@ Partitions less than 1 GB bad: https://www.linkedin.com/pulse/delta-lake-optimis
 
 ## 2. Good file size
 
-1 GB: https://delta.io/blog/2023-01-25-delta-lake-small-file-compaction-optimize/
-100 MB to 10 GB: https://duckdb.org/docs/guides/performance/file_formats.html#parquet-file-sizes
+1 GB: <FancyLink linkText="Delta Lake Small File Compaction with OPTIMIZE" url="https://delta.io/blog/2023-01-25-delta-lake-small-file-compaction-optimize/"/>
+100 MB to 10 GB: <FancyLink linkText="DuckDB | Parquet File Sizes" url="https://duckdb.org/docs/guides/performance/file_formats.html#parquet-file-sizes"/>
 
 ## 3. How to avoid it?
 
