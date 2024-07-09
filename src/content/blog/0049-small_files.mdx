@@ -14,15 +14,24 @@ draft: false
 
 ## 1. What's the problem
 
-Partitions less than 1 GB bad: <FancyLink linkText="Delta Lake Optimisation Guide" url="https://www.linkedin.com/pulse/delta-lake-optimisation-guide-deenar-toraskar/"/>
+In data lakes, managing the size of partitions is crucial for maintaining optimal performance and cost-efficiency.
+Partitions that are too small, generally less than 1 GB, can significantly degrade performance and inflate costs.
+This issue is well-documented in the <FancyLink linkText="Delta Lake Optimisation Guide" url="https://www.linkedin.com/pulse/delta-lake-optimisation-guide-deenar-toraskar/"/>, which highlights the adverse effects of small partitions on data processing and querying efficiency.
 
 ### 1.1. Performance
 
-4x based on <FancyLink linkText="Fixing the Small File Problem in Data Lake with Spark" url="https://medium.com/@satadru1998/%EF%B8%8F-fixing-the-small-file-problem-in-data-lake-with-spark-2cc9fbb86796" dark="true"/>
+According to the article <FancyLink linkText="Fixing the Small File Problem in Data Lake with Spark" url="https://medium.com/@satadru1998/%EF%B8%8F-fixing-the-small-file-problem-in-data-lake-with-spark-2cc9fbb86796" dark="true"/>:
+
+> Small files can cause a performance degradation of up to **4x**.
+
+This is because small files increase the number of tasks required to process the data, leading to higher overhead in task management and scheduling. Each task incurs a startup cost, and when there are many small tasks, this overhead can accumulate, resulting in significant slowdowns.
 
 ### 1.2. Costs
 
-10x Glovo
+Another significant issue with small file partitions is the impact on costs.
+When I was working at Glovo, my colleagues observed that reducing the number of small files in heavily queried tables resulted in a **10x cost reduction**.
+
+This significant saving was primarily due to the decreased number of `S3 GET requests`, which are a major cost factor when querying small files.
 
 ## 2. Good file size
 
