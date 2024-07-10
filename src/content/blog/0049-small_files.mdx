@@ -33,10 +33,25 @@ When I was working at Glovo, my colleagues observed that reducing the number of 
 
 This significant saving was primarily due to the decreased number of `S3 GET requests`, which are a major cost factor when querying small files.
 
+### 1.3. Default Behavior of Data Lake Writers
+
+By default, many data lake writers tend to create a large number of small files.
+For instance, Apache Spark will write multiple small files if not properly configured.
+Similarly, with AWS Athena, it is challenging to control the file sizes, often resulting in tiny files being created.
+If not set up correctly, these default behaviors can lead to a proliferation of small files, exacerbating performance and cost issues in the data lake.
+
 ## 2. Good file size
 
-1 GB: <FancyLink linkText="Delta Lake Small File Compaction with OPTIMIZE" url="https://delta.io/blog/2023-01-25-delta-lake-small-file-compaction-optimize/"/>
-100 MB to 10 GB: <FancyLink linkText="DuckDB | Parquet File Sizes" url="https://duckdb.org/docs/guides/performance/file_formats.html#parquet-file-sizes"/>
+Determining the optimal file size in a data lake can be challenging, as it depends on various factors such as the data processing engine, query patterns, and specific workload characteristics.
+However, most documentation and data processing engines recommend targeting a file size **around 1 GB**.
+
+For example, the <FancyLink linkText="Delta Lake Small File Compaction with OPTIMIZE" url="https://delta.io/blog/2023-01-25-delta-lake-small-file-compaction-optimize/"/> article highlights that Delta Lake suggests aiming for partitions close to **1 GB in size**. This recommendation helps balance the performance benefits of larger files with the practical considerations of data processing and storage.
+
+Similarly, the <FancyLink linkText="DuckDB | Parquet File Sizes" url="https://duckdb.org/docs/guides/performance/file_formats.html#parquet-file-sizes"/> guide suggests that an optimal file size for Parquet files typically ranges **between 100 MB and 10 GB**. This broad range takes into account different use cases and workload requirements, allowing for flexibility while still emphasizing the importance of avoiding too small files.
+
+<Notice type="success">
+  Around **1 GB per file** is the usual target for optimal file size in data lakes.
+</Notice>
 
 ## 3. How to avoid it?
 
