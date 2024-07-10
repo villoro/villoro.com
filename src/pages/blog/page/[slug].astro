@@ -34,6 +34,10 @@ export async function getStaticPaths() {
   description={postIndex.data.description}
 >
   <section class="section pt-6 md:pt-14">
+    <div class="container pt-6 pb-12 text-center">
+      <h1>All Posts - Page {currentPage}</h1>
+    </div>
+
     <BlogCategories />
 
     <!-- Posts -->
