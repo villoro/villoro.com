@@ -1,11 +1,20 @@
 ---
 import { categoryMetadata } from "@/lib/categoryMetadata";
 
-// Get the props
 const { category } = Astro.props;
 
-// Get the metadata for the category
-const metadata = categoryMetadata[category] || { name: category };
+// Handle lower/upper case
+function getCategoryMetadata(category) {
+  const normalizedCategory = category.toLowerCase();
+  const normalizedMetadata = Object.keys(categoryMetadata).reduce((acc, key) => {
+    acc[key.toLowerCase()] = categoryMetadata[key];
+    return acc;
+  }, {});
+
+  return normalizedMetadata[normalizedCategory] || { name: category };
+}
+
+const metadata = getCategoryMetadata(category);
 ---
 
 {metadata.name}
