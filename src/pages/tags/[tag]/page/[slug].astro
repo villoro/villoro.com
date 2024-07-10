@@ -6,6 +6,7 @@ import Pagination from "@/components/Pagination.astro";
 import Base from "@/layouts/Base.astro";
 import { fetchAndSortPosts } from "@/lib/blogUtils.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
+import { slugify } from "@/lib/utils/textConverter";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getTaxonomy } from "@/lib/taxonomyParser.astro";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
@@ -33,7 +34,19 @@ export async function getStaticPaths() {
 
 const { tag, slug } = Astro.params;
 const items = await getSinglePage(blog_folder);
-const filterByTags = taxonomyFilter(items, "tags", tag!);
+
+// Find the original case-sensitive tag
+let originalTag = tag;
+const normalizedTag = tag.toLowerCase();
+const filterByTags = items.filter(item => {
+  const itemTags = item.data.tags;
+  if (itemTags && itemTags.some(t => slugify(t).toLowerCase() === normalizedTag)) {
+    originalTag = itemTags.find(t => slugify(t).toLowerCase() === normalizedTag);
+    return true;
+  }
+  return false;
+});
+
 const sortedPosts = sortByDate(filterByTags);
 const totalPages = Math.ceil(sortedPosts.length / config.settings.pagination);
 const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
@@ -42,8 +55,12 @@ const indexOfFirstPost = indexOfLastPost - config.settings.pagination;
 const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
 ---
 
-<Base title={`Tag: ${tag}`}>
+<Base title={`Tag: ${originalTag}`}>
   <section class="section pt-6 md:pt-14">
+    <div class="container pt-6 pb-12 text-center">
+      <h1>Posts with tag {originalTag}</h1>
+    </div>
+
     <BlogCategories />
 
     <!-- Posts -->
