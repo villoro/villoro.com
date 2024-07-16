@@ -7,7 +7,7 @@ date: 2024-07-05
 image: "/images/blog/0049-handling-small-files.jpg"
 category: DE
 tags: [DE, Performance, Spark]
-draft: true
+draft: false
 ---
 
 ## 0. Motivation
@@ -55,11 +55,91 @@ Similarly, the <FancyLink linkText="DuckDB | Parquet File Sizes" url="https://du
 
 ## 3. How to avoid it?
 
-### 3.1. General approach
+The key to avoiding small files in your data lake is to control the number of files written during data processing.
+Ensuring that the files are of optimal size improves both performance and cost-efficiency.
 
 ### 3.2. Spark
 
+In Spark, you can control the number of files written by using the `sdf.repartition(n_files)` function, which allows you to specify the number of partitions (and hence the number of output files).
+Additionally, you can configure Spark to manage the size of files by setting the minimum and maximum number of rows per file through the configuration options `spark.sql.files.maxRecordsPerFile` and `spark.sql.files.minRecordsPerFile`.
+
 ### 3.3. Athena with DBT
+
+<Notice type="warning">
+  In AWS Athena, **there is no direct way to control the number of files** written during query execution.
+</Notice>
+
+However, you can use DBT to manage this. With a DBT post-hook, you can compact the files after they are written using the `OPTIMIZE` command to merge smaller files into larger ones.
+That will only work if your tables are <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/> tables.
+
+Running `OPTIMIZE` will generate extra files.
+In order to avoid extra storage costs you should `VACUUM` the table.
+
+Here is the macros you will need:
+
+<TerminalOutput color="stone">
+  macros/iceberg.sql
+</TerminalOutput>
+```sql
+{%- macro optimize(table=this) -%}
+    {%- if (model.config.table_type == "iceberg")
+        and (model.config.materialized != "view")
+        and (adapter.type() == "athena")
+    -%}
+        OPTIMIZE {{ table }} REWRITE DATA USING BIN_PACK;
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro vacuum(table=this) -%}
+    {%- if (model.config.table_type == "iceberg")
+        and (model.config.materialized != "view")
+        and (adapter.type() == "athena")
+    -%}
+        VACUUM {{ table }};
+    {%- endif -%}
+{%- endmacro -%}
+```
+
+And the docs for those macros:
+
+<TerminalOutput color="stone">
+  macros/iceberg.yml
+</TerminalOutput>
+```yaml
+version: 2
+
+macros:
+  - name: optimize
+    description: |
+      Optimze iceberg tables (and skip it on duckdb).
+      More info: https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-data-optimization.html#querying-iceberg-data-optimization-rewrite-data-action
+    arguments:
+      - name: table
+        type: string
+        description: Table to `optimize`, by default it will use `this`
+
+  - name: vacuum
+    description: |
+      Vacuum iceberg tables (and skip it on duckdb).
+      More info: https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-data-optimization.html#querying-iceberg-vacuum
+    arguments:
+      - name: table
+        type: string
+        description: Table to `vacuum`, by default it will use `this`
+```
+
+And then, you can declare the **post-hook** in the `dbt_project.yml`:
+
+<TerminalOutput color="stone">
+  dbt_project.yml
+</TerminalOutput>
+```yaml
+models:
+  your_project:
+    +post-hook:
+      - "{{ optimize() }}"
+      - "{{ vacuum() }}"
+```
 
 ## 4. Good partitioning
 
