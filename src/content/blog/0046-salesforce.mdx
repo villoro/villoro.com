@@ -3,11 +3,11 @@ slug: extracting-data-salesforce-python
 title: Extracting data from Salesforce with Python
 meta_title: Extracting data from Salesforce
 description: The post serves as a comprehensive guide to extracting data from Salesforce using Python, focusing on the Simple Salesforce library. It covers various querying options, strategies to avoid timeouts and memory errors, and insights into different types of fields within Salesforce. Additionally, it provides practical code examples and recommendations for effective data extraction.
-date: 2024-05-27
+date: 2024-07-16
 image: "/images/blog/0046-salesforce-clouds.jpg"
 category: DE
 tags: [Python, DE, Tutorial]
-draft: true
+draft: false
 ---
 
 <script type="module" src="/js/posts/0046-salesforce.js"></script>
@@ -152,7 +152,7 @@ for row in data:
     process(row)
 ```
 
-Under the hood, it fetches records in bulk.
+Under the hood, it fetches records in bulk using the `sf.query` and `sf.query_more` functions.
 You may notice that the first row takes longer to retrieve than the rest when querying a large amount of data.
 
 <Notice type="success">
