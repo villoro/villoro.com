@@ -63,17 +63,24 @@ Ensuring that the files are of optimal size improves both performance and cost-e
 In Spark, you can control the number of files written by using the `sdf.repartition(n_files)` function, which allows you to specify the number of partitions (and hence the number of output files).
 Additionally, you can configure Spark to manage the size of files by setting the minimum and maximum number of rows per file through the configuration options `spark.sql.files.maxRecordsPerFile` and `spark.sql.files.minRecordsPerFile`.
 
+<Notice type="warning">
+  Using `repartition` can cause significant shuffling of data, which might lead to performance issues.
+  The number of partitions also affects Spark's parallelization; too few partitions can lead to underutilized resources, while too many can cause excessive overhead.
+</Notice>
+
 ### 3.3. Athena with DBT
 
 <Notice type="warning">
   In AWS Athena, **there is no direct way to control the number of files** written during query execution.
 </Notice>
 
-However, you can use DBT to manage this. With a DBT post-hook, you can compact the files after they are written using the `OPTIMIZE` command to merge smaller files into larger ones.
-That will only work if your tables are <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/> tables.
+However, you can use DBT to manage this.
+By implementing a DBT post-hook, you can compact the files after they are written using the `OPTIMIZE` command, which merges smaller files into larger ones.
+This will only work for <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/> tables.
+For more details, refer to the official documentation: <FancyLink linkText="Optimizing Iceberg tables" url="https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-data-optimization.html" company="aws"/>
 
-Running `OPTIMIZE` will generate extra files.
-In order to avoid extra storage costs you should `VACUUM` the table.
+Running `OPTIMIZE` will generate additional files. To avoid extra storage costs and maintain optimal performance, it is important to run `VACUUM` on the table.
+The `VACUUM` command removes any files that are no longer needed after the optimization process, freeing up storage space and reducing costs.
 
 Here is the macros you will need:
 
