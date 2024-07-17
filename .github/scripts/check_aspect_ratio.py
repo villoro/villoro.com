@@ -15,7 +15,7 @@ def parse_aspect_ratio(aspect_ratio_str):
 def check_aspect_ratio(directory, target_aspect_ratio_str):
     target_aspect_ratio = parse_aspect_ratio(target_aspect_ratio_str)
 
-    all_good = True
+    failures = 0
     for filename in os.listdir(directory):
         if not filename.lower().endswith(IMAGE_EXTENSIONS):
             continue
@@ -26,28 +26,30 @@ def check_aspect_ratio(directory, target_aspect_ratio_str):
         aspect_ratio = width / height
         if not (aspect_ratio == target_aspect_ratio):
             logger.warning(
-                f"{filename} has an aspect ratio of {aspect_ratio:.2f}, which is not {target_aspect_ratio_str}."
+                f"{filename} has an aspect ratio of {aspect_ratio:.2f}, "
+                f"which is not {target_aspect_ratio_str}"
             )
-            all_good = False
+            failures += 1
         else:
-            logger.info(f"{filename} has a {target_aspect_ratio_str} aspect ratio.")
+            logger.info(f"{filename} has a {target_aspect_ratio_str} aspect ratio")
 
-    return all_good
+    return failures
 
 
 @click.command()
-@click.option("--directory", required=True, help="Directory containing the images.")
+@click.option("--directory", required=True, help="Directory containing the images")
 @click.option(
     "--aspect-ratio",
     required=True,
-    help='Target aspect ratio to validate against (e.g., "16:9" or "1:1").',
+    help='Target aspect ratio to validate against (e.g., "16:9" or "1:1")',
 )
 def validate_images(directory, aspect_ratio):
-    if check_aspect_ratio(directory, aspect_ratio):
-        logger.success(f"All images have the target aspect ratio.")
+    failures = check_aspect_ratio(directory, aspect_ratio)
+    if failures == 0:
+        logger.success(f"All images have the target aspect ratio")
         exit(0)
 
-    logger.error(f"Some images do not have the target aspect ratio.")
+    logger.error(f"There are {failures} images that don't have the the {aspect_ratio=}")
     exit(1)
 
 
