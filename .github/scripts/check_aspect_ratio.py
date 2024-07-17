@@ -4,6 +4,9 @@ from loguru import logger
 import click
 
 
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico")
+
+
 def parse_aspect_ratio(aspect_ratio_str):
     width, height = map(int, aspect_ratio_str.split(":"))
     return width / height
@@ -14,7 +17,7 @@ def check_aspect_ratio(directory, target_aspect_ratio_str):
 
     all_good = True
     for filename in os.listdir(directory):
-        if not filename.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".gif")):
+        if not filename.lower().endswith(IMAGE_EXTENSIONS):
             continue
 
         with Image.open(os.path.join(directory, filename)) as img:
