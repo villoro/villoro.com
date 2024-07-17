@@ -49,4 +49,8 @@ jobs:
 
     - name: Check blog images aspect ratio
       if: steps.changes.outputs.images == 'true'
-      run: python path/to/check_aspect_ratio.py --directory public/images/blog --target-aspect-ratio "16:9"
+      run: python .github/scripts/check_aspect_ratio.py --directory public/images/blog --target-aspect-ratio "16:9"
+
+    - name: Check favicons aspect ratio
+      if: steps.changes.outputs.images == 'true'
+      run: python .github/scripts/check_aspect_ratio.py --directory public/favicons --target-aspect-ratio "1:1"
