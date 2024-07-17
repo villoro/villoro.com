@@ -39,8 +39,8 @@ def check_aspect_ratio(directory, target_aspect_ratio_str):
     required=True,
     help='Target aspect ratio to validate against (e.g., "16:9" or "1:1").',
 )
-def validate_images(directory, aspect_ratio_str):
-    if check_aspect_ratio(directory, aspect_ratio_str):
+def validate_images(directory, aspect_ratio):
+    if check_aspect_ratio(directory, aspect_ratio):
         logger.success(f"All images have the target aspect ratio.")
         exit(0)
 
