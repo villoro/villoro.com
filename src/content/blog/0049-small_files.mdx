@@ -7,7 +7,7 @@ date: 2024-07-18
 image: "/images/blog/0049-handling-small-files.jpg"
 category: DE
 tags: [DE, Performance, Spark, DBT]
-draft: false
+draft: true
 ---
 
 ## 0. Motivation
@@ -361,6 +361,8 @@ To automate this, create the following macros:
 {%- endmacro -%}
 ```
 
+And their documentation:
+
 <TerminalOutput color="stone">
   macros/metadata.yml
 </TerminalOutput>
@@ -494,6 +496,8 @@ daily_with_additions AS (
 SELECT *
 FROM daily_with_additions
 ```
+
+And the documentation for it:
 
 <TerminalOutput color="stone">
   models/files_by_day.yml
