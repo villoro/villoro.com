@@ -2,8 +2,8 @@
 slug: solving-problem-small-files-data-lake
 title: Solving the probem with small files in the Data Lake
 meta_title: Solving the probem with small files in the Data Lake
-description: xx
-date: 2024-07-05
+description: This post addresses the common problem of small files in data lakes, which can lead to significant performance degradation and increased costs. It provides an in-depth guide on understanding the issues caused by small files, determining optimal file sizes, and effectively managing file sizes using tools like Apache Spark, AWS Athena, Delta Lake, and Apache Iceberg. The post also covers strategies for tracking file sizes and partitioning tables to optimize data processing and storage efficiency.
+date: 2024-07-18
 image: "/images/blog/0049-handling-small-files.jpg"
 category: DE
 tags: [DE, Performance, Spark, DBT]
@@ -11,6 +11,14 @@ draft: false
 ---
 
 ## 0. Motivation
+
+In modern data lake architectures, managing the size and number of files is crucial for maintaining performance and cost-efficiency.
+During my work, I frequently encountered tables with a huge number of small files, which led to very poor query performance and significantly increased costs.
+
+To tackle this issue, I started tracking how tables were stored and developed a keen interest in optimizing data storage practices.
+After investing considerable time into tracking and fixing these problems, I wanted to share my approach and insights.
+
+This post aims to provide a comprehensive guide on understanding, identifying, and resolving the small file problem in data lakes, ensuring that your data processing remains efficient and cost-effective.
 
 ## 1. What's the problem
 
@@ -626,3 +634,23 @@ However, there is a caveat:
 
 To compact old partitions, you still need to move the data to a temporary table and then bring it back.
 You can follow a similar approach to what was described for Delta tables.
+
+## 7. Conclusion
+
+Managing the size and number of files in a data lake is essential for maintaining optimal performance and controlling costs.
+Throughout this post, we've explored the challenges posed by small files, the ideal file sizes recommended by various data processing engines, and practical strategies for avoiding and fixing these issues.
+
+Key takeaways:
+
+1. **Understanding the problem**: Small files can significantly degrade performance and increase costs due to inefficient data processing and numerous storage requests.
+2. **Optimal file size**: Aim for around 1 GB per file to balance performance and storage efficiency.
+3. **Avoiding small files**: Use appropriate configurations and tools like Spark's repartition and Delta Lake's OPTIMIZE commands to control file sizes.
+4. **Tracking the issue**: Regularly monitor the number and size of files using metadata queries in Iceberg and Delta Lake.
+5. **Fixing the problem**: Compact existing small files and, if necessary, recreate tables with better partitioning strategies.
+
+By implementing these strategies, you can ensure that your data lake remains efficient and cost-effective.
+The insights and methods shared here are based on practical experience and thorough research, aimed at helping you manage your data lake more effectively.
+
+> Efficient data management not only improves performance but also significantly reduces costs.
+
+With these tools and techniques at your disposal, you are well-equipped to tackle the small file problem in your data lake.
