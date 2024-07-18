@@ -179,9 +179,163 @@ This is possible because of <FancyLink linkText="Iceberg's hidden partitioning" 
 
 ## 5. How to track the problem
 
-### 5.1. Spark
+There are ways for iceberg and delta to get the number of files and partitions each table has.
+The idea is to regularly query the metadata for each table and export it into a table.
+Ideally we export that data every time a table has been written.
 
-### 5.2. Athena
+### 5.1. Iceberg
+
+With iceberg, we can query the `files` metadata which gives us something like this:
+
+| content | file_path                          | partition          | record_count | file_size_in_bytes |
+|---------|------------------------------------|--------------------|--------------|--------------------|
+| 0       | s3:/.../table/data/00000-3.parquet | \{1999-01-01, 01\} | 1            | 597                |
+| 0       | s3:/.../table/data/00001-4.parquet | \{1999-01-01, 02\} | 1            | 597                |
+| 0       | s3:/.../table/data/00002-5.parquet | \{1999-01-01, 03\} | 1            | 597                |
+
+<Notice type="info">
+  Showing only some relevant columns
+</Notice>
+
+From there we can easily extract the info we want with something like:
+
+```sql
+SELECT
+    '{{ this.schema }}.{{ this.table }}' AS table_name,
+    count(*) AS total_files,
+    sum(record_count) AS total_rows,
+    round(sum(CAST(file_size_in_bytes AS DOUBLE)) / 1024 / 1024, 3) AS total_size_mb,
+    CURRENT_TIMESTAMP AS exported_at
+FROM {{ this.schema }}."{{ this.table }}$files";
+```
+
+#### 5.1.1. Iceberg in Spark
+
+<FancyLink linkText="Spark: Querying with SQL | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-queries/#querying-with-sql" company="iceberg"/>
+
+#### 5.1.2. Iceberg in Athena with DBT
+
+You can query the `files` metadata with:
+
+```sql
+SELECT * FROM dbname."tablename$files"
+```
+
+For more info read <FancyLink linkText="Querying Iceberg table metadata | Athena" url="https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-table-metadata.html" company="aws"/> (and/or the <FancyLink linkText="Iceberg $files table | Trino" url="https://trino.io/docs/current/connector/iceberg.html#files-table"/> docs which is the underlying querying engine for Athena)
+
+In order to automate that, we can create the following macros:
+
+<TerminalOutput color="stone">
+  macros/metadata.sql
+</TerminalOutput>
+```sql
+{%- macro create_metadata_schema() -%}
+    {%- if is_scheduled_pro_run() -%}
+        {% do adapter.create_schema(api.Relation.create(database=target.database, schema=var("metadata")["db"])) %}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro create_metadata_table_raw_files() -%}
+    {%- if is_scheduled_pro_run() -%}
+        CREATE TABLE IF NOT EXISTS {{ var("metadata")["db"] }}.{{ var("metadata")["tables"]["raw_files"] }} (
+            table_name STRING,
+            total_files BIGINT,
+            total_rows BIGINT,
+            total_size_mb DOUBLE,
+            exported_at TIMESTAMP
+        )
+        LOCATION '{{ get_bronze_bucket() }}/metadata/{{ var("metadata")["tables"]["raw_files"] }}'
+        TBLPROPERTIES (
+            'table_type' ='ICEBERG',
+            'format' = 'parquet',
+            'write_compression' = 'snappy',
+            'vacuum_max_snapshot_age_seconds' = '86400'
+        );
+    {%- endif -%}
+{%- endmacro -%}
+
+{% macro get_raw_files_table() %}
+    {{ var("metadata")["db"] }}.{{ var("metadata")["tables"]["raw_files"] }}
+{% endmacro %}
+
+{%- macro export_metadata() -%}
+    {%- if is_scheduled_pro_run() and (model.config.table_type == "iceberg") and (model.config.materialized != "view") -%}
+        INSERT INTO {{ get_raw_files_table() }}
+        SELECT
+            '{{ this.schema }}.{{ this.table }}' AS table_name,
+            count(*) AS total_files,
+            sum(record_count) AS total_rows,
+            round(sum(CAST(file_size_in_bytes AS DOUBLE)) / 1024 / 1024, 3) AS total_size_mb,
+            CURRENT_TIMESTAMP AS exported_at
+        FROM {{ this.schema }}."{{ this.table }}$files";
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro optimize_metadata_table() -%}
+    {%- if is_scheduled_pro_run() -%}
+        {{ optimize(get_raw_files_table()) }}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro vacuum_metadata_table() -%}
+    {%- if is_scheduled_pro_run() and var('vacuum_raw_files') -%}
+        {{ vacuum(get_raw_files_table()) }}
+    {%- endif -%}
+{%- endmacro -%}
+```
+
+<TerminalOutput color="stone">
+  macros/metadata.yml
+</TerminalOutput>
+```yaml
+version: 2
+
+macros:
+  - name: create_metadata_schema
+    description: |
+      Creates the schema 'metadata' when running in `Athena` and in **PRO** using `nt_pro` profile
+
+  - name: create_metadata_table_raw_files
+    description: |
+      Creates the table 'raw_files' inside schema 'metadata'.
+      This contains `iceberg` metadata about the files each table has.
+      Will only be created when running in `Athena` and in **PRO** using `nt_pro` profile
+
+  - name: export_metadata
+    description: |
+      Exports metadata about a specific table
+      Will only be done when running in `Athena` and in **PRO** using `nt_pro` profile
+
+  - name: get_raw_files_table
+    description: Retrieves the fully qualified name of the raw files table from the metadata variables.
+
+  - name: optimize_metadata_table
+    description: Calls the `optimize` macro only when running in `Athena` and in **PRO** using `nt_pro` profile
+
+  - name: vacuum_metadata_table
+    description: |
+      Calls the `vacuum` macro only when:
+
+      * Running in `Athena`
+      * Running in **PRO** using `nt_pro` profile
+      * The variable `vacuum_raw_files` is `True` (happens when `--select` not present)
+```
+
+And then, you can declare the **post-hook** in the `dbt_project.yml`:
+
+<TerminalOutput color="stone">
+  dbt_project.yml
+</TerminalOutput>
+```yaml
+models:
+  your_project:
+    +post-hook:
+      - "{{ optimize() }}"
+      - "{{ vacuum() }}"
+      - "{{ export_metadata() }}" # <-- Add this
+```
+
+### 5.2. Delta
 
 ## 6. Fixing the problem
 
