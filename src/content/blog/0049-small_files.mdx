@@ -179,13 +179,13 @@ This is possible because of <FancyLink linkText="Iceberg's hidden partitioning" 
 
 ## 5. How to track the problem
 
-There are ways for iceberg and delta to get the number of files and partitions each table has.
-The idea is to regularly query the metadata for each table and export it into a table.
-Ideally we export that data every time a table has been written.
+Tracking the number of files and partitions each table has is crucial for managing data lakes efficiently.
+Both Iceberg and Delta provide ways to query the metadata, which can then be exported into a table.
+Ideally, this data should be exported every time a table is written.
 
 ### 5.1. Iceberg
 
-With iceberg, we can query the `files` metadata which gives us something like this:
+With Iceberg, you can query the `files` metadata, which gives you detailed information such as:
 
 | content | file_path                          | partition          | record_count | file_size_in_bytes |
 |---------|------------------------------------|--------------------|--------------|--------------------|
@@ -197,7 +197,7 @@ With iceberg, we can query the `files` metadata which gives us something like th
   Showing only some relevant columns
 </Notice>
 
-From there we can easily extract the info we want with something like:
+From there, you can extract the desired information with a query like this:
 
 ```sql
 SELECT
@@ -211,17 +211,17 @@ FROM {{ this.schema }}."{{ this.table }}$files";
 
 #### 5.1.1. Iceberg in Spark
 
-According to the offical documetnation (<FancyLink linkText="Spark: Querying with SQL | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-queries/#querying-with-sql" company="iceberg"/>) we can query the `files` metadata with:
+According to the official documentation (<FancyLink linkText="Spark: Querying with SQL | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-queries/#querying-with-sql" company="iceberg"/>), you can query the `files` metadata with:
 
 ```sql
 spark.sql(f"SELCT * FROM iceberg.{schema}.{table}.files")
 ```
 
 <Notice type="warning">
-  You must set up the `iceberg` catalog for that to work. Read <FancyLink linkText="Spark Configuration | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-configuration/" company="iceberg"/> for more info.
+  You must set up the `iceberg` catalog for this to work. Read <FancyLink linkText="Spark Configuration | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-configuration/" company="iceberg"/> for more info.
 </Notice>
 
-With that in mind, we can create the function `export_table_stats` that must be called every time we write a table:
+With that in mind, you can create the `export_table_stats` function to be called every time you write a table:
 
 ```python
 import backoff
@@ -275,13 +275,12 @@ def export_table_stats(spark, tablename):
         raise exc
 ```
 <Notice type="success">
-  Then you only need to call `export_table_stats(spark, tablename)` after every write
+  Then you only need to call `export_table_stats(spark, tablename)` after every write.
 </Notice>
 
-In general Iceberg can handle concurrent write operations.
-Read <FancyLink linkText="Concurrent write operations | Iceberg" url="https://iceberg.apache.org/docs/1.4.1/reliability/#concurrent-write-operations" company="iceberg"/> for more info.
-But sometimes I had problems when exporting the stats.
-That is why I added retries with <FancyLink linkText="Backoff" url="https://github.com/litl/backoff" dark="true"/>.
+While Iceberg can handle concurrent write operations, issues can sometimes occur when exporting stats.
+Therefore, retries with <FancyLink linkText="Backoff" url="https://github.com/litl/backoff" dark="true"/> are recommended.
+For more information, see <FancyLink linkText="Concurrent write operations | Iceberg" url="https://iceberg.apache.org/docs/1.4.1/reliability/#concurrent-write-operations" company="iceberg"/>.
 
 #### 5.1.2. Iceberg in Athena with DBT
 
@@ -291,9 +290,9 @@ You can query the `files` metadata with:
 SELECT * FROM dbname."tablename$files"
 ```
 
-For more info read <FancyLink linkText="Querying Iceberg table metadata | Athena" url="https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-table-metadata.html" company="aws"/> (and/or the <FancyLink linkText="Iceberg $files table | Trino" url="https://trino.io/docs/current/connector/iceberg.html#files-table"/> docs which is the underlying querying engine for Athena)
+For more info, read <FancyLink linkText="Querying Iceberg table metadata | Athena" url="https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-table-metadata.html" company="aws"/> and <FancyLink linkText="Iceberg $files table | Trino" url="https://trino.io/docs/current/connector/iceberg.html#files-table"/>.
 
-In order to automate that, we can create the following macros:
+To automate this, create the following macros:
 
 <TerminalOutput color="stone">
   macros/metadata.sql
@@ -391,7 +390,7 @@ macros:
       * The variable `vacuum_raw_files` is `True` (happens when `--select` not present)
 ```
 
-And then, you can declare the **post-hook** in the `dbt_project.yml`:
+And then, declare the **post-hook** in the `dbt_project.yml`:
 
 <TerminalOutput color="stone">
   dbt_project.yml
@@ -407,7 +406,7 @@ models:
 
 #### 5.1.3. Track `files_by_day`
 
-Now that we have a table with a snapshot of the metadata of each table whenever there was a write, we can create a table that tracks the latest state by day.
+Now that we have a table with a snapshot of the metadata for each table whenever there is a write, we can create a table that tracks the latest state by day.
 This table will help us monitor partitioning problems.
 
 Here is the DBT model for that:
@@ -536,8 +535,8 @@ models:
 
 ### 5.2. Delta
 
-With delta we can use the `DESCRIBE DETAIL table` command to get similar information. 
-That produces a table like this:
+With Delta, you can use the `DESCRIBE DETAIL table` command to get similar information.
+This produces a table like this:
 
 | name               | location             | createdAt           | lastModified        | partitionColumns | numFiles | sizeInBytes |
 |--------------------|----------------------|---------------------|---------------------|------------------|---------:|------------:|
@@ -547,51 +546,48 @@ That produces a table like this:
   Showing only some relevant columns
 </Notice>
 
-You can read more about this in the docs <FancyLink linkText="Review Delta Lake table details with describe detail" url="https://docs.databricks.com/en/delta/table-details.html#review-delta-lake-table-details-with-describe-detail"/>
+You can read more about this in the docs <FancyLink linkText="Review Delta Lake table details with describe detail" url="https://docs.databricks.com/en/delta/table-details.html#review-delta-lake-table-details-with-describe-detail"/>.
 
-Regarding when and how to extract that metadata, you can follow a similar approach to what we saw for Iceberg.
+For tracking metadata, you can follow a similar approach to what was described for Iceberg.
 
 ## 6. Fixing the problem
 
-After following the previous steps you have detected multiple tables that are not well partitioned since they have a lot of small files.
-What can you do? How can you fix the data?
+After following the previous steps, you have detected multiple tables that are not well partitioned and have a lot of small files.
+What can you do to fix the data?
 
 ### 6.1. Non partitioned tables
 
-For non partitioned tables is quite straightforward. You can simply run `OPTIMIZE` to compact the table.
+For non-partitioned tables, it is quite straightforward. You can simply run `OPTIMIZE` to compact the table.
 
 <Notice type="warning">
-  The `optimize` can take a lot of time and might require a lot of processing power (depends on the table size). Proceed with caution.
+  The `OPTIMIZE` command can take a lot of time and might require a lot of processing power, depending on the table size. Proceed with caution.
 </Notice>
 
 ### 6.2. Partitioned tables
 
-The best case scenario for partitioned tables is where you can compact the partitions with `OPTIMIZE`.
-That is the same as for the non partitioned tables.
-
-If you want, you can optimze only some partitions, which will be faster and require less computing power.
+For partitioned tables, the best case scenario is where you can compact the partitions with `OPTIMIZE`, similar to non-partitioned tables.
+If you want, you can optimize only some partitions, which will be faster and require less computing power.
 
 If compacting the partitions is not enough, you will need to change the partitioning of the table.
-That works differently for Delta and Iceberg tables.
+This process differs for Delta and Iceberg tables.
 
 ### 6.2.1. Partitioned Delta tables
 
-Delta tables have fixed partitioning and you **cannot change the partitioning** of an existing table.
-So you will need to recreate the table without the partition colum or with a different partitioning.
+Delta tables have fixed partitioning, and you **cannot change the partitioning** of an existing table.
+Therefore, you will need to recreate the table without the partition column or with a different partitioning.
 
-You can do that by first creating a new table with:
+To do this, follow these steps:
 
-1. Create a new temporal table with the new partitioning you want
-2. Move all the table from the original table to the temporal one
-3. Optimize the new table
-4. Validate that the new table
+1. Create a new temporary table with the desired partitioning.
+2. Move all the data from the original table to the temporary one.
+3. Optimize the new table.
+4. Validate the new table.
 
 <Notice type="info">
-  We optimize the temporal table so that all changes are done before removing the orignal table.
-  This way we minimize downtime.
+  Optimizing the temporary table ensures all changes are made before removing the original table, minimizing downtime.
 </Notice>
 
-To create the table you can simply do a `CREATE TABLE AS` like:
+You can create the new table with a `CREATE TABLE AS` statement:
 
 ```sql
 CREATE TABLE {db}.{new}
@@ -606,27 +602,27 @@ CREATE TABLE {db}.{new}
 ```
 
 <Notice type="warning">
-  You might have problems creating a table with all the data with one query.
-  In that case create the table with only some partitions and the do `INSERTS` to move all data.
+  You might encounter issues when creating a table with all the data in one query.
+  In such cases, create the table with only some partitions and then use `INSERTS` to move all the data.
 </Notice>
 
-Once everything is good on the new table, you can recreate the original table with:
+Once everything is good with the new table, you can recreate the original table:
 
-1. Delete the original table
-2. Recreate the original table
-3. Move back all the data
-4. Delete the temporal table
+1. Delete the original table.
+2. Recreate the original table.
+3. Move back all the data.
+4. Delete the temporary table.
 
 ### 6.2.2. Partitioned Iceberg tables
 
-With Iceberg you can do schema evolutions, such as changing the partitioning.
-You can read about it at <FancyLink linkText="Iceberg evolutions" url="https://iceberg.apache.org/docs/nightly/evolution/"/>.
+With Iceberg, you can perform schema evolutions, such as changing the partitioning.
+You can read more about it at <FancyLink linkText="Iceberg evolutions" url="https://iceberg.apache.org/docs/nightly/evolution/"/>.
 
-However there is a problem:
+However, there is a caveat:
 
 <Notice type="error">
-  Changing the partitioning of a delta table **does not repartition old data**.
+  Changing the partitioning of an Iceberg table **does not repartition old data**.
 </Notice>
 
-So if you need to compact old partitions you still will need to move the data to a temporal table and then bring it back.
-You can follow a similar approach to what we saw for Delta tables.
+To compact old partitions, you still need to move the data to a temporary table and then bring it back.
+You can follow a similar approach to what was described for Delta tables.
