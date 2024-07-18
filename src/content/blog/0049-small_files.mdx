@@ -274,6 +274,14 @@ def export_table_stats(spark, tablename):
         # If it's not the wanted exception, raise it
         raise exc
 ```
+<Notice type="success">
+  Then you only need to call `export_table_stats(spark, tablename)` after every write
+</Notice>
+
+In general Iceberg can handle concurrent write operations.
+Read <FancyLink linkText="Concurrent write operations | Iceberg" url="https://iceberg.apache.org/docs/1.4.1/reliability/#concurrent-write-operations" company="iceberg"/> for more info.
+But sometimes I had problems when exporting the stats.
+That is why I added retries with <FancyLink linkText="Backoff" url="https://github.com/litl/backoff" dark="true"/>.
 
 #### 5.1.2. Iceberg in Athena with DBT
 
@@ -528,8 +536,23 @@ models:
 
 ### 5.2. Delta
 
+With delta we can use the `DESCRIBE DETAIL table` command to get similar information. 
+That produces a table like this:
+
+| name               | location             | createdAt           | lastModified        | partitionColumns | numFiles | sizeInBytes |
+|--------------------|----------------------|---------------------|---------------------|------------------|---------:|------------:|
+| default.deltatable | file:/Users/tuor/... | 2020-06-05 12:20:20 | 2020-06-05 12:20:20 |               [] |       10 |       12345 |
+
+<Notice type="info">
+  Showing only some relevant columns
+</Notice>
+
+You can read more about this in the docs <FancyLink linkText="Review Delta Lake table details with describe detail" url="https://docs.databricks.com/en/delta/table-details.html#review-delta-lake-table-details-with-describe-detail"/>
+
+Regarding when and how to extract that metadata, you can follow a similar approach to what we saw for Iceberg.
+
 ## 6. Fixing the problem
 
-### 6.1. Iceberg
+### 6.1. Delta
 
-### 6.2. Delta
+### 6.2. Iceberg
