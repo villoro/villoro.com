@@ -14,9 +14,34 @@ draft: false
 
 ## 0. Motivation
 
+Last year I bought a <FancyLink linkText="Geekom AS6" url="https://www.geekompc.com/geekom-as-6-mini-pc/"/> and I'm really happy about it.
+It has an integrated GPU (680M) that allows me to play most modern games at 1080p, such as Resident Evil 4 Remake.
+I bought it since it's almost identical to the <FancyLink linkText="Asus PN53" url="https://www.asus.com/displays-desktops/mini-pcs/pn-series/asus-expertcenter-pn53/"/> and that gave me the confidence to buy from what was an unknown brand at the time.
+
+It has been working really well until summer arrived.
+Due to temperatures the CPU was shutting down because of excesive temperatures.
+
 ## 1. What's the problem
 
+I have been using <FancyLink linkText="Open Hardware Monitor" url="https://openhardwaremonitor.org/"/> to track and store multiple data from the computer. Such as temperatures, load and watts.
+
+My computer has a <FancyLink linkText="Ryzen 7 6800H" url="https://www.amd.com/en/product/11546"/> processor.
+It has a default TDP of 45W but can be set up between 35W to 54W.
+And the **max temperature is 95ºC**.
+
+The problem I had is that when it had a high load in summer, temperatures were too high: 
+
 <canvas id="stats_without_limits" style="width:100%;height:300px;"></canvas>
+
+<Notice type="danger">
+  The CPU was around 97 ºC which is higher than the max 95 ºC.
+  Whenever it reached 100 ºC the computer automatically turned off to prevent damages.
+</Notice>
+
+<Notice type="info">
+  The CPU load looks low because I was gaming at the time (GPU intensive).
+  GPU load is not tracked nor included in the CPU load and that is why it looks like the computer was close to idle.
+</Notice>
 
 <canvas id="stats_with_limits" style="width:100%;height:300px;"></canvas>
 
