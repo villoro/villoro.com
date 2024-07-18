@@ -6,7 +6,7 @@ description: xx
 date: 2024-07-05
 image: "/images/blog/0049-handling-small-files.jpg"
 category: DE
-tags: [DE, Performance, Spark]
+tags: [DE, Performance, Spark, DBT]
 draft: false
 ---
 
@@ -211,7 +211,69 @@ FROM {{ this.schema }}."{{ this.table }}$files";
 
 #### 5.1.1. Iceberg in Spark
 
-<FancyLink linkText="Spark: Querying with SQL | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-queries/#querying-with-sql" company="iceberg"/>
+According to the offical documetnation (<FancyLink linkText="Spark: Querying with SQL | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-queries/#querying-with-sql" company="iceberg"/>) we can query the `files` metadata with:
+
+```sql
+spark.sql(f"SELCT * FROM iceberg.{schema}.{table}.files")
+```
+
+<Notice type="warning">
+  You must set up the `iceberg` catalog for that to work. Read <FancyLink linkText="Spark Configuration | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-configuration/" company="iceberg"/> for more info.
+</Notice>
+
+With that in mind, we can create the function `export_table_stats` that must be called every time we write a table:
+
+```python
+import backoff
+from prefect import get_run_logger
+
+QUERY_STATS = """
+SELECT
+    '{schema}.{table}' AS table_name,
+    count(*) AS total_files,
+    sum(record_count) AS total_rows,
+    round(sum(CAST(file_size_in_bytes AS DOUBLE)) / 1024 / 1024, 3) AS total_size_mb,
+    CURRENT_TIMESTAMP AS exported_at
+FROM iceberg.{schema}.{table}.files;
+"""
+TABLE_STATS = "iceberg.nt_bronze__metadata.raw_files"
+ICEBERG_COMMIT_EXC = "org.apache.iceberg.exceptions.CommitFailedException"
+
+class CommitFailedException(Exception):
+    """Represents 'org.apache.iceberg.exceptions.CommitFailedException' exception"""
+
+    pass
+
+def log_error(details):
+    logger = get_run_logger()
+
+    msg = "'{target}' failed, backing off {wait:0.1f} seconds after {tries} tries"
+    logger.warning(msg.format(**details))
+
+
+@backoff.on_exception(
+    backoff.expo, CommitFailedException, on_backoff=log_error, max_time=60 * 2  # 2 mins
+)
+def export_table_stats(spark, tablename):
+    _, schema, table = tablename.split(".")
+
+    query = QUERY_STATS.format(schema=schema, table=table)
+    sdf = spark.sql(query)
+
+    try:
+        sdf.repartition(1).write.mode("append").format("parquet").saveAsTable(
+            TABLE_STATS
+        )
+
+    # Catch the exception so that we can further inspect the type
+    except Exception as exc:
+        # If it's what we are looking for, raise our custom exception so that it can 'backoff'
+        if ICEBERG_COMMIT_EXC == exc.java_exception.getClass().getName():
+            raise CommitFailedException("Write failed (Commit Failed)")
+
+        # If it's not the wanted exception, raise it
+        raise exc
+```
 
 #### 5.1.2. Iceberg in Athena with DBT
 
@@ -333,6 +395,135 @@ models:
       - "{{ optimize() }}"
       - "{{ vacuum() }}"
       - "{{ export_metadata() }}" # <-- Add this
+```
+
+#### 5.1.3. Track `files_by_day`
+
+Now that we have a table with a snapshot of the metadata of each table whenever there was a write, we can create a table that tracks the latest state by day.
+This table will help us monitor partitioning problems.
+
+Here is the DBT model for that:
+
+<TerminalOutput color="stone">
+  models/files_by_day.sql
+</TerminalOutput>
+```sql
+{{ config(unique_key='_uuid') }}
+
+WITH source AS (
+    SELECT *
+    FROM {{ source('nt_bronze__metadata', 'raw_files') }}
+),
+
+fillna AS (
+    SELECT
+        table_name,
+        total_files,
+        exported_at,
+        COALESCE(total_rows, 0) AS total_rows,
+        COALESCE(total_size_mb, 0) AS total_size_mb
+    FROM source
+),
+
+daily AS (
+    SELECT
+        table_name,
+        CAST(exported_at AS date) AS export_date,
+        {{ last('total_files') }}
+            OVER (PARTITION BY table_name ORDER BY exported_at ASC) AS total_files,
+        {{ last('total_rows') }}
+            OVER (PARTITION BY table_name ORDER BY exported_at ASC) AS total_rows,
+        {{ last('total_size_mb') }}
+            OVER (PARTITION BY table_name ORDER BY exported_at ASC) AS total_size_mb,
+        RANK()
+            OVER (PARTITION BY table_name, CAST(exported_at AS date) ORDER BY exported_at ASC)
+            AS _rank
+    FROM fillna
+),
+
+daily_with_lags AS (
+    SELECT
+        table_name,
+        export_date,
+        total_files,
+        total_rows,
+        total_size_mb,
+        LAG(total_files)
+            OVER (PARTITION BY table_name ORDER BY export_date ASC) AS last_total_files,
+        LAG(total_rows)
+            OVER (PARTITION BY table_name ORDER BY export_date ASC) AS last_total_rows,
+        LAG(total_size_mb)
+            OVER (PARTITION BY table_name ORDER BY export_date ASC) AS last_total_size_mb
+    FROM daily
+    WHERE _rank = 1
+),
+
+daily_with_additions AS (
+    SELECT
+        ----------  ids
+        {{ dbt_utils.generate_surrogate_key(['table_name', 'export_date']) }} AS _uuid,
+        table_name,
+        SUBSTRING(table_name FROM 1 FOR POSITION('.' IN table_name) - 1) AS schema_name,
+        export_date,
+        ----------  totals
+        total_files,
+        total_rows,
+        total_size_mb,
+        ----------  added datas
+        COALESCE(total_files - last_total_files, total_files) AS added_files,
+        COALESCE(total_rows - last_total_rows, total_rows) AS added_rows,
+        ROUND(COALESCE(total_size_mb - last_total_size_mb, total_size_mb), 3) AS added_mb
+    FROM daily_with_lags
+)
+
+SELECT *
+FROM daily_with_additions
+```
+
+<TerminalOutput color="stone">
+  models/files_by_day.yml
+</TerminalOutput>
+```yaml
+models:
+  - name: files_by_day
+    description: Shows total and added `files`, `rows` and `MBs` of each table
+    columns:
+      # ----------  ids
+      - name: _uuid
+        description: Unique identifier of the table. Composite key of `table_name` and `export_date`
+        tests:
+          - not_null
+          - unique
+      - name: table_name
+        description: Full name of the table (format `schema.table`)
+        tests: [not_null]
+      - name: schema_name
+        description: Name of the schema, extracted from `table_name`
+      - name: export_date
+        description: Day the statistics where exported for the given table
+        tests: [not_null]
+
+      # ----------  totals
+      - name: total_files
+        description: Total number of files the table has
+        tests: [not_null]
+      - name: total_rows
+        description: Total number of rows the table has
+        tests: [not_null]
+      - name: total_size_mb
+        description: Total size of the table in MBs
+        tests: [not_null]
+
+      # ----------  added
+      - name: added_files
+        description: Added number of files from the last write
+        tests: [not_null]
+      - name: added_rows
+        description: Added rows from the last write
+        tests: [not_null]
+      - name: added_mb
+        description: Increase in size (as `MB`) from the last write
+        tests: [not_null]
 ```
 
 ### 5.2. Delta
