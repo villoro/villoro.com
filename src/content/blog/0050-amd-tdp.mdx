@@ -7,9 +7,35 @@ date: 2024-07-18
 image: "/images/blog/0050-amd-tdp.jpg"
 category: others
 tags: [xx]
-draft: true
+draft: false
 ---
 
 ## 0. Motivation
 
 ## 1. What's the problem
+
+## 2. Measure
+
+| Name                | Value | Limit                                              | Parameter         |
+|---------------------|------:|---------------------------------------------------:|-------------------|
+| STAPM               |   8.0 |                                               35.0 | stapm-limit       |
+| PPT FAST            |  14.8 | <span style="background-color:Salmon;">65.0</span> | fast-limit        |
+| PPT SLOW            |   8.3 | <span style="background-color:Salmon;">54.0</span> | slow-limit        |
+| StapmTimeConst      |   nan |                                                    | stapm-time        |
+| SlowPPTTimeConst    |   nan |                                                    | slow-time         |
+| PPT APU             |   0.0 |                                               54.0 | apu-slow-limit    |
+| TDC VDD             |   5.7 |                                               55.0 | vrm-current       |
+| TDC SOC             |   2.2 |                                               15.0 | vrmsoc-current    |
+| EDC VDD             |  70.4 |                                              130.0 | vrmmax-current    |
+| EDC SOC             |   0.1 |                                               20.0 | vrmsocmax-current |
+| THM CORE            |  53.0 | <span style="background-color:Salmon;">98.0</span> | tctl-temp         |
+| STT APU             |   0.0 |                                                0.0 | apu-skin-temp     |
+| STT dGPU            |   0.0 |                                                0.0 | dgpu-skin-temp    |
+| CCLK Boost SETPOINT |   nan |                                                    | power-saving /    |
+| CCLK BUSY VALUE     |   nan |                                                    | max-performance   |
+
+| Name                | Value | Limit                                                 | Parameter         |
+|---------------------|------:|------------------------------------------------------:|-------------------|
+| PPT FAST            |  14.8 | <span style="background-color:PaleGreen;">45.0</span> | fast-limit        |
+| PPT SLOW            |   8.3 | <span style="background-color:PaleGreen;">40.0</span> | slow-limit        |
+| THM CORE            |  53.0 | <span style="background-color:PaleGreen;">90.0</span> | tctl-temp         |
