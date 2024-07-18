@@ -43,30 +43,68 @@ The problem I had is that when it had a high load in summer, temperatures were t
   GPU load is not tracked nor included in the CPU load and that is why it looks like the computer was close to idle.
 </Notice>
 
-<canvas id="stats_with_limits" style="width:100%;height:300px;"></canvas>
+## 2. Regular ways to control temperatures
 
-## 2. Measure
+### 2.1. Changing TDP on the BIOS
 
-| Name                | Value | Limit                                              | Parameter         |
-|---------------------|------:|---------------------------------------------------:|-------------------|
-| STAPM               |   8.0 |                                               35.0 | stapm-limit       |
-| PPT FAST            |  14.8 | <span style="background-color:Salmon;">65.0</span> | fast-limit        |
-| PPT SLOW            |   8.3 | <span style="background-color:Salmon;">54.0</span> | slow-limit        |
-| StapmTimeConst      |   nan |                                                    | stapm-time        |
-| SlowPPTTimeConst    |   nan |                                                    | slow-time         |
-| PPT APU             |   0.0 |                                               54.0 | apu-slow-limit    |
-| TDC VDD             |   5.7 |                                               55.0 | vrm-current       |
-| TDC SOC             |   2.2 |                                               15.0 | vrmsoc-current    |
-| EDC VDD             |  70.4 |                                              130.0 | vrmmax-current    |
-| EDC SOC             |   0.1 |                                               20.0 | vrmsocmax-current |
-| THM CORE            |  53.0 | <span style="background-color:Salmon;">98.0</span> | tctl-temp         |
-| STT APU             |   0.0 |                                                0.0 | apu-skin-temp     |
-| STT dGPU            |   0.0 |                                                0.0 | dgpu-skin-temp    |
-| CCLK Boost SETPOINT |   nan |                                                    | power-saving /    |
-| CCLK BUSY VALUE     |   nan |                                                    | max-performance   |
+### 2.2. Undervolting
+
+https://www.msi.com/Landing/afterburner/graphics-cards
+
+### 2.3. Dedicated software
+
+<FancyLink linkText="AMD Software: Adrenalin Edition™ Application" url="https://www.amd.com/en/products/software/adrenalin.html"/>
+<FancyLink linkText="AMD Ryzen™ Master Utility for Overclocking Control" url="https://www.amd.com/en/products/software/ryzen-master.html"/>
+
+## 3. Using RyzenAdj
+
+<FancyLink linkText="RyzenAdj" url="https://github.com/FlyGoat/RyzenAdj" dark="true"/>
+
+### 3.1. Check current setup
+
+```sh
+ryzenadj.exe -i
+```
+<Notice type="warning">
+  Must be run as an Administrator.
+</Notice>
 
 | Name                | Value | Limit                                                 | Parameter         |
 |---------------------|------:|------------------------------------------------------:|-------------------|
+| STAPM               |   8.0 | <span style="background-color:PaleGreen;">35.0</span> | stapm-limit       |
+| PPT FAST            |  14.8 |    <span style="background-color:Salmon;">65.0</span> | fast-limit        |
+| PPT SLOW            |   8.3 |    <span style="background-color:Salmon;">54.0</span> | slow-limit        |
+| StapmTimeConst      |   nan |                                                       | stapm-time        |
+| SlowPPTTimeConst    |   nan |                                                       | slow-time         |
+| PPT APU             |   0.0 |                                                  54.0 | apu-slow-limit    |
+| TDC VDD             |   5.7 |                                                  55.0 | vrm-current       |
+| TDC SOC             |   2.2 |                                                  15.0 | vrmsoc-current    |
+| EDC VDD             |  70.4 |                                                 130.0 | vrmmax-current    |
+| EDC SOC             |   0.1 |                                                  20.0 | vrmsocmax-current |
+| THM CORE            |  53.0 |    <span style="background-color:Salmon;">98.0</span> | tctl-temp         |
+| STT APU             |   0.0 |                                                   0.0 | apu-skin-temp     |
+| STT dGPU            |   0.0 |                                                   0.0 | dgpu-skin-temp    |
+| CCLK Boost SETPOINT |   nan |                                                       | power-saving /    |
+| CCLK BUSY VALUE     |   nan |                                                       | max-performance   |
+
+### 3.2. Limit TDP and Temperature
+
+```sh
+ryzenadj.exe --stapm-limit=40000 --fast-limit=45000 --slow-limit=40000 --tctl-temp=90 -i
+```
+
+| Name                | Value | Limit                                                 | Parameter         |
+|---------------------|------:|------------------------------------------------------:|-------------------|
+| STAPM               |   8.0 | <span style="background-color:PaleGreen;">40.0</span> | stapm-time        |
 | PPT FAST            |  14.8 | <span style="background-color:PaleGreen;">45.0</span> | fast-limit        |
 | PPT SLOW            |   8.3 | <span style="background-color:PaleGreen;">40.0</span> | slow-limit        |
 | THM CORE            |  53.0 | <span style="background-color:PaleGreen;">90.0</span> | tctl-temp         |
+
+## 4. Stress testing
+
+https://benchmarks.ul.com/3dmark
+https://www.aida64.com/downloads
+
+<canvas id="stats_with_limits" style="width:100%;height:300px;"></canvas>
+
+## 5. Limit TDP at start up
