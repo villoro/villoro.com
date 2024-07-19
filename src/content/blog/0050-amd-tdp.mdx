@@ -43,24 +43,41 @@ The problem I had is that when it had a high load in summer, temperatures were t
   GPU load is not tracked nor included in the CPU load and that is why it looks like the computer was close to idle.
 </Notice>
 
-## 2. Regular ways to control temperatures
+## 2. Regular ways to prevent overheating
+
+Here you can see the most common ways to prevent overheating.
 
 ### 2.1. Changing TDP on the BIOS
 
+A lot of computers allow to lower the Thermal Design Power (TDP) to lower the wattage of the CPU.
+That helps preventing overheating.
+
+However there are some PCs (such as mine) that don't have this option.
+
 ### 2.2. Undervolting
 
-https://www.msi.com/Landing/afterburner/graphics-cards
+Another way is by undervolting the CPU with a tool like <FancyLink linkText="MSI Afterburner" url="https://www.msi.com/Landing/afterburner/graphics-cards"/>.
+It doesn't work for all computers and it's dangerours
+
+<Notice type="warning">
+  Undervolting can permanently damage your computer, proceed with caution.
+</Notice>
 
 ### 2.3. Dedicated software
 
-<FancyLink linkText="AMD Software: Adrenalin Edition™ Application" url="https://www.amd.com/en/products/software/adrenalin.html"/>
-<FancyLink linkText="AMD Ryzen™ Master Utility for Overclocking Control" url="https://www.amd.com/en/products/software/ryzen-master.html"/>
+Some times there is dedicated software for your PC.
+For example for AMD you have <FancyLink linkText="AMD Software: Adrenalin Edition™ Application" url="https://www.amd.com/en/products/software/adrenalin.html"/> and <FancyLink linkText="AMD Ryzen™ Master Utility for Overclocking Control" url="https://www.amd.com/en/products/software/ryzen-master.html"/>.
+However I couldn't change the TDP on my computer with any of those.
 
 ## 3. Using RyzenAdj
 
-<FancyLink linkText="RyzenAdj" url="https://github.com/FlyGoat/RyzenAdj" dark="true"/>
+After having no luck with the previous methods I discovered <FancyLink linkText="RyzenAdj" url="https://github.com/FlyGoat/RyzenAdj" dark="true"/>.
+That allows you to configure multiple things for you AMD ryzen CPU.
 
 ### 3.1. Check current setup
+
+The first thing you need to do is to download it in a folder (like `C:\AMD`).
+The you can check the current setup with:
 
 ```sh
 ryzenadj.exe -i
@@ -68,6 +85,8 @@ ryzenadj.exe -i
 <Notice type="warning">
   Must be run as an Administrator.
 </Notice>
+
+You will see this kind of information
 
 | Name                | Value | Limit                                                 | Parameter         |
 |---------------------|------:|------------------------------------------------------:|-------------------|
@@ -87,7 +106,21 @@ ryzenadj.exe -i
 | CCLK Boost SETPOINT |   nan |                                                       | power-saving /    |
 | CCLK BUSY VALUE     |   nan |                                                       | max-performance   |
 
-### 3.2. Limit TDP and Temperature
+<Notice type="info">
+  I pivoted the table so that it's easier to read.
+</Notice>
+
+### 3.2. What to change with RyzenAdj
+
+Here there multiple ways to prevent overheating.
+In my case I want to change:
+
+* **STAPM Limit** (`--stapm-limit=40000`): Manages the long-term average power consumption of the CPU based on thermal conditions to prevent overheating and ensure thermal comfort.
+* **Fast Limit** (`--fast-limit=45000`): Controls the maximum power the CPU can draw during short bursts of high performance, allowing the CPU to handle intensive tasks more efficiently.
+* **Slow Limit** (`--slow-limit=40000`): Sets the maximum sustained power the CPU can draw over longer periods, ensuring that the CPU does not overheat during prolonged use and maintains system stability.
+* **Thermal Control Temperature** (`--tctl-temp=90`): Sets the maximum allowable temperature for the CPU cores to prevent the CPU from reaching high temperatures, reducing thermal throttling, prolonging the lifespan of the CPU, and ensuring the system remains cool and stable.
+
+### 3.3. Limit TDP and Temperature
 
 ```sh
 ryzenadj.exe --stapm-limit=40000 --fast-limit=45000 --slow-limit=40000 --tctl-temp=90 -i
