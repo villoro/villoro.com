@@ -120,24 +120,94 @@ In my case I want to change:
 * **Slow Limit** (`--slow-limit=40000`): Sets the maximum sustained power the CPU can draw over longer periods, ensuring that the CPU does not overheat during prolonged use and maintains system stability.
 * **Thermal Control Temperature** (`--tctl-temp=90`): Sets the maximum allowable temperature for the CPU cores to prevent the CPU from reaching high temperatures, reducing thermal throttling, prolonging the lifespan of the CPU, and ensuring the system remains cool and stable.
 
+After tracking temperatures and CPU usage I settled for:
+
+| Name     | Limit | Parameter   |
+|----------|------:|-------------|
+| STAPM    |  40.0 | stapm-limit |
+| PPT FAST |  45.0 | fast-limit  |
+| PPT SLOW |  40.0 | slow-limit  |
+| THM CORE |  90.0 | tctl-temp   |
+
 ### 3.3. Limit TDP and Temperature
+
+To apply the changes simply run:
 
 ```sh
 ryzenadj.exe --stapm-limit=40000 --fast-limit=45000 --slow-limit=40000 --tctl-temp=90 -i
 ```
 
-| Name                | Value | Limit                                                 | Parameter         |
-|---------------------|------:|------------------------------------------------------:|-------------------|
-| STAPM               |   8.0 | <span style="background-color:PaleGreen;">40.0</span> | stapm-time        |
-| PPT FAST            |  14.8 | <span style="background-color:PaleGreen;">45.0</span> | fast-limit        |
-| PPT SLOW            |   8.3 | <span style="background-color:PaleGreen;">40.0</span> | slow-limit        |
-| THM CORE            |  53.0 | <span style="background-color:PaleGreen;">90.0</span> | tctl-temp         |
+And then validate that the limits are properly set up:
+
+| Name     | Value | Limit                                                 | Parameter   |
+|----------|------:|------------------------------------------------------:|-------------|
+| STAPM    |   8.0 | <span style="background-color:PaleGreen;">40.0</span> | stapm-limit |
+| PPT FAST |  14.8 | <span style="background-color:PaleGreen;">45.0</span> | fast-limit  |
+| PPT SLOW |   8.3 | <span style="background-color:PaleGreen;">40.0</span> | slow-limit  |
+| THM CORE |  53.0 | <span style="background-color:PaleGreen;">90.0</span> | tctl-temp   |
 
 ## 4. Stress testing
 
-https://benchmarks.ul.com/3dmark
-https://www.aida64.com/downloads
+Once you have changed the limits you should test that your computer does not overheat.
+You can do that with <FancyLink linkText="3D Mark" url="https://benchmarks.ul.com/3dmark" company="default" dark="true"/> or <FancyLink linkText="AIDA64" url="https://www.aida64.com/downloads" company="default" dark="true"/> (among others).
+To make sure your computer don't overheat I suggest you run a CPU and GPU test at the same time.
+
+Here are my results:
 
 <canvas id="stats_with_limits" style="width:100%;height:300px;"></canvas>
 
+<Notice type="success">
+  You can see that the TDP remains at 40 W and that the temperature never reaches the danger zone (above 95 ºC).
+</Notice>
+
 ## 5. Limit TDP at start up
+
+Unfortunatelly, the changes done by `ryzenadj.exe` will only work for the current session.
+Once you restart your PC, you will need to apply them.
+
+### 5.1. Create Scheduled Task
+
+To automatically apply them at start up, you can create a `Scheduled Task`.
+
+To do so:
+
+1. Open Task Scheduler:
+  * Press `Win + S` and type `Task Scheduler`, then press Enter.
+2. Create a New Task:
+  * In the Task Scheduler window, click on `Create Task` in the right-hand pane.
+3. General Tab:
+  * Name your task (e.g., `Set AMD TDP Limits`).
+  * Under `Security options`, select `Run whether user is logged on or not`.
+  * Check `Run with highest privileges`.
+4. Triggers Tab:
+  * Click `New...` to create a new trigger.
+  * Choose `At startup` from the `Begin the task` dropdown.
+  * Click OK.
+5. Actions Tab:
+  * Click `New...` to create a new action.
+  * For `Action`, select `Start a program`.
+  * In the `Program/script` field, enter the path to ryzenadj.exe. If it's not in a standard location, you might need to use the full path.
+  * In the `Add arguments (optional)` field, enter the arguments for the command: `--stapm-limit=40000 --fast-limit=45000 --slow-limit=40000  --tctl-temp=90`
+  * Click `OK`.
+6. Conditions Tab:
+  * Adjust any conditions if necessary, but it's usually fine to leave them as default.
+7. Settings Tab:
+  * Ensure `Allow task to be run on demand` is checked.
+  * Optionally, you can adjust other settings to suit your needs.
+8. Save the Task:
+  * Click `OK`.
+  * You may be prompted to enter your administrator password to create the task.
+
+### 5.2. Verify Scheduled Task
+
+The first thing to do is to restart the computer and validate that the limits are correctly applied with:
+
+```sh
+ryzenadj.exe -i
+```
+
+If you have problems, you can do a manual run:
+
+1. Go back to the Task Scheduler and find your newly created task.
+2. Right-click the task and select "Run" to test if it works as expected.
+3. Ensure that the TDP limits are applied correctly.
