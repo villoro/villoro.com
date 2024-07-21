@@ -38,14 +38,11 @@ To run the website locally, use the following commands:
 ## Project Structure
 The project is organized as follows:
 
-- **src/**: Contains the source code for the Astro components and pages.
-- **public/**: Contains static assets like images and styles.
-- **content/**: Contains markdown or data files for the site content.
-
-### Main Components
-- **layouts/**: Layout templates for different page types.
-- **components/**: Reusable UI components.
-- **pages/**: Main pages of the site.
+- **src/**: Contains the source code for the Astro components, pages, and content.
+  - **layouts/**: Layout templates for different page types.
+  - **components/**: Reusable UI components.
+  - **pages/**: Main pages of the site.
+  - **content/**: Contains markdown or data files for the site content.
 
 ## Deployment
 The site is deployed using [Netlify](https://www.netlify.com/). You can trigger a deployment by pushing changes to the main branch. For feature development, create a feature branch, and merge it into the main branch through a pull request.
