@@ -16,19 +16,27 @@ xx
 
 ## 1. Types of failures
 
+There are 2 types of problems we can handle in DBT
+
+1. Failures before DBT
+2. Failures in DBT
+
+![Pipeline DAG example](../../images/posts/2024/0051-pipeline-dag.jpg)
+
 ## 2. Failures before DBT
+
+![Failures before DBT example](../../images/posts/2024/0051-pre-dbt-failure.jpg)
+
+`dbt build --exclude tag:salesforce`
 
 ## 3. Failures in DBT
 
-### 3.1. Blocking failures
+![Failures in DBT example](../../images/posts/2024/0051-dbt-failure.jpg)
 
-### 3.2. Non blocking failures
+How failures work in DBT
 
-
-<FancyLink linkText="DBT tags | Other resource types" url="https://docs.getdbt.com/reference/resource-configs/tags#other-resource-types"/>
+## 4. Running jobs post DBT
 
 <FancyLink linkText="Running DBT with AWS ECS (Fargate) | 8.2. DBT run results" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/#82-dbt-run-results" dark="true"/>
 
-
-
-## 4. Running jobs post DBT
+![Failures before and inside DBT](../../images/posts/2024/0051-both-failures.jpg)
