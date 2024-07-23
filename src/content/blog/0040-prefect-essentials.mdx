@@ -475,10 +475,10 @@ if flow_runs:
 
 ### 6.3. Cancelling Stuck Flow Runs
 
-There are some times where flow runs appear as `Running` even if they are not.
-For example that frequently happens when an EMR job times out.
+Occasionally, flow runs may appear as `Running` even when they are not.
+This can happen, for example, when an EMR job times out.
 
-The first thing is to get the running flow runs:
+To address this, the first step is to retrieve the running flow runs:
 
 ```python
 from datetime import datetime, timedelta
@@ -505,19 +505,21 @@ async def get_running_flow_runs(start_time_min=datetime.now() - timedelta(days=1
     return df.sort_values("created")
 ```
 
-That will give you a pandas dataframe with all running flow runs.
+This function will provide you with a pandas dataframe containing all the running flow runs.
 
 <Notice type="warning">
-  You might not want to cancell all flow runs, filter it accordingly.
+  You may not want to cancel all running flow runs, so be sure to filter them accordingly.
 </Notice>
 
-Then you can cancell the flow runs with:
+Next, you can cancel the flow runs with the following code:
 
 ```python
-def cancell_flow_runs(flow_run_ids):
-    for x in flow_run_ids:
-        await client.set_flow_run_state(str(x), state=states.Cancelled(), force=True)
+async def cancel_flow_runs(flow_run_ids):
+    for flow_run_id in flow_run_ids:
+        await client.set_flow_run_state(str(flow_run_id), state=states.Cancelled(), force=True)
 
 df = await get_running_flow_runs()
-cancell_flow_runs(flow_run_ids=df["id"])
+await cancel_flow_runs(flow_run_ids=df["id"])
 ```
+
+This script will cancel the flow runs that are stuck in the Running state.
