@@ -472,3 +472,52 @@ if flow_runs:
 <Notice type="success" className="mt-6">
   This is very useful when you have a pipeline that executes multiple times a day and you don't want to run a `flow`/`task` each time but only once if it hasn't been done in less than a day.
 </Notice>
+
+### 6.3. Cancelling Stuck Flow Runs
+
+There are some times where flow runs appear as `Running` even if they are not.
+For example that frequently happens when an EMR job times out.
+
+The first thing is to get the running flow runs:
+
+```python
+from datetime import datetime, timedelta
+
+import pandas as pd
+
+from prefect import states
+from prefect.client import get_client
+from prefect.client.schemas import filters
+
+client = get_client()
+
+async def get_running_flow_runs(start_time_min=datetime.now() - timedelta(days=1)):
+    filter_state = filters.FlowRunFilterState(
+        name=filters.FlowRunFilterStateName(any_=["Running"])
+    )
+    
+    filter_start_time = filters.FlowRunFilterStartTime(after_=start_time_min)
+
+    flow_run_filter = filters.FlowRunFilter(state=filter_state, start_time=filter_start_time)
+    data = await client.read_flow_runs(flow_run_filter=flow_run_filter)
+
+    df = pd.DataFrame([x.dict() for x in data])
+    return df.sort_values("created")
+```
+
+That will give you a pandas dataframe with all running flow runs.
+
+<Notice type="warning">
+  You might not want to cancell all flow runs, filter it accordingly.
+</Notice>
+
+Then you can cancell the flow runs with:
+
+```python
+def cancell_flow_runs(flow_run_ids):
+    for x in flow_run_ids:
+        await client.set_flow_run_state(str(x), state=states.Cancelled(), force=True)
+
+df = await get_running_flow_runs()
+cancell_flow_runs(flow_run_ids=df["id"])
+```
