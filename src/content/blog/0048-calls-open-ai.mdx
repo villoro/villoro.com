@@ -152,68 +152,133 @@ With that, we can add this to the `process_file` function:
     )
 ```
 
-### 5. Using `ChatGPT` to extract insights
+## 5. Using `ChatGPT` to extract insights
 
 To extract information you can do a regular call to `ChatGPT`.
-The key here is to use a prompt that asks for a `json` with any content you want.
-Also, you can provide a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that the output should follow.
+The key here is to use structured outputs that were anounced some weeks ago (<FancyLink linkText="Introducing Structured Outputs in the API" url="https://openai.com/index/introducing-structured-outputs-in-the-api/"/>).
+Also take a look at the documentation at <FancyLink linkText="API Reference | response_format" url="https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format"/> and <FancyLink linkText="Structured Outputs" url="https://platform.openai.com/docs/guides/structured-outputs/introduction"/>.
+
+<Notice type="warning">
+  Notice that there is a way to provide a Pydantic class directly in the API call and that it will handle the casting.
+  However this is in beta and I prefer not using it yet.
+</Notice>
+
+### 5.1. Creating the prompt with a pydantic class
+
+In order to avoid code duplication, the first thing we will do is to create a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that the output should follow:
+
+```python
+from typing import Literal, List, Optional
+from pydantic import BaseModel, Field
+
+class CallAnalysis(BaseModel):
+    class Config:
+        description = "A model to analyze transcribed calls, extracting key information about sentiment, outcomes, and potential improvements."
+    
+    sentiment: Literal['positive', 'negative'] = Field(
+        ..., description="The overall sentiment of the call, either 'positive' or 'negative'."
+    )
+    summary: str = Field(
+        ..., description="A brief summary of the call."
+    )
+    is_answered: bool = Field(
+        ..., description="True if the call was answered, else false."
+    )
+    successful_sale: bool = Field(
+        ..., description="True if the agent was able to sell a course, else false."
+    )
+    improvements: List[str] = Field(
+        ..., description="Suggestions for improving the agent's performance on the call."
+    )
+    failure_reason: Optional[str] = Field(
+        ..., description="The reason for the call's failure to result in a sale. Leave empty or as None if the sale was successful."
+    )
+```
+
+We can use the pydantic class for creating the prompt with `CallAnalysis.model_json_schema()`.
+
+```python
+PROMPT = f"""You are an assistant tasked with analyzing a transcribed call.
+Your response must be in English and return a JSON that is parsable with the following Pydantic model:
+
+{CallAnalysis.model_json_schema()}
+```"""
+```
 
 <Notice type="info">
   There is a lot of prompt engineering that you can do here, but this is out of the scope of this post.
 </Notice>
 
-So you can extract the information with:
+### 5.2. Calling OpenAI
 
-````python
-from openai import OpenAI
+The important part here is handling the `response_format` properly.
+With `get_json_schema_from_pydantic` it can be created based on the `pydantic` object.
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+Then you can get the output with `CLIENT.chat.completions.create`.
 
-PROMPT = """
-I want you to extract information about a transcribed call. I want the output to be *only* a `json` with the following information:
-
-* sentiment: positive/negative
-* summary: a short summary of the call
-* is_answered: true if the person who was being called answered the call else false
-* successul_sale: true if the agent was able to sell a course
-* improvements: improvements ideas for the agent that was doing the call
-* failure_reason: in case there was no sale, the reason why. If there was a sale, leave it as `None` or empty
-
-That json must be parsable with the following `pydantic` model:
+Finally, in order to store relevant metadata about the API call I extend the pydantic class and add some relevant fields.
 
 ```python
-from pydantic import BaseModel
-from typing import List, Optional, Literal
+from datetime import datetime
+import json
 
-class CallAnalysis(BaseModel):
-    sentiment: Literal['positive', 'negative']
-    summary: str
-    is_answered: bool
-    successful_sale: bool
-    improvements: List[str]
-    failure_reason: Optional[str] = None
-```
+from openai import OpenAI
 
-Here is the complete transcription:
+CLIENT = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-```plaintext
-{transcription}
-```"""
+
+def get_json_schema_from_pydantic(pydantic_model):
+    """
+    To force ChatGPT to output json data.
+    More info: https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format
+    """
+    schema = pydantic_model.model_json_schema()
+
+    # Manually add "additionalProperties": false to the schema
+    schema["additionalProperties"] = False
+
+    json_schema = {
+        "name": pydantic_model.__name__,
+        "description": pydantic_model.Config.description,
+        "schema": schema,
+        "strict": True,
+    }
+
+    return {"type": "json_schema", "json_schema": json_schema}
+
 
 def extract_info(transcription)
-    messages = [{
-        "role": "user",
-        "content": PROMPT.format(transcription=transcription),
-    }]
+    messages = [
+        {"role": "system", "content": PROMPT},
+        {"role": "user", "content": transcription}
+    ]
 
-    chat_completion = client.chat.completions.create(
-        model="gpt-4o", messages=messages,
+    response_format = get_json_schema_from_pydantic(CallAnalysis)
+
+    chat_completion = CLIENT.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        response_format=response_format,
     )
 
-    return chat_completion.choices[0].message.content
+    class ChatOutput(pydantic_model):
+        """
+        This class is an extension of the input `pydantic_model`
+        It adds multiple metadata meant for debugging and issues resolution
+        """
+
+        gpt_called_at: datetime = datetime.now()
+        gpt_raw_input: str = transcription
+        gpt_model: str = data["model"]
+        id: Optional[str]
+
+    result = chat_completion.choices[0].message.content
+    result_json = json.loads(result)
+
+    return ChatOutput(**result_json)
 
 extract_info("your transcription goes here")
-````
+```
 <Notice type="warning">
   Remember to pass the `transcription` from the previous step.
 </Notice>
@@ -230,7 +295,7 @@ for file in files:
     results.append(result)
 ```
 
-`results` will be a `list` of `Transcription` pydantic models.
+`results` will be a `list` of `Transcription` or `ChatOutput` pydantic models.
 We can easily transform that to a `pandas` dataframe with:
 
 ```python
