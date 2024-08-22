@@ -2,7 +2,7 @@
 slug: process-calls-open-ai
 title: Process Calls with Open AI
 meta_title: Process Calls with Open AI
-description: Learn how to extract and analyze call data using OpenAI models. This guide covers transcribing calls with Whisper, extracting insights with ChatGPT, handling invalid calls, and processing multiple files efficiently.
+description: Learn how to extract and analyze call data using OpenAI models, with a focus on structured outputs for clear and consistent results. This guide covers transcribing calls with Whisper, extracting insights with ChatGPT, handling invalid calls, and processing multiple files efficiently. Explore how to use Pydantic models and OpenAI's API for structured data extraction.
 date: 2024-06-21
 image: "/images/blog/0048-process-calls-openai.jpg"
 category: AI
@@ -247,13 +247,13 @@ def get_json_schema_from_pydantic(pydantic_model):
     return {"type": "json_schema", "json_schema": json_schema}
 
 
-def extract_info(transcription)
+def extract_info(transcription, pydantic_model=CallAnalysis)
     messages = [
         {"role": "system", "content": PROMPT},
         {"role": "user", "content": transcription}
     ]
 
-    response_format = get_json_schema_from_pydantic(CallAnalysis)
+    response_format = get_json_schema_from_pydantic(pydantic_model)
 
     chat_completion = CLIENT.chat.completions.create(
         model="gpt-4o",
@@ -294,6 +294,9 @@ for file in files:
     result = await process_file(client, s3, file)
     results.append(result)
 ```
+<Notice type="info">
+  This example demonstrates the process for handling transcriptions. The extraction of insights can be achieved in a very similar manner.
+</Notice>
 
 `results` will be a `list` of `Transcription` or `ChatOutput` pydantic models.
 We can easily transform that to a `pandas` dataframe with:
@@ -350,3 +353,11 @@ def write_parquet(
         **kwargs,
     )
 ```
+
+## 7. Conclusion
+
+In this post, we explored how to use `ChatGPT` to extract structured insights from transcriptions by leveraging Pydantic models and OpenAI's API.
+This approach allows for clear and consistent outputs, making it easier to automate and analyze data.
+
+In a future post, I’ll dive into how to handle asynchronous concurrent calls using a `RateLimiter` to ensure efficiency and compliance with API rate limits.
+Stay tuned for more advanced techniques to optimize your workflows with ChatGPT!
