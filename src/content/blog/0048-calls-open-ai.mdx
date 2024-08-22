@@ -2,11 +2,11 @@
 slug: process-calls-open-ai
 title: Process Calls with Open AI
 meta_title: Process Calls with Open AI
-description: Learn how to extract and analyze call data using OpenAI models. This guide covers transcribing calls with Whisper, extracting insights with ChatGPT, handling invalid calls, and processing multiple files efficiently.
+description: Learn how to extract and analyze call data using OpenAI models, with a focus on structured outputs for clear and consistent results. This guide covers transcribing calls with Whisper, extracting insights with ChatGPT, handling invalid calls, and processing multiple files efficiently. Explore how to use Pydantic models and OpenAI's API for structured data extraction.
 date: 2024-06-21
 image: "/images/blog/0048-process-calls-openai.jpg"
 category: AI
-tags: [Python, DE, AI, Tutorial]
+tags: [Python, DE, AI, Tutorial, OpenAI]
 draft: true
 ---
 
@@ -14,7 +14,7 @@ draft: true
 
 At work we wanted to extract information from calls done using a CTI. This way we can improve the service we offer by getting insights from the call and by providing suggestions to agents. We can do that using different OpenAI models.
 
-## 1. Extracting information with OpenAI
+## 1. How to extract insights from an audio with OpenAI
 
 At the time of writing `ChatGPT 4o` is not able to process multimodal information. That means that we cannot pass an audio together with text to extract insights. To do so, we need to do it with 2 steps:
 
@@ -23,7 +23,9 @@ At the time of writing `ChatGPT 4o` is not able to process multimodal informatio
 
 We will do it using <FancyLink linkText="OpenAI python" url="https://github.com/openai/openai-python" dark="true"/> package.
 
-### 1.1. Using `Whisper` to transcribe the call
+First, let's focus on the transcription.
+
+### 2. Using `Whisper` to transcribe the call
 
 With `whisper` we can transcribe an audio file easily.
 It can be done with:
@@ -58,73 +60,7 @@ transcription = transcribe_audio(client, file)
 
 This code assumes that the file is stored in `S3` but it can easily be adapted for local files or for other cloud providers.
 
-### 1.2. Using `ChatGPT` to extract insights
-
-To extract information you can do a regular call to `ChatGPT`.
-The key here is to use a prompt that asks for a `json` with any content you want.
-Also, you can provide a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that the output should follow.
-
-<Notice type="info">
-  There is a lot of prompt engineering that you can do here, but this is out of the scope of this post.
-</Notice>
-
-So you can extract the information with:
-
-````python
-from openai import OpenAI
-
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-PROMPT = """
-I want you to extract information about a transcribed call. I want the output to be *only* a `json` with the following information:
-
-* sentiment: positive/negative
-* summary: a short summary of the call
-* is_answered: true if the person who was being called answered the call else false
-* successul_sale: true if the agent was able to sell a course
-* improvements: improvements ideas for the agent that was doing the call
-* failure_reason: in case there was no sale, the reason why. If there was a sale, leave it as `None` or empty
-
-That json must be parsable with the following `pydantic` model:
-
-```python
-from pydantic import BaseModel
-from typing import List, Optional, Literal
-
-class CallAnalysis(BaseModel):
-    sentiment: Literal['positive', 'negative']
-    summary: str
-    is_answered: bool
-    successful_sale: bool
-    improvements: List[str]
-    failure_reason: Optional[str] = None
-```
-
-Here is the complete transcription:
-
-```plaintext
-{transcription}
-```"""
-
-def extract_info(transcription)
-    messages = [{
-        "role": "user",
-        "content": PROMPT.format(transcription=transcription),
-    }]
-
-    chat_completion = client.chat.completions.create(
-        model="gpt-4o", messages=messages,
-    )
-
-    return chat_completion.choices[0].message.content
-
-extract_info("your transcription goes here")
-````
-<Notice type="warning">
-  Remember to pass the `transcription` from the previous step.
-</Notice>
-
-## 2. Handling invalid calls
+## 3. Handling invalid calls
 
 When processing the first calls, I noticed that we had a lot of super short calls where no transcription could be extracted.
 Trying to transcribe those calls is a waste of resources.
@@ -178,7 +114,7 @@ def process_file(client, s3, filename):
     return transcription
 ```
 
-## 3. Adding metadata
+## 4. Adding metadata
 
 I think that is always really useful to have some metadata whenever doing operations in the datalake.
 It will be specially useful when debugging issues.
@@ -216,7 +152,138 @@ With that, we can add this to the `process_file` function:
     )
 ```
 
-## 4. Processing the outputs
+## 5. Using `ChatGPT` to Extract Insights
+
+To extract information, you can make a standard call to `ChatGPT`.
+The key here is to leverage the newly introduced structured outputs, which were announced recently (<FancyLink linkText="Introducing Structured Outputs in the API" url="https://openai.com/index/introducing-structured-outputs-in-the-api/"/>).
+For more details, refer to the <FancyLink linkText="API Reference | response_format" url="https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format"/> and <FancyLink linkText="Structured Outputs" url="https://platform.openai.com/docs/guides/structured-outputs/introduction"/> documentation.
+
+<Notice type="warning">
+  Note that there is an option to directly provide a Pydantic class in the API call, which will automatically handle the casting.
+  However, since this feature is still in beta, I prefer not to use it at this time.
+</Notice>
+
+### 5.1. Defining the Prompt with a Pydantic Model
+
+To ensure consistency and avoid code duplication, we'll start by creating a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that defines the structure and fields of the output:
+
+```python
+from typing import Literal, List, Optional
+from pydantic import BaseModel, Field
+
+class CallAnalysis(BaseModel):
+    class Config:
+        description = "A model to analyze transcribed calls, extracting key information about sentiment, outcomes, and potential improvements."
+    
+    sentiment: Literal['positive', 'negative'] = Field(
+        ..., description="The overall sentiment of the call, either 'positive' or 'negative'."
+    )
+    summary: str = Field(
+        ..., description="A brief summary of the call."
+    )
+    is_answered: bool = Field(
+        ..., description="True if the call was answered, else false."
+    )
+    successful_sale: bool = Field(
+        ..., description="True if the agent was able to sell a course, else false."
+    )
+    improvements: List[str] = Field(
+        ..., description="Suggestions for improving the agent's performance on the call."
+    )
+    failure_reason: Optional[str] = Field(
+        ..., description="The reason for the call's failure to result in a sale. Leave empty or as None if the sale was successful."
+    )
+```
+
+With this Pydantic class, you can generate a prompt by using `CallAnalysis.model_json_schema()`:
+
+```python
+PROMPT = f"""You are an assistant tasked with analyzing a transcribed call.
+Your response must be in English and return a JSON that is parsable with the following Pydantic model:
+
+{CallAnalysis.model_json_schema()}
+```"""
+```
+
+<Notice type="info">
+  While there are many ways to refine and optimize the prompt, those techniques are beyond the scope of this post.
+</Notice>
+
+### 5.2. Calling OpenAI
+
+The key aspect here is correctly handling the `response_format` when interacting with OpenAI's API.
+You can generate the required schema using `get_json_schema_from_pydantic` based on the `pydantic` model.
+
+Afterward, you can obtain the output using `CLIENT.chat.completions.create`.
+
+Finally, to capture relevant metadata about the API call, I extend the Pydantic class by adding some additional fields.
+
+```python
+from datetime import datetime
+import json
+
+from openai import OpenAI
+
+CLIENT = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+
+def get_json_schema_from_pydantic(pydantic_model):
+    """
+    To force ChatGPT to output json data.
+    More info: https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format
+    """
+    schema = pydantic_model.model_json_schema()
+
+    # Manually add "additionalProperties": false to the schema
+    schema["additionalProperties"] = False
+
+    json_schema = {
+        "name": pydantic_model.__name__,
+        "description": pydantic_model.Config.description,
+        "schema": schema,
+        "strict": True,
+    }
+
+    return {"type": "json_schema", "json_schema": json_schema}
+
+
+def extract_info(transcription, pydantic_model=CallAnalysis)
+    messages = [
+        {"role": "system", "content": PROMPT},
+        {"role": "user", "content": transcription}
+    ]
+
+    response_format = get_json_schema_from_pydantic(pydantic_model)
+
+    chat_completion = CLIENT.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        response_format=response_format,
+    )
+
+    class ChatOutput(pydantic_model):
+        """
+        This class is an extension of the input `pydantic_model`
+        It adds multiple metadata meant for debugging and issues resolution
+        """
+
+        gpt_called_at: datetime = datetime.now()
+        gpt_raw_input: str = transcription
+        gpt_model: str = data["model"]
+        id: Optional[str]
+
+    result = chat_completion.choices[0].message.content
+    result_json = json.loads(result)
+
+    return ChatOutput(**result_json)
+
+extract_info("your transcription goes here")
+```
+<Notice type="warning">
+  Remember to pass the `transcription` from the previous step.
+</Notice>
+
+## 6. Processing the outputs
 
 Right now we have seen how to process one file.
 For now we can process multiple files with a single `for` loop like:
@@ -227,8 +294,11 @@ for file in files:
     result = await process_file(client, s3, file)
     results.append(result)
 ```
+<Notice type="info">
+  This example demonstrates the process for handling transcriptions. The extraction of insights can be achieved in a very similar manner.
+</Notice>
 
-`results` will be a `list` of `Transcription` pydantic models.
+`results` will be a `list` of `Transcription` or `ChatOutput` pydantic models.
 We can easily transform that to a `pandas` dataframe with:
 
 ```python
@@ -239,7 +309,7 @@ df["p_extracted_at"] = datetime.now()
   As usual, we add the `p_extracted_at` column as the partition column. You can read more about this in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>
 </Notice>
 
-### 4.1. Exporting the dataframe
+### 6.1. Exporting the dataframe
 
 Here we can use <FancyLink linkText="AWSwrangler" url="https://github.com/aws/aws-sdk-pandas" dark="true"/> to export the result as a table. This can be done with the following functions:
 
@@ -284,8 +354,10 @@ def write_parquet(
     )
 ```
 
-## 5. Concurrent Async calls
+## 7. Conclusion
 
-### 5.1. Doing async calls
+In this post, we explored how to use `ChatGPT` to extract structured insights from transcriptions by leveraging Pydantic models and OpenAI's API.
+This approach allows for clear and consistent outputs, making it easier to automate and analyze data.
 
-### 5.2. Rate limiter
+In a future post, I’ll dive into how to handle asynchronous concurrent calls using a `RateLimiter` to ensure efficiency and compliance with API rate limits.
+Stay tuned for more advanced techniques to optimize your workflows with ChatGPT!
