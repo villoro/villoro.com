@@ -6,7 +6,7 @@ description: Learn how to extract and analyze call data using OpenAI models. Thi
 date: 2024-06-21
 image: "/images/blog/0048-process-calls-openai.jpg"
 category: AI
-tags: [Python, DE, AI, Tutorial]
+tags: [Python, DE, AI, Tutorial, OpenAI]
 draft: true
 ---
 
@@ -152,20 +152,20 @@ With that, we can add this to the `process_file` function:
     )
 ```
 
-## 5. Using `ChatGPT` to extract insights
+## 5. Using `ChatGPT` to Extract Insights
 
-To extract information you can do a regular call to `ChatGPT`.
-The key here is to use structured outputs that were anounced some weeks ago (<FancyLink linkText="Introducing Structured Outputs in the API" url="https://openai.com/index/introducing-structured-outputs-in-the-api/"/>).
-Also take a look at the documentation at <FancyLink linkText="API Reference | response_format" url="https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format"/> and <FancyLink linkText="Structured Outputs" url="https://platform.openai.com/docs/guides/structured-outputs/introduction"/>.
+To extract information, you can make a standard call to `ChatGPT`.
+The key here is to leverage the newly introduced structured outputs, which were announced recently (<FancyLink linkText="Introducing Structured Outputs in the API" url="https://openai.com/index/introducing-structured-outputs-in-the-api/"/>).
+For more details, refer to the <FancyLink linkText="API Reference | response_format" url="https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format"/> and <FancyLink linkText="Structured Outputs" url="https://platform.openai.com/docs/guides/structured-outputs/introduction"/> documentation.
 
 <Notice type="warning">
-  Notice that there is a way to provide a Pydantic class directly in the API call and that it will handle the casting.
-  However this is in beta and I prefer not using it yet.
+  Note that there is an option to directly provide a Pydantic class in the API call, which will automatically handle the casting.
+  However, since this feature is still in beta, I prefer not to use it at this time.
 </Notice>
 
-### 5.1. Creating the prompt with a pydantic class
+### 5.1. Defining the Prompt with a Pydantic Model
 
-In order to avoid code duplication, the first thing we will do is to create a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that the output should follow:
+To ensure consistency and avoid code duplication, we'll start by creating a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that defines the structure and fields of the output:
 
 ```python
 from typing import Literal, List, Optional
@@ -195,7 +195,7 @@ class CallAnalysis(BaseModel):
     )
 ```
 
-We can use the pydantic class for creating the prompt with `CallAnalysis.model_json_schema()`.
+With this Pydantic class, you can generate a prompt by using `CallAnalysis.model_json_schema()`:
 
 ```python
 PROMPT = f"""You are an assistant tasked with analyzing a transcribed call.
@@ -206,17 +206,17 @@ Your response must be in English and return a JSON that is parsable with the fol
 ```
 
 <Notice type="info">
-  There is a lot of prompt engineering that you can do here, but this is out of the scope of this post.
+  While there are many ways to refine and optimize the prompt, those techniques are beyond the scope of this post.
 </Notice>
 
 ### 5.2. Calling OpenAI
 
-The important part here is handling the `response_format` properly.
-With `get_json_schema_from_pydantic` it can be created based on the `pydantic` object.
+The key aspect here is correctly handling the `response_format` when interacting with OpenAI's API.
+You can generate the required schema using `get_json_schema_from_pydantic` based on the `pydantic` model.
 
-Then you can get the output with `CLIENT.chat.completions.create`.
+Afterward, you can obtain the output using `CLIENT.chat.completions.create`.
 
-Finally, in order to store relevant metadata about the API call I extend the pydantic class and add some relevant fields.
+Finally, to capture relevant metadata about the API call, I extend the Pydantic class by adding some additional fields.
 
 ```python
 from datetime import datetime
