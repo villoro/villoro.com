@@ -14,7 +14,7 @@ draft: true
 
 At work we wanted to extract information from calls done using a CTI. This way we can improve the service we offer by getting insights from the call and by providing suggestions to agents. We can do that using different OpenAI models.
 
-## 1. Extracting information with OpenAI
+## 1. How to extract insights from an audio with OpenAI
 
 At the time of writing `ChatGPT 4o` is not able to process multimodal information. That means that we cannot pass an audio together with text to extract insights. To do so, we need to do it with 2 steps:
 
@@ -23,7 +23,9 @@ At the time of writing `ChatGPT 4o` is not able to process multimodal informatio
 
 We will do it using <FancyLink linkText="OpenAI python" url="https://github.com/openai/openai-python" dark="true"/> package.
 
-### 1.1. Using `Whisper` to transcribe the call
+First, let's focus on the transcription.
+
+### 2. Using `Whisper` to transcribe the call
 
 With `whisper` we can transcribe an audio file easily.
 It can be done with:
@@ -58,7 +60,99 @@ transcription = transcribe_audio(client, file)
 
 This code assumes that the file is stored in `S3` but it can easily be adapted for local files or for other cloud providers.
 
-### 1.2. Using `ChatGPT` to extract insights
+## 3. Handling invalid calls
+
+When processing the first calls, I noticed that we had a lot of super short calls where no transcription could be extracted.
+Trying to transcribe those calls is a waste of resources.
+
+To solve that I used <FancyLink linkText="Mutagen" url="https://github.com/quodlibet/mutagen" dark="true"/> to extract the audio length with:
+
+```python
+from mutagen.mp3 import HeaderNotFoundError
+from mutagen.mp3 import MP3
+
+def get_duration(file):
+    """Get duration of the audio file using mutagen"""
+    try:
+        audio = MP3(file)
+        duration_seconds = audio.info.length
+    except HeaderNotFoundError:
+        logger = get_run_logger()
+        logger.error(f"Unable to read the duration of the file: {file.name}")
+        duration_seconds = -1
+
+    file.seek(0)  # Reset file pointer after reading
+    return duration_seconds
+```
+
+Once extracted, I could only transcribe if the audio length was greater than a minimum value with:
+
+```python
+import time
+from loguru import logger
+
+MIN_SECONDS = 5 # Adjust if needed
+
+
+def process_file(client, s3, filename):
+    logger.info(f"Processing {filename=}")
+
+    t0 = time.monotonic()
+    file = get_file(s3, filename)
+    duration_seconds = get_duration(file)
+
+    if duration_seconds > MIN_SECONDS:
+        transcription = transcribe_audio(client, file)
+        trans_time = time.monotonic() - t0
+        logger.info(f"Successfully transcribed {filename=} in {trans_time:.2f} seconds")
+    else:
+        logger.info(
+            f"Skipping transcription for {filename=}, "
+            f"{duration_seconds=:.2f} is less than {MIN_SECONDS=}"
+        )
+
+    return transcription
+```
+
+## 4. Adding metadata
+
+I think that is always really useful to have some metadata whenever doing operations in the datalake.
+It will be specially useful when debugging issues.
+
+That can easily be done with <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/>.
+The idea is to create `model` for each file we process.
+
+Here is how you can define the model:
+
+```python
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+
+class Transcription(BaseModel):
+    filename: str
+    duration_seconds: float
+    transcription: Optional[str] = None
+    transcription_time: Optional[float] = None
+    transcribed_at: datetime = datetime.now()
+```
+
+With that, we can add this to the `process_file` function:
+
+<TerminalOutput color="stone">
+  process_file
+</TerminalOutput>
+```python
+    return Transcription(
+        filename=filename,
+        duration_seconds=duration_seconds,
+        transcription=transcription,
+        transcription_time=trans_time,
+    )
+```
+
+### 5. Using `ChatGPT` to extract insights
 
 To extract information you can do a regular call to `ChatGPT`.
 The key here is to use a prompt that asks for a `json` with any content you want.
@@ -124,99 +218,7 @@ extract_info("your transcription goes here")
   Remember to pass the `transcription` from the previous step.
 </Notice>
 
-## 2. Handling invalid calls
-
-When processing the first calls, I noticed that we had a lot of super short calls where no transcription could be extracted.
-Trying to transcribe those calls is a waste of resources.
-
-To solve that I used <FancyLink linkText="Mutagen" url="https://github.com/quodlibet/mutagen" dark="true"/> to extract the audio length with:
-
-```python
-from mutagen.mp3 import HeaderNotFoundError
-from mutagen.mp3 import MP3
-
-def get_duration(file):
-    """Get duration of the audio file using mutagen"""
-    try:
-        audio = MP3(file)
-        duration_seconds = audio.info.length
-    except HeaderNotFoundError:
-        logger = get_run_logger()
-        logger.error(f"Unable to read the duration of the file: {file.name}")
-        duration_seconds = -1
-
-    file.seek(0)  # Reset file pointer after reading
-    return duration_seconds
-```
-
-Once extracted, I could only transcribe if the audio length was greater than a minimum value with:
-
-```python
-import time
-from loguru import logger
-
-MIN_SECONDS = 5 # Adjust if needed
-
-
-def process_file(client, s3, filename):
-    logger.info(f"Processing {filename=}")
-
-    t0 = time.monotonic()
-    file = get_file(s3, filename)
-    duration_seconds = get_duration(file)
-
-    if duration_seconds > MIN_SECONDS:
-        transcription = transcribe_audio(client, file)
-        trans_time = time.monotonic() - t0
-        logger.info(f"Successfully transcribed {filename=} in {trans_time:.2f} seconds")
-    else:
-        logger.info(
-            f"Skipping transcription for {filename=}, "
-            f"{duration_seconds=:.2f} is less than {MIN_SECONDS=}"
-        )
-
-    return transcription
-```
-
-## 3. Adding metadata
-
-I think that is always really useful to have some metadata whenever doing operations in the datalake.
-It will be specially useful when debugging issues.
-
-That can easily be done with <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/>.
-The idea is to create `model` for each file we process.
-
-Here is how you can define the model:
-
-```python
-from datetime import datetime
-from typing import Optional
-
-from pydantic import BaseModel
-
-class Transcription(BaseModel):
-    filename: str
-    duration_seconds: float
-    transcription: Optional[str] = None
-    transcription_time: Optional[float] = None
-    transcribed_at: datetime = datetime.now()
-```
-
-With that, we can add this to the `process_file` function:
-
-<TerminalOutput color="stone">
-  process_file
-</TerminalOutput>
-```python
-    return Transcription(
-        filename=filename,
-        duration_seconds=duration_seconds,
-        transcription=transcription,
-        transcription_time=trans_time,
-    )
-```
-
-## 4. Processing the outputs
+## 6. Processing the outputs
 
 Right now we have seen how to process one file.
 For now we can process multiple files with a single `for` loop like:
@@ -239,7 +241,7 @@ df["p_extracted_at"] = datetime.now()
   As usual, we add the `p_extracted_at` column as the partition column. You can read more about this in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>
 </Notice>
 
-### 4.1. Exporting the dataframe
+### 6.1. Exporting the dataframe
 
 Here we can use <FancyLink linkText="AWSwrangler" url="https://github.com/aws/aws-sdk-pandas" dark="true"/> to export the result as a table. This can be done with the following functions:
 
