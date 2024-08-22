@@ -413,8 +413,8 @@ For example for querying `flow_runs` we would use something like:
 
 ```python
 from prefect.client import get_client
-from prefect.orion.schemas import filters
-from prefect.orion.schemas import sorting
+from prefect.client.schemas import filters
+from prefect.client.schemas import sorting
 
 async def read_flow_runs(flow_run_filter=None, sort=sorting.FlowRunSort.START_TIME_DESC):
     """
@@ -422,8 +422,8 @@ async def read_flow_runs(flow_run_filter=None, sort=sorting.FlowRunSort.START_TI
 
     Args:
         offset (int): Offset for paginating the results.
-        flow_run_filter (prefect.orion.schemas.filters.FlowRunFilter, optional): Filter for flow runs. Defaults to None.
-        sort (prefect.orion.schemas.sorting.FlowRunSort, optional): Sorting options. Defaults to sorting.FlowRunSort.START_TIME_DESC.
+        flow_run_filter (prefect.client.schemas.filters.FlowRunFilter, optional): Filter for flow runs. Defaults to None.
+        sort (prefect.client.schemas.sorting.FlowRunSort, optional): Sorting options. Defaults to sorting.FlowRunSort.START_TIME_DESC.
 
     Returns:
         list: List of flow runs.
@@ -433,7 +433,7 @@ async def read_flow_runs(flow_run_filter=None, sort=sorting.FlowRunSort.START_TI
 ```
 
 We can use the `flow_run_filter` to filter the `flow_runs` we want to get.
-It is a little bit complex since you need to use the `filter` from `prefect.orion.schemas`.
+It is a little bit complex since you need to use the `filter` from `prefect.client.schemas`.
 
 For example:
 
@@ -472,3 +472,56 @@ if flow_runs:
 <Notice type="success" className="mt-6">
   This is very useful when you have a pipeline that executes multiple times a day and you don't want to run a `flow`/`task` each time but only once if it hasn't been done in less than a day.
 </Notice>
+
+### 6.3. Cancelling Stuck Flow Runs
+
+Occasionally, flow runs may appear as `Running` even when they are not.
+This can happen, for example, when an EMR job times out.
+
+To address this, the first step is to retrieve the running flow runs:
+
+```python
+from datetime import datetime, timedelta
+
+import pandas as pd
+
+from prefect import states
+from prefect.client import get_client
+from prefect.client.schemas import filters
+from prefect.client.schemas import sorting
+
+client = get_client()
+
+async def get_running_flow_runs(start_time_min=datetime.now() - timedelta(days=1)):
+    filter_state = filters.FlowRunFilterState(
+        name=filters.FlowRunFilterStateName(any_=["Running"])
+    )
+    
+    filter_start_time = filters.FlowRunFilterStartTime(after_=start_time_min)
+
+    data = await client.read_flow_runs(
+        flow_run_filter=filters.FlowRunFilter(state=filter_state, start_time=filter_start_time),
+        sort=sorting.FlowRunSort.START_TIME_DESC
+    )
+
+    return pd.DataFrame([x.dict() for x in data])
+```
+
+This function will provide you with a pandas dataframe containing all the running flow runs.
+
+<Notice type="warning">
+  You may not want to cancel all running flow runs, so be sure to filter them accordingly.
+</Notice>
+
+Next, you can cancel the flow runs with the following code:
+
+```python
+async def cancel_flow_runs(flow_run_ids):
+    for flow_run_id in flow_run_ids:
+        await client.set_flow_run_state(str(flow_run_id), state=states.Cancelled(), force=True)
+
+df = await get_running_flow_runs()
+await cancel_flow_runs(flow_run_ids=df["id"])
+```
+
+This script will cancel the flow runs that are stuck in the Running state.
