@@ -12,49 +12,45 @@ draft: false
 
 ## 0. Motivation
 
-In a previous post (<FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>), we covered how to extract insights from audio recordings.
-To fully automate this process, it's crucial to handle quota limits effectively and manage concurrent API calls efficiently.
-This post demonstrates how to implement a rate limiter to manage concurrent asynchronous calls to the OpenAI API, ensuring compliance with API quotas while maximizing throughput.
-Whether you're using **Whisper** for transcription or **ChatGPT** for extracting insights, this guide will help streamline operations, avoid common pitfalls, and optimize your use of OpenAI's capabilities.
+In a previous post (<FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>), we explored how to extract insights from audio recordings using OpenAI models.
+While extracting insights is critical, fully automating this process presents additional challenges, primarily in managing API quota limits and efficiently handling multiple concurrent API calls.
+
+Consider a scenario where you need to process thousands of audio recordings daily.
+Without proper management, exceeding the API rate limits could lead to failed requests, delays, or even service disruptions.
+This post addresses these challenges by demonstrating how to implement a rate limiter that effectively manages concurrent asynchronous calls to the OpenAI API.
+By ensuring compliance with API quotas and dynamically handling limits, you can maximize the throughput of your requests while maintaining service reliability.
+Whether you're using **Whisper** for transcription or **ChatGPT** for extracting insights, this guide will help you streamline operations, avoid common pitfalls, and optimize the use of OpenAI's powerful capabilities.
 
 ## 1. Approach overview
 
-To effectively manage concurrent API calls to OpenAI while respecting rate limits, we adopt a two-part approach:
+To efficiently manage concurrent API calls to OpenAI while respecting rate limits, we use a two-pronged approach:
 
-1. **Rate Limiting**: A custom `RateLimiter` class is implemented to monitor and control the number of requests and tokens used. This limiter dynamically adjusts based on API response headers, ensuring that the application adheres to OpenAI's usage policies. It prevents overuse by pausing execution when limits are reached and resuming once quotas reset.
+1. **Rate Limiting**: We implement a custom `RateLimiter` class to monitor and control the number of requests and tokens used. This rate limiter dynamically adjusts based on API response headers, ensuring that the application remains within OpenAI's usage policies. By doing so, it prevents overuse and potential service disruptions by pausing execution when limits are reached and resuming once quotas are reset.
 
-2. **Asynchronous Execution**: By leveraging Python's `asyncio` and the `aiohttp` library, we can handle multiple API calls concurrently without blocking the execution of other tasks. This asynchronous approach is crucial for maintaining high throughput and efficiency. Each API call is managed in a non-blocking way, allowing the system to handle other operations while waiting for responses.
+2. **Asynchronous Execution**: Leveraging Python's `asyncio` and the `aiohttp` library, we can handle multiple API calls concurrently without blocking other tasks. This asynchronous approach is vital for maintaining high throughput and efficiency, as it allows each API call to be managed in a non-blocking manner. The system can handle other operations while waiting for API responses, maximizing resource utilization.
 
-The combination of these strategies allows us to process a large number of API requests efficiently and effectively. By using structured output formats like Pydantic models, we ensure that data is organized and easily manageable. This approach not only optimizes performance but also maintains the integrity and reliability of data processing tasks.
+Combining these strategies enables the processing of a large volume of API requests both efficiently and reliably. By structuring outputs using Pydantic models, we ensure that data remains organized and easily manageable. This approach not only optimizes performance but also preserves the integrity and reliability of data processing tasks, making it well-suited for scaling up operations.
 
 ## 2. Quota limits
 
 ### 2.1. Understanding OpenAI Rate Limits
 
-OpenAI enforces rate limits to manage the number of API requests and tokens you can use within specific time frames.
-These limits help ensure fair usage and stable performance for all users.
-The key metrics to be aware of include:
+OpenAI enforces rate limits to manage API usage effectively, ensuring fair use and stable performance for all users. The primary metrics to consider are:
 
-1. **Requests Per Minute (RPM)**: The maximum number of API requests allowed per minute.
-2. **Requests Per Day (RPD)**: The total number of API requests you can make in a day.
-3. **Tokens Per Minute (TPM)**: The number of tokens (units of text) you can process per minute, including both input and output tokens.
-4. **Tokens Per Day (TPD)**: The daily limit on token usage, covering all input and output tokens throughout the day.
+* **Requests Per Minute (RPM)**: Limits the number of API requests allowed per minute. This is crucial for high-frequency tasks like transcribing audio with `whisper-1`, where RPM can range significantly depending on the subscription tier.
+* **Requests Per Day (RPD)**: Caps the total number of API requests that can be made in a day.
+* **Tokens Per Minute (TPM)**: Limits the number of text tokens processed per minute, including both input and output. This is particularly relevant for `ChatGPT` models, where the number of tokens depends on the length of the conversation.
+* **Tokens Per Day (TPD)**: Sets a daily limit on token usage across all operations.
 
-The specific rate limits vary based on the subscription tier.
-You can read more about it at <FancyLink linkText="Open AI | Rate Limits" url="https://platform.openai.com/docs/guides/rate-limits"/>.
+The specific rate limits vary by subscription tier. For more details, refer to <FancyLink linkText="Open AI | Rate Limits" url="https://platform.openai.com/docs/guides/rate-limits"/>.
 
-### 2.2. Requests limits
+### 2.2. Managing Rate Limits
 
-The most important limit is the **Requests Per Minute (RPM)**.
-That is specially important when calling `whisper-1` to transcribe audio since the RPM ranges from 3 to 500 depending on the tier.
+Understanding and managing these limits is essential, especially when scaling operations or integrating with automated workflows. Here's how to handle them effectively:
 
-### 2.1. Tokens limits
+* **Requests Per Minute (RPM)**: Critical when making frequent API calls. For example, using whisper-1 for transcriptions may involve a high number of requests, requiring careful monitoring of RPM to prevent exceeding the limit.
 
-This other limit is important when calling `Chat GPT` (any version of it).
-The number of tokens related to the number of words each request has.
-
-When using a model with **Tokens Per Minute (TPM)** limits we will need to calculate the number of tokens needed before submitting a request.
-I use a function that gives a good approximation for the tokens:
+* **Tokens Per Minute (TPM)**: When using models like `ChatGPT`, it's important to estimate token usage accurately before making a request. The following function provides a good approximation of token count:
 
 ```python
 import tiktoken
@@ -104,12 +100,10 @@ def count_tokens(messages, model=MODEL_TOKENIZER_DEFAULT):
 
 ```
 <Notice type="warning">
-  It does a good job at predicting tokens used but it's not perfect.
-  Real usage will be slighly different.
+  This function estimates token usage effectively, but note that actual usage may vary slightly.
 </Notice>
 <Notice type="info">
-  The `GPTTokens` will be used to export real usage once we call the API.
-  More on that on the next sections.
+  The `GPTTokens` class will be used to track actual token usage during API calls, which will be detailed in the following sections.
 </Notice>
 
 ## 3. Rate Limiter
@@ -117,32 +111,16 @@ def count_tokens(messages, model=MODEL_TOKENIZER_DEFAULT):
 We use a Rate Limiter to prevent exceeding API usage limits, ensuring compliance and avoiding throttling or service disruptions.
 This approach maximizes the number of valid requests per minute.
 
-### 3.1. How does it work?
+### 3.1. How It Works
 
-* **Managing Requests and Tokens:** Before making an API call, the limiter checks if there are enough remaining requests or tokens. If limits are reached, it pauses execution until the limits reset.
+The `RateLimiter` class is designed to monitor and control both request and token usage.
+It initializes with specified limits for maximum requests (`max_requests`) and tokens (`max_tokens`).
+Before each API call, it checks the remaining quota.
+If limits are reached, the limiter pauses execution until quotas reset, preventing the application from sending too many requests simultaneously.
 
-* **Handling API Responses:** After each API call, the limiter updates its state using information from response headers, keeping internal counters accurate. More details on this are in the next section.
-
-### 3.2. Overview of the RateLimiter
-
-1. **Initialization**: The `RateLimiter` is initialized with optional limits for maximum requests (`max_requests`) and maximum tokens (`max_tokens`). These define the cap for how many requests or tokens can be used in a given period.
-
-2. **Waiting for Availability**: The `wait_for_availability` method checks if there are enough remaining requests and tokens. If not, it pauses the execution for a calculated amount of time until limits are reset. This prevents the application from making too many API calls at once.
-
-3. **Updating Limits**: The `update_limits` method resets the request and token counts if the reset time has passed, ensuring that the rate limits are restored after each time window.
-
-4. **Dynamic Adjustment**: The `update_from_headers` method allows the rate limiter to adjust based on headers received from API responses, which may indicate the remaining requests, tokens, and the reset time. This keeps the rate limiter in sync with real-time API limits.
-
-5. **Global Setup**: The `set_rate_limiter` function initializes a global `RATE_LIMITER` instance, making it easy to enforce rate limits across the application without passing the limiter object around.
-
-<Notice type="info">
-  There is some overlap between the `update_limits` and `update_from_headers` methods.
-  While `update_limits` resets limits based on a fixed time window, `update_from_headers` allows dynamic adjustments based on real-time data from API responses.
-  This overlap is intentional, as using `update_from_headers` ensures more accurate limit management and optimizes the number of valid requests per minute.
-  By relying on actual API feedback, we can better handle fluctuating limits and reduce the risk of hitting rate caps unexpectedly.
-</Notice>
-
-### 3.2. Rate Limiter code
+After each API call, the limiter updates its counters using response headers.
+This dynamic adjustment keeps the rate limiter in sync with real-time API limits, ensuring that subsequent calls respect the current usage status.
+The global `set_rate_limiter` function simplifies setup by initializing a shared instance that can be accessed throughout the application.
 
 Here you have the full code for the `RateLimiter`:
 
@@ -290,6 +268,13 @@ class RateLimiter:
         self.reset_time_requests = time.monotonic() + reset_requests_seconds
         logger.debug(f"Updating limits from headers:\n{self}")
 ```
+
+<Notice type="info">
+  There is some overlap between the `update_limits` and `update_from_headers` methods.
+  While `update_limits` resets limits based on a fixed time window, `update_from_headers` allows dynamic adjustments based on real-time data from API responses.
+  This overlap is intentional, as using `update_from_headers` ensures more accurate limit management and optimizes the number of valid requests per minute.
+  By relying on actual API feedback, we can better handle fluctuating limits and reduce the risk of hitting rate caps unexpectedly.
+</Notice>
 
 ## 4. Using the Rate Limiter with Async calls
 
