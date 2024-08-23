@@ -276,11 +276,48 @@ Since this will help us getting more accurate information which in turn will hel
 
 ### 4.1. Calling the API
 
-We will use <FancyLink linkText="Aiohttp" url="https://github.com/aio-libs/aiohttp" dark="true"/> for the API requests.
+We will use <FancyLink linkText="Aiohttp" url="https://github.com/aio-libs/aiohttp" dark="true"/> for making API requests.
 
+The general idea is to have a function that waits for sufficient quota (managed by the `RateLimiter`) before calling the API.
+If a `HTTP 429` error (rate limit exceeded) occurs, the function will recursively call itself to retry the request.
+After each API call, it updates the `RateLimiter` with quota information from the response headers.
+
+A semaphore is also used to limit the number of concurrent calls, ensuring that we don't overwhelm the system. More details on this will be covered later.
+
+In the next section, you will see the full code for making calls to both Chat and Transcription endpoints.
+
+### 4.2. Calling Transcription endpoint
+
+For doing transcriptions we use `whisper-1` which doesn't have RPM limits.
+So the code is simpler than the one for `Chat`.
+
+Here is the code for it:
+
+<TerminalOutput color="stone">
+  transcription.py
+</TerminalOutput>
 ```python
+import asyncio
+import io
+import time
+from datetime import datetime
+from typing import Optional
+
 import aiohttp
+import pandas as pd
+from mutagen.mp3 import HeaderNotFoundError
+from mutagen.mp3 import MP3
+from pydantic import BaseModel
+from loguru import logger
+
 import rate_limiter as rt
+import utils as u
+
+MIN_SECONDS = 5
+DEFAULT_MODEL = "whisper-1"
+ENDPOINT_TRANSCRIPTIONS = "https://api.openai.com/v1/audio/transcriptions"
+
+MAX_REQUESTS_PER_MIN = 100
 
 async def _call_openai_transcription(data):
     await rt.RATE_LIMITER.wait_for_availability()
@@ -306,14 +343,72 @@ async def _call_openai_transcription(data):
 
                 result = await res.json()
                 return result["text"]
+
+class TranscriptionOutput(BaseModel):
+    """
+    Export relevant metadata
+    """
+
+    filename: str
+    duration_seconds: float
+    transcription: Optional[str]
+    transcription_time: Optional[float] = None
+    transcribed_at: datetime = datetime.now()
+    gpt_model: str
+
+
+async def call_openai_transcription(filename, temperature=0.2, gpt_model=DEFAULT_MODEL):
+    logger = get_run_logger()
+    logger.info(f"Processing {filename=}")
+
+    t0 = time.monotonic()
+    file = io.BytesIO(s3.read_file(filename))
+    duration_seconds = get_duration(file)
+
+    transcription = None
+    trans_time = None
+
+    if duration_seconds > MIN_SECONDS:
+        data = aiohttp.FormData()
+        data.add_field(
+            "file",
+            file,
+            filename=filename.split("/")[-1],
+            content_type="audio/mpeg",
+        )
+        data.add_field("model", gpt_model)
+        data.add_field("response_format", "json")
+        data.add_field("temperature", str(temperature))
+
+        transcription = await _call_openai_transcription(data)
+        trans_time = time.monotonic() - t0
+        logger.info(f"Successfully transcribed {filename=} in {trans_time:.2f} seconds")
+    else:
+        logger.info(
+            f"Skipping transcription for {filename=}, "
+            f"{duration_seconds=:.2f} is less than {MIN_SECONDS=}"
+        )
+
+    return TranscriptionOutput(
+        filename=filename,
+        duration_seconds=duration_seconds,
+        transcription=transcription,
+        transcription_time=trans_time,
+        gpt_model=gpt_model,
+    )
 ```
 
-### 4.2. Calling Chat endpoint
+The `_call_openai_transcription` is the function that handles the Rate Limits.
+We also have `call_openai_transcription` for taking care of both the input data to the API call. It also handles the output as a pydantic request (more info about that in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>). 
 
-### 4.3. Calling Transcription endpoint
+### 4.3. Calling Chat endpoint
+
 
 ### 4.4. Utils
 
+<TerminalOutput color="stone">
+  utils.py
+</TerminalOutput>
 ```python
 import asyncio
 
@@ -342,7 +437,6 @@ def split_valid_and_invalid_records(records, pydantic_model):
 
     valid_results = [x for x in records if isinstance(x, pydantic_model)]
     return valid_results, invalid_results
-
 ```
 
 ## 5. Doing batches
