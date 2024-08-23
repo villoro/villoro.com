@@ -86,13 +86,14 @@ def count_tokens(messages, model=MODEL_TOKENIZER_DEFAULT):
 
 ## 3. Rate Limiter
 
-We use a Rate Limiter to prevent exceeding API usage limits, ensuring compliance and avoiding throttling or service disruptions. This helps us get more valid requests per minute.
+We use a Rate Limiter to prevent exceeding API usage limits, ensuring compliance and avoiding throttling or service disruptions.
+This approach maximizes the number of valid requests per minute.
 
 ### 3.1. How does it work?
 
-* **Managing Requests and Tokens:** Before making an API call, the limiter checks if there are sufficient remaining requests or tokens. If limits are reached, it waits until the limits reset.
+* **Managing Requests and Tokens:** Before making an API call, the limiter checks if there are enough remaining requests or tokens. If limits are reached, it pauses execution until the limits reset.
 
-* **Handling API Responses:** After each API call, the limiter can update its state using information from response headers, keeping its internal counters accurate. More on that on the next section
+* **Handling API Responses:** After each API call, the limiter updates its state using information from response headers, keeping internal counters accurate. More details on this are in the next section.
 
 ### 3.2. Overview of the RateLimiter
 
@@ -117,6 +118,9 @@ We use a Rate Limiter to prevent exceeding API usage limits, ensuring compliance
 
 Here you have the full code for the `RateLimiter`:
 
+<TerminalOutput color="stone">
+  rate_limiter.py
+</TerminalOutput>
 ```python
 import asyncio
 import re
@@ -259,12 +263,86 @@ class RateLimiter:
         logger.debug(f"Updating limits from headers:\n{self}")
 ```
 
-### 3.3. Using the Rate Limiter
+## 4. Using the Rate Limiter with Async calls
 
-## 4. Async calls
+As seen in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/> we were using the <FancyLink linkText="OpenAI python" url="https://github.com/openai/openai-python" dark="true"/> package.
+This simplifies the process but prevents us from getting relevant data from the headers (as explained in <FancyLink linkText="Rate limits in headers | Open AI" url="https://platform.openai.com/docs/guides/rate-limits/rate-limits-in-headers"/>).
+That data is really useful for knowning:
 
-### 3.1. Chat
+* The remaining quota
+* The time until the quota is reset
 
-### 3.2. Whisper
+Since this will help us getting more accurate information which in turn will help us increase the number of requests we can do, we will do manual requests to the API.
+
+### 4.1. Calling the API
+
+We will use <FancyLink linkText="Aiohttp" url="https://github.com/aio-libs/aiohttp" dark="true"/> for the API requests.
+
+```python
+import aiohttp
+import rate_limiter as rt
+
+async def _call_openai_transcription(data):
+    await rt.RATE_LIMITER.wait_for_availability()
+    async with u.RATE_LIMITER_SEMAPHORE:  # Ensure no more than N tasks run concurrently
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                ENDPOINT_TRANSCRIPTIONS, headers=u.HEADERS, data=data
+            ) as res:
+                # Update the rate limiter with the response headers
+                # We want this no matter if the request succeded or failed
+                rt.RATE_LIMITER.update_from_headers(res.headers)
+
+                try:
+                    res.raise_for_status()
+
+                except aiohttp.ClientResponseError as e:
+                    if e.status == 429:
+                        u.LOGGER.warning("Rate limit exceeded, retrying")
+                        await rt.RATE_LIMITER.wait_for_availability()
+                        return await _call_openai_transcription(data)
+                    else:
+                        raise e
+
+                result = await res.json()
+                return result["text"]
+```
+
+### 4.2. Calling Chat endpoint
+
+### 4.3. Calling Transcription endpoint
+
+### 4.4. Utils
+
+```python
+import asyncio
+
+from loguru import logger
+
+HEADERS = None
+RATE_LIMITER_SEMAPHORE = asyncio.Semaphore(25)
+
+
+def init_openai(secret, n_jobs=None, json=True):
+    global HEADERS
+    HEADERS = {"Authorization": f"Bearer {secret['api_key']}"}
+    if json:
+        HEADERS["Content-Type"] = "application/json"
+
+    if n_jobs:
+        global RATE_LIMITER_SEMAPHORE
+        RATE_LIMITER_SEMAPHORE = asyncio.Semaphore(n_jobs)
+
+
+def split_valid_and_invalid_records(records, pydantic_model):
+    if invalid_results := [x for x in records if not isinstance(x, pydantic_model)]:
+        logger.error(f"There are {len(invalid_results)} failed OpenAI calls")
+    else:
+        logger.info("All calls were successful")
+
+    valid_results = [x for x in records if isinstance(x, pydantic_model)]
+    return valid_results, invalid_results
+
+```
 
 ## 5. Doing batches
