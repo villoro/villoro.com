@@ -14,15 +14,252 @@ draft: false
 
 xx
 
+<FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>
+
 ## 1. Approach overview
+
 
 ## 2. Quota limits
 
-### 2.1. Tokens
+### 2.1. Understanding OpenAI Rate Limits
+
+OpenAI enforces rate limits to manage the number of API requests and tokens you can use within specific time frames.
+These limits help ensure fair usage and stable performance for all users.
+The key metrics to be aware of include:
+
+1. **Requests Per Minute (RPM)**: The maximum number of API requests allowed per minute.
+2. **Requests Per Day (RPD)**: The total number of API requests you can make in a day.
+3. **Tokens Per Minute (TPM)**: The number of tokens (units of text) you can process per minute, including both input and output tokens.
+4. **Tokens Per Day (TPD)**: The daily limit on token usage, covering all input and output tokens throughout the day.
+
+The specific rate limits vary based on the subscription tier.
+You can read more about it at <FancyLink linkText="Open AI | Rate Limits" url="https://platform.openai.com/docs/guides/rate-limits"/>.
+
+### 2.2. Requests limits
+
+The most important limit is the **Requests Per Minute (RPM)**.
+That is specially important when calling `whisper-1` to transcribe audio since the RPM ranges from 3 to 500 depending on the tier.
+
+### 2.1. Tokens limits
+
+This other limit is important when calling `Chat GPT` (any version of it).
+The number of tokens related to the number of words each request has.
+
+When using a model with **Tokens Per Minute (TPM)** limits we will need to calculate the number of tokens needed before submitting a request.
+I use a function that gives a good approximation for the tokens:
+
+```python
+import tiktoken
+
+MODEL_GPT_4 = "gpt-4"
+MODEL_TOKENIZER_DEFAULT = MODEL_GPT_4
+
+def count_tokens(messages, model=MODEL_TOKENIZER_DEFAULT):
+    """Estimate the number of tokens used by the messages."""
+
+    # I belive the tokenization does not change between sub models
+    if model.startswith(MODEL_GPT_4):
+        model = MODEL_GPT_4
+
+    encoding = tiktoken.encoding_for_model(model)
+
+    tokens_per_message = 3  # A rough estimate for the start of each message
+    tokens_per_name = 1  # If names are used, they add an extra token
+
+    total_tokens = 0
+    for message in messages:
+        total_tokens += tokens_per_message
+        for key, value in message.items():
+            total_tokens += len(encoding.encode(value))
+            if key == "name":
+                total_tokens += tokens_per_name
+
+    # Adding 3 tokens for the overall start and end of the message
+    total_tokens += 3
+
+    return total_tokens
+```
+<Notice type="warning">
+  It does a good job at predicting tokens used but it's not perfect.
+  Real usage will be slighly different.
+</Notice>
 
 ## 3. Rate Limiter
 
-### 3.1. Using the Rate Limiter
+We use a Rate Limiter to prevent exceeding API usage limits, ensuring compliance and avoiding throttling or service disruptions. This helps us get more valid requests per minute.
+
+### 3.1. How does it work?
+
+* **Managing Requests and Tokens:** Before making an API call, the limiter checks if there are sufficient remaining requests or tokens. If limits are reached, it waits until the limits reset.
+
+* **Handling API Responses:** After each API call, the limiter can update its state using information from response headers, keeping its internal counters accurate. More on that on the next section
+
+### 3.2. Overview of the RateLimiter
+
+1. **Initialization**: The `RateLimiter` is initialized with optional limits for maximum requests (`max_requests`) and maximum tokens (`max_tokens`). These define the cap for how many requests or tokens can be used in a given period.
+
+2. **Waiting for Availability**: The `wait_for_availability` method checks if there are enough remaining requests and tokens. If not, it pauses the execution for a calculated amount of time until limits are reset. This prevents the application from making too many API calls at once.
+
+3. **Updating Limits**: The `update_limits` method resets the request and token counts if the reset time has passed, ensuring that the rate limits are restored after each time window.
+
+4. **Dynamic Adjustment**: The `update_from_headers` method allows the rate limiter to adjust based on headers received from API responses, which may indicate the remaining requests, tokens, and the reset time. This keeps the rate limiter in sync with real-time API limits.
+
+5. **Global Setup**: The `set_rate_limiter` function initializes a global `RATE_LIMITER` instance, making it easy to enforce rate limits across the application without passing the limiter object around.
+
+<Notice type="info">
+  There is some overlap between the `update_limits` and `update_from_headers` methods.
+  While `update_limits` resets limits based on a fixed time window, `update_from_headers` allows dynamic adjustments based on real-time data from API responses.
+  This overlap is intentional, as using `update_from_headers` ensures more accurate limit management and optimizes the number of valid requests per minute.
+  By relying on actual API feedback, we can better handle fluctuating limits and reduce the risk of hitting rate caps unexpectedly.
+</Notice>
+
+### 3.2. Rate Limiter code
+
+Here you have the full code for the `RateLimiter`:
+
+```python
+import asyncio
+import re
+import time
+
+from loguru import logger
+
+
+# Define a regular expression to capture time components
+REGEX_TIME = re.compile(r"(?P<value>\d+)(?P<unit>[smhms]+)")
+
+RATE_LIMITER = None
+MAX_SLEEP_TIME = 2 * 60  # 2 Minutes
+
+
+def set_rate_limiter(max_requests: int = None, max_tokens: int = None):
+    global RATE_LIMITER
+    RATE_LIMITER = RateLimiter(max_requests, max_tokens)
+
+
+class RateLimiter:
+    def __init__(self, max_requests: int = None, max_tokens: int = None):
+        self.max_requests = max_requests
+        self.max_tokens = max_tokens
+
+        self.remaining_requests = max_requests
+        self.remaining_tokens = max_tokens
+
+        # Assume reset in 60 seconds initially
+        self.reset_time_requests = time.monotonic() + 60
+        self.reset_time_tokens = time.monotonic() + 60
+
+        logger.info(f"Setting {self}")
+
+    def __repr__(self):
+        max_reqs = self.max_requests
+        max_tokens = self.max_tokens
+        rem_reqs = self.remaining_requests
+        rem_tokens = self.remaining_tokens
+        reset_t_reqs = round(self.reset_time_requests)
+        reset_t_tokens = round(self.reset_time_tokens)
+
+        if max_tokens is None:
+            return f"RateLimiter({max_reqs=}, {rem_reqs=}, {reset_t_reqs=} [no_tokens])"
+
+        return (
+            f"RateLimiter({max_reqs=}, {max_tokens=} "
+            f"{rem_reqs=}, {rem_tokens=}, {reset_t_reqs=}, {reset_t_tokens=})"
+        )
+
+    def _get_seconds_to_sleep(self):
+        if self.max_tokens is None:
+            # Only consider requests if tokens are not being used
+            sleep_time = self.reset_time_requests - time.monotonic()
+        else:
+            sleep_time = min(
+                self.reset_time_requests - time.monotonic(),
+                self.reset_time_tokens - time.monotonic(),
+            )
+
+        # Do not wait really high times. Better to try anyway
+        sleep_time = min(sleep_time, MAX_SLEEP_TIME)
+
+        # Ensure sleep_time is at least 1 second
+        return max(sleep_time, 1)
+
+    async def wait_for_availability(self, required_tokens=None):
+        if self.max_tokens is None:
+            required_tokens = 0  # Ignore tokens if max_tokens is None
+
+        while self.remaining_requests <= 0 or (
+            self.max_tokens is not None and self.remaining_tokens < required_tokens
+        ):
+            self.update_limits()
+
+            seconds_to_sleep = self._get_seconds_to_sleep()
+            logger.debug(f"Sleeping {seconds_to_sleep=}")
+            await asyncio.sleep(seconds_to_sleep)
+
+        self.remaining_requests -= 1
+        if self.max_tokens is not None:
+            self.remaining_tokens -= required_tokens
+
+    def update_limits(self):
+        current_time = time.monotonic()
+
+        # If we've passed the reset time, reset the limits
+        if current_time >= self.reset_time_requests:
+            self.remaining_requests = self.max_requests
+            self.reset_time_requests = current_time + 60  # Reset the time window
+
+        if self.max_tokens is not None and current_time >= self.reset_time_tokens:
+            self.remaining_tokens = self.max_tokens
+            self.reset_time_tokens = current_time + 60  # Reset the time window
+
+        logger.debug(f"Updating limits:\n{self}")
+
+    def _parse_reset_time(self, reset_time_str):
+        """Convert a time reset string like '1s', '6m0s', or '60ms' into seconds."""
+
+        total_seconds = 0
+        for match in REGEX_TIME.finditer(reset_time_str):
+            value = int(match.group("value"))
+            unit = match.group("unit")
+
+            if unit == "s":
+                total_seconds += value
+            elif unit == "m":
+                total_seconds += value * 60
+            elif unit == "h":
+                total_seconds += value * 3600
+            elif unit == "ms":
+                total_seconds += value / 1000.0
+
+        # Default to 60 seconds if the format is unexpected
+        return total_seconds if total_seconds > 0 else 60
+
+    def update_from_headers(self, headers):
+        """Update the rate limits based on headers from the API response."""
+
+        self.remaining_requests = int(
+            headers.get("x-ratelimit-remaining-requests", self.remaining_requests)
+        )
+
+        if self.max_tokens is not None:
+            self.remaining_tokens = int(
+                headers.get("x-ratelimit-remaining-tokens", self.remaining_tokens)
+            )
+
+            reset_tokens_seconds = self._parse_reset_time(
+                headers.get("x-ratelimit-reset-tokens", "60s")
+            )
+            self.reset_time_tokens = time.monotonic() + reset_tokens_seconds
+
+        reset_requests_seconds = self._parse_reset_time(
+            headers.get("x-ratelimit-reset-requests", "60s")
+        )
+
+        self.reset_time_requests = time.monotonic() + reset_requests_seconds
+        logger.debug(f"Updating limits from headers:\n{self}")
+```
+
+### 3.3. Using the Rate Limiter
 
 ## 4. Async calls
 
