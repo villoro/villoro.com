@@ -290,6 +290,7 @@ Since this will help us getting more accurate information which in turn will hel
 ### 4.1. Calling the API
 
 We will use <FancyLink linkText="Aiohttp" url="https://github.com/aio-libs/aiohttp" dark="true"/> for making API requests.
+The general approach is similar to what is descrived in <FancyLink linkText="Best strategy on managing concurrent calls ? (Python/Asyncio)" url="https://community.openai.com/t/best-strategy-on-managing-concurrent-calls-python-asyncio/849702/2"/>.
 
 The general idea is to have a function that waits for sufficient quota (managed by the `RateLimiter`) before calling the API.
 If a `HTTP 429` error (rate limit exceeded) occurs, the function will recursively call itself to retry the request.
@@ -407,7 +408,6 @@ async def call_openai_transcription(filename, temperature=0.2, gpt_model=DEFAULT
         gpt_model=gpt_model,
     )
 ```
-
 
 The `_call_openai_transcription` function handles the rate limits, ensuring compliance by checking availability before making API calls.
 If a rate limit is exceeded, indicated by a `HTTP 429` error, it retries the request after waiting. 
@@ -657,3 +657,13 @@ async def async_call_open_ai_chat(
     # If we have a pydantic_model, we can extract tabulated data
     return pd.DataFrame([x.dict() for x in output]), errors
 ```
+
+## 6. Further Reading and Resources
+
+* <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>
+* <FancyLink linkText="Best strategy on managing concurrent calls ? (Python/Asyncio)" url="https://community.openai.com/t/best-strategy-on-managing-concurrent-calls-python-asyncio/849702/2"/>
+* <FancyLink linkText="Understanding Rate Limits" url="https://platform.openai.com/docs/guides/rate-limits"/>
+* <FancyLink linkText="Python Asyncio Documentation" url="https://docs.python.org/3/library/asyncio.html" company="default" dark="true"/>
+* <FancyLink linkText="Aiohttp Documentation" url="https://docs.aiohttp.org/en/stable/" company="default" dark="true"/>
+* <FancyLink linkText="Pydantic for Data Validation" url="https://pydantic-docs.helpmanual.io/" company="pydantic"/>
+* <FancyLink linkText="Pandas for Data Analysis" url="https://pandas.pydata.org/docs/" company="pandas"/>
