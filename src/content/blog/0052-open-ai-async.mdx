@@ -12,12 +12,20 @@ draft: false
 
 ## 0. Motivation
 
-xx
-
-<FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>
+In a previous post (<FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>), we covered how to extract insights from audio recordings.
+To fully automate this process, it's crucial to handle quota limits effectively and manage concurrent API calls efficiently.
+This post demonstrates how to implement a rate limiter to manage concurrent asynchronous calls to the OpenAI API, ensuring compliance with API quotas while maximizing throughput.
+Whether you're using **Whisper** for transcription or **ChatGPT** for extracting insights, this guide will help streamline operations, avoid common pitfalls, and optimize your use of OpenAI's capabilities.
 
 ## 1. Approach overview
 
+To effectively manage concurrent API calls to OpenAI while respecting rate limits, we adopt a two-part approach:
+
+1. **Rate Limiting**: A custom `RateLimiter` class is implemented to monitor and control the number of requests and tokens used. This limiter dynamically adjusts based on API response headers, ensuring that the application adheres to OpenAI's usage policies. It prevents overuse by pausing execution when limits are reached and resuming once quotas reset.
+
+2. **Asynchronous Execution**: By leveraging Python's `asyncio` and the `aiohttp` library, we can handle multiple API calls concurrently without blocking the execution of other tasks. This asynchronous approach is crucial for maintaining high throughput and efficiency. Each API call is managed in a non-blocking way, allowing the system to handle other operations while waiting for responses.
+
+The combination of these strategies allows us to process a large number of API requests efficiently and effectively. By using structured output formats like Pydantic models, we ensure that data is organized and easily manageable. This approach not only optimizes performance but also maintains the integrity and reliability of data processing tasks.
 
 ## 2. Quota limits
 
@@ -424,7 +432,8 @@ The `call_openai_transcription` function manages the preparation of input data f
 ### 4.3. Calling the Chat Endpoint
 
 Calls to the `Chat` endpoint are quite similar to those for `Transcriptions`.
-The key differences are that we need to manage the number of tokens and ensure that the output is structured according to a Pydantic class (more details on this can be found in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>).
+The key differences are that we need to manage the number of tokens used in each request and ensure that the output is structured according to a Pydantic class.
+More details on this can be found in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>.
 
 <TerminalOutput color="stone">
   chat.py
