@@ -14,3 +14,32 @@ draft: true
 
 xx
 
+## 1. NAS Setup and Storage Configuration
+
+ex4 vs btrfs
+
+* Initial Setup: Choose between default and custom installations; selecting hard drives for system files is common.
+* M.2 SSDs for Caching: You can use read, write, or balanced cache. Balanced caching gives a mix of read and write performance, but if you're focused on media streaming (e.g., Plex), read cache is recommended.
+* RAID Synchronization: HDDs may be noisy during the RAID synchronization process, but noise will decrease during regular usage.
+* Noise Reduction: Add acoustic foam, anti-vibration pads, and rubber seals to reduce noise if placing the NAS in a cabinet. Ensure proper ventilation.
+
+## 2. Network Configuration and Performance
+
+* Transfer Files Over 2.5 Gbps Ethernet: If supported, use 2.5 Gbps Ethernet for faster file transfers (around 250–280 MB/s). USB 3.1 Gen 1 with an external SSD could offer higher speeds (~300–400 MB/s) for local transfers.
+* Gigabit Ethernet: Limited to 125 MB/s, so it won’t fully utilize HDD speeds (~249 MB/s max for Seagate Exos X18).
+* VPN Setup: Use WireGuard with Docker if not natively supported by TOS. Forward port 51820/UDP for external access.
+
+## 3. Plex Setup and Troubleshooting
+
+* Plex Claim Issues: If you're having trouble claiming the Plex server, use the manual token method via https://plex.tv/claim or access the NAS at http://127.0.0.1:32400/web to claim it directly from the local machine.
+
+## 4. qBittorrent Setup
+
+* qBittorrent App from Terramaster Community:
+    * Set up public/Torrents as the monitored folder for new torrents.
+    * Configure public/Downloads as the destination for completed downloads in the qBittorrent Web UI.
+
+## 5. Firewall rules
+xx
+
+## Tailscale
