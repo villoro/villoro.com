@@ -12,7 +12,7 @@ draft: false
 
 ## 0. Motivation
 
-In a previous post (<FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>), we explored how to extract insights from audio recordings using OpenAI models.
+In a previous post (<FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/>), we explored how to extract insights from audio recordings using OpenAI models.
 While extracting insights is critical, fully automating this process presents additional challenges, primarily in managing API quota limits and efficiently handling multiple concurrent API calls.
 
 Consider a scenario where you need to process thousands of audio recordings daily.
@@ -278,7 +278,7 @@ class RateLimiter:
 
 ## 4. Using the Rate Limiter with Async calls
 
-As seen in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/> we were using the <FancyLink linkText="OpenAI python" url="https://github.com/openai/openai-python" dark="true"/> package.
+As seen in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/> we were using the <FancyLink linkText="OpenAI python" url="https://github.com/openai/openai-python" dark="true"/> package.
 This simplifies the process but prevents us from getting relevant data from the headers (as explained in <FancyLink linkText="Rate limits in headers | Open AI" url="https://platform.openai.com/docs/guides/rate-limits/rate-limits-in-headers"/>).
 That data is really useful for knowning:
 
@@ -412,13 +412,13 @@ async def call_openai_transcription(filename, temperature=0.2, gpt_model=DEFAULT
 The `_call_openai_transcription` function handles the rate limits, ensuring compliance by checking availability before making API calls.
 If a rate limit is exceeded, indicated by a `HTTP 429` error, it retries the request after waiting. 
 
-The `call_openai_transcription` function manages the preparation of input data for the API call and formats the output as a Pydantic object for structured response handling (more details on this can be found in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>).
+The `call_openai_transcription` function manages the preparation of input data for the API call and formats the output as a Pydantic object for structured response handling (more details on this can be found in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt" dark="true"/>).
 
 ### 4.3. Calling the Chat Endpoint
 
 Calls to the `Chat` endpoint are quite similar to those for `Transcriptions`.
 The key differences are that we need to manage the number of tokens used in each request and ensure that the output is structured according to a Pydantic class.
-More details on this can be found in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>.
+More details on this can be found in <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt" dark="true"/>.
 
 <TerminalOutput color="stone">
   chat.py
@@ -660,7 +660,7 @@ async def async_call_open_ai_chat(
 
 ## 6. Further Reading and Resources
 
-* <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/process-calls-open-ai/" dark="true"/>
+* <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/>
 * <FancyLink linkText="Best strategy on managing concurrent calls ? (Python/Asyncio)" url="https://community.openai.com/t/best-strategy-on-managing-concurrent-calls-python-asyncio/849702/2"/>
 * <FancyLink linkText="Understanding Rate Limits" url="https://platform.openai.com/docs/guides/rate-limits"/>
 * <FancyLink linkText="Python Asyncio Documentation" url="https://docs.python.org/3/library/asyncio.html" company="default" dark="true"/>
