@@ -43,3 +43,44 @@ ex4 vs btrfs
 xx
 
 ## Tailscale
+
+```yaml
+- Name: Tailscale TCP
+  Operation: Allow
+  Incoming IP: All
+  Port: 443,80
+  Protocol: tcp
+
+- Name: Tailscale UDP
+  Operation: Allow
+  Incoming IP: All
+  Port: 41641,3478
+  Protocol: udp
+```
+
+## 6. Connecting locally
+
+Discover NAS IP. I use fing.
+
+1. Network Services / Terminal $ SNMP
+2. Allow SSH access with username and password
+3. You should set a custom port (defaults to `9222`)
+4. `ssh username@ip -p 9222` (you must use your the `username` of the first user you created) (use the NAS IP)
+
+## 7. Qbittorrent
+
+You must set the paths for where to download the torrents and optionally which folder to watch for adding torrents.
+
+I like using `public/Downloads`. So I'll need to use `/Volume1/public/Downloads` since `Volume1` is the name I gave to the data pool.
+
+
+## DMZ and double NAT
+
+### 1. Reserve an IP for you secondary router
+
+1. Get the mac address of the secondary router
+2. Create a DHCP binding for the secondary router. For simplicity use the IP it's currently using
+
+### 2. DMZ
+
+Create a DMZ for the IP of the secondary router
