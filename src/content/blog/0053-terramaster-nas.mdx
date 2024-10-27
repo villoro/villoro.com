@@ -35,14 +35,13 @@ ex4 vs btrfs
 
 ## 4. qBittorrent Setup
 
+Read log for the password, then change it
+
 * qBittorrent App from Terramaster Community:
     * Set up public/Torrents as the monitored folder for new torrents.
     * Configure public/Downloads as the destination for completed downloads in the qBittorrent Web UI.
 
 ## 5. Firewall rules
-xx
-
-## Tailscale
 
 ```yaml
 - Name: Tailscale TCP
@@ -84,3 +83,17 @@ I like using `public/Downloads`. So I'll need to use `/Volume1/public/Downloads`
 ### 2. DMZ
 
 Create a DMZ for the IP of the secondary router
+
+## UPS
+
+Hardware & Power / enable USB support
+
+
+tailsacle set --advertise-exit-node
+
+## Mega
+
+### Install Portainer
+
+Set up local environment and select it
+Create new container
