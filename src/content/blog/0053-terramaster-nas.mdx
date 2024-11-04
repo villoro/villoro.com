@@ -1,0 +1,99 @@
+---
+slug: setting-up-nas-terramaster
+title: xx
+meta_title: xx
+description: xx
+date: 2024-10-24
+image: /images/blog/0053-terramaster-nas.jpg
+category: hardware
+tags: [NAS, Hardware]
+draft: true
+---
+
+## 0. Motivation
+
+xx
+
+## 1. NAS Setup and Storage Configuration
+
+ex4 vs btrfs
+
+* Initial Setup: Choose between default and custom installations; selecting hard drives for system files is common.
+* M.2 SSDs for Caching: You can use read, write, or balanced cache. Balanced caching gives a mix of read and write performance, but if you're focused on media streaming (e.g., Plex), read cache is recommended.
+* RAID Synchronization: HDDs may be noisy during the RAID synchronization process, but noise will decrease during regular usage.
+* Noise Reduction: Add acoustic foam, anti-vibration pads, and rubber seals to reduce noise if placing the NAS in a cabinet. Ensure proper ventilation.
+
+## 2. Network Configuration and Performance
+
+* Transfer Files Over 2.5 Gbps Ethernet: If supported, use 2.5 Gbps Ethernet for faster file transfers (around 250–280 MB/s). USB 3.1 Gen 1 with an external SSD could offer higher speeds (~300–400 MB/s) for local transfers.
+* Gigabit Ethernet: Limited to 125 MB/s, so it won’t fully utilize HDD speeds (~249 MB/s max for Seagate Exos X18).
+* VPN Setup: Use WireGuard with Docker if not natively supported by TOS. Forward port 51820/UDP for external access.
+
+## 3. Plex Setup and Troubleshooting
+
+* Plex Claim Issues: If you're having trouble claiming the Plex server, use the manual token method via https://plex.tv/claim or access the NAS at http://127.0.0.1:32400/web to claim it directly from the local machine.
+
+## 4. qBittorrent Setup
+
+Read log for the password, then change it
+
+* qBittorrent App from Terramaster Community:
+    * Set up public/Torrents as the monitored folder for new torrents.
+    * Configure public/Downloads as the destination for completed downloads in the qBittorrent Web UI.
+
+## 5. Firewall rules
+
+```yaml
+- Name: Tailscale TCP
+  Operation: Allow
+  Incoming IP: All
+  Port: 443,80
+  Protocol: tcp
+
+- Name: Tailscale UDP
+  Operation: Allow
+  Incoming IP: All
+  Port: 41641,3478
+  Protocol: udp
+```
+
+## 6. Connecting locally
+
+Discover NAS IP. I use fing.
+
+1. Network Services / Terminal $ SNMP
+2. Allow SSH access with username and password
+3. You should set a custom port (defaults to `9222`)
+4. `ssh username@ip -p 9222` (you must use your the `username` of the first user you created) (use the NAS IP)
+
+## 7. Qbittorrent
+
+You must set the paths for where to download the torrents and optionally which folder to watch for adding torrents.
+
+I like using `public/Downloads`. So I'll need to use `/Volume1/public/Downloads` since `Volume1` is the name I gave to the data pool.
+
+
+## DMZ and double NAT
+
+### 1. Reserve an IP for you secondary router
+
+1. Get the mac address of the secondary router
+2. Create a DHCP binding for the secondary router. For simplicity use the IP it's currently using
+
+### 2. DMZ
+
+Create a DMZ for the IP of the secondary router
+
+## UPS
+
+Hardware & Power / enable USB support
+
+
+tailsacle set --advertise-exit-node
+
+## Mega
+
+### Install Portainer
+
+Set up local environment and select it
+Create new container
