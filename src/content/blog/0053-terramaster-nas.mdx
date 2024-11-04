@@ -7,33 +7,86 @@ date: 2024-10-24
 image: /images/blog/0053-terramaster-nas.jpg
 category: hardware
 tags: [NAS, Hardware]
-draft: true
+draft: false
 ---
 
 ## 0. Motivation
 
 xx
 
-## 1. NAS Setup and Storage Configuration
+## Initial Setup
+
+### Locating the NAS
+
+The first thing you will need to do is to locate the NAS inside your network.
+With a Terramaster NAS you can head over to `http://tnas.local` and after a couple of cliks, you will see the NAS IP.
+Alternatively you can use an app that analyzes your network (such as <FancyLink linkText="Fing" url="https://www.fing.com/"/>).
+
+### Install Terramaster OS (TOS)
+
+<Notice type="info">
+  I want to install TOS on the SSD so that when it's idle the HDD can sleep.
+</Notice>
+
+You can do it by:
+
+1. Selecting a custom configuration
+2. Select all SSDs you have
+3. Online install
+
+This will create a partition in each disk you selected with the OS.
+While you wait I think it's a good moment to make sure you have a proper network setup.
+
+## Avoiding double NAT
+
+Some of us have a secondary router because we don't like the one the Internet Service Provider (ISP) provides for free.
+Those routers are usually not very powerful and can lack advanced features.
+
+In that case, you might have double NAT (see <FancyLink linkText="Double NAT explained and possible solutions" url="https://medium.com/@gmanual/double-nat-explained-and-possible-solutions-8b41b6c651bd" dark="true"/> for more info) which might cause you problems.
+
+You have multiple options to solve it, what I recommend is one of the following:
+1. Set the ISP router in bridge mode
+2. Create a DMZ
+
+In my case, I could not set up the ISP router in bridge mode, so I went for a DMZ.
+
+<Notice type="warning">
+  This will be very different for each setup and router models, but here you have what worked for me.
+</Notice>
+
+### Reserve an IP for you secondary router
+
+The first step for setting up a DMZ is to assing an IP for your secondary router by:
+
+1. Get the mac address of the secondary router
+2. Go to the ISP router config
+2. Create a DHCP binding for the secondary router. For simplicity use the IP it's currently using
+
+### DMZ
+
+Then create the DMZ itself by:
+
+1. Go to the ISP router config
+2. Create a DMZ for the IP of the secondary router
+
+## Creating a storage pool
 
 ex4 vs btrfs
 
-* Initial Setup: Choose between default and custom installations; selecting hard drives for system files is common.
 * M.2 SSDs for Caching: You can use read, write, or balanced cache. Balanced caching gives a mix of read and write performance, but if you're focused on media streaming (e.g., Plex), read cache is recommended.
 * RAID Synchronization: HDDs may be noisy during the RAID synchronization process, but noise will decrease during regular usage.
-* Noise Reduction: Add acoustic foam, anti-vibration pads, and rubber seals to reduce noise if placing the NAS in a cabinet. Ensure proper ventilation.
 
-## 2. Network Configuration and Performance
+## Network Configuration and Performance
 
 * Transfer Files Over 2.5 Gbps Ethernet: If supported, use 2.5 Gbps Ethernet for faster file transfers (around 250–280 MB/s). USB 3.1 Gen 1 with an external SSD could offer higher speeds (~300–400 MB/s) for local transfers.
 * Gigabit Ethernet: Limited to 125 MB/s, so it won’t fully utilize HDD speeds (~249 MB/s max for Seagate Exos X18).
 * VPN Setup: Use WireGuard with Docker if not natively supported by TOS. Forward port 51820/UDP for external access.
 
-## 3. Plex Setup and Troubleshooting
+## Plex Setup and Troubleshooting
 
 * Plex Claim Issues: If you're having trouble claiming the Plex server, use the manual token method via https://plex.tv/claim or access the NAS at http://127.0.0.1:32400/web to claim it directly from the local machine.
 
-## 4. qBittorrent Setup
+## qBittorrent Setup
 
 Read log for the password, then change it
 
@@ -41,7 +94,7 @@ Read log for the password, then change it
     * Set up public/Torrents as the monitored folder for new torrents.
     * Configure public/Downloads as the destination for completed downloads in the qBittorrent Web UI.
 
-## 5. Firewall rules
+## Firewall rules
 
 ```yaml
 - Name: Tailscale TCP
@@ -57,7 +110,7 @@ Read log for the password, then change it
   Protocol: udp
 ```
 
-## 6. Connecting locally
+## Connecting locally
 
 Discover NAS IP. I use fing.
 
@@ -66,23 +119,12 @@ Discover NAS IP. I use fing.
 3. You should set a custom port (defaults to `9222`)
 4. `ssh username@ip -p 9222` (you must use your the `username` of the first user you created) (use the NAS IP)
 
-## 7. Qbittorrent
+## Qbittorrent
 
 You must set the paths for where to download the torrents and optionally which folder to watch for adding torrents.
 
 I like using `public/Downloads`. So I'll need to use `/Volume1/public/Downloads` since `Volume1` is the name I gave to the data pool.
 
-
-## DMZ and double NAT
-
-### 1. Reserve an IP for you secondary router
-
-1. Get the mac address of the secondary router
-2. Create a DHCP binding for the secondary router. For simplicity use the IP it's currently using
-
-### 2. DMZ
-
-Create a DMZ for the IP of the secondary router
 
 ## UPS
 
