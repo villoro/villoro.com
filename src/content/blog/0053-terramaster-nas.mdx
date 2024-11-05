@@ -16,6 +16,9 @@ xx
 
 ## Initial Setup
 
+First of all, if you need a detailed installation guide you should read <FancyLink linkText="Terramaster Quickguide" url="https://support.terra-master.com/quickguide/" company="terramaster"/>.
+In this post I'll explain the points that were most relevant to me.
+
 ### Locating the NAS
 
 The first thing you will need to do is to locate the NAS inside your network.
@@ -69,18 +72,46 @@ Then create the DMZ itself by:
 1. Go to the ISP router config
 2. Create a DMZ for the IP of the secondary router
 
-## Creating a storage pool
+## Handling storage
 
-ex4 vs btrfs
+Once TOS installation finishes you can create your superuser. Afterwards you are ready to set up the storege.
 
-* M.2 SSDs for Caching: You can use read, write, or balanced cache. Balanced caching gives a mix of read and write performance, but if you're focused on media streaming (e.g., Plex), read cache is recommended.
-* RAID Synchronization: HDDs may be noisy during the RAID synchronization process, but noise will decrease during regular usage.
+<Notice type="warning">
+  You can use `letters`, `numbers` and `special characters` in your passwords. And at least it can be 64 characters long.
+</Notice>
 
-## Network Configuration and Performance
+### Creating a storage pool
 
-* Transfer Files Over 2.5 Gbps Ethernet: If supported, use 2.5 Gbps Ethernet for faster file transfers (around 250–280 MB/s). USB 3.1 Gen 1 with an external SSD could offer higher speeds (~300–400 MB/s) for local transfers.
-* Gigabit Ethernet: Limited to 125 MB/s, so it won’t fully utilize HDD speeds (~249 MB/s max for Seagate Exos X18).
-* VPN Setup: Use WireGuard with Docker if not natively supported by TOS. Forward port 51820/UDP for external access.
+The first thing you will need to decide is the `RAID` you want. Here I suggest:
+* `TRAID` if you have different disk sizes in order to avoid wasted space
+* `TRAID` if you plan on adding more disks later, since you won't need to recreate the volume
+* A standard `RAID` (0, 1, 5 or 6) if you have same size disks and you won't add extra disks (so that it's compatible with other OS and it's easier to recover in case of failures.)
+
+Regarding the storage formats you can go with `EX4` or `BTRFS`.
+Honestly I'm no expert here, I chose `EX4` because I read it's more stable.
+You can read more about it in <FancyLink linkText="BTRFS vs EX4 | Terramaster forum" url="https://forum.terra-master.com/en/viewtopic.php?t=1851#:~:text=Re%3A%20BTRFS%20vs%20EXT4,-Post%20by%20TMzethar&text=The%20ext4%20format%20will%20retain,stable%20in%20terms%20of%20stability" company="terramaster"/>.
+
+<Notice type="info">
+  HDDs will be noisy during the storage pool creation (RAID Synchronization), but noise will decrease during regular usage.
+</Notice>
+
+### Hyper Cache
+
+You can use one of the 2 M2 SSD slots for caching. That can speed up `reads`, `writes` or both (`balanced`). The choice will depend on the NAS usage.
+
+### Options for adding data
+
+My model has two 2.5 Gbps ethernet ports which should give file transfers speeds of around 250–280 MB/s.
+The alternative is to use the USB 3.1 Gen 1 with an external SSD.
+That could offer higher speeds (~300–400 MB/s) but I think it's not worht it since you will first need to copy the data into the SSD and then out of it.
+
+It's important to notice that depending of the RAID you chose, you might reach the HDD speed limit (~250 MB/s for the Seagate Ironwolf Pro I installed).
+
+<Notice type="info">
+  In general I suggest you load data into the NAS over ethernet as oposed to using a USB external drive.
+</Notice>
+
+## Installing apps
 
 ## Plex Setup and Troubleshooting
 
@@ -94,21 +125,11 @@ Read log for the password, then change it
     * Set up public/Torrents as the monitored folder for new torrents.
     * Configure public/Downloads as the destination for completed downloads in the qBittorrent Web UI.
 
-## Firewall rules
+## Qbittorrent
 
-```yaml
-- Name: Tailscale TCP
-  Operation: Allow
-  Incoming IP: All
-  Port: 443,80
-  Protocol: tcp
+You must set the paths for where to download the torrents and optionally which folder to watch for adding torrents.
 
-- Name: Tailscale UDP
-  Operation: Allow
-  Incoming IP: All
-  Port: 41641,3478
-  Protocol: udp
-```
+I like using `public/Downloads`. So I'll need to use `/Volume1/public/Downloads` since `Volume1` is the name I gave to the data pool.
 
 ## Connecting locally
 
@@ -119,17 +140,9 @@ Discover NAS IP. I use fing.
 3. You should set a custom port (defaults to `9222`)
 4. `ssh username@ip -p 9222` (you must use your the `username` of the first user you created) (use the NAS IP)
 
-## Qbittorrent
-
-You must set the paths for where to download the torrents and optionally which folder to watch for adding torrents.
-
-I like using `public/Downloads`. So I'll need to use `/Volume1/public/Downloads` since `Volume1` is the name I gave to the data pool.
-
-
 ## UPS
 
 Hardware & Power / enable USB support
-
 
 tailsacle set --advertise-exit-node
 
