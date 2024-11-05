@@ -1,7 +1,7 @@
 ---
 slug: setting-up-terramaster-nas
-title: Setting UP a Terramster NAS
-meta_title: Setting UP Terramster NAS
+title: Setting up a Terramster NAS
+meta_title: Setting up a Terramster NAS
 description: xx
 date: 2024-10-24
 image: /images/blog/0053-terramaster-nas.jpg
@@ -22,7 +22,7 @@ In this post I'll explain the points that were most relevant to me.
 ### 1.1. Locating the NAS
 
 The first thing you will need to do is to locate the NAS inside your network.
-With a Terramaster NAS you can head over to `http://tnas.local` and after a couple of cliks, you will see the NAS IP.
+With a Terramaster NAS you can head over to <FancyLink linkText="tnas.local" url="http://tnas.local" dark="true" company="default"/> and after a couple of cliks, you will see the NAS IP.
 Alternatively you can use an app that analyzes your network (such as <FancyLink linkText="Fing" url="https://www.fing.com/"/>).
 
 ### 1.2. Install Terramaster OS (TOS)
@@ -205,16 +205,22 @@ ssh [username]@nas -p [port]
 ```
 Remember to replace `[username]` (you must use the first user you created) and `[port]`.
 
-Finally you can set the NAS as an exit node with:
+Then you can set the NAS as an exit node with:
 
 ```sh
-tailsacle set --advertise-exit-node
+tailscale set --advertise-exit-node
 ```
 
-<Notice type="warning">
-  You might need to reboot the nas if `tailscale` command is not found.
-</Notice>
+Finally you might also want to update it and enable auto updates to avoid security problems with:
 
-## UPS
+```sh
+tailscale update
+tailscale set --auto-update
+```
 
-Hardware & Power / enable USB support
+## 6. UPS
+
+In order to protect the NAS from power outages I think it is really important to connect it to a UPS.
+Some models can be connected by USB so that whenever there is a power outage the NAS is notified and can be automatically turned off.
+
+To set this up, go to `Control Panel/Hardware & Power` and click `enable USB support`.
