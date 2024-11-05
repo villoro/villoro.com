@@ -1,7 +1,7 @@
 ---
-slug: setting-up-nas-terramaster
-title: xx
-meta_title: xx
+slug: setting-up-terramaster-nas
+title: Setting UP a Terramster NAS
+meta_title: Setting UP Terramster NAS
 description: xx
 date: 2024-10-24
 image: /images/blog/0053-terramaster-nas.jpg
@@ -141,31 +141,80 @@ You must replace:
 
 ## 5. Installing apps
 
+In the `App Center` you can install apps either from the `Terramaster` or from the `Community`.
+
+In my case I'll use:
+* Plex
+* qBittorrent
+* Docker (`Docker Engine`, `Docker Manager` and `Portainer`)
+* Tailscale (community app)
+
 ### 5.1. Plex
 
-* Plex Claim Issues: If you're having trouble claiming the Plex server, use the manual token method via https://plex.tv/claim or access the NAS at http://127.0.0.1:32400/web to claim it directly from the local machine.
+The configuration is quite straightforward. You will need to open the app and sign in into plex.
+Afterwards you can create your libraries as usual.
+I suggest putting the plex libraries inside the `Public` folder so that 
 
 ### 5.2. qBittorrent
 
-Read log for the password, then change it
+When you install qBittorrent an `admin` user will be created with a password (`adminadmin`)
 
-* qBittorrent App from Terramaster Community:
-    * Set up public/Torrents as the monitored folder for new torrents.
-    * Configure public/Downloads as the destination for completed downloads in the qBittorrent Web UI.
+<Notice type="info">
+  If you used the community app the password will be randomnly created. You can get it from the logs.
+</Notice>
 
-You must set the paths for where to download the torrents and optionally which folder to watch for adding torrents.
+<Notice type="warning">
+  The first thing you need to do is change the default password.
+  You can do it at `Tools/Options/Web UI/Authentication`
+</Notice>
 
-I like using `public/Downloads`. So I'll need to use `/Volume1/public/Downloads` since `Volume1` is the name I gave to the data pool.
+Regarding downloads I prefer having them inside `public` (`/Volume1/public/Downloads`) folder so that every user can access them.
+
+Finally I like adding a folder that is whatched for new torrents and to move the added ones and completed ones into subfolders.
+You can set it up in `Tools/Options/Downloads` with:
+
+* Monitored folder: `/Volume1/public/Torrents/`
+* Copy `.torrent` files to: `/Volume1/public/Torrents/Added/`
+* Copy `.torrent` files for finished downloads to: `/Volume1/public/Torrents/Downloaded/`
 
 ### 5.3. Tailscale
+
+This is a community app. You can download it from <FancyLink linkText="Tailscale | TerraMaster Community Place" url="https://tmnascommunity.eu/download/tailscale/" dark="true" company="default"/>. To install it you need to upload the file to `App Center/Settings/Install application manually`.
+
+In order to connect the NAS to your tailscale you will need to register.
+First download the logs (`/<your_user>/MOD_CONFIG/Tailscale/Tailscale_start.log`).
+There you will find the `login url` which should look like:
+
+```plaintext
+To authenticate, visit:
+
+  https://login.tailscale.com/a/xxxxxxxxxxxxxx
+```
+
+Once you have added it, it should appear in your admin console. Optinally you can change it's name to something like `nas`.
+
+#### 5.3.1. Set the NAS as an exit node
+
+Optionally you can set the NAS as an exit node.
+You will need to SSH into the NAS.
+If you do it with a computer where you have tailscale install and connect you can reference the machine name (`nas`) instead of the IP.
+
+So you can SSH as we saw before
+```sh
+ssh [username]@nas -p [port]
+```
+Remember to replace `[username]` (you must use the first user you created) and `[port]`.
+
+Finally you can set the NAS as an exit node with:
 
 ```sh
 tailsacle set --advertise-exit-node
 ```
 
-### 5.4. Mega
+<Notice type="warning">
+  You might need to reboot the nas if `tailscale` command is not found.
+</Notice>
 
 ## UPS
 
 Hardware & Power / enable USB support
-
