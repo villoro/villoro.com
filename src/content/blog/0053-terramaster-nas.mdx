@@ -148,51 +148,54 @@ Replace:
   To minimize security risks, disable `SSH` once setup is complete and you no longer need terminal access.
 </Notice>
 
-## 6. Installing apps
+## 6. Installing Apps
 
-In the `App Center` you can install apps either from the `Terramaster` or from the `Community`.
+The  `App Center` on your TerraMaster NAS allows you to install applications from both the official `Terramaster` repository and the `Community` repository.
 
-In my case I'll use:
-* Plex
-* qBittorrent
-* Docker (`Docker Engine`, `Docker Manager` and `Portainer`)
-* Tailscale (community app)
+For my setup, I installed:
+* **Plex** for media streaming.
+* **qBittorrent** for torrent management
+* **Docker** (including `Docker Engine`, `Docker Manager` and `Portainer`)
+* **Tailscale** (community app) for secure remote access
 
 ### 6.1. Plex
 
-The configuration is quite straightforward. You will need to open the app and sign in into plex.
-Afterwards you can create your libraries as usual.
-I suggest putting the plex libraries inside the `Public` folder so that 
+Plex setup is simple:
+
+1. Open the app and sign in to your Plex account.
+2. Create your libraries as desired.
+
+For easier access, I recommend creating the Plex libraries within the `Public` folder.
 
 ### 6.2. qBittorrent
 
-When you install qBittorrent an `admin` user will be created with a password (`adminadmin`)
+Upon installing qBittorrent, an `admin` user is created with the password `adminadmin`.
 
 <Notice type="info">
-  If you used the community app the password will be randomnly created. You can get it from the logs.
+  If you used the community app, a random password may be generated. Check the logs for this information.
 </Notice>
 
 <Notice type="warning">
-  The first thing you need to do is change the default password.
-  You can do it at `Tools/Options/Web UI/Authentication`
+  For security, change the default password immediately: go to `Tools/Options/Web UI/Authentication`.
 </Notice>
 
-Regarding downloads I prefer having them inside `public` (`/Volume1/public/Downloads`) folder so that every user can access them.
+Suggested Download Configuration:
 
-Finally I like adding a folder that is whatched for new torrents and to move the added ones and completed ones into subfolders.
-You can set it up in `Tools/Options/Downloads` with:
+1. Save downloads in a shared location like (`/Volume1/public/Downloads`) for easy access.
+2. Set up a monitored folder:
+  * Monitored folder: `/Volume1/public/Torrents/`
+  * Added `.torrent` files: `/Volume1/public/Torrents/Added/`
+  * Completed downloads: `/Volume1/public/Torrents/Downloaded/`
 
-* Monitored folder: `/Volume1/public/Torrents/`
-* Copy `.torrent` files to: `/Volume1/public/Torrents/Added/`
-* Copy `.torrent` files for finished downloads to: `/Volume1/public/Torrents/Downloaded/`
+This setup keeps everything organized and makes it easy to monitor new and completed downloads.
 
 ### 6.3. Tailscale
 
-This is a community app. You can download it from <FancyLink linkText="Tailscale | TerraMaster Community Place" url="https://tmnascommunity.eu/download/tailscale/" dark="true" company="default"/>. To install it you need to upload the file to `App Center/Settings/Install application manually`.
+Tailscale, a community app, enables secure remote connections. Download it from the <FancyLink linkText="Tailscale | TerraMaster Community Place" url="https://tmnascommunity.eu/download/tailscale/" dark="true" company="default"/>and install it manually via `App Center/Settings/Install application manually`.
 
-In order to connect the NAS to your tailscale you will need to register.
-First download the logs (`/<your_user>/MOD_CONFIG/Tailscale/Tailscale_start.log`).
-There you will find the `login url` which should look like:
+Connecting the NAS to Tailscale:
+
+1. After installation, find the login URL in the log file (`/<your_user>/MOD_CONFIG/Tailscale/Tailscale_start.log`). It will look like:
 
 ```plaintext
 To authenticate, visit:
@@ -200,36 +203,38 @@ To authenticate, visit:
   https://login.tailscale.com/a/xxxxxxxxxxxxxx
 ```
 
-Once you have added it, it should appear in your admin console. Optinally you can change it's name to something like `nas`.
+2. Visit this URL to register the NAS with your Tailscale account. Once added, it will appear in your Tailscale admin console (optionally, rename it to nas for easy identification).
 
-#### 6.3.1. Set the NAS as an exit node
+#### 6.3.1. Set the NAS as an Exit Node
 
-Optionally you can set the NAS as an exit node.
-You will need to SSH into the NAS.
-If you do it with a computer where you have tailscale install and connect you can reference the machine name (`nas`) instead of the IP.
+Optionally, you can configure the NAS as an exit node:
 
-So you can SSH as we saw before
+1. SSH into the NAS (use nas as the hostname if connected via Tailscale).
+
 ```sh
 ssh [username]@nas -p [port]
 ```
-Remember to replace `[username]` (you must use the first user you created) and `[port]`.
 
-Then you can set the NAS as an exit node with:
+2. Set the NAS as an exit node:
 
 ```sh
 tailscale set --advertise-exit-node
 ```
 
-Finally you might also want to update it and enable auto updates to avoid security problems with:
+3. To ensure the app remains updated, use:
 
 ```sh
 tailscale update
 tailscale set --auto-update
 ```
 
-## 7. UPS
+## 7. UPS Configuration
 
-In order to protect the NAS from power outages I think it is really important to connect it to a UPS.
-Some models can be connected by USB so that whenever there is a power outage the NAS is notified and can be automatically turned off.
+To safeguard against power outages, connecting the NAS to a UPS is highly recommended. Some UPS models offer USB connectivity, which allows the NAS to receive a shutdown signal during power interruptions.
 
-To set this up, go to `Control Panel/Hardware & Power` and click `enable USB support`.
+To enable UPS support:
+
+1. Go to `Control Panel/Hardware & Power`.
+2. Check the `Enable USB Support` box.
+
+This setup ensures your NAS can safely shut down in the event of a power failure, protecting your data and system.
