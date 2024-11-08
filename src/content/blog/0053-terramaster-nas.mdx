@@ -12,20 +12,49 @@ draft: false
 
 ## 0. Motivation
 
-xx
+I recently bought the <FancyLink linkText="Terramster F2-424" url="https://amzn.to/40CRZqJ" company="amazon"/> NAS and I wanted to write down all the steps I took for setting it up.
+This will help me resinstall everything if I needed and it might help others as well.
 
-## 1. Initial Setup
+## 1. About the hardware
+
+In case anyone is thinking about buying one, here is how it went for me.
+
+### 1.1. The NAS
+
+I previously had a synology D115J but the CPU it had was quite slow.
+I wanted my nas to be able to host multiple dockers and for that I needed something more powerful.
+After looking for different models, I saw that the cheap models from both Synology and QNAP had pretty outdated CPUs.
+Here is where I found out about Terramaster newest NAS.
+Initially I was afraid about Terramaster Operative System (TOS) but I read that it was easy to switch it for unraid, Truenas or any other OS I wanted.
+
+Finally, I decided it was better for me to have as fewer disks as possible but as big as I needed them.
+So I settled for a 2 bay NAS, the <FancyLink linkText="Terramster F2-424" url="https://amzn.to/40CRZqJ" company="amazon"/>
+
+### 1.2. The Hard Drives
+
+I knew it was important to have disks rated for 24/7 usage and/or tagged for a NAS.
+Initially I went for a <FancyLink linkText="Seagate Exos X18 3.5 16TB" url="https://amzn.to/3O2h2vX" company="amazon"/> since they were quite cheap for me but it was a big mistake.
+I have my NAS in a closed next to my living room, and those HDD were loud enough to be anyoing.
+Fortunatelly I was able to echange them for the <FancyLink linkText="Seagate IronWolf Pro 3.5 NAS 16TB" url="https://amzn.to/4eopD6G" company="amazon"/> (for an extra 90€ per disk) but I think it was worth it, since they are way more silent.
+
+### 1.3. The UPS
+
+Finally I wanted a UPS to make sure a power outage didn't break the NAS.
+For me it was important that it had USB connection so that the UPS could automatically turn of the NAS.
+I choose the <FancyLink linkText="Master Power (UPS 650 VA - 360W)" url="https://amzn.to/3YDj7Dw" company="amazon"/> since it is a really cheap option as long as you use it a device with low power needs, such as the NAS I chose.
+
+## 2. Initial Setup
 
 First of all, if you need a detailed installation guide you should read <FancyLink linkText="Terramaster Quickguide" url="https://support.terra-master.com/quickguide/" company="terramaster"/>.
 In this post I'll explain the points that were most relevant to me.
 
-### 1.1. Locating the NAS
+### 2.1. Locating the NAS
 
 The first thing you will need to do is to locate the NAS inside your network.
 With a Terramaster NAS you can head over to <FancyLink linkText="tnas.local" url="http://tnas.local" dark="true" company="default"/> and after a couple of cliks, you will see the NAS IP.
 Alternatively you can use an app that analyzes your network (such as <FancyLink linkText="Fing" url="https://www.fing.com/"/>).
 
-### 1.2. Install Terramaster OS (TOS)
+### 2.2. Install Terramaster OS (TOS)
 
 <Notice type="info">
   I want to install TOS on the SSD so that when it's idle the HDD can sleep.
@@ -40,7 +69,7 @@ You can do it by:
 This will create a partition in each disk you selected with the OS.
 While you wait I think it's a good moment to make sure you have a proper network setup.
 
-## 2. Avoiding double NAT
+## 3. Avoiding double NAT
 
 Some of us have a secondary router because we don't like the one the Internet Service Provider (ISP) provides for free.
 Those routers are usually not very powerful and can lack advanced features.
@@ -57,7 +86,7 @@ In my case, I could not set up the ISP router in bridge mode, so I went for a DM
   This will be very different for each setup and router models, but here you have what worked for me.
 </Notice>
 
-### 2.1. Reserve an IP for you secondary router
+### 3.1. Reserve an IP for you secondary router
 
 The first step for setting up a DMZ is to assing an IP for your secondary router by:
 
@@ -65,14 +94,14 @@ The first step for setting up a DMZ is to assing an IP for your secondary router
 2. Go to the ISP router config
 2. Create a DHCP binding for the secondary router. For simplicity use the IP it's currently using
 
-### 2.2. DMZ
+### 3.2. DMZ
 
 Then create the DMZ itself by:
 
 1. Go to the ISP router config
 2. Create a DMZ for the IP of the secondary router
 
-## 3. Handling storage
+## 4. Handling storage
 
 Once TOS installation finishes you can create your superuser. Afterwards you are ready to set up the storege.
 
@@ -80,7 +109,7 @@ Once TOS installation finishes you can create your superuser. Afterwards you are
   You can use `letters`, `numbers` and `special characters` in your passwords. And at least it can be 64 characters long.
 </Notice>
 
-### 3.1. Creating a storage pool
+### 4.1. Creating a storage pool
 
 The first thing you will need to decide is the `RAID` you want. Here I suggest:
 * `TRAID` if you have different disk sizes in order to avoid wasted space
@@ -95,11 +124,11 @@ You can read more about it in <FancyLink linkText="BTRFS vs EX4 | Terramaster fo
   HDDs will be noisy during the storage pool creation (RAID Synchronization), but noise will decrease during regular usage.
 </Notice>
 
-### 3.2. Hyper Cache
+### 4.2. Hyper Cache
 
 You can use one of the 2 M2 SSD slots for caching. That can speed up `reads`, `writes` or both (`balanced`). The choice will depend on the NAS usage.
 
-### 3.3. Options for adding data
+### 4.3. Options for adding data
 
 My model has two 2.5 Gbps ethernet ports which should give file transfers speeds of around 250–280 MB/s.
 The alternative is to use the USB 3.1 Gen 1 with an external SSD.
@@ -111,7 +140,7 @@ It's important to notice that depending of the RAID you chose, you might reach t
   In general I suggest you load data into the NAS over ethernet as oposed to using a USB external drive.
 </Notice>
 
-## 4. Connecting locally (SSH)
+## 5. Connecting locally (SSH)
 
 When installing some apps it is very useful to be able to connect a terminaly directly to the NAS (`ssh`).
 
@@ -139,7 +168,7 @@ You must replace:
   Once you are done setting up everything I suggest you disable `SSH` to minimize security risks.
 </Notice>
 
-## 5. Installing apps
+## 6. Installing apps
 
 In the `App Center` you can install apps either from the `Terramaster` or from the `Community`.
 
@@ -149,13 +178,13 @@ In my case I'll use:
 * Docker (`Docker Engine`, `Docker Manager` and `Portainer`)
 * Tailscale (community app)
 
-### 5.1. Plex
+### 6.1. Plex
 
 The configuration is quite straightforward. You will need to open the app and sign in into plex.
 Afterwards you can create your libraries as usual.
 I suggest putting the plex libraries inside the `Public` folder so that 
 
-### 5.2. qBittorrent
+### 6.2. qBittorrent
 
 When you install qBittorrent an `admin` user will be created with a password (`adminadmin`)
 
@@ -177,7 +206,7 @@ You can set it up in `Tools/Options/Downloads` with:
 * Copy `.torrent` files to: `/Volume1/public/Torrents/Added/`
 * Copy `.torrent` files for finished downloads to: `/Volume1/public/Torrents/Downloaded/`
 
-### 5.3. Tailscale
+### 6.3. Tailscale
 
 This is a community app. You can download it from <FancyLink linkText="Tailscale | TerraMaster Community Place" url="https://tmnascommunity.eu/download/tailscale/" dark="true" company="default"/>. To install it you need to upload the file to `App Center/Settings/Install application manually`.
 
@@ -193,7 +222,7 @@ To authenticate, visit:
 
 Once you have added it, it should appear in your admin console. Optinally you can change it's name to something like `nas`.
 
-#### 5.3.1. Set the NAS as an exit node
+#### 6.3.1. Set the NAS as an exit node
 
 Optionally you can set the NAS as an exit node.
 You will need to SSH into the NAS.
@@ -218,7 +247,7 @@ tailscale update
 tailscale set --auto-update
 ```
 
-## 6. UPS
+## 7. UPS
 
 In order to protect the NAS from power outages I think it is really important to connect it to a UPS.
 Some models can be connected by USB so that whenever there is a power outage the NAS is notified and can be automatically turned off.
