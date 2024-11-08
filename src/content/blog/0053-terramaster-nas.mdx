@@ -34,61 +34,55 @@ To protect the NAS from potential power outages, I opted for a UPS with a USB co
 
 ## 2. Initial Setup
 
-First of all, if you need a detailed installation guide you should read <FancyLink linkText="Terramaster Quickguide" url="https://support.terra-master.com/quickguide/" company="terramaster"/>.
-In this post I'll explain the points that were most relevant to me.
+For a detailed installation guide, you may want to consult the <FancyLink linkText="Terramaster Quickguide" url="https://support.terra-master.com/quickguide/" company="terramaster"/>. Here, I’ll highlight the steps that were most relevant for my setup.
 
 ### 2.1. Locating the NAS
 
-The first thing you will need to do is to locate the NAS inside your network.
-With a Terramaster NAS you can head over to <FancyLink linkText="tnas.local" url="http://tnas.local" dark="true" company="default"/> and after a couple of cliks, you will see the NAS IP.
-Alternatively you can use an app that analyzes your network (such as <FancyLink linkText="Fing" url="https://www.fing.com/"/>).
+To begin, you’ll need to locate the NAS on your network. With a Terramaster NAS, simply navigate to <FancyLink linkText="tnas.local" url="http://tnas.local" dark="true" company="default"/>. After a few clicks, you should see the NAS IP displayed. If that doesn’t work, you can use a network analysis app, such as <FancyLink linkText="Fing" url="https://www.fing.com"/>, to find the NAS IP.
 
 ### 2.2. Install Terramaster OS (TOS)
 
 <Notice type="info">
-  I want to install TOS on the SSD so that when it's idle the HDD can sleep.
+  My goal was to install TOS on the SSD, allowing the HDDs to go into sleep mode when not in use, which reduces wear and noise.
 </Notice>
 
-You can do it by:
+To install TOS on the SSD:
 
-1. Selecting a custom configuration
-2. Select all SSDs you have
-3. Online install
+1. Choose a **custom configuration** during the setup process.
+2. Select all the SSDs you want to use for the installation.
+3. Proceed with the **Online Install** option.
 
-This will create a partition in each disk you selected with the OS.
-While you wait I think it's a good moment to make sure you have a proper network setup.
+This process will partition each selected SSD to install the OS. While the installation completes, it’s a good time to review your network setup for optimal connectivity.
 
 ## 3. Network Configuration
 
-Some of us have a secondary router because we don't like the one the Internet Service Provider (ISP) provides for free.
-Those routers are usually not very powerful and can lack advanced features.
+Many users opt to use a secondary router rather than the one provided by their Internet Service Provider (ISP). ISP-provided routers often have limited features and performance. However, adding a secondary router can introduce double NAT, which can cause connectivity issues. You can learn more about double NAT and its effects in this <FancyLink linkText="guide" url="https://medium.com/@gmanual/double-nat-explained-and-possible-solutions-8b41b6c651bd" dark="true"/>.
 
-In that case, you might have double NAT (see <FancyLink linkText="Double NAT explained and possible solutions" url="https://medium.com/@gmanual/double-nat-explained-and-possible-solutions-8b41b6c651bd" dark="true"/> for more info) which might cause you problems.
+To resolve double NAT, you have two main options:
+1. Set the ISP router to **bridge mode**.
+2. **Create a DMZ** on the ISP router for the secondary router.
 
-You have multiple options to solve it, what I recommend is one of the following:
-1. Set the ISP router in bridge mode
-2. Create a DMZ
-
-In my case, I could not set up the ISP router in bridge mode, so I went for a DMZ.
+Since I couldn’t enable bridge mode on my ISP router, I opted for the DMZ setup. Below are the steps that worked for me.
 
 <Notice type="warning">
-  This will be very different for each setup and router models, but here you have what worked for me.
+  Note: These steps may vary depending on your router models and network configuration. Refer to your router’s manual for model-specific instructions.
 </Notice>
 
 ### 3.1. Reserve an IP for you secondary router
 
-The first step for setting up a DMZ is to assing an IP for your secondary router by:
+To set up a DMZ, the first step is to assign a static IP to your secondary router:
 
-1. Get the mac address of the secondary router
-2. Go to the ISP router config
-2. Create a DHCP binding for the secondary router. For simplicity use the IP it's currently using
+1. Locate the **MAC address** of your secondary router.
+2. Access your **ISP router’s configuration** page.
+2. In the DHCP settings, **create a DHCP binding** for the secondary router, preferably using its current IP for simplicity.
 
 ### 3.2. DMZ
 
-Then create the DMZ itself by:
+Once the IP is reserved, follow these steps to set up the DMZ:
 
-1. Go to the ISP router config
-2. Create a DMZ for the IP of the secondary router
+1. Go to the **ISP router’s configuration** page.
+2. Locate the **DMZ settings**.
+3. Enable the DMZ and assign it to the static IP of your secondary router.
 
 ## 4. Handling storage
 
