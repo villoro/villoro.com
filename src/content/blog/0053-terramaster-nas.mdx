@@ -1,8 +1,8 @@
 ---
-slug: setting-up-nas-terramaster
-title: xx
-meta_title: xx
-description: xx
+slug: setting-up-terramaster-nas
+title: Setting Up and Optimizing a Terramaster NAS
+meta_title: Complete Guide to Setting Up a Terramaster NAS
+description: A comprehensive guide on setting up and configuring the Terramaster F2-424 NAS, including hardware selection, RAID setup, storage configuration, network optimization, and essential app installations.
 date: 2024-10-24
 image: /images/blog/0053-terramaster-nas.jpg
 category: hardware
@@ -12,88 +12,229 @@ draft: true
 
 ## 0. Motivation
 
-xx
+After purchasing the <FancyLink linkText="Terramaster F2-424" url="https://amzn.to/40CRZqJ" company="amazon"/> NAS, I decided to document my setup process. This guide serves as both a personal reference in case I need to reinstall and a practical guide for others who might be setting up a similar NAS configuration.
 
-## 1. NAS Setup and Storage Configuration
+## 1. About the hardware
 
-ex4 vs btrfs
+For anyone considering a NAS, here’s a summary of my experience and the choices I made for my setup.
 
-* Initial Setup: Choose between default and custom installations; selecting hard drives for system files is common.
-* M.2 SSDs for Caching: You can use read, write, or balanced cache. Balanced caching gives a mix of read and write performance, but if you're focused on media streaming (e.g., Plex), read cache is recommended.
-* RAID Synchronization: HDDs may be noisy during the RAID synchronization process, but noise will decrease during regular usage.
-* Noise Reduction: Add acoustic foam, anti-vibration pads, and rubber seals to reduce noise if placing the NAS in a cabinet. Ensure proper ventilation.
+### 1.1. The NAS
 
-## 2. Network Configuration and Performance
+Previously, I had a Synology D115J, but its CPU wasn’t quite powerful enough for my needs. I wanted a NAS capable of running multiple Docker containers, which required a more robust processor. After researching Synology and QNAP models, I found that their budget options were often limited by outdated CPUs.
 
-* Transfer Files Over 2.5 Gbps Ethernet: If supported, use 2.5 Gbps Ethernet for faster file transfers (around 250–280 MB/s). USB 3.1 Gen 1 with an external SSD could offer higher speeds (~300–400 MB/s) for local transfers.
-* Gigabit Ethernet: Limited to 125 MB/s, so it won’t fully utilize HDD speeds (~249 MB/s max for Seagate Exos X18).
-* VPN Setup: Use WireGuard with Docker if not natively supported by TOS. Forward port 51820/UDP for external access.
+That’s when I came across the Terramaster NAS lineup. Although I initially had reservations about Terramaster's Operating System (TOS), reviews suggested that it was straightforward to replace TOS with options like Unraid or TrueNAS if needed. Ultimately, I decided on a 2-bay NAS for simplicity, choosing fewer but larger disks for storage capacity. The <FancyLink linkText="Terramaster F2-424" url="https://amzn.to/40CRZqJ" company="amazon"/> offered the best balance of power and flexibility for my setup.
 
-## 3. Plex Setup and Troubleshooting
+### 1.2. The Hard Drives
 
-* Plex Claim Issues: If you're having trouble claiming the Plex server, use the manual token method via https://plex.tv/claim or access the NAS at http://127.0.0.1:32400/web to claim it directly from the local machine.
+When selecting drives, I prioritized models rated for 24/7 operation, essential for NAS use. Initially, I purchased <FancyLink linkText="Seagate Exos X18 3.5 16TB" url="https://amzn.to/3O2h2vX" company="amazon"/> drives because they were cost-effective. However, the noise level turned out to be too disruptive, especially with the NAS housed in a cabinet near my living room. Fortunately, I was able to exchange them for <FancyLink linkText="Seagate IronWolf Pro 3.5 NAS 16TB" url="https://amzn.to/4eopD6G" company="amazon"/> drives (at an additional 90€ per drive). Although pricier, the IronWolf Pro drives are significantly quieter and better suited to my setup.
 
-## 4. qBittorrent Setup
+### 1.3. The UPS
 
-Read log for the password, then change it
+To protect the NAS from potential power outages, I opted for a UPS with a USB connection, enabling automatic shutdown of the NAS during an outage. I chose the <FancyLink linkText="Master Power (UPS 650 VA - 360W)" url="https://amzn.to/3YDj7Dw" company="amazon"/> as a budget-friendly option, which is ideal for low-power devices like my NAS. This UPS provides just enough backup power to safely handle brief outages and help prevent data loss.
 
-* qBittorrent App from Terramaster Community:
-    * Set up public/Torrents as the monitored folder for new torrents.
-    * Configure public/Downloads as the destination for completed downloads in the qBittorrent Web UI.
+## 2. Initial Setup
 
-## 5. Firewall rules
+For a detailed installation guide, you may want to consult the <FancyLink linkText="Terramaster Quickguide" url="https://support.terra-master.com/quickguide/" company="terramaster"/>. Here, I’ll highlight the steps that were most relevant for my setup.
 
-```yaml
-- Name: Tailscale TCP
-  Operation: Allow
-  Incoming IP: All
-  Port: 443,80
-  Protocol: tcp
+### 2.1. Locating the NAS
 
-- Name: Tailscale UDP
-  Operation: Allow
-  Incoming IP: All
-  Port: 41641,3478
-  Protocol: udp
+To begin, you’ll need to locate the NAS on your network. With a Terramaster NAS, simply navigate to <FancyLink linkText="tnas.local" url="http://tnas.local" dark="true" company="default"/>. After a few clicks, you should see the NAS IP displayed. If that doesn’t work, you can use a network analysis app, such as <FancyLink linkText="Fing" url="https://www.fing.com"/>, to find the NAS IP.
+
+### 2.2. Install Terramaster OS (TOS)
+
+<Notice type="info">
+  My goal was to install TOS on the SSD, allowing the HDDs to go into sleep mode when not in use, which reduces wear and noise.
+</Notice>
+
+To install TOS on the SSD:
+
+1. Choose a **custom configuration** during the setup process.
+2. Select all the SSDs you want to use for the installation.
+3. Proceed with the **Online Install** option.
+
+This process will partition each selected SSD to install the OS. While the installation completes, it’s a good time to review your network setup for optimal connectivity.
+
+## 3. Network Configuration
+
+Many users opt to use a secondary router rather than the one provided by their Internet Service Provider (ISP). ISP-provided routers often have limited features and performance. However, adding a secondary router can introduce double NAT, which can cause connectivity issues. You can learn more about double NAT and its effects in this <FancyLink linkText="guide" url="https://medium.com/@gmanual/double-nat-explained-and-possible-solutions-8b41b6c651bd" dark="true"/>.
+
+To resolve double NAT, you have two main options:
+1. Set the ISP router to **bridge mode**.
+2. **Create a DMZ** on the ISP router for the secondary router.
+
+Since I couldn’t enable bridge mode on my ISP router, I opted for the DMZ setup. Below are the steps that worked for me.
+
+<Notice type="warning">
+  Note: These steps may vary depending on your router models and network configuration. Refer to your router’s manual for model-specific instructions.
+</Notice>
+
+### 3.1. Reserve an IP for you secondary router
+
+To set up a DMZ, the first step is to assign a static IP to your secondary router:
+
+1. Locate the **MAC address** of your secondary router.
+2. Access your **ISP router’s configuration** page.
+2. In the DHCP settings, **create a DHCP binding** for the secondary router, preferably using its current IP for simplicity.
+
+### 3.2. DMZ
+
+Once the IP is reserved, follow these steps to set up the DMZ:
+
+1. Go to the **ISP router’s configuration** page.
+2. Locate the **DMZ settings**.
+3. Enable the DMZ and assign it to the static IP of your secondary router.
+
+## 4. Handling storage
+
+Once TOS installation is complete, you can create your superuser account. Afterward, you’re ready to configure storage on the NAS.
+
+<Notice type="warning">
+  You can use letters, numbers, and special characters in your passwords, with a maximum length of 64 characters.
+</Notice>
+
+### 4.1. Creating a storage pool
+
+The first step is to choose a RAID configuration. Here are some general recommendations:
+* **TRAID**: Suitable if you have disks of different sizes, as it minimizes wasted space. It’s also beneficial if you plan to add more disks in the future since TRAID doesn’t require volume recreation.
+* **Standard RAID (0, 1, 5, or 6)**: Ideal if you have disks of the same size and don’t plan on adding more disks. Standard RAID setups are compatible with other operating systems and can be easier to recover in case of failures.
+
+For storage formats, you can choose between `EXT4` and `BTRFS`. While both have advantages, I opted for `EXT4`, as it is often regarded as more stable. For a more detailed comparison, refer to <FancyLink linkText="BTRFS vs EXT4 | Terramaster forum" url="https://forum.terra-master.com/en/viewtopic.php?t=1851#:~:text=Re%3A%20BTRFS%20vs%20EXT4,-Post%20by%20TMzethar&text=The%20ext4%20format%20will%20retain,stable%20in%20terms%20of%20stability" company="terramaster"/>.
+
+<Notice type="info">
+  HDDs will be noisy during storage pool creation (RAID synchronization). Noise will decrease once synchronization completes and during regular usage.
+</Notice>
+
+### 4.2. Hyper Cache
+
+You can use one of the two M.2 SSD slots for caching. This can enhance `read`, `write`, or `balanced` performance, depending on your NAS’s primary tasks.
+
+### 4.3. Options for adding data
+
+The NAS model I chose has two 2.5 Gbps Ethernet ports, which typically support file transfer speeds around 250–280 MB/s. Alternatively, you can use USB 3.1 Gen 1 with an external SSD, potentially achieving speeds between 300–400 MB/s. However, the Ethernet option is generally more efficient, as using an external SSD requires first copying data to the SSD, then transferring it to the NAS.
+
+Note that your transfer speeds may be limited by the RAID configuration and the specific hard drives in use. For example, with the Seagate IronWolf Pro HDDs I installed, speeds top out at around 250 MB/s due to HDD limitations.
+
+<Notice type="info">
+  For optimal performance, I recommend transferring data over Ethernet rather than using an external USB drive.
+</Notice>
+
+## 5. Connecting locally (SSH)
+
+When setting up applications, it can be very useful to access the NAS via a terminal (`ssh`), allowing direct command-line interaction.
+
+<Notice type="danger">
+  Only enable SSH if you are comfortable using it and aware of the security implications.
+</Notice>
+
+To enable SSH on your NAS:
+
+1. Open the `Control Panel`.
+1. Go to `Network Services` and select `Terminal & SNMP`.
+2. Enable SSH access with your username and password.
+3. For security, set a custom SSH port (default is `9222`).
+
+After enabling SSH, you can connect to the NAS from a terminal with:
+
+```sh
+ssh [username]@[ip] -p [port]
 ```
 
-## 6. Connecting locally
+Replace:
+* `[username]` with the first user you created.
+* `[ip]` with your NAS IP address.
+* `[port]` with the SSH port you specified.
 
-Discover NAS IP. I use fing.
+<Notice type="warning">
+  To minimize security risks, disable `SSH` once setup is complete and you no longer need terminal access.
+</Notice>
 
-1. Network Services / Terminal $ SNMP
-2. Allow SSH access with username and password
-3. You should set a custom port (defaults to `9222`)
-4. `ssh username@ip -p 9222` (you must use your the `username` of the first user you created) (use the NAS IP)
+## 6. Installing Apps
 
-## 7. Qbittorrent
+The  `App Center` on your TerraMaster NAS allows you to install applications from both the official `Terramaster` repository and the `Community` repository.
 
-You must set the paths for where to download the torrents and optionally which folder to watch for adding torrents.
+For my setup, I installed:
+* **Plex** for media streaming.
+* **qBittorrent** for torrent management
+* **Docker** (including `Docker Engine`, `Docker Manager` and `Portainer`)
+* **Tailscale** (community app) for secure remote access
 
-I like using `public/Downloads`. So I'll need to use `/Volume1/public/Downloads` since `Volume1` is the name I gave to the data pool.
+### 6.1. Plex
 
+Plex setup is simple:
 
-## DMZ and double NAT
+1. Open the app and sign in to your Plex account.
+2. Create your libraries as desired.
 
-### 1. Reserve an IP for you secondary router
+For easier access, I recommend creating the Plex libraries within the `Public` folder.
 
-1. Get the mac address of the secondary router
-2. Create a DHCP binding for the secondary router. For simplicity use the IP it's currently using
+### 6.2. qBittorrent
 
-### 2. DMZ
+Upon installing qBittorrent, an `admin` user is created with the password `adminadmin`.
 
-Create a DMZ for the IP of the secondary router
+<Notice type="info">
+  If you used the community app, a random password may be generated. Check the logs for this information.
+</Notice>
 
-## UPS
+<Notice type="warning">
+  For security, change the default password immediately: go to `Tools/Options/Web UI/Authentication`.
+</Notice>
 
-Hardware & Power / enable USB support
+Suggested Download Configuration:
 
+1. Save downloads in a shared location like (`/Volume1/public/Downloads`) for easy access.
+2. Set up a monitored folder:
+  * Monitored folder: `/Volume1/public/Torrents/`
+  * Added `.torrent` files: `/Volume1/public/Torrents/Added/`
+  * Completed downloads: `/Volume1/public/Torrents/Downloaded/`
 
-tailsacle set --advertise-exit-node
+This setup keeps everything organized and makes it easy to monitor new and completed downloads.
 
-## Mega
+### 6.3. Tailscale
 
-### Install Portainer
+Tailscale, a community app, enables secure remote connections. Download it from the <FancyLink linkText="Tailscale | TerraMaster Community Place" url="https://tmnascommunity.eu/download/tailscale/" dark="true" company="default"/>and install it manually via `App Center/Settings/Install application manually`.
 
-Set up local environment and select it
-Create new container
+Connecting the NAS to Tailscale:
+
+1. After installation, find the login URL in the log file (`/<your_user>/MOD_CONFIG/Tailscale/Tailscale_start.log`). It will look like:
+
+```plaintext
+To authenticate, visit:
+
+  https://login.tailscale.com/a/xxxxxxxxxxxxxx
+```
+
+2. Visit this URL to register the NAS with your Tailscale account. Once added, it will appear in your Tailscale admin console (optionally, rename it to nas for easy identification).
+
+#### 6.3.1. Set the NAS as an Exit Node
+
+Optionally, you can configure the NAS as an exit node:
+
+1. SSH into the NAS (use nas as the hostname if connected via Tailscale).
+
+```sh
+ssh [username]@nas -p [port]
+```
+
+2. Set the NAS as an exit node:
+
+```sh
+tailscale set --advertise-exit-node
+```
+
+3. To ensure the app remains updated, use:
+
+```sh
+tailscale update
+tailscale set --auto-update
+```
+
+## 7. UPS Configuration
+
+To safeguard against power outages, connecting the NAS to a UPS is highly recommended. Some UPS models offer USB connectivity, which allows the NAS to receive a shutdown signal during power interruptions.
+
+To enable UPS support:
+
+1. Go to `Control Panel/Hardware & Power`.
+2. Check the `Enable USB Support` box.
+
+This setup ensures your NAS can safely shut down in the event of a power failure, protecting your data and system.
