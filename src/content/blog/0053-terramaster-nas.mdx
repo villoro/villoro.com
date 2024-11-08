@@ -86,69 +86,66 @@ Once the IP is reserved, follow these steps to set up the DMZ:
 
 ## 4. Handling storage
 
-Once TOS installation finishes you can create your superuser. Afterwards you are ready to set up the storege.
+Once TOS installation is complete, you can create your superuser account. Afterward, you’re ready to configure storage on the NAS.
 
 <Notice type="warning">
-  You can use `letters`, `numbers` and `special characters` in your passwords. And at least it can be 64 characters long.
+  You can use letters, numbers, and special characters in your passwords, with a maximum length of 64 characters.
 </Notice>
 
 ### 4.1. Creating a storage pool
 
-The first thing you will need to decide is the `RAID` you want. Here I suggest:
-* `TRAID` if you have different disk sizes in order to avoid wasted space
-* `TRAID` if you plan on adding more disks later, since you won't need to recreate the volume
-* A standard `RAID` (0, 1, 5 or 6) if you have same size disks and you won't add extra disks (so that it's compatible with other OS and it's easier to recover in case of failures.)
+The first step is to choose a RAID configuration. Here are some general recommendations:
+* **TRAID**: Suitable if you have disks of different sizes, as it minimizes wasted space. It’s also beneficial if you plan to add more disks in the future since TRAID doesn’t require volume recreation.
+* **Standard RAID (0, 1, 5, or 6)**: Ideal if you have disks of the same size and don’t plan on adding more disks. Standard RAID setups are compatible with other operating systems and can be easier to recover in case of failures.
 
-Regarding the storage formats you can go with `EX4` or `BTRFS`.
-Honestly I'm no expert here, I chose `EX4` because I read it's more stable.
-You can read more about it in <FancyLink linkText="BTRFS vs EX4 | Terramaster forum" url="https://forum.terra-master.com/en/viewtopic.php?t=1851#:~:text=Re%3A%20BTRFS%20vs%20EXT4,-Post%20by%20TMzethar&text=The%20ext4%20format%20will%20retain,stable%20in%20terms%20of%20stability" company="terramaster"/>.
+For storage formats, you can choose between `EXT4` and `BTRFS`. While both have advantages, I opted for `EXT4`, as it is often regarded as more stable. For a more detailed comparison, refer to <FancyLink linkText="BTRFS vs EXT4 | Terramaster forum" url="https://forum.terra-master.com/en/viewtopic.php?t=1851#:~:text=Re%3A%20BTRFS%20vs%20EXT4,-Post%20by%20TMzethar&text=The%20ext4%20format%20will%20retain,stable%20in%20terms%20of%20stability" company="terramaster"/>.
 
 <Notice type="info">
-  HDDs will be noisy during the storage pool creation (RAID Synchronization), but noise will decrease during regular usage.
+  HDDs will be noisy during storage pool creation (RAID synchronization). Noise will decrease once synchronization completes and during regular usage.
 </Notice>
 
 ### 4.2. Hyper Cache
 
-You can use one of the 2 M2 SSD slots for caching. That can speed up `reads`, `writes` or both (`balanced`). The choice will depend on the NAS usage.
+You can use one of the two M.2 SSD slots for caching. This can enhance `read`, `write`, or `balanced` performance, depending on your NAS’s primary tasks.
 
 ### 4.3. Options for adding data
 
-My model has two 2.5 Gbps ethernet ports which should give file transfers speeds of around 250–280 MB/s.
-The alternative is to use the USB 3.1 Gen 1 with an external SSD.
-That could offer higher speeds (~300–400 MB/s) but I think it's not worht it since you will first need to copy the data into the SSD and then out of it.
+The NAS model I chose has two 2.5 Gbps Ethernet ports, which typically support file transfer speeds around 250–280 MB/s. Alternatively, you can use USB 3.1 Gen 1 with an external SSD, potentially achieving speeds between 300–400 MB/s. However, the Ethernet option is generally more efficient, as using an external SSD requires first copying data to the SSD, then transferring it to the NAS.
 
-It's important to notice that depending of the RAID you chose, you might reach the HDD speed limit (~250 MB/s for the Seagate Ironwolf Pro I installed).
+Note that your transfer speeds may be limited by the RAID configuration and the specific hard drives in use. For example, with the Seagate IronWolf Pro HDDs I installed, speeds top out at around 250 MB/s due to HDD limitations.
 
 <Notice type="info">
-  In general I suggest you load data into the NAS over ethernet as oposed to using a USB external drive.
+  For optimal performance, I recommend transferring data over Ethernet rather than using an external USB drive.
 </Notice>
 
 ## 5. Connecting locally (SSH)
 
-When installing some apps it is very useful to be able to connect a terminaly directly to the NAS (`ssh`).
+When setting up applications, it can be very useful to access the NAS via a terminal (`ssh`), allowing direct command-line interaction.
 
 <Notice type="danger">
-  Only do this if you are confortable with `ssh`!
+  Only enable SSH if you are comfortable using it and aware of the security implications.
 </Notice>
 
-1. Go to `Control Panel`
-1. Inside the `Network Services` section select `Terminal & SNMP`
-2. Allow SSH access with username and password
-3. You should set a custom port for security reasons (defaults to `9222`)
+To enable SSH on your NAS:
 
-Then with a terminal you can connect to the NAS with:
+1. Open the `Control Panel`.
+1. Go to `Network Services` and select `Terminal & SNMP`.
+2. Enable SSH access with your username and password.
+3. For security, set a custom SSH port (default is `9222`).
+
+After enabling SSH, you can connect to the NAS from a terminal with:
 
 ```sh
 ssh [username]@[ip] -p [port]
 ```
 
-You must replace:
-* `[username]`. You must use the first user you created
-* `[ip]`
-* `[port]`  
+Replace:
+* `[username]` with the first user you created.
+* `[ip]` with your NAS IP address.
+* `[port]` with the SSH port you specified.
 
 <Notice type="warning">
-  Once you are done setting up everything I suggest you disable `SSH` to minimize security risks.
+  To minimize security risks, disable `SSH` once setup is complete and you no longer need terminal access.
 </Notice>
 
 ## 6. Installing apps
