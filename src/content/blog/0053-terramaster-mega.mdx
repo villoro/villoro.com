@@ -1,12 +1,12 @@
 ---
-slug: xxx
-title: xxx
-meta_title: x
-description: xxx
+slug: megasync-terramaster-docker-setup
+title: How to Set Up MEGASync on a TerraMaster NAS Using Docker
+meta_title: MEGASync Setup on TerraMaster NAS with Docker
+description: A step-by-step guide to installing and configuring MEGASync on a TerraMaster NAS using Docker for seamless MEGA cloud synchronization.
 date: 2024-12-22
 image: /images/blog/0052-terramaster-nas.jpg
 category: hardware
-tags: [NAS, Hardware, Terramaster]
+tags: [NAS, Hardware, Terramaster, Docker]
 draft: false
 ---
 
@@ -24,22 +24,24 @@ TerraMaster's TOS handles user directories in a specific way that can sometimes 
 
 Based on conventions used by other apps like **Tailscale**, I recommend the following paths for MEGASync:
 
-* **Configuration Files**: `/home/<admin_username>/MOD_CONFIG/Mega/<username>`. This path organizes MEGASync configurations under a dedicated MOD_CONFIG folder, keeping the structure clean and consistent with other apps.
+- **Configuration Files**: `/home/<admin_username>/MOD_CONFIG/Mega/<username>`  
+  This path organizes MEGASync configurations under a dedicated `MOD_CONFIG` folder, keeping the structure clean and consistent with other apps.
 
-* **Synced Data**: `/home/<username>`. Using the root directory of the target user ensures straightforward access and avoids conflicts with other applications.
+- **Synced Data**: `/home/<username>`  
+  Using the root directory of the target user ensures straightforward access and avoids conflicts with other applications.
 
 ## 2. Run the MEGASync Docker Container
 
 You can set up MEGASync either via the terminal or by using Portainer. Choose the option that works best for you.
 
-Before proceeding please notice:
+The Docker image we are using for this setup is <FancyLink linkText="ich777/docker-megasync" url="https://github.com/ich777/docker-megasync" dark="true"/>, which provides a lightweight and reliable containerized version of MEGASync. Ensure you review the repository for the latest updates and additional configuration options.
 
 <Notice type="warning">
   **Default Path Issues:** The default configuration path for MEGASync includes spaces (`/megasync/.local/share/data/Mega Limited/MEGAsync`), which can cause parsing and permission problems. To avoid this, we set the `DATA_DIR` environment variable to `/megasync/config`.
 </Notice>
 
 <Notice type="warning" classname="mt-6">
-  **Ports:** It is recommeneded you use a custom port for security reasons. As an example I set it to 8081, but I suggest you use something different.
+  **Ports:** It is recommended to use a custom port for security reasons. This guide uses 8081 as an example, but I suggest choosing a unique port for your setup.
 </Notice>
 
 You can use the following command to see which ports are free to use:
@@ -66,7 +68,7 @@ docker run -d \
 ```
 
 <Notice type="warning">
-  You must replace `<admin_username>` and `<username>`.
+  Replace `<admin_username>` and `<username>` with your actual values.
 </Notice>
 
 ### 2.2. Option 2: Using Portainer
@@ -107,21 +109,22 @@ Once the container is running, access the MEGASync interface by opening your bro
 ```plaintext
 http://<NAS_IP>:8081
 ```
+
 <Notice type="warning">
-  Replace `<NAS_IP>` with your NAS’s IP address. Also make sure to use the port you decided.
+  Replace `<NAS_IP>` with your NAS’s IP address and use the port you chose.
 </Notice>
 
-Once there you will see a nice UI similar to what you would see on a desktop computer with mega installed:
+You will see a user interface similar to what you would see on a desktop computer with MEGA installed:
 
 ![Pipeline DAG example](../../images/posts/2024/0053-megasync-config.jpg)
 
-In that window, log in to your MEGA account and set up synchronization.
+Log in to your MEGA account and set up synchronization.
 
 <Notice type="warning">
   **Local Folder Setup**: Always choose `/sync-data` (or a subdirectory) for the **local folder** during synchronization setup to ensure proper syncing with the host.
 </Notice>
 
-Once you are done, you can always access the configuration by using the `Mega` icon on the "task bar":
+Once configured, you can access the settings anytime via the `Mega` icon on the "task bar":
 
 ![Pipeline DAG example](../../images/posts/2024/0053-megasync-icon-settings.jpg)
 
@@ -136,7 +139,7 @@ Once you are done, you can always access the configuration by using the `Mega` i
 
 ## 5. Adding Multiple Users
 
-This setup is designed to work for multiple users. To sync another user, simply repeat the steps to run the Docker container. Use another `user_name` with the new username in all relevant paths and container names. For example:
+This setup is designed to work for multiple users. To sync another user, repeat the steps to run the Docker container. Use the new username in all relevant paths and container names. For example:
 
 - Configuration Path: `/home/<admin_username>/MOD_CONFIG/Mega/<new_username>`
 - Sync Data Path: `/home/<new_username>`
@@ -149,9 +152,10 @@ By doing so, each user will have their own isolated MEGAsync instance.
 
 ### 6.1. Permission Denied Errors
 
-I had a lot of problems with this. The issue was that I was not correctly setting up the volumns and it was unable to work on the path I was setting.
+If you encounter permission errors, verify the volume paths are set correctly and accessible to the Docker container.
 
 ### 6.2. Logs Indicate Missing Commands
+
 Errors like `xrdb: command not found` are harmless and can be ignored.
 
 ### 6.3. Access Issues
