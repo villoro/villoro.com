@@ -30,10 +30,23 @@ Based on conventions used by other apps like **Tailscale**, I recommend the foll
 
 ## 2. Run the MEGASync Docker Container
 
-You can set up MEGASync either via the terminal or by using Portainer. Choose the option that works best for you:
+You can set up MEGASync either via the terminal or by using Portainer. Choose the option that works best for you.
 
-> [!warning] **Default Path Issues**
-> The default configuration path for MEGASync includes spaces (`/megasync/.local/share/data/Mega Limited/MEGAsync`), which can cause parsing and permission problems. To avoid this, we set the `DATA_DIR` environment variable to `/megasync/config`.
+Before proceeding please notice:
+
+<Notice type="warning">
+  **Default Path Issues:** The default configuration path for MEGASync includes spaces (`/megasync/.local/share/data/Mega Limited/MEGAsync`), which can cause parsing and permission problems. To avoid this, we set the `DATA_DIR` environment variable to `/megasync/config`.
+</Notice>
+
+<Notice type="warning" classname="mt-6">
+  **Ports:** It is recommeneded you use a custom port for security reasons. As an example I set it to 8081, but I suggest you use something different.
+</Notice>
+
+You can use the following command to see which ports are free to use:
+
+```bash
+netstat -tuln | grep LISTEN
+```
 
 ### 2.1. Option 1: Using the Terminal
 
@@ -58,7 +71,7 @@ docker run -d \
 
 ### 2.2. Option 2: Using Portainer
 
-Use the following YAML configuration:
+Use the following configuration:
 
 ```yaml
 Name: megasync-villoro
@@ -85,37 +98,41 @@ Advanced container settings:
 Restart Policy: Always
 ```
 
-After entering the YAML configuration in Portainer, click `Deploy the container`.
-
-> [!tip] **Verify Ports**
-> Use the following command to ensure the container is listening on the correct ports:
-> ```bash
-> netstat -tuln | grep LISTEN
-> ```
+After entering all the configuration in Portainer, click `Deploy the container`.
 
 ## 3. Access the MEGASync Web Interface
-Once the container is running, access the MEGASync interface:
 
-1. Open your browser and navigate to:
-   ```
-   http://<NAS_IP>:8081/vnc_auto.html
-   ```
-   Replace `<NAS_IP>` with your NAS’s IP address.
+Once the container is running, access the MEGASync interface by opening your browser and navigating to:
 
-2. Log in to your MEGA account and set up synchronization:
-   - **Local Folder**: Choose `/sync-data` or a subdirectory.
-   - **MEGA Folder**: Select the folder in your MEGA account to sync with.
+```plaintext
+http://<NAS_IP>:8081
+```
+<Notice type="warning">
+  Replace `<NAS_IP>` with your NAS’s IP address. Also make sure to use the port you decided.
+</Notice>
 
-> [!important] **Local Folder Setup**
-> Always choose `/sync-data` (or a subdirectory) for the **local folder** during synchronization setup to ensure proper syncing with the host.
+Once there you will see a nice UI similar to what you would see on a desktop computer with mega installed:
+
+![Pipeline DAG example](../../images/posts/2024/0053-megasync-config.jpg)
+
+In that window, log in to your MEGA account and set up synchronization.
+
+<Notice type="warning">
+  **Local Folder Setup**: Always choose `/sync-data` (or a subdirectory) for the **local folder** during synchronization setup to ensure proper syncing with the host.
+</Notice>
+
+Once you are done, you can always access the configuration by using the `Mega` icon on the "task bar":
+
+![Pipeline DAG example](../../images/posts/2024/0053-megasync-icon-settings.jpg)
 
 ## 4. Verify the Setup
+
 - Monitor the container logs to ensure there are no errors:
   ```bash
   docker logs megasync
   ```
 
-- Test synchronization by adding files to `/home/villoro` and confirming they appear in your MEGA account (and vice versa).
+- Test synchronization by adding files to `/home/<username>` and confirming they appear in your MEGA account (and vice versa).
 
 ## 5. Adding Multiple Users
 
@@ -130,22 +147,22 @@ By doing so, each user will have their own isolated MEGAsync instance.
 
 ## 6. Troubleshooting
 
-1. **Permission Denied Errors**:
-   - Ensure the mapped directories have the correct permissions:
-     ```bash
-     chmod -R 777 /home/<admin_username>/MOD_CONFIG/Mega/villoro
-     chmod -R 777 /home/villoro
-     ```
+### 6.1. Permission Denied Errors
 
-2. **Logs Indicate Missing Commands**:
-   - Errors like `xrdb: command not found` are harmless and can be ignored.
+I had a lot of problems with this. The issue was that I was not correctly setting up the volumns and it was unable to work on the path I was setting.
 
-3. **Access Issues**:
-   - Ensure the container is running:
-     ```bash
-     docker ps
-     ```
-   - Verify the port mapping matches your setup.
+### 6.2. Logs Indicate Missing Commands
+Errors like `xrdb: command not found` are harmless and can be ignored.
+
+### 6.3. Access Issues
+
+Ensure the container is running:
+
+```bash
+docker ps
+```
+
+Verify the port mapping matches your setup.
 
 ---
 
