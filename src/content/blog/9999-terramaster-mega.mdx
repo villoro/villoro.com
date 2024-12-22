@@ -16,57 +16,48 @@ In this guide, I'll walk you through installing and configuring MEGASync on a Te
 
 If you're just starting with your TerraMaster NAS, I recommend checking out my previous post <FancyLink linkText="Setting Up and Optimizing a Terramaster NAS" url="https://villoro.com/blog/setting-up-terramaster-nas/" dark="true"/>, where I cover the basics to get your device up and running. Once your NAS is set up, this guide will help you extend its functionality with MEGASync.
 
-## Prerequisites
+## 1. About TOS Paths
 
-- A TerraMaster NAS with Docker installed.
-- Basic knowledge of the terminal and Docker.
-- Familiarity with the first user created in TOS (referred to here as `<admin_username>`).
+TerraMaster's TOS handles user directories in a specific way that can sometimes cause confusion or issues with Docker containers. While user folders are displayed in TOS under `/home/<username>`, these directories are actually mapped internally to `/Volume1/User/<username>`. This discrepancy can lead to problems with Docker containers, particularly when they require consistent and predictable file paths.
 
-> [!info] **TOS Paths**
-> TOS displays user directories in `/home/<username>`, but these map internally to `/Volume1/User/<username>`. For simplicity, always use `/home/<username>` in Docker commands or configurations.
+### 1.1. Proposed Directory Structure for MEGASync
 
-## Step 1: Prepare the Folders
-To store configuration files and synced data, create the necessary directories on your NAS:
+Based on conventions used by other apps like **Tailscale**, I recommend the following paths for MEGASync:
 
-```bash
-mkdir -p /home/<admin_username>/MOD_CONFIG/Mega/villoro
-mkdir -p /home/villoro
-```
+* **Configuration Files**: `/home/<admin_username>/MOD_CONFIG/Mega/<username>`. This path organizes MEGASync configurations under a dedicated MOD_CONFIG folder, keeping the structure clean and consistent with other apps.
 
-- `/home/<admin_username>/MOD_CONFIG/Mega/villoro`: Stores MEGASync configuration files.
-- `/home/villoro`: The directory to sync with MEGA.
+* **Synced Data**: `/home/<username>`. Using the root directory of the target user ensures straightforward access and avoids conflicts with other applications.
 
-Ensure these directories have the correct permissions:
+## 2. Run the MEGASync Docker Container
 
-```bash
-chmod -R 777 /home/<admin_username>/MOD_CONFIG/Mega/villoro
-chmod -R 777 /home/villoro
-```
-
-## Step 2: Run the MEGASync Docker Container
-
-You can set up MEGASync either via the terminal or with a YAML configuration in Portainer. Choose the option that works best for you:
+You can set up MEGASync either via the terminal or by using Portainer. Choose the option that works best for you:
 
 > [!warning] **Default Path Issues**
 > The default configuration path for MEGASync includes spaces (`/megasync/.local/share/data/Mega Limited/MEGAsync`), which can cause parsing and permission problems. To avoid this, we set the `DATA_DIR` environment variable to `/megasync/config`.
 
-### **Option 1: Using the Terminal**
+### 2.1. Option 1: Using the Terminal
+
 Run the following command:
 
 ```bash
 docker run -d \
-  --name=megasync \
+  --name=megasync-<username> \
   -p 8081:8080 \
   --env 'DATA_DIR=/megasync/config' \
   --env 'CUSTOM_RES_W=1280' \
   --env 'CUSTOM_RES_H=720' \
-  --volume "/home/<admin_username>/MOD_CONFIG/Mega/villoro:/megasync/config" \
-  --volume "/home/villoro:/sync-data" \
+  --volume "/home/<admin_username>/MOD_CONFIG/Mega/<username>:/megasync/config" \
+  --volume "/home/<username>:/sync-data" \
   --restart=always \
   ich777/megasync
 ```
 
-### **Option 2: Using Portainer**
+<Notice type="warning">
+  You must replace `<admin_username>` and `<username>`.
+</Notice>
+
+### 2.2. Option 2: Using Portainer
+
 Use the following YAML configuration:
 
 ```yaml
@@ -102,7 +93,7 @@ After entering the YAML configuration in Portainer, click `Deploy the container`
 > netstat -tuln | grep LISTEN
 > ```
 
-## Step 3: Access the MEGASync Web Interface
+## 3. Access the MEGASync Web Interface
 Once the container is running, access the MEGASync interface:
 
 1. Open your browser and navigate to:
@@ -118,7 +109,7 @@ Once the container is running, access the MEGASync interface:
 > [!important] **Local Folder Setup**
 > Always choose `/sync-data` (or a subdirectory) for the **local folder** during synchronization setup to ensure proper syncing with the host.
 
-## Step 4: Verify the Setup
+## 4. Verify the Setup
 - Monitor the container logs to ensure there are no errors:
   ```bash
   docker logs megasync
@@ -126,9 +117,9 @@ Once the container is running, access the MEGASync interface:
 
 - Test synchronization by adding files to `/home/villoro` and confirming they appear in your MEGA account (and vice versa).
 
-## Adding Multiple Users
+## 5. Adding Multiple Users
 
-This setup is designed to work for multiple users. To sync another user, simply repeat the steps to create directories and run the Docker container. Replace `villoro` with the new username in all relevant paths and container names. For example:
+This setup is designed to work for multiple users. To sync another user, simply repeat the steps to run the Docker container. Use another `user_name` with the new username in all relevant paths and container names. For example:
 
 - Configuration Path: `/home/<admin_username>/MOD_CONFIG/Mega/<new_username>`
 - Sync Data Path: `/home/<new_username>`
@@ -137,9 +128,8 @@ This setup is designed to work for multiple users. To sync another user, simply 
 
 By doing so, each user will have their own isolated MEGAsync instance.
 
-## Troubleshooting
+## 6. Troubleshooting
 
-### Common Issues and Fixes
 1. **Permission Denied Errors**:
    - Ensure the mapped directories have the correct permissions:
      ```bash
@@ -159,7 +149,6 @@ By doing so, each user will have their own isolated MEGAsync instance.
 
 ---
 
-## Conclusion
 By following this guide, you’ve successfully set up MEGASync on your TerraMaster NAS. This setup enables seamless synchronization between your local NAS storage and MEGA cloud storage. If you encounter issues or have questions, feel free to leave a comment or reach out.
 
 Happy syncing! 😊
