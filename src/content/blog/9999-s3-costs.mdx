@@ -1,0 +1,160 @@
+---
+slug: manage-s3-costs
+title: "How to Optimize S3 Costs: Exporting an S3 Inventory and Using Lifecycle Policies"
+meta_title: Manage S3 Costs with Inventory and Lifecycle Policies
+description: Discover strategies to optimize Amazon S3 costs by leveraging inventory exports and lifecycle policies for automated storage management.
+date: 2025-01-13
+image: /images/blog/9999-manage-s3-costs.jpg
+category: cloud_devops
+tags: [AWS, S3]
+draft: false
+---
+
+## Introduction
+
+Amazon S3 is a powerful, scalable storage solution that is integral to many workflows. However, storage costs can quickly accumulate, especially when managing large datasets. After migrating some of our jobs from EMR to ECS, we noticed that S3 storage, rather than requests, became our largest expense. To tackle this, we decided to analyze our storage usage and explore strategies to reduce costs. This guide outlines how to export an S3 Inventory and implement Lifecycle Policies to optimize your storage expenses effectively.
+
+<Notice type="info">
+  S3 Inventory and Lifecycle Policies help provide insights into your storage usage and reduce costs by automating data management.
+</Notice>
+
+## Step 1: Create an S3 Inventory Configuration
+
+1. **Access the S3 Console:**
+   Log in to the AWS Management Console and navigate to the S3 service.
+
+2. **Select Your Bucket:**
+   Choose the bucket for which you want to create an inventory report.
+
+3. **Go to Management:**
+   In the bucket’s dashboard, select the **Management** tab and scroll down to the **Inventory** section.
+
+4. **Create Inventory Configuration:**
+   - Click **Create Inventory Configuration**.
+   - Provide a unique name for your inventory.
+   - Specify the **destination bucket** where the inventory report will be delivered. Ensure the destination bucket has the appropriate permissions.
+
+5. **Select Report Content:**
+   - Choose the **frequency** of the report: Daily or Weekly.
+   - Select the **file format**: CSV, ORC, or Parquet.
+   - Specify the **fields** to include, such as object size, storage class, last modified date, and encryption status.
+
+6. **Set Permissions:**
+   Grant the S3 service principal the required permissions to write the inventory file to the destination bucket.
+
+7. **Review and Save:**
+   - Review your configuration.
+   - Save it by clicking **Create**.
+
+<Notice type="info">
+  Use Parquet format for inventory reports to optimize storage and query performance.
+</Notice>
+
+
+## Step 2: Access the Inventory Report
+
+Once the S3 Inventory configuration is active, reports will start appearing in the destination bucket based on your selected frequency.
+
+1. **Locate the Inventory Report:**
+   - Navigate to the destination bucket.
+   - Look for a folder structure that includes the inventory configuration name, followed by the report’s creation date.
+
+2. **Download the Report:**
+   - Open the folder for the desired report date.
+   - Download the file(s) containing the inventory data.
+
+3. **View the Report:**
+   - If you selected CSV, you can open the report in a text editor, spreadsheet application, or data processing tool.
+   - For ORC or Parquet, use tools like AWS Athena, Apache Spark, or a Parquet-compatible viewer.
+
+<Notice type="warning">
+  Ensure that the destination bucket has proper access permissions to avoid errors in report generation.
+</Notice>
+
+## Step 3: Query the Inventory Report with Athena
+
+For efficient querying of large inventory reports, use Amazon Athena:
+
+1. **Set Up the Destination Bucket for Athena:**
+   - Ensure the inventory report files are stored in a structured format (e.g., Parquet).
+   - Note the S3 path where the reports are located.
+
+2. **Create a Table in Athena:**
+   - Open the AWS Management Console and navigate to Athena.
+   - Use the following SQL statement as a guide to create a table for your inventory:
+
+     ```sql
+     CREATE EXTERNAL TABLE s3_inventory (
+         bucket STRING,
+         key STRING,
+         size BIGINT,
+         last_modified_date STRING,
+         storage_class STRING
+     )
+     STORED AS PARQUET
+     LOCATION 's3://your-destination-bucket/inventory-path/';
+     ```
+
+   - Replace `your-destination-bucket` and `inventory-path` with your actual S3 bucket and folder path.
+
+3. **Run Queries:**
+   - Use SQL queries to analyze your inventory, e.g., find objects older than a specific date, identify objects in a particular storage class, etc.
+
+## Step 4: Implement S3 Lifecycle Policies
+
+S3 Lifecycle Policies can automatically manage your objects to reduce costs. For example, you can configure policies to transition objects to cheaper storage classes or delete non-current versions of objects. Here’s how to set them up:
+
+1. **Navigate to Lifecycle Rules:**
+   - In the S3 console, go to the **Management** tab of your bucket.
+   - Scroll to the **Lifecycle Rules** section and click **Create Lifecycle Rule**.
+
+2. **Define the Rule Scope:**
+   - Provide a name for the rule.
+   - Specify whether the rule applies to the entire bucket or to a subset of objects (e.g., objects with a specific prefix or tag).
+
+3. **Configure Actions:**
+   - **Transition Actions:** Move objects to cheaper storage classes like S3 Standard-IA, S3 Glacier Instant Retrieval, or S3 Deep Archive after a specified number of days.
+   - **Expiration Actions:** Set rules to delete objects after a certain number of days.
+   - **Non-Current Version Expiration:** Automatically delete older versions of objects to save storage space.
+
+4. **Review and Save:**
+   - Review your configuration.
+   - Save the rule by clicking **Create Rule**.
+
+<Notice type="info">
+  Non-current version expiration is especially useful for buckets with versioning enabled to minimize storage costs.
+</Notice>
+
+## Step 5: Automate Inventory Exports and Analysis
+
+To streamline inventory management:
+
+1. **Set Up Event Notifications:**
+   Configure S3 event notifications to trigger a Lambda function whenever a new inventory file is uploaded.
+
+2. **Process the Report:**
+   Use the Lambda function to:
+   - Parse the inventory report.
+   - Store relevant data in a database.
+   - Trigger workflows for additional processing.
+
+<Notice type="info">
+  Consider combining Lambda with Amazon SNS for efficient notification handling and workflow automation.
+</Notice>
+
+## Best Practices
+
+- **Analyze Cost Drivers:** Use the S3 Inventory to identify objects in expensive storage classes or objects that are rarely accessed.
+- **Optimize Storage Classes:** Transition infrequently accessed objects to lower-cost storage classes using Lifecycle Policies.
+- **Permissions:** Ensure proper IAM permissions for accessing and managing the inventory.
+- **Data Retention:** Clean up old inventory files to save storage costs.
+- **Monitor Costs:** Keep an eye on costs associated with inventory generation and querying.
+- **Use Compression:** Select compressed formats like Parquet to optimize storage and query performance.
+
+<Notice type="warning">
+  Frequent inventory generation may increase costs; choose daily reports only if necessary.
+</Notice>
+
+---
+
+By combining S3 Inventory with Lifecycle Policies, you can effectively analyze and manage your storage, ensuring optimal cost efficiency. This approach not only provides visibility into your data but also automates actions to keep your storage expenses under control.
