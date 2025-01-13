@@ -1,18 +1,22 @@
 ---
 slug: manage-s3-costs
-title: "How to Optimize S3 Costs: Exporting an S3 Inventory and Using Lifecycle Policies"
+title: Managing S3 Costs with Inventory and Lifecycle Policies
 meta_title: Manage S3 Costs with Inventory and Lifecycle Policies
 description: Discover strategies to optimize Amazon S3 costs by leveraging inventory exports and lifecycle policies for automated storage management.
 date: 2025-01-13
-image: /images/blog/9999-manage-s3-costs.jpg
+image: /images/blog/9999-s3-costs.jpg
 category: cloud_devops
 tags: [AWS, S3]
 draft: false
 ---
 
+<script type="module" src="/js/posts/9999-plots-s3-costs.js"></script>
+
 ## Introduction
 
 Amazon S3 is a powerful, scalable storage solution that is integral to many workflows. However, storage costs can quickly accumulate, especially when managing large datasets. After migrating some of our jobs from EMR to ECS, we noticed that S3 storage, rather than requests, became our largest expense. To tackle this, we decided to analyze our storage usage and explore strategies to reduce costs. This guide outlines how to export an S3 Inventory and implement Lifecycle Policies to optimize your storage expenses effectively.
+
+<canvas id="plot-s3-costs" style="width:100%;height:300px;"></canvas>
 
 <Notice type="info">
   S3 Inventory and Lifecycle Policies help provide insights into your storage usage and reduce costs by automating data management.
