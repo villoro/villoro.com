@@ -28,10 +28,27 @@ By analyzing our storage usage and implementing targeted strategies, we managed 
 
 ### 1.1. Discover S3 costs with Cost Explorer
 
+The first thing you need to do is to check your AWS costs by Service. This way you can see where you should focus your efforts in order to reduce costs.
+In our case, after reducing EMR costs, S3 became the next clear objective:
 
-### 1.2. Compact files in the datalake
+<div class="border-2 rounded-md">
+  ![AWS Montly Costs by Service](../../images/posts/2025/9999-aws-costs-by-service.png)
+</div>
 
-### 1.3. Create an S3 Inventory Configuration
+Once you are sure you want to reduce S3 costs, you should check what you are paying for:
+
+<div class="border-2 rounded-md">
+  ![S3 Daily Costs by Usage type](../../images/posts/2025/9999-s3-costs-by-usage-type.png)
+</div>
+
+In our case it's for data we are storing but in other companies I've seen an abnormally high cost allocated to requests.
+That usually happen when you have very small files in the datalake that you need to compact.
+
+<Notice type="info">
+  If you are paying a lot for S3 requests you should see how to compact data files at <FancyLink linkText="Solving the probem with small files in the Data Lake" url="https://villoro.com/blog/solving-problem-small-files-data-lake/" dark="true"/>.
+</Notice>
+
+### 1.2. Create an S3 Inventory Configuration
 
 1. **Access the S3 Console:**
    Log in to the AWS Management Console and navigate to the S3 service.
@@ -63,7 +80,7 @@ By analyzing our storage usage and implementing targeted strategies, we managed 
   Use Parquet format for inventory reports to optimize storage and query performance.
 </Notice>
 
-### 1.4. Accessing the S3 inventory
+### 1.3. Accessing the S3 inventory
 
 ## 2. Automating the Inventory
 
