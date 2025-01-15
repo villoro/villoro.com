@@ -280,6 +280,15 @@ if __name__ == "__main__":
 
 ### 2.2. Cleaning the data with DBT
 
+Here you have the 4 different models I used to model the inventory:
+
+1. `base_metadata__s3_inventory.sql`: Base model for renamings and castings
+2. `clean_metadata__s3_inventory.sql`: Keeps only the last report (optional) and ensures there are no duplicates
+3. `int_metadata__s3_inventory.sql`: I used this model to tag different paths so that's easier to extract insights
+4. `stg_metadata__s3_inventory.sql`: Used only for removing temporal columns by selecting the final columns
+5. `stg_metadata__s3_inventory.sql`: Documentation for the stg model
+
+You can see the code for each model by clicking each file:
 
 <Accordion client:load title="base_metadata__s3_inventory.sql">
   <TerminalOutput color="stone">
@@ -356,6 +365,9 @@ if __name__ == "__main__":
     /models/staging/metadata/internal/int_metadata__s3_inventory.sql
   </TerminalOutput>
   ```sql
+  -- Here we are categoryzing differents paths with the `CASE WHEN s3_id LIKE pattern` so that we can better explore files.
+  -- Together with the `folders` columns they provide an excelent way to dig further into the costs.
+
   {% set patterns = {
       's3://ct-bronze-eu-west-1-742407267173-pro/%': 'tables/bronze',
       's3://ct-silver-eu-west-1-742407267173-pro/%': 'tables/silver',
@@ -454,7 +466,7 @@ if __name__ == "__main__":
   ```
 </Accordion>
 
-<Accordion client:load title="stg_metadata__s3_inventory.sql">
+<Accordion client:load title="stg_metadata__s3_inventory.yml">
   <TerminalOutput color="stone">
     /models/staging/metadata/stg/stg_metadata__s3_inventory.yml
   </TerminalOutput>
@@ -505,6 +517,19 @@ if __name__ == "__main__":
           description: Timestamp indicating when the S3 inventory report was generated.
   ```
 </Accordion>
+
+### 2.3. Analyzing the inventory
+
+Once you have a proper table with the inventory, it's up to you how to analyze it. In our case we did multiple things:
+1. Analyze different categories
+2. Explore the different folders for the top categories
+3. Compare `bronze` and `silver` layers for the same entities
+
+With that we discovered a couple of things:
+1. We were not efectively deleting files in our biggest bucket
+2. In some `bronze` tables we were only appending without any efective deletion
+
+The first problem we solved it with a `S3 Lifecycle Policy` (details in the next section). The second one is out of the scope of this post.
 
 ## 3. Implement S3 Lifecycle Policies
 
