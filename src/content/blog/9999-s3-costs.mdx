@@ -134,11 +134,377 @@ And here you have an example of the first `manifest.json`:
 }
 ```
 
-## 2. Automating the Inventory
+## 2. Extracting data from the inventory
+
+We want to create a standard iceberg table given the non conventional folder structure of the inventory.
 
 ### 2.1. Creating a S3 Inventory table
 
+The main idea is to read each manifest to know which parquet files correspond to each extraction. Then read those files and export it in a table. Then reapeat it for each inventory. Since we will be exporting all data, I think it's also a good idea to remove the source data.
+
+This can be done with:
+
+```python
+import json
+from datetime import datetime
+
+import awswrangler as wr
+import pandas as pd
+from prefect import flow
+from prefect import task
+from prefect import get_run_logger
+
+from ecs_northius.common import glue
+from ecs_northius.common import parameters
+
+
+BUCKET_DE = "nt-data-engineering-eu-west-1-742407267173-pro"
+
+PREFIX_INVENOTRY = "s3_inventory/{bucket}/{inventory}"
+PATH_INVENTORY = f"s3://{BUCKET_DE}/{PREFIX_INVENOTRY}"
+
+INVENTORIES = {
+    "de_inventory": BUCKET_DE,
+    "bronze_inventory": "ct-bronze-eu-west-1-742407267173-pro",
+    "silver_inventory": "ct-silver-eu-west-1-742407267173-pro",
+}
+
+DATABASE = "nt_bronze__metadata"
+TABLE = "s3_inventory"
+
+S3 = boto3.client("s3")
+
+
+def get_all_files(inventory, bucket):
+    logger = get_run_logger()
+    uri = PATH_INVENTORY.format(inventory=inventory, bucket=bucket)
+    logger.info(f"Reading files in {uri=}")
+
+    return wr.s3.list_objects(uri)
+
+
+def get_ts_from_manifest_path(manifest_file):
+    date_str = manifest_file.split("/")[-2]
+    return datetime.strptime(date_str, "%Y-%m-%dT%H-%MZ")
+
+
+def get_data_files_from_manifest(manifest_file):
+    logger = get_run_logger()
+
+    logger.info(f"Reading manifest {manifest_file=}")
+    bucket, filename = manifest_file.replace("s3://", "").split("/", 1)
+    manifest = S3.get_object(Bucket=bucket, Key=filename)["Body"].read()
+
+    logger.debug("Parsing manifest")
+    return json.loads(manifest)["files"]
+
+
+def read_and_export_data(inventory, bucket, data_files, reported_at):
+    logger = get_run_logger()
+
+    dfs = []
+    logger.info(f"Reading {len(data_files)} files for {inventory=}")
+    for file in data_files:
+        # The replace is to fix an error in config
+        key = file["key"].replace(f"{bucket}/{bucket}", bucket)
+
+        uri = f"s3://{BUCKET_DE}/{key}"
+        logger.debug(f"Reading parquet {uri=}")
+        dfs.append(wr.s3.read_parquet(uri))
+
+    df = pd.concat(dfs)
+    df["bucket"] = bucket
+    df["reported_at"] = reported_at
+
+    glue.write_iceberg(df, DATABASE, TABLE) # This uses `wr.athena.to_iceberg`
+
+def get_bucket_and_prefix(s3_path):
+    if not s3_path.startswith("s3://"):
+        raise ValueError("Invalid S3 path. Path must start with 's3://'.")
+
+    # Remove 's3://' and split the remaining path
+    path_parts = s3_path[5:].split("/", 1)
+
+    # Bucket is the first part, prefix is the remaining
+    bucket = path_parts[0]
+    prefix = path_parts[1] if len(path_parts) > 1 else ""
+
+    return bucket, prefix
+
+def delete_all_files(all_files):
+    logger = get_run_logger()
+
+    for file in all_files:
+        bucket, prefix = get_bucket_and_prefix(file)
+        logger.debug(f"Removing {file=}")
+        S3.delete_object(Bucket=bucket, Key=prefix)
+
+
+def export_one_inventory(inventory, bucket, delete_files):
+    logger = get_run_logger()
+
+    all_files = get_all_files(inventory, bucket)
+
+    manifest_files = sorted([x for x in all_files if x.endswith("manifest.json")])
+    if len(manifest_files) == 0:
+        logger.warning(f"There are no manifests files for {inventory=}")
+        return False
+
+    for manifest_file in manifest_files:
+        reported_at = get_ts_from_manifest_path(manifest_file)
+        data_files = get_data_files_from_manifest(manifest_file)
+        read_and_export_data(inventory, bucket, data_files, reported_at)
+
+    if delete_files:
+        logger.info(f"Deleting {len(all_files)} files")
+        delete_all_files(all_files)
+
+    return True
+
+
+@flow(name="export_inventory")
+def export_all_inventories(flow_name="export_inventory", delete_files=False):
+    logger = get_run_logger()
+
+    for i, (inventory, bucket) in enumerate(INVENTORIES.items()):
+        percent = f"{i + 1}/{len(INVENTORIES)}"
+        logger.info(f"[Inventory {percent}] Processing {inventory=}'")
+        name = f"export_inventory.{inventory}__{percent}"
+        task(name=name)(export_one_inventory)(inventory, bucket, delete_files)
+
+
+if __name__ == "__main__":
+    export_all_inventories()
+
+```
+
 ### 2.2. Cleaning the data with DBT
+
+
+<Accordion client:load title="base_metadata__s3_inventory.sql">
+  <TerminalOutput color="stone">
+    /models/staging/metadata/base/base_metadata__s3_inventory.sql
+  </TerminalOutput>
+  ```sql
+  WITH source AS (
+      SELECT *
+      FROM {{ source('nt_bronze__metadata', 's3_inventory') }}
+  ),
+
+  casted AS (
+      SELECT
+          ---------- pks
+          's3://' || bucket || '/' || key AS s3_id,
+
+          ---------- partitions
+          {{ from_iso_timestamp('p_extracted_at') }} AS p_extracted_at,
+
+          ---------- info
+          bucket AS s3_bucket,
+          key AS s3_key,
+          lower(storage_class) AS storage_class,
+
+          ---------- metrics
+          size / 1024.0 / 1024.0 AS size_mb,
+
+          ---------- time related
+          last_modified_date AS last_modified_at,
+          reported_at
+      FROM source
+  )
+
+  SELECT *
+  FROM casted
+  ```
+</Accordion>
+
+<Accordion client:load title="clean_metadata__s3_inventory.sql">
+  <TerminalOutput color="stone">
+    /models/staging/metadata/clean/clean_metadata__s3_inventory.sql
+  </TerminalOutput>
+  ```sql
+  WITH source AS (
+      SELECT *
+      FROM {{ ref('base_metadata__s3_inventory') }}
+  ),
+
+  latest_report AS (
+      SELECT
+          *,
+          {{ row_number('s3_id') }} AS _rn
+      FROM source
+      WHERE reported_at = (
+          SELECT MAX(t2.reported_at)
+          FROM source AS t2
+          WHERE t2.s3_bucket = source.s3_bucket
+      )
+  ),
+
+  latest_data_from_latest_report AS (
+      SELECT *
+      FROM latest_report
+      WHERE _rn = 1
+  )
+
+  SELECT *
+  FROM latest_data_from_latest_report
+  ```
+</Accordion>
+
+<Accordion client:load title="int_metadata__s3_inventory.sql">
+  <TerminalOutput color="stone">
+    /models/staging/metadata/internal/int_metadata__s3_inventory.sql
+  </TerminalOutput>
+  ```sql
+  {% set patterns = {
+      's3://ct-bronze-eu-west-1-742407267173-pro/%': 'tables/bronze',
+      's3://ct-silver-eu-west-1-742407267173-pro/%': 'tables/silver',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/dbt/code/%': 'code/dbt',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/dbt/database/%': 'tables/de',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/dbt/staging_dir/%': 'temp/dbt_staging_dir',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/dbt/users/%': 'dbt_personal_schemas',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/ecs/%': 'code/ecs',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/emr/%': 'code/emr',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/lambda/%': 'code/lambda',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/s3_inventory/%': 's3_inventory',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/superset/query-results/%': 'query_results/superset',
+      's3://nt-data-engineering-eu-west-1-742407267173-pro/temp/%': 'temp/de_root'
+  } %}
+
+  WITH source AS (
+      SELECT *
+      FROM {{ ref('clean_metadata__s3_inventory') }}
+  ),
+
+  assigned_categories AS (
+      SELECT
+          *,
+          CASE
+              {% for path_pattern, category in patterns.items() -%}
+                  WHEN s3_id LIKE '{{ path_pattern }}' THEN '{{ category }}'
+              {% endfor -%}
+          END AS _category,
+          CASE
+              {% for path_pattern, category in patterns.items() %}
+                  WHEN s3_id LIKE '{{ path_pattern }}' THEN '{{ path_pattern }}'
+              {% endfor %}
+          END AS _path_pattern
+      FROM source
+  ),
+
+  extracted_folder AS (
+      SELECT
+          *,
+          COALESCE(_category, 'other') AS category,
+          CASE
+              WHEN _path_pattern IS NOT NULL THEN
+                  SPLIT_PART(SUBSTRING(s3_id, LENGTH(_path_pattern)), '/', 1)
+          END AS folder_1,
+          CASE
+              WHEN _path_pattern IS NOT NULL THEN
+                  SPLIT_PART(SUBSTRING(s3_id, LENGTH(_path_pattern)), '/', 2)
+          END AS folder_2
+      FROM assigned_categories
+  )
+
+  SELECT *
+  FROM extracted_folder
+  ```
+</Accordion>
+
+<Accordion client:load title="stg_metadata__s3_inventory.sql">
+  <TerminalOutput color="stone">
+    /models/staging/metadata/stg/stg_metadata__s3_inventory.sql
+  </TerminalOutput>
+  ```sql
+  WITH source AS (
+      SELECT *
+      FROM {{ ref('int_metadata__s3_inventory') }}
+  ),
+
+  selected_columns AS (
+      SELECT
+          ---------- pks
+          s3_id,
+
+          ---------- partitions
+          p_extracted_at,
+
+          ---------- info
+          s3_bucket,
+          s3_key,
+          storage_class,
+
+          ---------- metrics
+          size_mb,
+
+          ---------- categories
+          category,
+          folder_1,
+          folder_2,
+
+          ---------- time related
+          last_modified_at,
+          reported_at
+      FROM source
+  )
+
+  SELECT *
+  FROM selected_columns
+  ```
+</Accordion>
+
+<Accordion client:load title="stg_metadata__s3_inventory.sql">
+  <TerminalOutput color="stone">
+    /models/staging/metadata/stg/stg_metadata__s3_inventory.yml
+  </TerminalOutput>
+  ```yaml
+  version: 2
+
+  models:
+    - name: stg_metadata__s3_inventory
+      description: >
+        Processes raw S3 inventory data, transforming it into a clean dataset
+        with partitioning, calculated metrics, and standardized fields for analysis.
+      columns:
+        # ---------- pks
+        - name: s3_id
+          description: Unique identifier for the S3 object in the format `s3://<bucket>/<key>`.
+          tests: [not_null, unique]
+
+        # ---------- partitions
+        - name: p_extracted_at
+          description: Partition column indicating when the metadata was extracted.
+
+        # ---------- info
+        - name: s3_bucket
+          description: The name of the S3 bucket containing the object.
+        - name: s3_key
+          description: The key (path) of the object within the bucket.
+        - name: storage_class
+          description: The storage class of the object, such as `standard`, `glacier`, etc., converted to lowercase.
+        
+        # ---------- metrics
+        - name: size_mb
+          description: Size of the S3 object in megabytes, calculated as `size / 1024 / 1024`.
+
+        # ---------- categories
+        - name: category
+          description: >
+            High-level categorization of the S3 object based on its prefix,
+            such as `tables`, `code/dbt`, or `temp/de_root`.
+        - name: folder_1
+          description: The first folder level extracted from the S3 key after the matched path pattern.
+        - name: folder_2
+          description: The second folder level extracted from the S3 key after the matched path pattern.
+
+        # ---------- time related
+        - name: last_modified_at
+          description: Timestamp indicating when the object was last modified.
+        - name: reported_at
+          description: Timestamp indicating when the S3 inventory report was generated.
+  ```
+</Accordion>
 
 ## 3. Implement S3 Lifecycle Policies
 
