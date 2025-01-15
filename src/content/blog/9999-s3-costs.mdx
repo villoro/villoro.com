@@ -76,8 +76,8 @@ In our case, most costs stemmed from storage. However, in some organizations, hi
    * Specify the **fields** to include. At a minimum, include object `size`, `storage class`, and `last modified` date.
 
 6. **Review and Save:**
-   - Review your configuration.
-   - Save it by clicking **Create**.
+   * Review your configuration.
+   * Save it by clicking **Create**.
 
 #### 1.2.2. Notes on Destination Path:
 
@@ -134,13 +134,18 @@ The S3 Inventory follows a unique structure. Reports are stored at `destination_
 }
 ```
 
-## 2. Extracting data from the inventory
+## 2. Extracting Data from the Inventory
 
-We want to create a standard iceberg table given the non conventional folder structure of the inventory.
+To create a standard Iceberg table from the non-conventional folder structure of the S3 inventory, we need to process the manifest files, extract the corresponding Parquet data, and then structure it into a usable table. Removing source data after processing is also recommended to optimize storage.
 
-### 2.1. Creating a S3 Inventory table
+### 2.1 Creating an S3 Inventory Table
 
-The main idea is to read each manifest to know which parquet files correspond to each extraction. Then read those files and export it in a table. Then reapeat it for each inventory. Since we will be exporting all data, I think it's also a good idea to remove the source data.
+The main steps involve:
+
+1. **Reading Manifest Files:** Extract Parquet file paths from each manifest to identify the files corresponding to a specific inventory extraction.
+2. **Processing Data:** Read the extracted Parquet files and consolidate the data into a unified table.
+3. **Exporting Data:** Export the consolidated data into an Iceberg table for further analysis.
+4. **Cleanup:** Remove source data after successful processing to free up storage.
 
 This can be done with:
 
@@ -278,17 +283,14 @@ if __name__ == "__main__":
 
 ```
 
-### 2.2. Cleaning the data with DBT
+### 2.2 Cleaning the Data with DBT
 
-Here you have the 4 different models I used to model the inventory:
+Below are the four models used to structure and clean the inventory data:
 
-1. `base_metadata__s3_inventory.sql`: Base model for renamings and castings
-2. `clean_metadata__s3_inventory.sql`: Keeps only the last report (optional) and ensures there are no duplicates
-3. `int_metadata__s3_inventory.sql`: I used this model to tag different paths so that's easier to extract insights
-4. `stg_metadata__s3_inventory.sql`: Used only for removing temporal columns by selecting the final columns
-5. `stg_metadata__s3_inventory.sql`: Documentation for the stg model
-
-You can see the code for each model by clicking each file:
+1. **`base_metadata__s3_inventory.sql`:** A base model for renaming and casting fields.
+2. **`clean_metadata__s3_inventory.sql`:** Ensures no duplicates and optionally keeps only the latest report.
+3. **`int_metadata__s3_inventory.sql`:** Tags paths for better categorization and insights.
+4. **`stg_metadata__s3_inventory.sql`:** Final staging model to remove temporary columns and select clean fields.
 
 <Accordion client:load title="base_metadata__s3_inventory.sql">
   <TerminalOutput color="stone">
@@ -518,22 +520,24 @@ You can see the code for each model by clicking each file:
   ```
 </Accordion>
 
-### 2.3. Analyzing the inventory
+### 2.3 Analyzing the Inventory
 
-Once you have a proper table with the inventory, it's up to you how to analyze it. In our case we did multiple things:
-1. Analyze different categories
-2. Explore the different folders for the top categories
-3. Compare `bronze` and `silver` layers for the same entities
+Once the data is consolidated in an Iceberg table, analysis can be customized based on your needs. Examples of what we analyzed:
 
-With that we discovered a couple of things:
-1. We were not efectively deleting files in our biggest bucket
-2. In some `bronze` tables we were only appending without any efective deletion
+1. **Categorizing Data:** Analyze different categories of data.
+2. **Exploring Folders:** Dive into folder-level details for high-priority categories.
+3. **Comparing Layers:** Compare `bronze` and `silver` layers for the same entities to identify discrepancies.
 
-The first problem we solved it with a `S3 Lifecycle Policy` (details in the next section). The second one is out of the scope of this post.
+#### 2.3.1. Insights Gained
+
+1. **Ineffective File Deletion:** We found that files in our largest bucket were not being deleted effectively.
+2. **Append-Only Tables:** Some `bronze` tables were only appending data without deletions, leading to unnecessary storage costs.
+
+The first issue was addressed with an S3 Lifecycle Policy (details in the next section). The second issue, while significant, is beyond the scope of this post.
 
 ## 3. Implement S3 Lifecycle Policies
 
-S3 Lifecycle Policies can automatically manage your objects to reduce costs. For example, you can configure policies to transition objects to cheaper storage classes or delete non-current versions of objects. Here’s how to set them up:
+S3 Lifecycle Policies automate object management to reduce costs. For instance, you can transition objects to cheaper storage classes or delete non-current versions. Here’s how to set them up:
 
 1. **Navigate to Lifecycle Rules:**
    * In the S3 console, go to the **Management** tab of your bucket.
@@ -541,16 +545,16 @@ S3 Lifecycle Policies can automatically manage your objects to reduce costs. For
 
 2. **Define the Rule Scope:**
    * Provide a name for the rule.
-   * Specify whether the rule applies to the entire bucket or to a subset of objects (e.g., objects with a specific prefix or tag).
+   * Specify whether the rule applies to the entire bucket or specific objects (e.g., those with a prefix or tag).
 
 3. **Configure Actions:**
-   * **Transition Actions:** Move objects to cheaper storage classes like S3 Standard-IA, S3 Glacier Instant Retrieval, or S3 Deep Archive after a specified number of days.
-   * **Expiration Actions:** Set rules to delete objects after a certain number of days.
-   * **Non-Current Version Expiration:** Automatically delete older versions of objects to save storage space.
+   * **Transition Actions:** Move objects to cheaper storage classes like S3 Standard-IA, S3 Glacier Instant Retrieval, or S3 Deep Archive after a set number of days.
+   * **Expiration Actions:** Delete objects after a specified period.
+   * **Non-Current Version Expiration:** Remove older object versions in versioned buckets.
 
 4. **Review and Save:**
    * Review your configuration.
-   * Save the rule by clicking **Create Rule**.
+   * Save it by clicking **Create Rule**.
 
 <Notice type="info">
   Non-current version expiration is especially useful for buckets with versioning enabled to minimize storage costs.
