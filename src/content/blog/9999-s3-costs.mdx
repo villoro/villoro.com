@@ -21,7 +21,7 @@ By analyzing our storage usage and implementing targeted strategies, we managed 
 <canvas id="plot-s3-costs" style="width:100%;height:300px;"></canvas>
 
 <Notice type="success" className="mt-6">
-   This guide outlines how to export an S3 Inventory and implement Lifecycle Policies to track and optimize your storage expenses effectively.
+  This guide outlines how to export an S3 Inventory and implement Lifecycle Policies to track and optimize your storage expenses effectively.
 </Notice>
 
 ## 1. Categoryzing S3 costs
@@ -34,6 +34,10 @@ In our case, after reducing EMR costs, S3 became the next clear objective:
 <div class="border-2 rounded-md">
   ![AWS Montly Costs by Service](../../images/posts/2025/9999-aws-costs-by-service.png)
 </div>
+
+<Notice type="warning" className="mt-6">
+  You should focus first on the AWS service with the biggest cost. Focus only on S3 if you have already addressed other services with bigger costs.
+</Notice>
 
 Once you are sure you want to reduce S3 costs, you should check what you are paying for:
 
@@ -50,6 +54,10 @@ That usually happen when you have very small files in the datalake that you need
 
 ### 1.2. Create an S3 Inventory Configuration
 
+**S3 Inventory** is a feature in Amazon S3 that generates a scheduled report containing a comprehensive list of objects in a bucket, along with their metadata, enabling you to analyze and manage storage efficiently.
+
+The steps to set it up are:
+
 1. **Access the S3 Console:**
    Log in to the AWS Management Console and navigate to the S3 service.
 
@@ -60,27 +68,71 @@ That usually happen when you have very small files in the datalake that you need
    In the bucket’s dashboard, select the **Management** tab and scroll down to the **Inventory** section.
 
 4. **Create Inventory Configuration:**
-   - Click **Create Inventory Configuration**.
-   - Provide a unique name for your inventory.
-   - Specify the **destination bucket** where the inventory report will be delivered. Ensure the destination bucket has the appropriate permissions.
+   * Click **Create Inventory Configuration**.
+   * Provide a unique name for your inventory.
+   * Specify the **destination bucket** where the inventory report will be delivered.
 
 5. **Select Report Content:**
-   - Choose the **frequency** of the report: Daily or Weekly.
-   - Select the **file format**: CSV, ORC, or Parquet.
-   - Specify the **fields** to include, such as object size, storage class, last modified date, and encryption status.
+   * Choose the **frequency** of the report: Daily or Weekly.
+   * Select the **file format**: Since you will be exporting a lot of data, I suggest you export it as `parquet`.
+   * Specify the **fields** to include. I suggest you at least include object `size`, `storage class` and `last modified` date.
 
-6. **Set Permissions:**
-   Grant the S3 service principal the required permissions to write the inventory file to the destination bucket.
+6. **Review and Save:**
+   * Review your configuration.
+   * Save it by clicking **Create**.
 
-7. **Review and Save:**
-   - Review your configuration.
-   - Save it by clicking **Create**.
+Regarding the destination path, notice that some folder will be added automatically to it. For example if we have a bucket named `villoro` and we set `destination_path=s3://villoro/s3_inventory` the data will end up at `s3://villoro/s3_inventory/villoro/villoro_inventory/` (the bucket name and the inventory name are appended).
 
 <Notice type="info">
-  Use Parquet format for inventory reports to optimize storage and query performance.
+  The first report will be done within 48h and the next ones will be done each day or monday (depending on the frequency you chose).
 </Notice>
 
 ### 1.3. Accessing the S3 inventory
+
+The S3 inventory follows a non conventional structure. As mentioned, it will be exported to `destination_path/bucket_name/inventory_name/`.
+There you will have:
+* A folder with the timestamp of each export containing a `manifest.json` listing the `parquets` files of that extraction.
+* The `data` folder with the data from all exports
+* The `hive` data with symlinks to the dated folder
+
+As an example here is what I got:
+
+```plaintext
+- s3://villoro/s3_inventory/villoro/villoro_inventory/
+  ├── 2025-01-09T01-00Z/
+  │   ├── manifest.json
+  │   └── manifest.checksum
+  ├── 2025-01-12T01-00Z/
+  │   ├── manifest.json
+  │   └── manifest.checksum
+  ├── data/
+  │   ├── 469e11b1-730b-487b-9110-e0fac5cb4237.parquet
+  │   ├── ...
+  │   └── 91ee5bf8-c053-4993-b698-ba07009b9060.parquet
+  └── hive/
+      ├── dt=2025-01-09-01-00/
+      │   └──symlink.txt
+      └── dt=2025-01-12-01-00/
+          └──symlink.txt
+```
+
+And here you have an example of the first `manifest.json`:
+
+```json
+{
+  "sourceBucket" : "villoro",
+  "destinationBucket" : "arn:aws:s3:::villoro",
+  "version" : "2016-11-30",
+  "creationTimestamp" : "1736384401000",
+  "fileFormat" : "Parquet",
+  "fileSchema" : "message s3.inventory {  required binary bucket (STRING);  required binary key (STRING);}",
+  "files" : [ {
+    "key" : "s3_inventory/villoro/villoro_inventory/data/469e11b1-730b-487b-9110-e0fac5cb4237.parquet",
+    "size" : 120112,
+    "MD5checksum" : "f0731733165f367e93fa4a51ecc28edb"
+  } ]
+}
+```
 
 ## 2. Automating the Inventory
 
@@ -93,21 +145,21 @@ That usually happen when you have very small files in the datalake that you need
 S3 Lifecycle Policies can automatically manage your objects to reduce costs. For example, you can configure policies to transition objects to cheaper storage classes or delete non-current versions of objects. Here’s how to set them up:
 
 1. **Navigate to Lifecycle Rules:**
-   - In the S3 console, go to the **Management** tab of your bucket.
-   - Scroll to the **Lifecycle Rules** section and click **Create Lifecycle Rule**.
+   * In the S3 console, go to the **Management** tab of your bucket.
+   * Scroll to the **Lifecycle Rules** section and click **Create Lifecycle Rule**.
 
 2. **Define the Rule Scope:**
-   - Provide a name for the rule.
-   - Specify whether the rule applies to the entire bucket or to a subset of objects (e.g., objects with a specific prefix or tag).
+   * Provide a name for the rule.
+   * Specify whether the rule applies to the entire bucket or to a subset of objects (e.g., objects with a specific prefix or tag).
 
 3. **Configure Actions:**
-   - **Transition Actions:** Move objects to cheaper storage classes like S3 Standard-IA, S3 Glacier Instant Retrieval, or S3 Deep Archive after a specified number of days.
-   - **Expiration Actions:** Set rules to delete objects after a certain number of days.
-   - **Non-Current Version Expiration:** Automatically delete older versions of objects to save storage space.
+   * **Transition Actions:** Move objects to cheaper storage classes like S3 Standard-IA, S3 Glacier Instant Retrieval, or S3 Deep Archive after a specified number of days.
+   * **Expiration Actions:** Set rules to delete objects after a certain number of days.
+   * **Non-Current Version Expiration:** Automatically delete older versions of objects to save storage space.
 
 4. **Review and Save:**
-   - Review your configuration.
-   - Save the rule by clicking **Create Rule**.
+   * Review your configuration.
+   * Save the rule by clicking **Create Rule**.
 
 <Notice type="info">
   Non-current version expiration is especially useful for buckets with versioning enabled to minimize storage costs.
