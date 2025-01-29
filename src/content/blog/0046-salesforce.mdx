@@ -416,6 +416,11 @@ class Column(BaseModel):
 
 ## 5. Querying with External Changes
 
+<Notice type="warning">
+  After writing this post I discovered that I can simply use `SystemModstamp` for getting all changes done to an entity.
+  Here is the original content for reference, but **I strongly suggest you query with `SystemModstamp`** instead.
+</Notice>
+
 ### 5.1. The problem
 
 Compound fields can be calculated based on external entities.
