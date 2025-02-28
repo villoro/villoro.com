@@ -3,14 +3,14 @@ slug: manage-s3-costs
 title: Managing S3 Costs with Inventory and Lifecycle Policies
 meta_title: Manage S3 Costs with Inventory and Lifecycle Policies
 description: Discover strategies to optimize Amazon S3 costs by leveraging inventory exports and lifecycle policies for automated storage management.
-date: 2025-01-14
-image: /images/blog/9999-s3-costs.jpg
+date: 2025-02-28
+image: /images/blog/0054-s3-costs.jpg
 category: cloud_devops
 tags: [AWS, S3, Best Practices]
-draft: true
+draft: false
 ---
 
-<script type="module" src="/js/posts/9999-plots-s3-costs.js"></script>
+<script type="module" src="/js/posts/0054-plots-s3-costs.js"></script>
 
 ## 0. Motivation
 
@@ -31,7 +31,7 @@ By analyzing our storage usage and implementing targeted strategies, we successf
 The first step is to examine your AWS costs by service using the **Cost Explorer**. This allows you to identify which service to target for cost reduction. In our case, after optimizing EMR costs, S3 became the next clear objective:
 
 <div class="border-2 rounded-md">
-  ![AWS Monthly Costs by Service](../../images/posts/2025/9999-aws-costs-by-service.png)
+  ![AWS Monthly Costs by Service](../../images/posts/2025/0054-aws-costs-by-service.png)
 </div>
 
 <Notice type="warning" className="mt-6">
@@ -41,7 +41,7 @@ The first step is to examine your AWS costs by service using the **Cost Explorer
 Once you’ve identified S3 as your focus, analyze your S3 expenses by usage type:
 
 <div class="border-2 rounded-md">
-  ![S3 Daily Costs by Usage Type](../../images/posts/2025/9999-s3-costs-by-usage-type.png)
+  ![S3 Daily Costs by Usage Type](../../images/posts/2025/0054-s3-costs-by-usage-type.png)
 </div>
 
 In our case, most costs stemmed from storage. However, in some organizations, high request costs may dominate, often due to numerous small files in a data lake.
@@ -369,28 +369,18 @@ Below are the four models used to structure and clean the inventory data:
   ```sql
   -- Here we are categorizing differents paths with the `CASE WHEN s3_id LIKE pattern` so that we can better explore files.
   -- Together with the `folders` columns they provide an excelent way to dig further into the costs.
-
   {% set patterns = {
       's3://ct-bronze-eu-west-1-742407267173-pro/%': 'tables/bronze',
-      's3://ct-silver-eu-west-1-742407267173-pro/%': 'tables/silver',
-      's3://nt-data-engineering-eu-west-1-742407267173-pro/dbt/code/%': 'code/dbt',
       's3://nt-data-engineering-eu-west-1-742407267173-pro/dbt/database/%': 'tables/de',
       's3://nt-data-engineering-eu-west-1-742407267173-pro/dbt/staging_dir/%': 'temp/dbt_staging_dir',
       's3://nt-data-engineering-eu-west-1-742407267173-pro/dbt/users/%': 'dbt_personal_schemas',
-      's3://nt-data-engineering-eu-west-1-742407267173-pro/ecs/%': 'code/ecs',
-      's3://nt-data-engineering-eu-west-1-742407267173-pro/emr/%': 'code/emr',
-      's3://nt-data-engineering-eu-west-1-742407267173-pro/lambda/%': 'code/lambda',
       's3://nt-data-engineering-eu-west-1-742407267173-pro/s3_inventory/%': 's3_inventory',
-      's3://nt-data-engineering-eu-west-1-742407267173-pro/superset/query-results/%': 'query_results/superset',
       's3://nt-data-engineering-eu-west-1-742407267173-pro/temp/%': 'temp/de_root'
   } %}
-
   WITH source AS (
       SELECT *
       FROM {{ ref('clean_metadata__s3_inventory') }}
-  ),
-
-  assigned_categories AS (
+  ), assigned_categories AS (
       SELECT
           *,
           CASE
@@ -404,25 +394,19 @@ Below are the four models used to structure and clean the inventory data:
               {% endfor %}
           END AS _path_pattern
       FROM source
-  ),
-
-  extracted_folder AS (
+  ), extracted_folder AS (
       SELECT
           *,
           COALESCE(_category, 'other') AS category,
-          CASE
-              WHEN _path_pattern IS NOT NULL THEN
-                  SPLIT_PART(SUBSTRING(s3_id, LENGTH(_path_pattern)), '/', 1)
+          CASE WHEN _path_pattern IS NOT NULL THEN
+              SPLIT_PART(SUBSTRING(s3_id, LENGTH(_path_pattern)), '/', 1)
           END AS folder_1,
-          CASE
-              WHEN _path_pattern IS NOT NULL THEN
-                  SPLIT_PART(SUBSTRING(s3_id, LENGTH(_path_pattern)), '/', 2)
+          CASE WHEN _path_pattern IS NOT NULL THEN
+              SPLIT_PART(SUBSTRING(s3_id, LENGTH(_path_pattern)), '/', 2)
           END AS folder_2
       FROM assigned_categories
   )
-
-  SELECT *
-  FROM extracted_folder
+  SELECT * FROM extracted_folder
   ```
 </Accordion>
 
@@ -474,7 +458,6 @@ Below are the four models used to structure and clean the inventory data:
   </TerminalOutput>
   ```yaml
   version: 2
-
   models:
     - name: stg_metadata__s3_inventory
       description: >
@@ -485,11 +468,9 @@ Below are the four models used to structure and clean the inventory data:
         - name: s3_id
           description: Unique identifier for the S3 object in the format `s3://<bucket>/<key>`.
           tests: [not_null, unique]
-
         # ---------- partitions
         - name: p_extracted_at
           description: Partition column indicating when the metadata was extracted.
-
         # ---------- info
         - name: s3_bucket
           description: The name of the S3 bucket containing the object.
@@ -497,11 +478,9 @@ Below are the four models used to structure and clean the inventory data:
           description: The key (path) of the object within the bucket.
         - name: storage_class
           description: The storage class of the object, such as `standard`, `glacier`, etc., converted to lowercase.
-        
         # ---------- metrics
         - name: size_mb
           description: Size of the S3 object in megabytes, calculated as `size / 1024 / 1024`.
-
         # ---------- categories
         - name: category
           description: >
@@ -511,7 +490,6 @@ Below are the four models used to structure and clean the inventory data:
           description: The first folder level extracted from the S3 key after the matched path pattern.
         - name: folder_2
           description: The second folder level extracted from the S3 key after the matched path pattern.
-
         # ---------- time related
         - name: last_modified_at
           description: Timestamp indicating when the object was last modified.
