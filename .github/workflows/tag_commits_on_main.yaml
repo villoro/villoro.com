@@ -1,42 +1,20 @@
-name: Tag
+name: Tag Version
 
 on:
   push:
     branches:
       - main
-      - master
     paths:
       - package.json
 
+permissions:
+  contents: write
+
 jobs:
-  tag_with_version:
+  tag_version:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up python
-        uses: actions/setup-python@v4
-
-      - name: Install requirements
-        run: pip install toml loguru click
-
-      - name: Checkout current branch
-        uses: actions/checkout@v3
-
-      - name: Get current version
-        run: python .github/scripts/get_version.py --name=current
-
-      - uses: mukunku/tag-exists-action@v1.4.0
-        id: check_tag
-        with: 
-          tag: ${{env.VERSION_CURRENT}}
-
-      - name: Tag commit with current version
-        if: steps.check_tag.outputs.exists != 'true'
-        uses: actions/github-script@v5
+      - uses: villoro/vhooks/tag_version@1.2.0
         with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/tags/${{env.VERSION_CURRENT}}`,
-              sha: context.sha
-            })
+          file: package.json
+          path: version
