@@ -11,9 +11,10 @@ jobs:
   pre_commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-    - uses: pre-commit/action@v3.0.0
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - uses: pre-commit/action@v3.0.0
+
 
   labeler:
     permissions:
@@ -21,36 +22,46 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/labeler@v4
+      - uses: actions/labeler@v4
+
+
+  check_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: villoro/vhooks/check_version@1.2.0
+        with:
+          file: package.json
+          path: version
+
+
 
   aspect_ratio_check:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - uses: dorny/paths-filter@v2
-      id: changes
-      with:
-        filters: |
-          images:
-            - '.github/scripts/check_aspect_ratio.py'
-            - 'public/favicons/**'
-            - 'public/images/blog/**'
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            images:
+              - '.github/scripts/check_aspect_ratio.py'
+              - 'public/favicons/**'
+              - 'public/images/blog/**'
 
-    - name: Set up Python
-      if: steps.changes.outputs.images == 'true'
-      uses: actions/setup-python@v4
+      - name: Set up Python
+        if: steps.changes.outputs.images == 'true'
+        uses: actions/setup-python@v4
 
-    - name: Install dependencies
-      if: steps.changes.outputs.images == 'true'
-      run: pip install pillow loguru click
+      - name: Install dependencies
+        if: steps.changes.outputs.images == 'true'
+        run: pip install pillow loguru click
 
-    - name: Check blog images aspect ratio
-      if: steps.changes.outputs.images == 'true'
-      run: python .github/scripts/check_aspect_ratio.py --directory public/images/blog --aspect-ratio 16:9
+      - name: Check blog images aspect ratio
+        if: steps.changes.outputs.images == 'true'
+        run: python .github/scripts/check_aspect_ratio.py --directory public/images/blog --aspect-ratio 16:9
 
-    - name: Check favicons aspect ratio
-      if: steps.changes.outputs.images == 'true'
-      run: python .github/scripts/check_aspect_ratio.py --directory public/favicons --aspect-ratio 1:1
+      - name: Check favicons aspect ratio
+        if: steps.changes.outputs.images == 'true'
+        run: python .github/scripts/check_aspect_ratio.py --directory public/favicons --aspect-ratio 1:1
