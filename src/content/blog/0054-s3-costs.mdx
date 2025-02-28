@@ -3,14 +3,14 @@ slug: manage-s3-costs
 title: Managing S3 Costs with Inventory and Lifecycle Policies
 meta_title: Manage S3 Costs with Inventory and Lifecycle Policies
 description: Discover strategies to optimize Amazon S3 costs by leveraging inventory exports and lifecycle policies for automated storage management.
-date: 2025-01-14
-image: /images/blog/9999-s3-costs.jpg
+date: 2025-02-28
+image: /images/blog/0054-s3-costs.jpg
 category: cloud_devops
 tags: [AWS, S3, Best Practices]
-draft: true
+draft: false
 ---
 
-<script type="module" src="/js/posts/9999-plots-s3-costs.js"></script>
+<script type="module" src="/js/posts/0054-plots-s3-costs.js"></script>
 
 ## 0. Motivation
 
@@ -31,7 +31,7 @@ By analyzing our storage usage and implementing targeted strategies, we successf
 The first step is to examine your AWS costs by service using the **Cost Explorer**. This allows you to identify which service to target for cost reduction. In our case, after optimizing EMR costs, S3 became the next clear objective:
 
 <div class="border-2 rounded-md">
-  ![AWS Monthly Costs by Service](../../images/posts/2025/9999-aws-costs-by-service.png)
+  ![AWS Monthly Costs by Service](../../images/posts/2025/0054-aws-costs-by-service.png)
 </div>
 
 <Notice type="warning" className="mt-6">
@@ -41,7 +41,7 @@ The first step is to examine your AWS costs by service using the **Cost Explorer
 Once you’ve identified S3 as your focus, analyze your S3 expenses by usage type:
 
 <div class="border-2 rounded-md">
-  ![S3 Daily Costs by Usage Type](../../images/posts/2025/9999-s3-costs-by-usage-type.png)
+  ![S3 Daily Costs by Usage Type](../../images/posts/2025/0054-s3-costs-by-usage-type.png)
 </div>
 
 In our case, most costs stemmed from storage. However, in some organizations, high request costs may dominate, often due to numerous small files in a data lake.
