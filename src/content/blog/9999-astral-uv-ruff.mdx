@@ -40,16 +40,65 @@ Or, if using `brew` on macOS:
 brew install astral-sh/uv/uv
 ```
 
-### Creating a Project with `uv`
+### Single-Script Execution and Ad-Hoc Dependencies
 
-Setting up a new Python project with `uv` is straightforward:
+One of `uv`'s standout features is the ability to execute scripts with dependencies without manually managing a virtual environment:
 
 ```sh
-uv venv
-uv pip install requests
+uv run --with rich example.py
 ```
 
-This creates a virtual environment and installs packages while leveraging Rust's speed for near-instantaneous execution.
+You can also add dependencies dynamically to a script:
+
+```sh
+uv add --script example.py 'requests<3' 'rich'
+```
+
+This makes `uv` an excellent choice for quick experiments or one-off scripts that need isolated dependencies.
+
+### Initializing a Project
+
+To create a new Python project with `uv` run:
+
+```bash
+uv init
+```
+
+This will prompt you to enter project details like name, version, and dependencies. It will create `pyproject.toml` and `.python-version`
+
+### Creating a Virtual Environment
+
+A major feature of `uv` is its fast virtual environment management:
+
+```bash
+uv venv .venv
+```
+
+You can also specify a Python version:
+
+```bash
+uv venv --python=3.11 .venv
+```
+
+<Notice type="warning">
+  If a `.python-version` file exists, `uv` will automatically use the specified version.
+</Notice>
+
+### Installing Dependencies
+
+Install packages like you would with `pip`:
+
+```bash
+uv pip install requests pandas
+```
+
+To install packages in **editable mode** (useful for development environments and CI/CD):
+
+```bash
+uv pip install --editable .
+```
+
+This ensures your local code changes reflect immediately when running scripts.
 
 ### Running Commands in an Isolated Environment
 
@@ -71,22 +120,6 @@ uv run python -m src.main
 
 This ensures that the installed package is properly recognized when executing it as a module.
 
-### Single-Script Execution and Ad-Hoc Dependencies
-
-One of `uv`'s standout features is the ability to execute scripts with dependencies without manually managing a virtual environment:
-
-```sh
-uv run --with rich example.py
-```
-
-You can also add dependencies dynamically to a script:
-
-```sh
-uv add --script example.py 'requests<3' 'rich'
-```
-
-This makes `uv` an excellent choice for quick experiments or one-off scripts that need isolated dependencies.
-
 ### CI/CD Integration
 
 For automation, `uv` works seamlessly in CI/CD pipelines. To install dependencies and run tests efficiently, use:
@@ -97,6 +130,93 @@ uv run pytest
 ```
 
 Since `uv` is significantly faster than `pip`, this reduces setup time in workflows like GitHub Actions and GitLab CI/CD.
+
+#### Exporting Dependencies
+
+In some setups, you might need a `requirements.txt`. For example, when working with `Prefect` it expects that file.
+To generate the `requirements.txt` file run:
+
+```bash
+uv export --format requirements-txt > requirements.txt
+```
+
+For CI/CD workflows, you can use `pre-commit` to ensure dependencies are always up-to-date:
+
+```yaml
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.6.3
+  hooks:
+    - id: uv-export
+      args: ["--no-hashes", "--frozen", "--output-file=requirements.txt"]
+```
+
+#### Running Tests with `uv`
+
+To run tests inside the virtual environment:
+
+```bash
+uv run pytest # Or any other testing suite you use
+```
+
+For GitHub Actions:
+
+<Accordion client:load title=".github/workflows/CI.yaml">
+  ```yaml
+  unit_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+  
+      - name: Install UV
+        run: pip install uv
+  
+      - name: Set up virtual environment
+        run: uv venv .venv
+  
+      - name: Install dependencies
+        run: uv pip install --editable .
+  
+      - name: Run tests
+        run: uv run pytest .
+  ```
+</Accordion>
+
+#### Publishing to PyPI
+
+To build and publish a package to PyPI using `uv`:
+
+```bash
+uv build
+uv publish
+```
+
+For automation, add this to GitHub Actions:
+
+<Accordion client:load title=".github/workflows/CD.yaml">
+  ```yaml
+  jobs:
+    publish_pypi:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+  
+      - name: Install uv
+        run: pip install uv
+  
+      - name: Build
+        run: uv build
+  
+      - name: Publish
+        run: uv publish
+  ```
+</Accordion>
+
+<Notice type="info">
+  I strongly suggest you set up [trusted publishers in pypi](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) to avoid adding tokens.
+  It's the prefered way of uploading packages to pypi.
+</Notice>
 
 ## `ruff`: The Ultra-Fast Linter and Formatter
 
@@ -160,4 +280,3 @@ These results demonstrate that `uv` and `ruff` are orders of magnitude faster th
 Astral’s tools, `uv` and `ruff`, provide a powerful, high-performance alternative to traditional Python package management and linting solutions. By leveraging Rust’s efficiency, they dramatically reduce execution time while maintaining full compatibility with existing workflows.
 
 If you’re looking for a faster, smoother experience in Python development, consider replacing `poetry` with `uv` and switching from `flake8` + `black` to `ruff`. The time savings alone make them well worth the transition.
-
