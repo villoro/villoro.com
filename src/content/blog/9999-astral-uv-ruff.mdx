@@ -10,6 +10,9 @@ tags: []
 draft: false
 ---
 
+<script type="module" src="/js/posts/9999-plots-astral.js"></script>
+
+
 ## 0. Introduction: Virtual Environment and Linting Tools
 
 When working with Python, managing dependencies and ensuring clean code are essential tasks. Over the years, the Python ecosystem has developed multiple tools for these purposes, but there is no universal agreement on which one to use. Tools like `pipenv`, `venv`, `poetry`, and `conda` all offer different ways to manage environments and dependencies, while linters like `flake8`, `pylint`, and `black` aim to enforce style and correctness.
@@ -268,22 +271,21 @@ For automation, add this to GitHub Actions:
 
 Rust-based tooling provides substantial speed improvements over Python-based alternatives. The following benchmarks are sourced from the <FancyLink linkText="Official Astral documentation" url="https://docs.astral.sh/"/>:
 
-### 4.1. Dependency Management (`uv` vs `pip` + `venv`)
+### 4.1. `uv` benchmarks
 
-| Task                     | `uv` Time | `pip + venv` Time |
-|--------------------------|----------|------------------|
-| Create virtualenv        | 0.05s    | 2.3s             |
-| Install `requests`       | 0.08s    | 3.1s             |
-| Install dependencies     | 0.12s    | 4.5s             |
+At <FancyLink linkText="uv benchmarks" url="https://github.com/astral-sh/uv/blob/main/BENCHMARKS.md" dark="true"/> you can see a very comprehensive speed analysis.
 
-### 4.2. Linting and Formatting (`ruff` vs `flake8` + `black`)
+For quick reference here is a summary:
 
-| Task                  | `ruff` Time | `flake8 + black` Time |
-|----------------------|-----------|------------------|
-| Lint 1000 files     | 0.7s      | 8.3s             |
-| Format 1000 files   | 0.8s      | 9.1s             |
+<canvas id="astral_uv" style="width:100%;height:400px;"></canvas>
 
-These results demonstrate that `uv` and `ruff` are orders of magnitude faster than their Python-based counterparts, making them ideal choices for modern development workflows.
+### 4.2. `ruff` benchmarks
+
+Here you can see the time it took to format <FancyLink linkText="Zulip" url="https://github.com/zulip/zulip" dark="true"/> codebase (~ 250k lines of code).
+
+<canvas id="astral_ruff" style="width:100%;height:130px;"></canvas>
+
+More info at <FancyLink linkText="Ruff formatter" url="https://astral.sh/blog/the-ruff-formatter"/> .
 
 ## 5. Conclusion
 

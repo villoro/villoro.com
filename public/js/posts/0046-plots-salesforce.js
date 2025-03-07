@@ -14,7 +14,7 @@ script.onload = function () {
         labels: ['query_all', 'query_all_iter', 'bulk', 'bulk (lazy)', 'bulk2'],
         datasets: [
           {
-            label: 'query time',
+            label: 'Query Time',
             backgroundColor: "#3a76ff", 
             data: [305.85, 301.51, 154.44, 183.47, 130.02],
           },
