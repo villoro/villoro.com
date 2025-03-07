@@ -56,7 +56,7 @@ The setup process involves providing the correct configuration for the database:
 </TerminalOutput>
 ```docker
 # Prefect version must match Dockerfile.worker and pyproject.toml
-FROM prefecthq/prefect:2.16-python3.10 as base
+FROM prefecthq/prefect:2.16-python3.10 AS base
 
 # Set connection (format: `postgresql+asyncpg://{user}:{password}@{url}:{port}/prefect`)
 ARG DB_URL
@@ -107,7 +107,7 @@ Once you have the `Work Pool`, we will create a Worker with Docker, following a 
 </TerminalOutput>
 ```docker
 # Prefect version must match Dockerfile.server and pyproject.toml
-FROM prefecthq/prefect:2.16-python3.10 as base
+FROM prefecthq/prefect:2.16-python3.10 AS base
 
 # Connect to Prefect
 ARG PREFECT_API_URL
