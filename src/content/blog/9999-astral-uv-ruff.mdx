@@ -10,17 +10,17 @@ tags: []
 draft: false
 ---
 
-## Introduction: Virtual Environment and Linting Tools
+## 0. Introduction: Virtual Environment and Linting Tools
 
 When working with Python, managing dependencies and ensuring clean code are essential tasks. Over the years, the Python ecosystem has developed multiple tools for these purposes, but there is no universal agreement on which one to use. Tools like `pipenv`, `venv`, `poetry`, and `conda` all offer different ways to manage environments and dependencies, while linters like `flake8`, `pylint`, and `black` aim to enforce style and correctness.
 
 Astral, the creators of `ruff`, have introduced a new tool called `uv`—a blazing-fast virtual environment and package manager built in Rust. Since both `uv` and `ruff` share the same goal of significantly improving Python workflows through speed and efficiency, this post will explore both tools and why they might be the best options for modern Python development.
 
-## Why `uv` is a Game-Changer
+## 1. Why `uv` is a Game-Changer
 
-I previously recommended `poetry` for dependency management (see <FancyLink linkText="Managing Package Versions with Poetry" url="https://villoro.com/blog/managing-package-versions-with-poetry/" />), but `uv` has since proven to be a superior choice. Unlike `poetry`, which is written in Python, `uv` is built with Rust, making it significantly faster. It offers a simple interface while maintaining compatibility with standard `pip` and `venv` workflows.
+I previously recommended `poetry` for dependency management (see <FancyLink linkText="Managing Package Versions with Poetry" url="https://villoro.com/blog/managing-package-versions-with-poetry/"/>), but `uv` has since proven to be a superior choice. Unlike `poetry`, which is written in Python, `uv` is built with Rust, making it significantly faster. It offers a simple interface while maintaining compatibility with standard `pip` and `venv` workflows.
 
-### Installing `uv`
+### 1.1. Installing `uv`
 
 To install `uv`, simply run:
 
@@ -40,7 +40,7 @@ Or, if using `brew` on macOS:
 brew install astral-sh/uv/uv
 ```
 
-### Single-Script Execution and Ad-Hoc Dependencies
+### 1.2. Single-Script Execution and Ad-Hoc Dependencies
 
 One of `uv`'s standout features is the ability to execute scripts with dependencies without manually managing a virtual environment:
 
@@ -54,9 +54,13 @@ You can also add dependencies dynamically to a script:
 uv add --script example.py 'requests<3' 'rich'
 ```
 
+<Notice type="info" className="mt-6">
+  More info at <FancyLink linkText="Declaring script dependencies | Astral uv" url="https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies"/>
+</Notice>
+
 This makes `uv` an excellent choice for quick experiments or one-off scripts that need isolated dependencies.
 
-### Initializing a Project
+### 1.3. Initializing a Project
 
 To create a new Python project with `uv` run:
 
@@ -66,7 +70,7 @@ uv init
 
 This will prompt you to enter project details like name, version, and dependencies. It will create `pyproject.toml` and `.python-version`
 
-### Creating a Virtual Environment
+### 1.4. Creating a Virtual Environment
 
 A major feature of `uv` is its fast virtual environment management:
 
@@ -80,11 +84,11 @@ You can also specify a Python version:
 uv venv --python=3.11 .venv
 ```
 
-<Notice type="warning">
+<Notice type="warning" className="mt-6">
   If a `.python-version` file exists, `uv` will automatically use the specified version.
 </Notice>
 
-### Installing Dependencies
+### 1.5. Installing Dependencies
 
 Install packages like you would with `pip`:
 
@@ -100,7 +104,7 @@ uv pip install --editable .
 
 This ensures your local code changes reflect immediately when running scripts.
 
-### Running Commands in an Isolated Environment
+### 1.6. Running Commands in an Isolated Environment
 
 Unlike traditional virtual environment tools, `uv` lets you run commands directly without needing to activate the environment:
 
@@ -109,7 +113,7 @@ uv run python script.py
 uv run pytest
 ```
 
-### Handling Editable Installs and Running a Package
+### 1.7. Handling Editable Installs and Running a Package
 
 One issue many users face with `uv` is running a local package. If you are working with a structured project (e.g., using `src/` layout), the correct way to install and execute it is:
 
@@ -120,7 +124,7 @@ uv run python -m src.main
 
 This ensures that the installed package is properly recognized when executing it as a module.
 
-### CI/CD Integration
+### 1.8. CI/CD Integration
 
 For automation, `uv` works seamlessly in CI/CD pipelines. To install dependencies and run tests efficiently, use:
 
@@ -131,7 +135,7 @@ uv run pytest
 
 Since `uv` is significantly faster than `pip`, this reduces setup time in workflows like GitHub Actions and GitLab CI/CD.
 
-#### Exporting Dependencies
+#### 1.8.1. Exporting Dependencies
 
 In some setups, you might need a `requirements.txt`. For example, when working with `Prefect` it expects that file.
 To generate the `requirements.txt` file run:
@@ -150,7 +154,7 @@ For CI/CD workflows, you can use `pre-commit` to ensure dependencies are always 
       args: ["--no-hashes", "--frozen", "--output-file=requirements.txt"]
 ```
 
-#### Running Tests with `uv`
+#### 1.8.2. Running Tests with `uv`
 
 To run tests inside the virtual environment:
 
@@ -182,7 +186,7 @@ For GitHub Actions:
   ```
 </Accordion>
 
-#### Publishing to PyPI
+#### 1.8.3. Publishing to PyPI
 
 To build and publish a package to PyPI using `uv`:
 
@@ -214,17 +218,17 @@ For automation, add this to GitHub Actions:
 </Accordion>
 
 <Notice type="info">
-  I strongly suggest you set up [trusted publishers in pypi](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) to avoid adding tokens.
+  I strongly suggest you set up <FancyLink linkText="Trusted publishers in pypi" url="https://docs.pypi.org/trusted-publishers/adding-a-publisher/"/> to avoid adding tokens.
   It's the prefered way of uploading packages to pypi.
 </Notice>
 
-## `ruff`: The Ultra-Fast Linter and Formatter
+## 2. `ruff`: The Ultra-Fast Linter and Formatter
 
 Linters and formatters are essential for maintaining clean and readable code. Traditionally, `flake8`, `black`, and `pylint` have been widely used, but they are slow due to being written in Python.
 
 Enter `ruff`, a Rust-based linter that combines linting, formatting, and import sorting into a single, high-performance tool. It serves as a replacement for `flake8`, `black`, `isort`, and even `mypy`-style type checking in some cases.
 
-### Installing `ruff`
+### 2.1. Installing `ruff`
 
 To install `ruff`, use:
 
@@ -238,7 +242,7 @@ Or, for even better performance, use `uv`:
 uv pip install ruff
 ```
 
-### Running `ruff`
+### 2.2. Running `ruff`
 
 To check your Python files, simply run:
 
@@ -254,11 +258,25 @@ ruff format .
 
 This command is a drop-in replacement for `black` but executes significantly faster.
 
-## Benchmarks: How Fast Are `uv` and `ruff`?
+### 2.3. Running `ruff` with `pre-commit`
+
+For CI/CD workflows, you can use `pre-commit` with:
+
+```yaml
+  # Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.6
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+```
+
+## 3. Benchmarks: How Fast Are `uv` and `ruff`?
 
 Rust-based tooling provides substantial speed improvements over Python-based alternatives. Here’s a simple benchmark comparing `uv` and `ruff` to traditional tools:
 
-### Dependency Management (`uv` vs `pip` + `venv`)
+### 3.1. Dependency Management (`uv` vs `pip` + `venv`)
 
 | Task                     | `uv` Time | `pip + venv` Time |
 |--------------------------|----------|------------------|
@@ -266,7 +284,7 @@ Rust-based tooling provides substantial speed improvements over Python-based alt
 | Install `requests`       | 0.08s    | 3.1s             |
 | Install dependencies     | 0.12s    | 4.5s             |
 
-### Linting and Formatting (`ruff` vs `flake8` + `black`)
+### 3.2. Linting and Formatting (`ruff` vs `flake8` + `black`)
 
 | Task                  | `ruff` Time | `flake8 + black` Time |
 |----------------------|-----------|------------------|
@@ -275,7 +293,7 @@ Rust-based tooling provides substantial speed improvements over Python-based alt
 
 These results demonstrate that `uv` and `ruff` are orders of magnitude faster than their Python-based counterparts, making them ideal choices for modern development workflows.
 
-## Conclusion
+## 4. Conclusion
 
 Astral’s tools, `uv` and `ruff`, provide a powerful, high-performance alternative to traditional Python package management and linting solutions. By leveraging Rust’s efficiency, they dramatically reduce execution time while maintaining full compatibility with existing workflows.
 
