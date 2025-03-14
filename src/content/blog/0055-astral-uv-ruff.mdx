@@ -1,16 +1,16 @@
 ---
 slug: astral-tools-uv-and-ruff
-title: "Exploring Astral's Fast Python Tools: uv and ruff"
+title: Fast Python Package Management and Linting with uv and ruff
 meta_title: "uv and ruff: Fast Python Package Management and Linting"
 description: Discover how Astral's Rust-powered tools, uv and ruff, provide a blazing-fast alternative for Python package management and linting. Learn how to set them up, integrate them into CI/CD workflows, and boost your development speed.
-date: 2025-03-07
-image: /images/blog/9999-astral.jpg
+date: 2025-03-14
+image: /images/blog/0055-astral.jpg
 category: Python
 tags: [Python, Tools/Utils, Performance, Benchmark, Setup, Best Practices]
-draft: true
+draft: false
 ---
 
-<script type="module" src="/js/posts/9999-plots-astral.js"></script>
+<script type="module" src="/js/posts/0055-plots-astral.js"></script>
 
 
 ## 0. Introduction: Virtual Environment and Linting Tools
@@ -21,7 +21,7 @@ Astral, the creators of `ruff`, have introduced a new tool called `uv`—a blazi
 
 ## 1. Why `uv` is a Game-Changer
 
-I previously recommended `poetry` for dependency management (see <FancyLink linkText="Managing Package Versions with Poetry" url="https://villoro.com/blog/managing-package-versions-with-poetry/"/>), but `uv` has since proven to be a superior choice. Unlike `poetry`, which is written in Python, `uv` is built with Rust, making it significantly faster. It offers a simple interface while maintaining compatibility with standard `pip` and `venv` workflows.
+I previously recommended `poetry` for dependency management (see <FancyLink linkText="Managing Package Versions with Poetry" url="https://villoro.com/blog/managing-package-versions-with-poetry/" dark="true"/>), but `uv` has since proven to be a superior choice. Unlike `poetry`, which is written in Python, `uv` is built with Rust, making it significantly faster. It offers a simple interface while maintaining compatibility with standard `pip` and `venv` workflows.
 
 ### 1.1. Installing `uv`
 
