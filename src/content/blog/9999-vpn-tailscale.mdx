@@ -1,0 +1,79 @@
+---
+slug: vpn-tailscale
+title: Understanding VPNs - Privacy and Security
+meta_title: Understanding VPNs - Privacy and Security
+description: "Explore the differences between commercial VPNs for privacy and security and private network VPNs for secure remote access. Learn how Tailscale simplifies private VPN setups and how exit nodes can help bypass restrictions."
+date: 2025-03-12
+image: /images/blog/9999-meshed-orbe-of-light.jpg
+category: tools
+tags: [Tools, Setup, Security, Networking]
+draft: true
+---
+
+## 0. What is a VPN and Why Use One?
+A Virtual Private Network (VPN) is a tool that establishes a secure and encrypted connection over the internet. It serves different purposes depending on the use case:
+
+- **Privacy and security**: Encrypting your internet traffic to prevent tracking by ISPs, advertisers, and potential attackers on public networks.
+- **Access and bypassing restrictions**: Allowing users to access geo-restricted content or bypass network censorship.
+- **Remote network access**: Connecting securely to a private network as if you were physically present in that location.
+
+## 1. Commercial VPNs vs Private Network VPNs
+There are two main categories of VPNs, each serving a distinct purpose:
+
+### 1.1. Commercial VPNs
+These services are designed primarily for privacy, security, and accessing restricted content. They provide:
+
+- **Encrypted traffic**: Protecting data from surveillance and attackers.
+- **IP masking**: Making it appear as if you're browsing from another location.
+- **Bypassing restrictions**: Overcoming geo-blocks for streaming or government censorship.
+
+A good example of a commercial VPN is <FancyLink linkText="Surfshark" url="https://surfshark.club/friend/FgNz9XN5"/> (you can use this link to get 3 months for free), which offers strong encryption, a no-logs policy, and the ability to connect unlimited devices under one subscription. If your goal is to protect your online privacy and bypass restrictions, a service like Surfshark is a solid choice.
+
+### 1.2. VPNs for Private Networks
+These VPNs are used to securely connect to private resources, such as internal company networks, home servers, or self-hosted services. Unlike commercial VPNs, their goal is not anonymity or bypassing restrictions but rather secure access to specific resources.
+
+## 2. Tailscale: A Simpler Approach to Private Network VPNs
+Traditional VPN setups for private access often require complex configurations, managing IP addresses, and dealing with NAT traversal issues. <FancyLink linkText="Tailscale" url="https://tailscale.com/"/> simplifies this by using WireGuard and a mesh network approach:
+
+- **Automatic peer-to-peer connections**: Devices connect directly without needing a central VPN server.
+- **No complex firewall rules**: Works across NAT without manual configuration.
+- **Zero trust security model**: Every device is authenticated, reducing risks of unauthorized access.
+
+With Tailscale, you can easily access your home server, NAS, or even remote desktops from anywhere, with minimal setup.
+
+Personally, I use Tailscale to securely access my NAS. One particularly useful feature is the ability to share access with my work email, which adds an extra layer of security by requiring two-step authentication. Additionally, I can easily revoke access whenever I want, ensuring I maintain control over who can connect.
+
+### 2.1. Tailnet and How IPs Work
+When you set up Tailscale, all connected devices form a private network called a **tailnet**. Each device gets a unique and persistent internal IP address (typically in the `100.x.x.x` range), allowing direct communication without needing manual network configurations. This means you can securely access any device in your tailnet from anywhere, just as if they were on the same local network.
+
+### 2.2. MagicDNS from Tailscale
+Another useful feature from Tailscale is **MagicDNS**, which allows devices to resolve DNS queries efficiently across a Tailscale network. This means:
+
+- Accessing local domain names from anywhere.
+- Resolving internal services seamlessly.
+- No need for manual DNS configurations.
+
+For example, instead of remembering IP addresses, you can simply access your NAS by going to `http://nas` in your browser or using `ssh nas` from your terminal. This makes remote access much more user-friendly and eliminates the need to manually configure local DNS settings.
+
+Additionally, MagicDNS supports **multiple tailnets**, meaning that if you use a work tailnet while also being part of your personal tailnet, it can resolve short names across both networks. This makes it even easier to access your devices without worrying about manually handling DNS settings across different environments.
+
+### 2.3. More Advanced Features of Tailscale
+Tailscale also includes several powerful features that enhance security and usability:
+
+- **Tailscale SSH** – Allows you to securely SSH into any device within your tailnet without opening ports or managing SSH keys manually.
+- **Access Control Lists (ACLs)** – Fine-grained control over which devices or users can communicate with each other, improving security.
+- **Keyless Authentication with OIDC** – Users can authenticate via identity providers like Google, Microsoft, or GitHub, eliminating the need for manually managed credentials.
+- **Subnet Routing** – Enables a single Tailscale-connected device to provide access to an entire network, making it easy to bridge remote offices or access devices that don’t natively support Tailscale.
+
+### 2.4. Tailscale Exit Nodes: Bypassing Subscription Restrictions
+One of the most powerful features of Tailscale is **Exit Nodes**, which allows you to route your internet traffic through another device on your Tailscale network. This is useful for:
+
+- **Privacy and security**: Routing traffic through a trusted location.
+- **Accessing region-locked content**: If you have a device in a country with access to a specific streaming library (e.g., Netflix), you can route your traffic through that device to avoid regional restrictions.
+- **Bypassing ISP-level restrictions**: If your ISP blocks certain websites or services, using an exit node can help restore access.
+
+If you want a VPN to browse securely and access global content, **Surfshark** is a strong contender. But if your goal is to easily connect to your own devices remotely and even set up your own exit nodes, **Tailscale** is the way to go.
+
+---
+
+VPNs serve different purposes depending on the use case. Whether you're looking for privacy, unrestricted access, or a way to connect securely to your private resources, understanding these distinctions helps in choosing the right tool for the job.
