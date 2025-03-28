@@ -12,8 +12,6 @@ draft: false
 
 <script type="module" src="/js/posts/0056-smoothing.js"></script>
 
-<canvas id="plot" style="width:100%;height:300px;"></canvas>
-
 ## Why Smoothing Matters (and Why It’s Not That Simple)
 
 I’ve spent hours—maybe days—trying to find the "perfect" way to smooth a time series. I didn’t just want a trend line, I wanted a smoothed *series*—the kind you often see in polished dashboards, where the noise fades and the pattern becomes obvious. I remembered seeing some tools that seemed to use something close to a Gaussian smoother, and that became my benchmark.
@@ -28,9 +26,7 @@ Along the way, I’ll show visual comparisons using the same time series, so you
   ![Source data](../../images/posts/2025/0056-source-data.jpg)
 </div>
 
-<div class="border-2 rounded-md">
-  ![Source data grouped by week](../../images/posts/2025/0056-source-data-grouped-by-week.jpg)
-</div>
+<canvas id="plot_source" style="width:100%;height:300px;"></canvas>
 
 ## Smoothing with Python: From Simple to Smart
 
@@ -64,6 +60,8 @@ Gaussian smoothing uses a weighted moving average where weights follow a Gaussia
 
 We'll use `tsmoothie.GaussianSmoother` to show its smoothing effects and how `sigma` influences the result.
 
+<canvas id="plot_gaussian" style="width:100%;height:300px;"></canvas>
+
 ### 📈 Lowess Smoother (`tsmoothie`)
 Lowess (Locally Weighted Scatterplot Smoothing) fits a local linear regression at each point using weighted neighboring data.
 
@@ -78,6 +76,8 @@ Lowess (Locally Weighted Scatterplot Smoothing) fits a local linear regression a
 - **No clear parameters:** Tuning the fraction of data used (`frac`) requires experimentation
 
 We'll visually explore how Lowess smooths differently and when it's a better choice.
+
+<canvas id="plot_lowess" style="width:100%;height:300px;"></canvas>
 
 ---
 
@@ -116,6 +116,8 @@ Quantile smoothing provides additional context:
 
 We'll demonstrate how to use quantiles as upper/lower bounds around a central trend.
 
+<canvas id="plot_sql" style="width:100%;height:300px;"></canvas>
+
 ### 📆 Timeframe Reduction
 Reducing granularity is another form of smoothing:
 
@@ -128,15 +130,13 @@ Reducing granularity is another form of smoothing:
 - **Loss of resolution:** You trade detail for clarity
 - **Harder comparisons:** Aggregated results may hide important local variation
 
-<div class="border-2 rounded-md">
-  ![SQL smoothing](../../images/posts/2025/0056-sql-smoothing.jpg)
-</div>
-
 ---
 
 ## Side-by-Side Comparison
 
 To wrap up, we’ll place all techniques side by side:
+
+<canvas id="plot_all" style="width:100%;height:300px;"></canvas>
 
 - Raw time series
 - Moving average
