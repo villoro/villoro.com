@@ -20,31 +20,60 @@ This post walks through that journey—from the most basic methods to more advan
 
 Along the way, I’ll show visual comparisons using the same time series, so you can see exactly what each technique does—and where it shines or fails.
 
----
+<div class="border-2 rounded-md">
+  ![Source data](../../images/posts/2025/0056-source-data.jpg)
+</div>
+
+<div class="border-2 rounded-md">
+  ![Source data grouped by week](../../images/posts/2025/0056-source-data-grouped-by-week.jpg)
+</div>
 
 ## Smoothing with Python: From Simple to Smart
 
 ### 🔁 Moving Average
-A moving average is the go-to method for basic smoothing. It replaces each point with the average of its neighbors over a defined window.
+A moving average is the most common starting point for smoothing. It replaces each point with the average of its neighbors over a fixed-size window.
 
-- **Trailing vs Centered:** Trailing averages lag behind real trends. Centered averages provide more accurate smoothing but are less suited for real-time use.
-- We'll apply both and see how they affect our time series.
+**Pros:**
+- Simple to understand and implement
+- Reduces high-frequency noise
+
+**Cons:**
+- **Not very smooth:** Especially with small windows, the result is spiky and lacks continuity.
+- **Sensitive to new data:** Trailing averages can react too fast or too slow, depending on window size.
+- **Centering tradeoff:** Centered windows yield a more accurate reflection of the trend, but introduce delay and make the method unusable in real-time contexts.
+- **Edge handling:** The start and end of the series are harder to estimate cleanly.
+
+We'll apply both trailing and centered versions and compare their impact on the series.
 
 ### 🎯 Gaussian Smoother (`tsmoothie`)
-Gaussian smoothing applies a Gaussian-weighted kernel to each point. This gives more importance to nearby values, resulting in a smooth, continuous curve.
+Gaussian smoothing uses a weighted moving average where weights follow a Gaussian (normal) distribution. Points closer to the center of the window get higher weight.
 
-- Based on convolution of the series with a Gaussian kernel
-- Controlled by the `sigma` parameter, which defines the spread
-- Ideal for visualizing trends without hard edges
+**Pros:**
+- Produces a very smooth, continuous curve
+- Reduces noise while preserving general structure
+- Tunable via the `sigma` parameter for controlling smoothness
+
+**Cons:**
+- **Window size matters:** Too large and you may lose important fluctuations; too small and it behaves like a basic moving average
+- **Still linear:** Doesn’t adapt to non-linear trends or local curvature
+- **Requires parameter tuning:** Choosing a good `sigma` isn’t always obvious
+
+We'll use `tsmoothie.GaussianSmoother` to show its smoothing effects and how `sigma` influences the result.
 
 ### 📈 Lowess Smoother (`tsmoothie`)
-Lowess (Locally Weighted Scatterplot Smoothing) fits local regressions using weighted least squares.
+Lowess (Locally Weighted Scatterplot Smoothing) fits a local linear regression at each point using weighted neighboring data.
 
-- A non-parametric regression method
-- Handles nonlinear trends and seasonal patterns well
-- Complexity: O(n^2) due to repeated local fitting
+**Pros:**
+- Adapts to local patterns, great for non-linear trends
+- Handles seasonal variation and local curvature very well
+- Smoother than moving average or Gaussian, especially with complex signals
 
-We'll compare it visually with other methods and show where it excels.
+**Cons:**
+- **Computationally expensive:** Especially on large datasets (O(n^2) in naive implementations)
+- **Not interpretable in real-time:** Being a centered smoother, it relies on future values
+- **No clear parameters:** Tuning the fraction of data used (`frac`) requires experimentation
+
+We'll visually explore how Lowess smooths differently and when it's a better choice.
 
 ---
 
@@ -53,25 +82,51 @@ We'll compare it visually with other methods and show where it excels.
 ### ❌ Why no Gaussian or Lowess in SQL?
 Techniques like Gaussian smoothing and Lowess require iterative, weighted, and often non-linear computations—something SQL just isn't designed for. You can’t easily apply convolution or perform local regressions inside a SQL query.
 
+SQL engines don’t support weighted kernels, nor do they support local least-squares fitting. While it's possible to simulate some behaviors using window functions and recursive queries, the complexity and performance penalty make it impractical.
+
 ### 📊 Median Smoothing
 SQL *can* do robust smoothing with medians:
 
-- Handles outliers better than the mean
-- Implemented via `MEDIAN() OVER (PARTITION BY ... ORDER BY ... ROWS BETWEEN ...)`
-- Still lags slightly like a moving average, but with better robustness
+**Pros:**
+- Robust to outliers, making it better for noisy series
+- Available in many modern SQL engines via window functions
+
+**Cons:**
+- **Hard edges:** Like the moving average, it produces sharp transitions, especially when values shift abruptly
+- **Still lags:** As with other rolling functions, it introduces temporal lag
+- **Computational cost:** Rolling medians are heavier than means in most engines
+
+We'll show how to apply a median using `MEDIAN() OVER (...)` to smooth the series.
 
 ### ⌐ Quantile Bands
-With window functions and percentile functions (like `PERCENTILE_CONT` in PostgreSQL or BigQuery):
+Quantile smoothing provides additional context:
 
-- Compute rolling quantiles (e.g. 25th, 50th, 75th)
-- Use them to draw upper/lower bands around the central trend
-- Useful for detecting shifts and volatility
+**Pros:**
+- Gives a sense of spread and volatility
+- Easy to implement using `PERCENTILE_CONT`
+- Useful for detecting changes in distribution or trends
+
+**Cons:**
+- **Not a smoother per se:** Quantiles don't create a smoothed line, but rather bands
+- **Limited interpretability:** Requires visual support to be useful
+
+We'll demonstrate how to use quantiles as upper/lower bounds around a central trend.
 
 ### 📆 Timeframe Reduction
-Sometimes, the best smoothing comes from resampling:
+Reducing granularity is another form of smoothing:
 
-- `DATE_TRUNC('week', timestamp)` to aggregate weekly
-- Works well when raw data is too granular (e.g. minute-level or daily with high variance)
+**Pros:**
+- Naturally removes noise by aggregation
+- Simple and performant in SQL
+- Useful when precision isn't critical
+
+**Cons:**
+- **Loss of resolution:** You trade detail for clarity
+- **Harder comparisons:** Aggregated results may hide important local variation
+
+<div class="border-2 rounded-md">
+  ![SQL smoothing](../../images/posts/2025/0056-sql-smoothing.jpg)
+</div>
 
 ---
 
