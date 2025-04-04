@@ -14,23 +14,23 @@ draft: false
 
 ## 0. Why Smoothing Matters (and Why It’s Not That Simple)
 
-I’ve spent hours—maybe days—trying to find the "perfect" way to smooth a time series. I didn’t just want a trend line, I wanted a smoothed *series*—the kind you often see in polished dashboards, where the noise fades and the pattern becomes obvious. I remembered seeing some tools that seemed to use something close to a Gaussian smoother, and that became my benchmark.
+I’ve spent hours—maybe days—trying to find the "perfect" way to smooth a time series. I didn’t just want a trend line—I wanted a smoothed *series*—the kind you often see in polished dashboards, where the noise fades and the pattern becomes obvious. I remembered seeing some tools that seemed to use something close to a Gaussian smoother, and that became my benchmark.
 
-So I tried everything: simple moving averages, exponential weighted moving averages (EWMA), Kalman filters, even rolling medians. Some were too noisy, others too laggy. I wanted something that respected the data's structure while highlighting the trend.
+So I tried everything: simple moving averages, exponentially weighted moving averages (EWMA), Kalman filters, even rolling medians. Some were too noisy, others too laggy. I wanted something that respected the data's structure while highlighting the trend.
 
 This post walks through that journey—from the most basic methods to more advanced, expressive smoothers. We’ll also explore what can and can’t be done in SQL, and why not every smoother belongs in a database.
 
 Along the way, I’ll show visual comparisons using the same time series, so you can see exactly what each technique does—and where it shines or fails.
 
-To do so I'll use the following time series with daily data:
+To do so, I'll use the following time series with daily data:
 
 ![Source data](../../images/posts/2025/0056-source-data.jpg)
 
 ## 1. Timeframe Reduction
-The simplest way of smoothing a time series is by reducing the granularity.
+The simplest way to smooth a time series is by reducing its granularity.
 
 **Pros:**
-- Naturally removes noise by aggregation
+- Naturally removes noise through aggregation
 - Simple and performant in SQL
 - Useful when precision isn't critical
 
@@ -50,17 +50,17 @@ A moving average is the most common starting point for smoothing. It replaces ea
 - Reduces high-frequency noise
 
 **Cons:**
-- **Not very smooth:** Especially with small windows, the result is spiky and lacks continuity.
-- **Sensitive to new data:** Trailing averages can react too fast or too slow, depending on window size.
-- **Centering tradeoff:** Centered windows yield a more accurate reflection of the trend, but introduce delay and make the method unusable in real-time contexts.
-- **Edge handling:** The start and end of the series are harder to estimate cleanly.
+- **Not very smooth:** Especially with small windows, the result is spiky and lacks continuity
+- **Sensitive to new data:** Trailing averages can react too fast or too slow, depending on window size
+- **Centering trade-off:** Centered windows yield a more accurate reflection of the trend but introduce delay, making the method unsuitable for real-time contexts
+- **Edge handling:** The start and end of the series are harder to estimate cleanly
 
 We'll apply both trailing and centered versions and compare their impact on the series.
 
 <canvas id="plot_ma" style="width:100%;height:300px;"></canvas>
 
 ### 🎯 Gaussian Smoother (`tsmoothie`)
-Gaussian smoothing uses a weighted moving average where weights follow a Gaussian (normal) distribution. Points closer to the center of the window get higher weight.
+Gaussian smoothing uses a weighted moving average where weights follow a Gaussian (normal) distribution. Points closer to the center of the window receive higher weight.
 
 **Pros:**
 - Produces a very smooth, continuous curve
@@ -72,7 +72,7 @@ Gaussian smoothing uses a weighted moving average where weights follow a Gaussia
 - **Still linear:** Doesn’t adapt to non-linear trends or local curvature
 - **Requires parameter tuning:** Choosing a good `sigma` isn’t always obvious
 
-We can apply the Gaussian smoothing using <FancyLink linkText="tsmoothie" url="https://github.com/cerlymarco/tsmoothie/tree/master" dark="true"/>:
+We can apply Gaussian smoothing using <FancyLink linkText="tsmoothie" url="https://github.com/cerlymarco/tsmoothie/tree/master" dark="true"/>:
 
 ```python
 from tsmoothie.smoother import GaussianSmoother
@@ -88,16 +88,16 @@ df["gaussian"] = smoother.smooth_data[0]
 Lowess (Locally Weighted Scatterplot Smoothing) fits a local linear regression at each point using weighted neighboring data.
 
 **Pros:**
-- Adapts to local patterns, great for non-linear trends
+- Adapts to local patterns—great for non-linear trends
 - Handles seasonal variation and local curvature very well
-- Smoother than moving average or Gaussian, especially with complex signals
+- Smoother than a moving average or Gaussian, especially with complex signals
 
 **Cons:**
-- **Computationally expensive:** Especially on large datasets (O(n^2) in naive implementations)
+- **Computationally expensive:** Especially on large datasets (O(n^2) in naïve implementations)
 - **Not interpretable in real-time:** Being a centered smoother, it relies on future values
 - **No clear parameters:** Tuning the fraction of data used (`frac`) requires experimentation
 
-We can also apply the Lowess smoothing using <FancyLink linkText="tsmoothie" url="https://github.com/cerlymarco/tsmoothie/tree/master" dark="true"/>:
+We can also apply Lowess smoothing using <FancyLink linkText="tsmoothie" url="https://github.com/cerlymarco/tsmoothie/tree/master" dark="true"/>:
 
 ```python
 from tsmoothie.smoother import LowessSmoother
@@ -114,7 +114,7 @@ df["lowess"] = smoother.smooth_data[0]
 ### ❌ Why no Gaussian or Lowess in SQL?
 Techniques like Gaussian smoothing and Lowess require iterative, weighted, and often non-linear computations—something SQL just isn't designed for. You can’t easily apply convolution or perform local regressions inside a SQL query.
 
-SQL engines don’t support weighted kernels, nor do they support local least-squares fitting. While it's possible to simulate some behaviors using window functions and recursive queries, the complexity and performance penalty make it impractical.
+SQL engines don’t support weighted kernels or local least-squares fitting. While it's possible to simulate some behaviors using window functions and recursive queries, the complexity and performance penalties make it impractical.
 
 ### 📊 Median Smoothing
 SQL *can* do robust smoothing with medians:
@@ -152,7 +152,7 @@ Quantile smoothing provides additional context:
 - **Not a smoother per se:** Quantiles don't create a smoothed line, but rather bands
 - **Limited interpretability:** Requires visual support to be useful
 
-There is no standard for calculating the quantiles in SQL. As an example, this is how it can be done with <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>.
+There is no standard for calculating quantiles in SQL. As an example, here’s how it can be done with <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>:
 
 ```sql
 SELECT
@@ -165,7 +165,7 @@ WINDOW win AS (ORDER BY start_day ROWS BETWEEN 15 PRECEDING AND 15 FOLLOWING)
 ORDER BY 1 DESC
 ```
 
-Also you can partition by one or more categories with:
+You can also partition by one or more categories with:
 
 ```sql
 SELECT
@@ -200,7 +200,6 @@ To wrap up, we’ll place all techniques side by side:
 - Lowess smoother
 - SQL median + quantiles + downsampling
 
-This comparison will help you decide which approach works best depending on your tech stack and the level of fidelity you need.
+This comparison will help you decide which approach works best, depending on your tech stack and the level of fidelity you need.
 
 Stay tuned for code samples, math notes, and visualizations.
-
