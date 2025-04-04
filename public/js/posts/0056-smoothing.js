@@ -64,8 +64,8 @@ script.onload = function () {
 
     const serie_source = {
       label: "source",
-      borderColor: "#D9D9D9",
-      backgroundColor: "#D9D9D9",
+      borderColor: "#C4C4C4",
+      backgroundColor: "#C4C4C4",
       data: [
         3.75, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 3.5, 3.5, 4.0, 4.75, 6.33, 3.25, 3.58, 3.25, 5.17, 4.25, 3.17, 3.5,
         3.08, 3.94, 4.54, 4.21, 3.94, 4.17, 3.67, 4.46, 3.9, 4.57, 3.67, 3.75, 5.54, 5.58, 5.0, 4.25, 9.17, 7.1, 7.19, 7.13,
@@ -338,6 +338,13 @@ script.onload = function () {
         datasets: [serie_source]
       }
     });
+    new Chart("plot_ma", {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [serie_ma_left, serie_ma_center, serie_source]
+      }
+    });
     new Chart("plot_gaussian", {
       type: "line",
       data: {
@@ -350,6 +357,13 @@ script.onload = function () {
       data: {
         labels: labels,
         datasets: [serie_lowess, serie_source]
+      }
+    });
+    new Chart("plot_median", {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [serie_median, serie_source]
       }
     });
     new Chart("plot_sql", {
