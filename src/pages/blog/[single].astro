@@ -18,13 +18,16 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { title, meta_title, description } = post.data;
+const { title, meta_title, description, image } = post.data;
+const canonical = `https://villoro.com${Astro.url.pathname}`;
 ---
 
 <Base
   title={title}
   meta_title={meta_title}
   description={description}
+  image={image}
+  canonical={canonical}
 >
   <PostSingle post={post} />
 </Base>
