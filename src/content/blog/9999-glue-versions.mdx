@@ -14,14 +14,20 @@ draft: false
 
 ## 0. What happened?
 
-We hit a strange issue with Athena: some queries started failing silently, while others returned cryptic errors in the DBT logs. After digging into multiple layers (Athena, dbt, Glue Catalog, Iceberg...), we finally discovered the culprit: **Glue table version limits**.
+We hit a strange issue with dbt Athena were no queries were running:
 
 ![DBT athena logs failure](../../images/posts/2025/9999-dbt-athena-failure.jpg)
 
-Until then, I was 100% unaware that:
-1. There is a hard limit of **1,000,000 schema versions across the entire Glue catalog**.
-2. Exceeding this limit doesn't just block updates — it can **break Athena queries** in ways that aren't obvious.
+After digging we discovered the culprit: **Glue table version limits**.
 
+Until then, I was totally unaware that:
+1. There is a hard limit of **1 000 000 schema versions across the entire Glue catalog**.
+2. Exceeding this limit doesn't just block updates — it **breaks Athena queries** in ways that aren't obvious.
+
+
+<Notice type="error">
+  Glue has a **hard limit** of **1 000 000 schema versions** across the **entire Glue catalog**.
+</Notice>
 
 ## 1. Glue versions
 
@@ -34,14 +40,14 @@ In our case:
 
 The version bloat was entirely invisible... until it wasn’t.
 
-
 ## 2. How to clean old versions
 
 We wrote a script that:
-- Iterates over all Glue tables
-- Lists all versions
-- Keeps only the latest few
-- Deletes the rest using `boto3`
+* Iterates over all databases
+* Iterates over all Glue tables
+* Lists all versions
+* Keeps only the latest few
+* Deletes the rest using `boto3`
 
 This brought the catalog size down **massively**:
 
@@ -202,11 +208,7 @@ def process():
 
 ## 3. Performance gains
 
-What surprised us the most was this: **query performance improved dramatically** after cleanup.
-
-- Metadata reads are faster.
-- Query planning is lighter.
-- Maybe Glue stops doing deep version resolution?
+What surprised us the most was that dbt athena **query performance improved dramatically** after cleanup.
 
 <canvas id="plot-dbt-execution-time" style="width:100%;height:300px;"></canvas>
 
@@ -215,12 +217,11 @@ What surprised us the most was this: **query performance improved dramatically**
   * Hourly: **4× faster** (from 64min to 16min)
 </Notice>
 
-
 ## 4. Takeaways
 
-- Be aware of **Glue’s 1,000,000-version catalog limit** — it's not just theoretical.
-- If you're running dbt (or Iceberg) frequently, **version bloat is guaranteed**.
-- The Glue UI doesn’t warn you. Athena doesn’t either. You need to check manually.
-- Cleaning up old versions not only avoids query failures — it **improves performance**.
+* Be aware of **Glue’s 1 000 000-version catalog limit** — it's not just theoretical.
+* If you're running dbt (or Iceberg) frequently, **version bloat is guaranteed**.
+* The Glue UI doesn’t warn you. Athena doesn’t either. You need to check manually.
+* Cleaning up old versions not only avoids query failures — it **improves performance**.
 
 We’ve now automated this cleanup as a regular maintenance task.
