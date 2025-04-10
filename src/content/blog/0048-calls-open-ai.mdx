@@ -128,15 +128,20 @@ Here is how you can define the model:
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class Transcription(BaseModel):
     filename: str
     duration_seconds: float
     transcription: Optional[str] = None
     transcription_time: Optional[float] = None
-    transcribed_at: datetime = datetime.now()
+    transcribed_at: datetime = Field(default_factory=datetime.now)
 ```
+
+<Notice type="warning">
+  The `Field(default_factory=datetime.now)` ensures that each instance has the proper timestamp.
+  If we used `datetime.now()` as the default, we will always get the timestamp when the class was created, not the instance.
+</Notice>
 
 With that, we can add this to the `process_file` function:
 
@@ -267,7 +272,7 @@ def extract_info(transcription, pydantic_model=CallAnalysis)
         It adds multiple metadata meant for debugging and issues resolution
         """
 
-        gpt_called_at: datetime = datetime.now()
+        gpt_called_at: datetime = Field(default_factory=datetime.now)
         gpt_raw_input: str = transcription
         gpt_model: str = data["model"]
         id: Optional[str]

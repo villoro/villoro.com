@@ -319,7 +319,7 @@ from typing import Optional
 import aiohttp
 from mutagen.mp3 import HeaderNotFoundError
 from mutagen.mp3 import MP3
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from loguru import logger
 
 import rate_limiter as rt
@@ -365,7 +365,7 @@ class TranscriptionOutput(BaseModel):
     duration_seconds: float
     transcription: Optional[str]
     transcription_time: Optional[float] = None
-    transcribed_at: datetime = datetime.now()
+    transcribed_at: datetime = Field(default_factory=datetime.now)
     gpt_model: str
 
 
@@ -540,7 +540,7 @@ async def call_openai_chat(
         It adds multiple metadata meant for debugging and issues resolution
         """
 
-        gpt_called_at: datetime = datetime.now()
+        gpt_called_at: datetime = Field(default_factory=datetime.now)
         gpt_tokens_used: GPTTokens
         gpt_raw_input: str = text or prompt
         gpt_model: str = data["model"]
