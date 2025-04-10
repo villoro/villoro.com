@@ -1,22 +1,22 @@
 ---
 slug: improving-aws-athena-performance-by-reducing-glue-versions
 title: Improving Athena performance by reducing Glue versions
-meta_title: Improving Athena performance by reducing Glue versions
-description: xxx
-date: 2025-04-08
-image: /images/blog/9999-athenea.jpg
+meta_title: Fixing dbt Athena Failures and Speed Issues by Reducing Glue Schema Versions
+description: Learn how AWS Glue schema version limits can silently break Athena queries and dbt runs—and how cleaning up old versions can improve performance by up to 4×.
+date: 2025-04-10
+image: /images/blog/0056-athenea.jpg
 category: DE
-tags: [DE, AWS, Best Practices]
+tags: [DE, AWS, Best Practices, Performance, DBT, Glue]
 draft: false
 ---
 
-<script type="module" src="/js/posts/9999-glue-versions.js"></script>
+<script type="module" src="/js/posts/0056-glue-versions.js"></script>
 
 ## 0. What happened?
 
 We hit a strange issue with dbt Athena where no queries were running:
 
-![DBT athena logs failure](../../images/posts/2025/9999-dbt-athena-failure.jpg)
+![DBT athena logs failure](../../images/posts/2025/0056-dbt-athena-failure.jpg)
 
 After digging we discovered the culprit: **Glue table version limits**.
 
@@ -56,7 +56,7 @@ We wrote a script that:
 
 This brought the catalog size down **massively**:
 
-![Number of versions by table](../../images/posts/2025/9999-table-versions.jpg)
+![Number of versions by table](../../images/posts/2025/0056-table-versions.jpg)
 
 We can also visualize it with a distribution plot:
 
@@ -201,7 +201,7 @@ Our main pipelines became faster:
 * Hourly: **4× faster** (from 64min to 16min)
 
 <Notice type="success">
-  After reducing the number of glue versions we saw a **2x-4x performance improvement** on dbt athena.
+  After reducing the number of glue versions we saw up to **4x performance improvement** on dbt athena.
 </Notice>
 
 ## 4. Takeaways
