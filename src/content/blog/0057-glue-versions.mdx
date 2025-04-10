@@ -58,6 +58,11 @@ This brought the catalog size down **massively**:
 
 ![Number of versions by table](../../images/posts/2025/0056-table-versions.jpg)
 
+<Notice type="info" className="mt-6">
+  I counted the versions in the `before` scenario **after deleting a lot of glue versions**.
+  This is because first I unblocked the production pipeline, then I took some time to analyze it properly.
+</Notice>
+
 We can also visualize it with a distribution plot:
 
 <canvas id="plot-table-versions" style="width:100%;height:300px;"></canvas>
