@@ -24,12 +24,17 @@ Until then, I was totally unaware that:
 1. There is a hard limit of **1 000 000 schema versions across the entire Glue catalog**.
 2. Exceeding this limit doesn't just block updates — it **breaks Athena queries** in ways that aren't obvious.
 
-
 <Notice type="error">
   Glue has a **hard limit** of **1 000 000 schema versions** across the **entire Glue catalog**.
 </Notice>
 
 ## 1. Glue versions
+
+Almost all the tables we write are **Iceberg**, which manages schema evolution more effectively under the hood.
+From an Iceberg perspective, we **don’t need Glue versioning at all** — it’s a side effect of using Glue as a catalog.
+
+For context, we use **Glue only as a metadata catalog**.
+We don't use Glue ETL jobs at all — in our opinion, there are far better alternatives for orchestration and transformation.
 
 Every time you run a DDL that alters a table — even implicitly through dbt or Iceberg — AWS Glue creates a new schema version.
 
@@ -51,9 +56,15 @@ We wrote a script that:
 
 This brought the catalog size down **massively**:
 
-![Number of versions by table](../../images/posts/2025/9999-table-versions.png)
+![Number of versions by table](../../images/posts/2025/9999-table-versions.jpg)
+
+We can also visualize it with a distribution plot:
 
 <canvas id="plot-table-versions" style="width:100%;height:300px;"></canvas>
+
+<Notice type="info" className="mt-6">
+  The canvas above is a **smoothed** version of the raw version count data for readability.
+</Notice>
 
 | metric         | before | now   |
 |----------------|--------|-------|
@@ -66,19 +77,13 @@ This brought the catalog size down **massively**:
 
 Here's the full code we used, broken down in sections:
 
-
 ### Getting database and tables info
-
 ```python
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
-
+from datetime import datetime, timedelta, timezone
 import awswrangler as wr
 import boto3
 import botocore
 from loguru import logger
-
 
 DB_DEFAULT = "default"
 MIN_VERSIONS = 5
@@ -87,22 +92,17 @@ RETENTION_DAYS = 14
 def get_databases(limit=1000):
     logger.info(f"Getting all databases ({limit=})")
     df = wr.catalog.databases(limit=limit)
-
     logger.info(f"There are {df.shape[0]} databases")
     return df["Database"].to_list()
 
-
 def get_tables(database, limit=1000):
     logger.info(f"Getting all tables in {database=} ({limit=})")
-    df = wr.catalog.tables(database=database, limit=1000)
-
+    df = wr.catalog.tables(database=database, limit=limit)
     logger.info(f"There are {df.shape[0]} tables in {database=}")
     return df["table"].to_list()
 
-
 def get_versions(database, table, client=None):
     client = client or boto3.client("glue")
-
     paginator = client.get_paginator("get_table_versions")
     out = []
     for data in paginator.paginate(DatabaseName=database, TableName=table):
@@ -126,18 +126,13 @@ def clean_old_glue_table_versions(
         retention_days=RETENTION_DAYS,
     ):
     cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
-
     prefix = f"Table '{database}.{table}'"
-
     client = boto3.client("glue")
-
     versions = get_versions(database, table, client=client)
     versions = sorted(versions, key=lambda v: v["Table"]["UpdateTime"])
 
     if len(versions) <= min_versions:
-        logger.debug(
-            f"{prefix} has {len(versions)} versions < {min_versions=}, nothing to do."
-        )
+        logger.debug(f"{prefix} has {len(versions)} versions < {min_versions=}, nothing to do")
         return 0
 
     logger.debug(f"{prefix} has {len(versions)} versions")
@@ -151,7 +146,7 @@ def clean_old_glue_table_versions(
     if len(old_versions) <= min_versions:
         logger.debug(
             f"{prefix} has {len(old_versions)} versions older "
-            f"than {retention_days=} < {min_versions=}, nothing to do."
+            f"than {retention_days=} < {min_versions=}, nothing to do"
         )
         return 0
 
@@ -177,32 +172,24 @@ def clean_old_glue_table_versions(
 def clean_one_database(database):
     tables = get_tables(database)
     logger.info(f"Processing {database=} with {len(tables)=}")
-
     n_deletes = 0
     for table in tables:
         try:
             n_deletes += clean_old_glue_table_versions(database, table)
-
         except botocore.exceptions.ClientError as e:
-            # If the table is deleted, simply skip
             if e.response["Error"]["Code"] == "EntityNotFoundException":
                 logger.warning(f"Table '{database}.{table}' not found, skipping it")
             else:
-                raise  # Re-raise unknown errors
-
+                raise # Re-raise unknown errors
     logger.info(f"{database=} done with {n_deletes=}")
     return n_deletes
 
-
-def process():
-
+def process():  # main entry point
     databases = get_databases()
-
     total_deletes = 0
     for i, database in enumerate(databases):
         logger.info(f"[Database {i + 1}/{len(databases)}] Processing {database=}")
         total_deletes = clean_one_database(database)
-
     logger.info(f"{len(databases)} databases proccessed with {total_deletes=}")
 ```
 
