@@ -14,7 +14,7 @@ draft: false
 
 ## 0. What happened?
 
-We hit a strange issue with dbt Athena were no queries were running:
+We hit a strange issue with dbt Athena where no queries were running:
 
 ![DBT athena logs failure](../../images/posts/2025/9999-dbt-athena-failure.jpg)
 
@@ -77,7 +77,7 @@ We can also visualize it with a distribution plot:
 
 Here's the full code we used, broken down in sections:
 
-### Getting database and tables info
+### 2.1. Getting database and tables info
 ```python
 from datetime import datetime, timedelta, timezone
 import awswrangler as wr
@@ -110,7 +110,7 @@ def get_versions(database, table, client=None):
     return out
 ```
 
-### Cleaning versions of a table with batches
+### 2.2. Cleaning versions of a table with batches
 
 ```python
 def _chunked(iterable, size):
@@ -118,13 +118,7 @@ def _chunked(iterable, size):
     for i in range(0, len(iterable), size):
         yield iterable[i : i + size]
 
-
-def clean_old_glue_table_versions(
-        database,
-        table,
-        min_versions=MIN_VERSIONS,
-        retention_days=RETENTION_DAYS,
-    ):
+def clean_old_glue_table_versions(database, table, min_versions, retention_days):
     cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
     prefix = f"Table '{database}.{table}'"
     client = boto3.client("glue")
@@ -166,16 +160,18 @@ def clean_old_glue_table_versions(
     return len(version_ids)
 ```
 
-### Cleaning the whole catalog
+### 2.3. Cleaning the whole catalog
 
 ```python
-def clean_one_database(database):
+def clean_one_database(database, min_versions, retention_days):
     tables = get_tables(database)
     logger.info(f"Processing {database=} with {len(tables)=}")
     n_deletes = 0
     for table in tables:
         try:
-            n_deletes += clean_old_glue_table_versions(database, table)
+            n_deletes += clean_old_glue_table_versions(
+                database, table, min_versions, retention_days,
+            )
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == "EntityNotFoundException":
                 logger.warning(f"Table '{database}.{table}' not found, skipping it")
@@ -184,7 +180,7 @@ def clean_one_database(database):
     logger.info(f"{database=} done with {n_deletes=}")
     return n_deletes
 
-def process():  # main entry point
+def process(min_versions=MIN_VERSIONS, retention_days=RETENTION_DAYS):
     databases = get_databases()
     total_deletes = 0
     for i, database in enumerate(databases):
@@ -199,9 +195,13 @@ What surprised us the most was that dbt athena **query performance improved dram
 
 <canvas id="plot-dbt-execution-time" style="width:100%;height:300px;"></canvas>
 
-<Notice type="success" className="mt-6">
-  * Daily: **2× faster** (from 2h to 1h)
-  * Hourly: **4× faster** (from 64min to 16min)
+Our main pipelines became faster:
+
+* Daily: **2× faster** (from 2h to 1h)
+* Hourly: **4× faster** (from 64min to 16min)
+
+<Notice type="success">
+  After reducing the number of glue versions we saw a **2x-4x performance improvement** on dbt athena.
 </Notice>
 
 ## 4. Takeaways
