@@ -33,17 +33,34 @@ Until then, I was totally unaware that:
 Almost all the tables we write are **Iceberg**, which manages schema evolution more effectively under the hood.
 From an Iceberg perspective, we **don’t need Glue versioning at all** — it’s a side effect of using Glue as a catalog.
 
-For context, we use **Glue only as a metadata catalog**.
-We don't use Glue ETL jobs at all — in our opinion, there are far better alternatives for orchestration and transformation.
+We use **Glue only as a metadata catalog**.
+We do not use Glue ETL jobs — in our experience, there are far better tools for orchestration and transformation.
 
-Every time you run a DDL that alters a table — even implicitly through dbt or Iceberg — AWS Glue creates a new schema version.
+Today, our tables are written using a mix of **Spark**, **AWS Wrangler**, and **dbt**.
+Each of these interacts with Glue differently when it comes to table updates and schema registration.
+
+We'll show the number of versions grouped by writer:
+
+![Glue versions by writer](../../images/posts/2025/0056-glue-versions-by-writer.jpg)
+
+In practice, most of the version bloat came from **AWS Wrangler** and **Spark**.
+These tools often update or overwrite tables in ways that trigger new Glue versions automatically — and frequently.
 
 In our case:
 - We had **4,429 tables** before cleanup.
 - Some of these tables had **thousands** of versions.
-- We weren’t explicitly managing schema evolution — just running dbt models repeatedly.
+- We weren’t explicitly managing schema evolution — just running pipelines.
 
 The version bloat was entirely invisible... until it wasn’t.
+
+### What about dbt?
+
+On the dbt side, the impact was smaller — but not zero.
+
+We’re mostly using `materialized = table`, which means dbt **recreates the table entirely on each run**.
+This avoids version accumulation because Glue treats each run as a clean slate.
+
+However, **views are a different story**. Since they’re not dropped and recreated, each run updates the definition, which **adds a new Glue version every time**.
 
 ## 2. How to clean old versions
 
@@ -56,7 +73,7 @@ We wrote a script that:
 
 This brought the catalog size down **massively**:
 
-![Number of versions by table](../../images/posts/2025/0056-table-versions.jpg)
+![Number of versions by table](../../images/posts/2025/0056-glue-table-versions-improvement.jpg)
 
 <Notice type="info" className="mt-6">
   I counted the versions in the `before` scenario **after deleting a lot of glue versions**.
