@@ -30,21 +30,19 @@ Until then, I was totally unaware that:
 
 ## 1. Glue versions
 
-Almost all the tables we write are **Iceberg**, which manages schema evolution more effectively under the hood.
-From an Iceberg perspective, we **don’t need Glue versioning at all** — it’s a side effect of using Glue as a catalog.
+Almost all the tables we write are **Iceberg**, which manages schema evolution more effectively under the hood. From an Iceberg perspective, we **don’t need Glue versioning at all** — it’s a side effect of using Glue as a catalog.
 
-We use **Glue only as a metadata catalog**.
-We do not use Glue ETL jobs — in our experience, there are far better tools for orchestration and transformation.
+We use **Glue only as a metadata catalog**. We do not use Glue ETL jobs — in our experience, there are far better tools for orchestration and transformation.
 
-Today, our tables are written using a mix of **Spark**, **AWS Wrangler**, and **dbt**.
-Each of these interacts with Glue differently when it comes to table updates and schema registration.
+Today, our tables are written using a mix of **Spark**, **AWS Wrangler**, and **dbt**. Each of these interacts with Glue differently when it comes to table updates and schema registration.
 
 We'll show the number of versions grouped by writer:
 
 ![Glue versions by writer](../../images/posts/2025/0056-glue-versions-by-writer.jpg)
 
-In practice, most of the version bloat came from **AWS Wrangler** and **Spark**.
-These tools often update or overwrite tables in ways that trigger new Glue versions automatically — and frequently.
+<Notice type="info">
+  Most of the version bloat came from **AWS Wrangler** and **Spark** in our case. These tools often update or overwrite tables in ways that trigger new Glue versions automatically — and frequently.
+</Notice>
 
 In our case:
 - We had **4,429 tables** before cleanup.
@@ -53,18 +51,29 @@ In our case:
 
 The version bloat was entirely invisible... until it wasn’t.
 
-### What about dbt?
+### 1.1. Glue versions in dbt
 
 On the dbt side, the impact was smaller — but not zero.
 
-We’re mostly using `materialized = table`, which means dbt **recreates the table entirely on each run**.
-This avoids version accumulation because Glue treats each run as a clean slate.
+We’re mostly using `materialized = table`, which means dbt **recreates the table entirely on each run**. This avoids version accumulation because Glue treats each run as a clean slate.
 
 However, **views are a different story**. Since they’re not dropped and recreated, each run updates the definition, which **adds a new Glue version every time**.
 
+dbt does support version cleanup using the `expire_glue_table_versions` macro, and you can configure how many versions to keep using the `versions_to_keep` parameter (see <FancyLink linkText="DBT Athena config | High availability" url="https://docs.getdbt.com/reference/resource-configs/athena-configs#high-availability-ha-table"/> for more info).
+
+This is especially useful when working with **incremental Iceberg models** or when using **Hive tables with high availability (HA)** — the two cases where Glue version bloat can accumulate rapidly. By default, `versions_to_keep` is set to 4, but this can be customized.
+
+<Notice type="warning">
+  Even with dbt, Glue version bloat can sneak in — especially with **views**, **incremental Iceberg** models or **hive tables with high availability**.
+</Notice>
+
+In our case, it's not needed because we use `materialized = table`, so our tables are fully recreated on each run, avoiding accumulation.
+
+So while dbt wasn't the main contributor to version bloat, **it still affected our total version count through view models.**
+
 ## 2. How to clean old versions
 
-We wrote a script that:
+I wrote a script that:
 * Iterates over all databases
 * Iterates over all Glue tables
 * Lists all versions
@@ -96,6 +105,12 @@ We can also visualize it with a distribution plot:
 <Notice type="success" className="mt-6">
   This is a **92% reduction** in Glue versions.
 </Notice>
+
+You might wonder why still have around 100 versions per table. That's because:
+
+* We have processes that write hourly to some tables
+* The clean up is scheduled to run weekly
+* The snapshot was taken some days after the last clean up
 
 Here's the full code we used, broken down in sections:
 
