@@ -30,24 +30,50 @@ Until then, I was totally unaware that:
 
 ## 1. Glue versions
 
-Almost all the tables we write are **Iceberg**, which manages schema evolution more effectively under the hood.
-From an Iceberg perspective, we **don’t need Glue versioning at all** — it’s a side effect of using Glue as a catalog.
+Almost all the tables we write are **Iceberg**, which manages schema evolution more effectively under the hood. From an Iceberg perspective, we **don’t need Glue versioning at all** — it’s a side effect of using Glue as a catalog.
 
-For context, we use **Glue only as a metadata catalog**.
-We don't use Glue ETL jobs at all — in our opinion, there are far better alternatives for orchestration and transformation.
+We use **Glue only as a metadata catalog**. We do not use Glue ETL jobs — in our experience, there are far better tools for orchestration and transformation.
 
-Every time you run a DDL that alters a table — even implicitly through dbt or Iceberg — AWS Glue creates a new schema version.
+Today, our tables are written using a mix of **Spark**, **AWS Wrangler**, and **dbt**. Each of these interacts with Glue differently when it comes to table updates and schema registration.
+
+We'll show the number of versions grouped by writer:
+
+![Glue versions by writer](../../images/posts/2025/0056-glue-versions-by-writer.jpg)
+
+<Notice type="info">
+  Most of the version bloat came from **AWS Wrangler** and **Spark** in our case. These tools often update or overwrite tables in ways that trigger new Glue versions automatically — and frequently.
+</Notice>
 
 In our case:
 - We had **4,429 tables** before cleanup.
 - Some of these tables had **thousands** of versions.
-- We weren’t explicitly managing schema evolution — just running dbt models repeatedly.
+- We weren’t explicitly managing schema evolution — just running pipelines.
 
 The version bloat was entirely invisible... until it wasn’t.
 
+### 1.1. Glue versions in dbt
+
+On the dbt side, the impact was smaller — but not zero.
+
+We’re mostly using `materialized = table`, which means dbt **recreates the table entirely on each run**. This avoids version accumulation because Glue treats each run as a clean slate.
+
+However, **views are a different story**. Since they’re not dropped and recreated, each run updates the definition, which **adds a new Glue version every time**.
+
+dbt does support version cleanup using the `expire_glue_table_versions` macro, and you can configure how many versions to keep using the `versions_to_keep` parameter (see <FancyLink linkText="DBT Athena config | High availability" url="https://docs.getdbt.com/reference/resource-configs/athena-configs#high-availability-ha-table"/> for more info).
+
+This is especially useful when working with **incremental Iceberg models** or when using **Hive tables with high availability (HA)** — the two cases where Glue version bloat can accumulate rapidly. By default, `versions_to_keep` is set to 4, but this can be customized.
+
+<Notice type="warning">
+  Even with dbt, Glue version bloat can sneak in — especially with **views**, **incremental Iceberg** models or **hive tables with high availability**.
+</Notice>
+
+In our case, it's not needed because we use `materialized = table`, so our tables are fully recreated on each run, avoiding accumulation.
+
+So while dbt wasn't the main contributor to version bloat, **it still affected our total version count through view models.**
+
 ## 2. How to clean old versions
 
-We wrote a script that:
+I wrote a script that:
 * Iterates over all databases
 * Iterates over all Glue tables
 * Lists all versions
@@ -56,7 +82,7 @@ We wrote a script that:
 
 This brought the catalog size down **massively**:
 
-![Number of versions by table](../../images/posts/2025/0056-table-versions.jpg)
+![Number of versions by table](../../images/posts/2025/0056-glue-table-versions-improvement.jpg)
 
 <Notice type="info" className="mt-6">
   I counted the versions in the `before` scenario **after deleting a lot of glue versions**.
@@ -80,9 +106,16 @@ We can also visualize it with a distribution plot:
   This is a **92% reduction** in Glue versions.
 </Notice>
 
+You might wonder why we still have an average of ~100 versions per table. That’s because:
+
+* Some tables are written to **hourly**
+* Our cleanup job runs **weekly**
+* The snapshot was taken **a few days after** the last cleanup
+
 Here's the full code we used, broken down in sections:
 
 ### 2.1. Getting database and tables info
+
 ```python
 from datetime import datetime, timedelta, timezone
 import awswrangler as wr
@@ -196,7 +229,9 @@ def process(min_versions=MIN_VERSIONS, retention_days=RETENTION_DAYS):
 
 ## 3. Performance gains
 
-What surprised us the most was that dbt athena **query performance improved dramatically** after cleanup.
+What surprised us the most was that **Athena performance improved dramatically**, even though dbt wasn’t contributing much to the version bloat.
+
+We suspected the performance hit came from Glue metadata overhead during query planning — and cleaning up versions helped significantly.
 
 <canvas id="plot-dbt-execution-time" style="width:100%;height:300px;"></canvas>
 
@@ -205,15 +240,16 @@ Our main pipelines became faster:
 * Daily: **2× faster** (from 2h to 1h)
 * Hourly: **4× faster** (from 64min to 16min)
 
-<Notice type="success">
-  After reducing the number of glue versions we saw up to **4x performance improvement** on dbt athena.
+<Notice type="success" className="mt-6">
+  Even if you use dbt and aren’t generating many Glue versions, it's worth checking.
+  After reducing the catalog size, we saw up to **4× faster** execution in Athena.
 </Notice>
 
 ## 4. Takeaways
 
-* Be aware of **Glue’s 1 000 000-version catalog limit** — it's not just theoretical.
-* If you're running dbt (or Iceberg) frequently, **version bloat is guaranteed**.
-* The Glue UI doesn’t warn you. Athena doesn’t either. You need to check manually.
-* Cleaning up old versions not only avoids query failures — it **improves performance**.
+* Be aware of the **1 000 000-version hard limit** in the Glue Catalog — it's not just theoretical.
+* If you're using **Spark, or AWS Wrangler** to write tables, version bloat is almost guaranteed.
+* Neither Glue nor Athena will warn you — you have to **monitor and manage it proactively**.
+* Cleaning up old schema versions doesn’t just avoid failures — it can lead to **significant performance gains**.
 
 We’ve now automated this cleanup as a regular maintenance task.
