@@ -106,15 +106,16 @@ We can also visualize it with a distribution plot:
   This is a **92% reduction** in Glue versions.
 </Notice>
 
-You might wonder why still have around 100 versions per table. That's because:
+You might wonder why we still have an average of ~100 versions per table. That’s because:
 
-* We have processes that write hourly to some tables
-* The clean up is scheduled to run weekly
-* The snapshot was taken some days after the last clean up
+* Some tables are written to **hourly**
+* Our cleanup job runs **weekly**
+* The snapshot was taken **a few days after** the last cleanup
 
 Here's the full code we used, broken down in sections:
 
 ### 2.1. Getting database and tables info
+
 ```python
 from datetime import datetime, timedelta, timezone
 import awswrangler as wr
@@ -228,7 +229,9 @@ def process(min_versions=MIN_VERSIONS, retention_days=RETENTION_DAYS):
 
 ## 3. Performance gains
 
-What surprised us the most was that dbt athena **query performance improved dramatically** after cleanup.
+What surprised us the most was that **Athena performance improved dramatically**, even though dbt wasn’t contributing much to the version bloat.
+
+We suspected the performance hit came from Glue metadata overhead during query planning — and cleaning up versions helped significantly.
 
 <canvas id="plot-dbt-execution-time" style="width:100%;height:300px;"></canvas>
 
@@ -237,15 +240,16 @@ Our main pipelines became faster:
 * Daily: **2× faster** (from 2h to 1h)
 * Hourly: **4× faster** (from 64min to 16min)
 
-<Notice type="success">
-  After reducing the number of glue versions we saw up to **4x performance improvement** on dbt athena.
+<Notice type="success" className="mt-6">
+  Even if you use dbt and aren’t generating many Glue versions, it's worth checking.
+  After reducing the catalog size, we saw up to **4× faster** execution in Athena.
 </Notice>
 
 ## 4. Takeaways
 
-* Be aware of **Glue’s 1 000 000-version catalog limit** — it's not just theoretical.
-* If you're running dbt (or Iceberg) frequently, **version bloat is guaranteed**.
-* The Glue UI doesn’t warn you. Athena doesn’t either. You need to check manually.
-* Cleaning up old versions not only avoids query failures — it **improves performance**.
+* Be aware of the **1 000 000-version hard limit** in the Glue Catalog — it's not just theoretical.
+* If you're using **Spark, or AWS Wrangler** to write tables, version bloat is almost guaranteed.
+* Neither Glue nor Athena will warn you — you have to **monitor and manage it proactively**.
+* Cleaning up old schema versions doesn’t just avoid failures — it can lead to **significant performance gains**.
 
 We’ve now automated this cleanup as a regular maintenance task.
