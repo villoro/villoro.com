@@ -113,7 +113,15 @@ For storage formats, you can choose between `EXT4` and `BTRFS`. While both have 
 
 You can use one of the two M.2 SSD slots for caching. This can enhance `read`, `write`, or `balanced` performance, depending on your NAS’s primary tasks.
 
-### 4.3. Options for adding data
+### 4.3. SMD and connecting externally
+
+There are different ways to connect to the NAS. My preferred method is mapping a network drive. To do this, you need to enable SMB:
+
+1. Open the `Control Panel`.
+2. Go to `Network Services > File Service`.
+3. Under the `SMB` tab, enable it (you can keep the default settings).
+
+### 4.4. Options for adding data
 
 The NAS model I chose has two 2.5 Gbps Ethernet ports, which typically support file transfer speeds around 250–280 MB/s. Alternatively, you can use USB 3.1 Gen 1 with an external SSD, potentially achieving speeds between 300–400 MB/s. However, the Ethernet option is generally more efficient, as using an external SSD requires first copying data to the SSD, then transferring it to the NAS.
 
@@ -234,7 +242,6 @@ tailscale set --advertise-exit-node
 3. To ensure the app remains updated, use:
 
 ```sh
-tailscale update
 tailscale set --auto-update
 ```
 

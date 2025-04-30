@@ -24,8 +24,8 @@ TerraMaster's TOS handles user directories in a specific way that can sometimes 
 
 Based on conventions used by other apps like **Tailscale**, I recommend the following paths for MEGASync:
 
-- **Configuration Files**: `/home/<admin_username>/MOD_CONFIG/Mega/<username>`  
-  This path organizes MEGASync configurations under a dedicated `MOD_CONFIG` folder, keeping the structure clean and consistent with other apps.
+- **Configuration Files**: `/home/<admin_username>/docker/mega/<username>`  
+  This path organizes MEGASync configurations under a dedicated `docker` folder, keeping the structure clean and consistent with other apps.
 
 - **Synced Data**: `/home/<username>`  
   Using the root directory of the target user ensures straightforward access and avoids conflicts with other applications.
@@ -61,7 +61,7 @@ docker run -d \
   --env 'DATA_DIR=/megasync/config' \
   --env 'CUSTOM_RES_W=1280' \
   --env 'CUSTOM_RES_H=720' \
-  --volume "/home/<admin_username>/MOD_CONFIG/Mega/<username>:/megasync/config" \
+  --volume "/home/<admin_username>/docker/Mmega/<username>:/megasync/config" \
   --volume "/home/<username>:/sync-data" \
   --restart=always \
   ich777/megasync
@@ -86,7 +86,7 @@ Advanced container settings:
   Volumes:
     - container: /megasync/config
       type: bind
-      host: /home/<admin_username>/MOD_CONFIG/Mega/villoro
+      host: /home/<admin_username>/docker/mega/villoro
     - container: /sync-data
       type: bind
       host: /home/villoro
@@ -141,7 +141,7 @@ Once configured, you can access the settings anytime via the `Mega` icon on the 
 
 This setup is designed to work for multiple users. To sync another user, repeat the steps to run the Docker container. Use the new username in all relevant paths and container names. For example:
 
-- Configuration Path: `/home/<admin_username>/MOD_CONFIG/Mega/<new_username>`
+- Configuration Path: `/home/<admin_username>/docker/mega/<new_username>`
 - Sync Data Path: `/home/<new_username>`
 - Container Name: `megasync-<new_username>`
 - Port: Use a different host port (e.g., `8082:8080`) to avoid conflicts.
@@ -153,6 +153,8 @@ By doing so, each user will have their own isolated MEGAsync instance.
 ### 6.1. Permission Denied Errors
 
 If you encounter permission errors, verify the volume paths are set correctly and accessible to the Docker container.
+
+You can also test if the problem you are expecting is related to permissions by giving 777 to the data path.
 
 ### 6.2. Logs Indicate Missing Commands
 
