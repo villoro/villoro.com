@@ -59,6 +59,10 @@ To install TOS on the SSD:
 
 This process will partition each selected SSD to install the OS. While the installation completes, it’s a good time to review your network setup for optimal connectivity.
 
+<Notice type="info">
+  I decided to install TOS only on the main SSD and then use the secondary SSD (not a NAS SSD) as cache.
+</Notice>
+
 ## 3. Network Configuration
 
 Many users opt to use a secondary router rather than the one provided by their Internet Service Provider (ISP). ISP-provided routers often have limited features and performance. However, adding a secondary router can introduce double NAT, which can cause connectivity issues. You can learn more about double NAT and its effects in this <FancyLink linkText="guide" url="https://medium.com/@gmanual/double-nat-explained-and-possible-solutions-8b41b6c651bd" dark="true"/>.
@@ -98,6 +102,11 @@ Once TOS installation is complete, you can create your superuser account. Afterw
 </Notice>
 
 ### 4.1. Creating a storage pool
+
+<Notice type="warning">
+  You might want to first create the storage pool for the SSDs and install the apps.
+  Once done, then create the storage pool for the HDs. This will help reducing noise.
+</Notice>
 
 The first step is to choose a RAID configuration. Here are some general recommendations:
 * **TRAID**: Suitable if you have disks of different sizes, as it minimizes wasted space. It’s also beneficial if you plan to add more disks in the future since TRAID doesn’t require volume recreation.
