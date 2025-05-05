@@ -35,7 +35,6 @@ export default defineConfig({
         "@/shortcodes/Tabs",
         "@/shortcodes/TerminalOutput",
         "@/shortcodes/Video",
-        "@/shortcodes/Youtube",
       ],
     }),
     mdx(),
