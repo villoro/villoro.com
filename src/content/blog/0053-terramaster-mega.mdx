@@ -20,15 +20,21 @@ If you're just starting with your TerraMaster NAS, I recommend checking out my p
 
 TerraMaster's TOS handles user directories in a specific way that can sometimes cause confusion or issues with Docker containers. While user folders are displayed in TOS under `/home/<username>`, these directories are actually mapped internally to `/Volume1/User/<username>`. This discrepancy can lead to problems with Docker containers, particularly when they require consistent and predictable file paths.
 
-### 1.1. Proposed Directory Structure for MEGASync
+### 1.1. Shared Folders for Sync
 
-Based on conventions used by other apps like **Tailscale**, I recommend the following paths for MEGASync:
+In my setup, `Volume1` is the SSD where the OS is installed, and `Volume2` is the RAID volume for the HDDs.
 
-- **Configuration Files**: `/home/<admin_username>/MOD_CONFIG/Mega/<username>`  
-  This path organizes MEGASync configurations under a dedicated `MOD_CONFIG` folder, keeping the structure clean and consistent with other apps.
+To store personal data on the HDDs, you need to create a shared folder on `Volume2` and assign access to the user who will use it. For example, you can create a shared folder named `<username>_data` to store all personal data for that user.
 
-- **Synced Data**: `/home/<username>`  
-  Using the root directory of the target user ensures straightforward access and avoids conflicts with other applications.
+### 1.2. Proposed Directory Structure for MEGASync
+
+I recommend the following paths for MEGASync:
+
+- **Configuration Files**: `/home/<admin_username>/docker/mega/<username>`  
+  This path keeps MEGASync configuration files organized under a dedicated `docker` folder, maintaining a clean and consistent structure across applications.
+
+- **Synced Data**: `/Volume2/<username>_data`  
+  Storing data in the shared folder ensures easy access and reduces the chance of conflicts with other applications.
 
 ## 2. Run the MEGASync Docker Container
 
@@ -61,8 +67,8 @@ docker run -d \
   --env 'DATA_DIR=/megasync/config' \
   --env 'CUSTOM_RES_W=1280' \
   --env 'CUSTOM_RES_H=720' \
-  --volume "/home/<admin_username>/MOD_CONFIG/Mega/<username>:/megasync/config" \
-  --volume "/home/<username>:/sync-data" \
+  --volume "/home/<admin_username>/docker/Mmega/<username>:/megasync/config" \
+  --volume "/Volume2/<username>_data:/sync-data" \
   --restart=always \
   ich777/megasync
 ```
@@ -76,7 +82,7 @@ docker run -d \
 Use the following configuration:
 
 ```yaml
-Name: megasync-villoro
+Name: megasync-<username>
 Image: ich777/megasync:latest
 Network ports configuration:
   Manual network port publishing:
@@ -86,10 +92,10 @@ Advanced container settings:
   Volumes:
     - container: /megasync/config
       type: bind
-      host: /home/<admin_username>/MOD_CONFIG/Mega/villoro
+      host: /home/<admin_username>/docker/mega/<username>
     - container: /sync-data
       type: bind
-      host: /home/villoro
+      host: /Volume2/<username>_data
   Env:
     - name: CUSTOM_RES_W
       value: 1280
@@ -135,13 +141,13 @@ Once configured, you can access the settings anytime via the `Mega` icon on the 
   docker logs megasync
   ```
 
-- Test synchronization by adding files to `/home/<username>` and confirming they appear in your MEGA account (and vice versa).
+- Test synchronization by adding files to `/Volume2/<username>_data` and confirming they appear in your MEGA account (and vice versa).
 
 ## 5. Adding Multiple Users
 
 This setup is designed to work for multiple users. To sync another user, repeat the steps to run the Docker container. Use the new username in all relevant paths and container names. For example:
 
-- Configuration Path: `/home/<admin_username>/MOD_CONFIG/Mega/<new_username>`
+- Configuration Path: `/home/<admin_username>/docker/mega/<new_username>`
 - Sync Data Path: `/home/<new_username>`
 - Container Name: `megasync-<new_username>`
 - Port: Use a different host port (e.g., `8082:8080`) to avoid conflicts.
@@ -153,6 +159,10 @@ By doing so, each user will have their own isolated MEGAsync instance.
 ### 6.1. Permission Denied Errors
 
 If you encounter permission errors, verify the volume paths are set correctly and accessible to the Docker container.
+
+<Notice type="info">
+  You can also test whether the issue is related to permissions by temporarily setting the data path to `777`.
+</Notice>
 
 ### 6.2. Logs Indicate Missing Commands
 
