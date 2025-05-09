@@ -1,18 +1,48 @@
 ---
-slug: handling-failures-with-dbt
-title: Handling failures with DBT
-meta_title: Handling failures with DBT
+slug: handling-pipeline-failures
+title: Handling pipeline failures
+meta_title: xx
 description: xx
 date: 2024-07-22
-image: /images/blog/9999-handling-dbt-failures.jpg
+image: /images/blog/9999-pipeline-failures.jpg
 category: DE
 tags: [SQL, DE, Best Practices, DBT]
-draft: true
+draft: false
 ---
 
 ## 0. Motivation
 
 xx
+
+
+## 1. Pipeline Stages - ETU paradigm
+
+Before we can talk about handling failures effectively, it's important to first describe the structure of our pipeline.
+
+<Notice type="info">
+  Our pipeline resembles a modern ELT process but with an important addition: we include a final step that pushes transformed data back into external systems — a practice often called Reverse ETL.
+  To capture this full lifecycle, we describe our approach as **ETU**: Extract, Transform, Upload.
+</Notice>
+
+### 1.1. ⬇️ Extract & Load (E)
+
+In this first phase, we move data from various external sources into our data lake. These sources include APIs, SQL databases (e.g., Postgres, MySQL), and other systems. The data is ingested and registered in our Glue Data Catalog, enabling downstream discoverability and schema management.
+
+### 1.2. ⚙️ Transform (T)
+
+Once the raw data lands in the lake, we use DBT to transform it into clean, structured, and enriched datasets. These transformations include filtering, joining, and applying business logic to create models that are ready for analysis or operational use.
+
+### 1.3. ⬆️ Upload (U)
+
+In the final step, we push processed data back into third-party systems. This might include CRM platforms, advertising tools, or other business systems that require fresh data to function effectively. This step ensures the data lifecycle comes full circle, making insights actionable.
+
+### 1.4. ETU Stage Summary
+
+| Stage                 | Goal                                  | Tools / Mechanism   | Output / Target                     |
+| --------------------- | ------------------------------------- | ------------------- | ----------------------------------- |
+| ⬇️ Extract & Load (E)  | Centralize raw data                   | Python jobs         | Iceberg tables on S3 + Glue Catalog |
+| ⚙️ Transform (T)      | Create trustworthy, reusable datasets | DBT on Athena       | Cleaned, versioned Iceberg tables   |
+| ⬆️ Upload (U)          | Activate data in external tools       | Python jobs         | Synced data in CRM/ad systems       |
 
 ## 1. Types of failures
 
