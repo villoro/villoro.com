@@ -38,46 +38,37 @@ In the final step, we push processed data back into third-party systems. This mi
 
 ### 1.4. ETU Stage Summary
 
-| Stage                 | Goal                                  | Tools / Mechanism   | Output / Target                     |
-| --------------------- | ------------------------------------- | ------------------- | ----------------------------------- |
-| ⬇️ Extract & Load (E)  | Centralize raw data                   | Python jobs         | Iceberg tables on S3 + Glue Catalog |
-| ⚙️ Transform (T)      | Create trustworthy, reusable datasets | DBT on Athena       | Cleaned, versioned Iceberg tables   |
-| ⬆️ Upload (U)          | Activate data in external tools       | Python jobs         | Synced data in CRM/ad systems       |
+| Stage                 | Goal                                  | Tools / Mechanism   | Output / Target                               |
+| --------------------- | ------------------------------------- | ------------------- | --------------------------------------------- |
+| ⬇️ Extract & Load (E)  | Centralize raw data                   | Python jobs         | Iceberg tables on S3 + Glue Catalog           |
+| ⚙️ Transform (T)      | Create trustworthy, reusable datasets | DBT on Athena       | Cleaned, versioned Iceberg tables             |
+| ⬆️ Upload (U)          | Activate data in external tools       | Python jobs         | Synced data in external systems (like CRM/ad) |
 
-## 1. Types of failures
+Here is a really simple example of how our pipeline looks like:
 
-There are 2 types of problems we can handle in DBT
+![Pipeline DAG example](../../images/posts/2025/9999-pipeline-stages.jpg)
 
-1. Failures before DBT
-2. Failures in DBT
+## 2. Failures in Extract & Load (E) ⬇️
 
-![Pipeline DAG example](../../images/posts/2024/9999-pipeline-dag.jpg)
+Since we follow an ETU paradigm, data needs to be successfully extracted and landed in the lake before DBT transformations can begin. These upstream extract jobs — often orchestrated outside DBT — are susceptible to failures, and how we handle those failures directly impacts downstream processing.
 
-## 2. Failures before DBT
-
-When using DBT usually people follow an ELT pattern where the data is first extracted (`E`) and then loaded (`L`) before doing the transformations (`T`) in DBT.
-That means that there are jobs before DBT and, as always, they can fail.
-
-For example we can have:
-
-![Failures before DBT example](../../images/posts/2024/9999-pre-dbt-failure.jpg)
-
-In that scenario I see 2 options:
+In this scenario, two main options arise:
 
 1. Exclude failed topics with an `exclude` (like `dbt build --exclude tag:salesforce`)
-2. Run DBT as always
+2. Run DBT as usual without exclusions
 
-It might be tempting to go with option `1` to save some resources but I think it's not a good idea.
-Usually transformations in DBT are quite cheap (specially if you have defined incremental models) and excluding some models is not worth it because of some complex issues you might have.
+While skipping failed upstream tasks with option 1 might seem like a resource optimization, it introduces significant risks. DBT transformations are usually cheap to run — especially with incremental models — and skipping them can create inconsistencies.
 
-<Notice type="info">
-  I suggest you don't exclude models in DBT to avoid problems.
-  The cost savings you could get are usually low.
+For example, I have a job that transcribes audios (see <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/>).
+This job can partially succeed — transcribing some files but failing others due to server timeouts. To avoid redundant processing, I use a LEFT ANTI JOIN with the DBT-generated transcriptions table.
+
+However, when the transcription job partially failed and I excluded its tag in the DBT run, the corresponding models weren’t updated. This led to reprocessing already-transcribed files, inflating compute costs and duplicating results. 
+
+<Notice type="warning">
+  Avoid relying on `--exclude` unless you're fully confident about the implications.
 </Notice>
 
-For example, I have a job for transcribing audios (more info at <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/>) which can transcribe audios but end up failing because of timeouts and other similar errors on the server side. Since transcribing it's quite costly, it's really important to avoid transcribing files that have already been transcribed and I handled it by doing a `LEFT ANTI JOIN` with the transcriptions table (created with DBT). So what happened to me is that since the `transcription` job failed (even though it transcribed some files) and DBT was excluding that `tag`, I ended up missing transcriptions which led to transcribing multiple times the same files.
-
-## 3. Failures in DBT
+## 3. Failures in Transform (T)
 
 Usually jobs done after DBT load data into external services.
 If there are failures in DBT it can be problematic if we load that data.
@@ -95,11 +86,9 @@ Let's imagine we have:
 
 ![Failures in DBT example](../../images/posts/2024/9999-dbt-failure.jpg)
 
-
-
 <FancyLink linkText="Running DBT with AWS ECS (Fargate) | 8.2. DBT run results" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/#82-dbt-run-results" dark="true"/>
 
-## 4. Running jobs post DBT
+## 3.1. Running jobs post DBT
 
 <TerminalOutput color="stone">
   QUERY_FAILURES
@@ -157,7 +146,7 @@ def get_dbt_failures(env, flow_run_id):
 
 ![Failures before and inside DBT](../../images/posts/2024/9999-both-failures.jpg)
 
-## 5. Putting it all together
+## 3.2 Putting it all together
 
 ```python
 def combine_failures(*failures):
@@ -176,3 +165,7 @@ def combine_failures(*failures):
     # Remove duplicates
     return list(set(out))
 ```
+
+## 4. Failures in Upload (U)
+
+xxxx
