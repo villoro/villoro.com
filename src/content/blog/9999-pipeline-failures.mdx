@@ -319,6 +319,10 @@ In this section, we’ll first show how to implement this behavior using synchro
 
 The key to enabling this pattern is the argument `return_state=True`. When passed to a Prefect flow, it causes the flow to return its **state object** instead of raising exceptions on failure. This allows you to inspect each result and decide what to do next — all without stopping execution.
 
+Here you can see one example of how a failue in one extraction didn't block the other one and didn't stop the rest of the pipeline stages:
+
+![Pipeline DAG example](../../images/posts/2025/9999-extract-failure.png)
+
 ### 3.1. Handling Sync Flows
 
 This is how we can continue executing tasks whenever one fails:
