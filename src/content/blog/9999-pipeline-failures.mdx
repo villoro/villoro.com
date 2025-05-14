@@ -309,6 +309,83 @@ async def run_uploads(flow_run_id, env: Literal["snd", "pro"] = "pro"):
 
 ### 2.3. Failures in Upload (U) ⬆️ 
 
-Failures in upload jobs need no special treatment since there are no jobs that dependen on them.
+Failures in upload jobs need no special treatment since there are no jobs that depend on them.
 
-## 5. xx
+## 3. Letting Tasks Fail Gracefully
+
+Sometimes you don’t want the failure of a single task to stop an entire pipeline. For example, you may be downloading multiple tables from a CRM, and if one of them fails, you'd still want to download the rest rather than stopping the whole process. Later, you can handle and report any failures encountered.
+
+In this section, we'll show how to implement this behavior in Prefect for both async and sync flows.
+
+The key to enabling this pattern is the argument `return_state=True`. When passed to a Prefect flow, it causes the flow to return its **state object** instead of raising exceptions on failure. This allows you to inspect each result and decide what to do next — all without stopping execution.
+
+### 3.1. Handling Sync Flows
+
+```python
+from prefect import flow, task, get_run_logger
+
+@task
+def process_item(item: int) -> float:
+    return 10 / item  # Replace with your actual logic
+
+@flow
+def main():
+    logger = get_run_logger()
+    items = [5, 2, 0, 1]  # Replace with your own data
+
+    futures = [process_item.submit(i, return_state=True) for i in items]
+    failures = []
+
+    for state, item in zip(futures, items):
+        if state.is_completed():
+            logger.info(f"Task succeeded for item={item}: result = {state.result()}")
+        else:
+            try:
+                _ = state.result()
+            except Exception as exc:
+                logger.error(f"Task failed for item={item}: {type(exc).__name__}: {exc}")
+                failures.append(f"{item} → {type(exc).__name__}: {exc}")
+
+    if failures:
+        summary = "\n".join(failures)
+        raise RuntimeError(f"One or more tasks failed:\n{summary}")
+```
+
+This pattern gives your pipeline flexibility and resilience, helping you avoid total failure just because one piece breaks.
+
+### 3.2. Handling Async Flows
+
+Here’s how to run async flows concurrently while collecting and reporting failures:
+
+```python
+import asyncio
+from prefect import get_run_logger, states
+
+def notify_and_raise(...): ...  # Omitted for brevity
+
+async def is_failure(state):
+    """Checks if it's a failed state."""
+    return isinstance(state, states.State) and state.is_failed()
+
+async def run_flows_async(flows, flow_name, env, version="latest", **kwargs):
+    logger = get_run_logger()
+    logger.info(f"Starting {flow_name=} with {len(flows)} flows.")
+
+    tasks = [func(env=env, return_state=True, **kwargs) for func in flows]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    failures = [
+        (flow.__name__, state)
+        for flow, state in zip(flows, results)
+        if isinstance(state, Exception) or await is_failure(state)
+    ]
+
+    if failures:
+        failure_msgs = [f"{name}: {state}" for name, state in failures]
+        msg = f"{flow_name} failed ({len(failures)} failures):\n" + "\n".join(failure_msgs)
+        notify_and_raise(env=env, version=version, entrypoint=flow_name, msg=msg)
+        return states.Failed(message=msg)
+
+    logger.info(f"{flow_name=} (with {len(flows)} flows) completed successfully!")
+    return states.Completed()
+```
