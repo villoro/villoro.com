@@ -68,13 +68,14 @@ However, when the transcription job partially failed and I excluded its tag in t
   Avoid relying on `--exclude` unless you're fully confident about the implications.
 </Notice>
 
-## 3. Failures in Transform (T)
+## 3. Failures in Transform (T) ⚙️
 
-Usually jobs done after DBT load data into external services.
-If there are failures in DBT it can be problematic if we load that data.
-For example we might be loading `users` and `sessions` data somewhere and if one fails, we might not want to load only one entity.
+The Transform step (T) is where DBT takes raw data from the lake and builds structured models. If something goes wrong here, pushing bad or incomplete data into external systems can create inconsistencies or break business processes.
 
-In DBT we have 6 possible status that represents:
+For example, if you're syncing both `users` and `sessions` but the transformation for `sessions` fails, you likely don’t want to upload only `users` — doing so could result in mismatched reporting or corrupted metrics.
+
+DBT assigns one of six statuses to each node during execution:
+
 * **error**: a `model` failure
 * **fail**: a `test` failure (with `fail` severity)
 * **warn**: a `test` problem with `warn` severity
@@ -82,13 +83,56 @@ In DBT we have 6 possible status that represents:
 * **success**: a `model` that run without problems
 * **pass**: a `test` that complied with it's requirements
 
-Let's imagine we have:
+### 3.1. Strategies to Handle Failures
 
-![Failures in DBT example](../../images/posts/2024/9999-dbt-failure.jpg)
+Before triggering the Upload (U) step, it’s important to inspect DBT results and decide which entities can safely be synced. We've used two main approaches:
 
-<FancyLink linkText="Running DBT with AWS ECS (Fargate) | 8.2. DBT run results" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/#82-dbt-run-results" dark="true"/>
+1. **Tag-based filtering**. Only upload data associated with models that belong to a specific tag and completed successfully. This relies on defining clear ownership via tags in your DBT project.
 
-## 3.1. Running jobs post DBT
+2. **Model-based filtering**. Build an allowlist of model names that finished with `success`, and restrict uploads to just those. This can be done by parsing the DBT `run_results.json`.
+
+Both strategies aim to prevent syncing stale or partial datasets while allowing the rest of the pipeline to proceed without a full rollback.
+
+## 3.2. Handling failures
+
+The idea is to be able to know which models succeed and which failed.
+
+This can be done by:
+
+1. Get a unique id for the execution
+1. Exporting DBT run results.
+2. Reading run results.
+
+### 3.2.1. Getting a unique execution id
+
+It is really important to pass some id to DBT so that we can know match the run results with the actual run.
+
+With prefect it can be done with:
+
+```python
+from prefect.context import get_run_context
+
+def get_flow_run_id():
+    context = get_run_context()
+    if hasattr(context, "flow_run"):
+        return str(context.flow_run.id)
+    elif hasattr(context, "task_run"):
+        return str(context.task_run.flow_run_id)
+    else:
+        msg = "get_flow_run_id must be called within a Prefect flow or task context."
+        raise RuntimeError(msg)
+```
+
+### 3.2.2. Exporting DBT run results
+
+I already described this in a previous post. You can read it at <FancyLink linkText="Running DBT with AWS ECS (Fargate) | 8.2. DBT run results" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/#82-dbt-run-results" dark="true"/>.
+
+The important part is to pass the `flow_run_id` to DBT so that it can be added as a column.
+This will allow us to filter later the run results we want.
+
+### 3.2.3. Reading the results
+
+Here is how we can query the results of a DBT run:
 
 <TerminalOutput color="stone">
   QUERY_FAILURES
@@ -103,9 +147,10 @@ WITH executions AS (
     SELECT *
     FROM nt_bronze__metadata.dbt_run_results
     WHERE p_extraction_date >= DATE '{yesterday:%Y-%m-%d}'
-        AND status NOT IN ('success', 'pass', 'skipped')
 )
-SELECT DISTINCT relation_name
+SELECT
+    run_res.status,
+    run_res.unique_id
 FROM executions
 LEFT JOIN run_res
     ON executions.invocation_id = run_res.invocation_id
@@ -115,57 +160,152 @@ WHERE relation_name IS NOT NULL
 And the python part:
 
 ```python
-from datetime import date, timedelta
+import asyncio
+from prefect import get_run_logger
+from common.glue import query_athena # Out of scope
 
-import awswrangler as wr
-from prefect import task, get_run_logger
+STATUS_MAPPING = {
+    "error": -1,
+    "fail": -1,
+    "warn": 0,
+    "skipped": 0,
+    "success": 1,
+    "pass": 1,
+}
 
 @task(name="prefect.dbt.run.get_failures")
-def get_dbt_failures(env, flow_run_id):
+def get_dbt_results(env, flow_run_id):
     logger = get_run_logger()
     logger.info(f"Checking if there were DBT failures for {flow_run_id=}")
 
     yesterday = date.today() - timedelta(days=1)
     query = QUERY_FAILURES.format(yesterday=yesterday, flow_run_id=flow_run_id)
-    df = wr.athena.read_sql_query(sql=query, database="default")
+    df = query_athena(query)
 
-    errors = [
-        x.split(".")[1].replace('"', "").split("__")[-1] for x in df["relation_name"]
-    ]
-    errors = list(set(errors))  # Remove duplicates
-    errors = [f"tag:{x}" for x in errors]
+    df["level"] = df["status"].map(STATUS_MAPPING)
 
-    if errors:
-        logger.warning(f"There were some failed models in DBT {errors=}")
-        return errors
+    if errors := df.loc[df["level"] < 0, "unique_id"].to_list():
+        logger.warning(f"There were {len(errors)} failures in DBT: {errors=}")
+    else:
+        logger.info("There were no failures in DBT")
 
-    logger.info("There were no failed models in DBT")
-    return False
+    return df
 ```
 
-
-![Failures before and inside DBT](../../images/posts/2024/9999-both-failures.jpg)
-
-## 3.2 Putting it all together
+Then we can check the results of the models we want using this function:
 
 ```python
-def combine_failures(*failures):
-    """Combines lists of failures"""
-    out = []
+from typing import List
+from typing import Optional
 
-    for x in failures:
-        # Returning 'None' in prefect is dangerous so we return 'False' instead
-        if x:
-            out += x
+from prefect import get_run_logger
+from pydantic import BaseModel
+from pydantic import computed_field
 
-    # In DBT we cannot pass 'False', since this is not a prefect task we can return 'None'
-    if not out:
-        return None
+class DbtNode(BaseModel):
+    dbt_type: str
+    name: str
+    level: int = LEVEL_SUCCESS
 
-    # Remove duplicates
-    return list(set(out))
+    @computed_field
+    @property
+    def full_name(self) -> str:
+        return f"{self.dbt_type}.dbt_northius.{self.name}"
+
+    def __repr__(self):
+        return f"{self.dbt_type.title()}(name='{self.name}', level={self.level})"
+
+
+class Model(DbtNode):
+    dbt_type: str = "model"
+
+
+class Test(DbtNode):
+    dbt_type: str = "test"
+
+
+class DbtExpectations(BaseModel):
+    models: Optional[List[Model]] = None
+    tests: Optional[List[Test]] = None
+
+    def get_all_unique_ids(self):
+        models = {x.full_name: x.level for x in self.models}
+        tests = {x.full_name: x.level for x in self.tests}
+        return {**models, **tests}
+
+def are_results_good(df, dbt_expectations=None, models=None, tests=None):
+    logger = get_run_logger()
+
+    if df is None:
+        logger.error("Results are missing (df is None)")
+        return True
+
+    if dbt_expectations is None:
+        if models is None and tests is None:
+            logger.info("There are no dependencies")
+            return True
+
+        models = [{"name": x} for x in models] if models else []
+        tests = [{"name": x} for x in tests] if tests else []
+        dbt_expectations = DbtExpectations(models=models, tests=tests)
+
+    logger.info(f"Expected results: {dbt_expectations}")
+    desired_results = dbt_expectations.get_all_unique_ids()
+    actual_results = df.groupby("unique_id").agg({"level": "min"}).to_dict()["level"]
+
+    missing_nodes = []
+    unwanted_outcomes = []
+
+    for model, desired_level in desired_results.items():
+        actual_level = actual_results.get(model)
+
+        if actual_level is None:
+            missing_nodes.append(model)
+
+        elif actual_level < desired_level:
+            unwanted_outcomes.append(f"{model} {actual_level=} {desired_level=}")
+
+    if missing_nodes:
+        logger.warning(f"{len(missing_nodes)} missing nodes: {missing_nodes=}")
+
+    if unwanted_outcomes:
+        logger.warning(
+            f"{len(unwanted_outcomes)} unwanted outcomes: {unwanted_outcomes=}"
+        )
+
+    failure = missing_nodes or unwanted_outcomes
+    return not failure
+```
+
+This would be called with something like:
+
+```python
+POST_DBT_JOBS = {
+    ds.ds_export: {"models": ["leads_ds_id"]},
+    salesforce.sf_upload_beca_scoring: {"models": ["sf__beca_model_score"]},
+    salesforce.sf_upload_conversion_rate: {"models": ["conversion_rate"]},
+}
+
+async def post_dbt(flow_run_id, env: Literal["snd", "pro"] = "pro"):
+    """Runs post-DBT jobs based on DBT validation results."""
+    logger = get_run_logger()
+
+    dbt_results = dbt.get_dbt_results(env, flow_run_id)
+
+    jobs = []
+    for func, expectations in POST_DBT_JOBS.items():
+        if are_results_good(dbt_results, **expectations):
+            jobs.append(func)
+        else:
+            logger.warning(f"Skipping {func=} because of DBT failures")
+
+    await prefect_utils.run_flows_async(
+        flows=jobs, flow_name="3h.post_dbt", env=env
+    )
 ```
 
 ## 4. Failures in Upload (U)
 
-xxxx
+Failures in upload jobs need no special treatment since there are no jobs that dependen on them.
+
+## 5. xx
