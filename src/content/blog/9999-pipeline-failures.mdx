@@ -48,7 +48,9 @@ Here is a really simple example of how our pipeline looks like:
 
 ![Pipeline DAG example](../../images/posts/2025/9999-pipeline-stages.jpg)
 
-## 2. Failures in Extract & Load (E) ⬇️
+## 2. Handling failures in different stages
+
+### 2.1. Failures in Extract & Load (E) ⬇️
 
 Since we follow an ETU paradigm, data needs to be successfully extracted and landed in the lake before DBT transformations can begin. These upstream extract jobs — often orchestrated outside DBT — are susceptible to failures, and how we handle those failures directly impacts downstream processing.
 
@@ -68,7 +70,7 @@ However, when the transcription job partially failed and I excluded its tag in t
   Avoid relying on `--exclude` unless you're fully confident about the implications.
 </Notice>
 
-## 3. Failures in Transform (T) ⚙️
+### 2.2. Failures in Transform (T) ⚙️
 
 The Transform step (T) is where DBT takes raw data from the lake and builds structured models. If something goes wrong here, pushing bad or incomplete data into external systems can create inconsistencies or break business processes.
 
@@ -80,10 +82,10 @@ DBT assigns one of six statuses to each node during execution:
 * **fail**: a `test` failure (with `fail` severity)
 * **warn**: a `test` problem with `warn` severity
 * **skipped**: a node that was not executed because of problems in predecessors
-* **success**: a `model` that run without problems
-* **pass**: a `test` that complied with it's requirements
+* **success**: a `model` that ran without problems
+* **pass**: a `test` that complied with its requirements
 
-### 3.1. Strategies to Handle Failures
+#### 2.2.1. Strategies to Handle Failures
 
 Before triggering the Upload (U) step, it’s important to inspect DBT results and decide which entities can safely be synced. We've used two main approaches:
 
@@ -93,21 +95,21 @@ Before triggering the Upload (U) step, it’s important to inspect DBT results a
 
 Both strategies aim to prevent syncing stale or partial datasets while allowing the rest of the pipeline to proceed without a full rollback.
 
-## 3.2. Handling failures
+#### 2.2.2. Handling Failures
 
-The idea is to be able to know which models succeed and which failed.
+The idea is to be able to know which models succeeded and which failed.
 
 This can be done by:
 
-1. Get a unique id for the execution
-1. Exporting DBT run results.
-2. Reading run results.
+1. Getting a unique ID for the execution
+2. Exporting DBT run results
+3. Reading run results
 
-### 3.2.1. Getting a unique execution id
+##### 2.2.2.1. Getting a Unique Execution ID
 
-It is really important to pass some id to DBT so that we can know match the run results with the actual run.
+It is really important to pass some ID to DBT so that we can match the run results with the actual run.
 
-With prefect it can be done with:
+With Prefect, it can be done like this:
 
 ```python
 from prefect.context import get_run_context
@@ -123,14 +125,13 @@ def get_flow_run_id():
         raise RuntimeError(msg)
 ```
 
-### 3.2.2. Exporting DBT run results
+##### 2.2.2.2. Exporting DBT Run Results
 
 I already described this in a previous post. You can read it at <FancyLink linkText="Running DBT with AWS ECS (Fargate) | 8.2. DBT run results" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/#82-dbt-run-results" dark="true"/>.
 
-The important part is to pass the `flow_run_id` to DBT so that it can be added as a column.
-This will allow us to filter later the run results we want.
+The important part is to pass the `flow_run_id` to DBT so that it can be added as a column. This will allow us to filter later the run results we want.
 
-### 3.2.3. Reading the results
+##### 2.2.2.3. Reading the results
 
 Here is how we can query the results of a DBT run:
 
@@ -159,6 +160,9 @@ WHERE relation_name IS NOT NULL
 
 And the python part:
 
+<TerminalOutput color="stone">
+  get_dbt_results
+</TerminalOutput>
 ```python
 import asyncio
 from prefect import get_run_logger
@@ -194,6 +198,9 @@ def get_dbt_results(env, flow_run_id):
 
 Then we can check the results of the models we want using this function:
 
+<TerminalOutput color="stone">
+  are_results_good
+</TerminalOutput>
 ```python
 from typing import List
 from typing import Optional
@@ -233,21 +240,16 @@ class DbtExpectations(BaseModel):
         tests = {x.full_name: x.level for x in self.tests}
         return {**models, **tests}
 
-def are_results_good(df, dbt_expectations=None, models=None, tests=None):
+def are_results_good(df, models=None, tests=None):
     logger = get_run_logger()
 
     if df is None:
         logger.error("Results are missing (df is None)")
         return True
 
-    if dbt_expectations is None:
-        if models is None and tests is None:
-            logger.info("There are no dependencies")
-            return True
-
-        models = [{"name": x} for x in models] if models else []
-        tests = [{"name": x} for x in tests] if tests else []
-        dbt_expectations = DbtExpectations(models=models, tests=tests)
+    models = [{"name": x} for x in models] if models else []
+    tests = [{"name": x} for x in tests] if tests else []
+    dbt_expectations = DbtExpectations(models=models, tests=tests)
 
     logger.info(f"Expected results: {dbt_expectations}")
     desired_results = dbt_expectations.get_all_unique_ids()
@@ -261,13 +263,11 @@ def are_results_good(df, dbt_expectations=None, models=None, tests=None):
 
         if actual_level is None:
             missing_nodes.append(model)
-
         elif actual_level < desired_level:
             unwanted_outcomes.append(f"{model} {actual_level=} {desired_level=}")
 
     if missing_nodes:
         logger.warning(f"{len(missing_nodes)} missing nodes: {missing_nodes=}")
-
     if unwanted_outcomes:
         logger.warning(
             f"{len(unwanted_outcomes)} unwanted outcomes: {unwanted_outcomes=}"
@@ -279,21 +279,24 @@ def are_results_good(df, dbt_expectations=None, models=None, tests=None):
 
 This would be called with something like:
 
+<TerminalOutput color="stone">
+  run_uploads
+</TerminalOutput>
 ```python
-POST_DBT_JOBS = {
+UPLOAD_JOBS = {
     ds.ds_export: {"models": ["leads_ds_id"]},
     salesforce.sf_upload_beca_scoring: {"models": ["sf__beca_model_score"]},
     salesforce.sf_upload_conversion_rate: {"models": ["conversion_rate"]},
 }
 
-async def post_dbt(flow_run_id, env: Literal["snd", "pro"] = "pro"):
+async def run_uploads(flow_run_id, env: Literal["snd", "pro"] = "pro"):
     """Runs post-DBT jobs based on DBT validation results."""
     logger = get_run_logger()
 
     dbt_results = dbt.get_dbt_results(env, flow_run_id)
 
     jobs = []
-    for func, expectations in POST_DBT_JOBS.items():
+    for func, expectations in UPLOAD_JOBS.items():
         if are_results_good(dbt_results, **expectations):
             jobs.append(func)
         else:
@@ -304,7 +307,7 @@ async def post_dbt(flow_run_id, env: Literal["snd", "pro"] = "pro"):
     )
 ```
 
-## 4. Failures in Upload (U)
+### 2.3. Failures in Upload (U) ⬆️ 
 
 Failures in upload jobs need no special treatment since there are no jobs that dependen on them.
 
