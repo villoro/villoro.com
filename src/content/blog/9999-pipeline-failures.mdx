@@ -313,13 +313,15 @@ Failures in upload jobs need no special treatment since there are no jobs that d
 
 ## 3. Letting Tasks Fail Gracefully
 
-Sometimes you don’t want the failure of a single task to stop an entire pipeline. For example, you may be downloading multiple tables from a CRM, and if one of them fails, you'd still want to download the rest rather than stopping the whole process. Later, you can handle and report any failures encountered.
+Sometimes you don’t want the failure of a single task to stop an entire pipeline. For example, you may be downloading multiple tables from a CRM inside an ECS or EMR job. Each table is processed in series using a synchronous flow. If one fails, you'd still want the rest to run — and only after finishing, handle and report any failures. In parallel, multiple of these jobs (e.g., for different sources) may be triggered as independent async flows.
 
-In this section, we'll show how to implement this behavior in Prefect for both async and sync flows.
+In this section, we’ll first show how to implement this behavior using synchronous flows — a simpler and more intuitive starting point — and then how to handle it in asynchronous flows running in parallel.
 
 The key to enabling this pattern is the argument `return_state=True`. When passed to a Prefect flow, it causes the flow to return its **state object** instead of raising exceptions on failure. This allows you to inspect each result and decide what to do next — all without stopping execution.
 
 ### 3.1. Handling Sync Flows
+
+This is how we can continue executing tasks whenever one fails:
 
 ```python
 from prefect import flow, task, get_run_logger
@@ -333,10 +335,10 @@ def main():
     logger = get_run_logger()
     items = [5, 2, 0, 1]  # Replace with your own data
 
-    futures = [process_item.submit(i, return_state=True) for i in items]
+    futures = {i: process_item.submit(i, return_state=True) for i in items}
     failures = []
 
-    for state, item in zip(futures, items):
+    for item, state in futures.items():
         if state.is_completed():
             logger.info(f"Task succeeded for item={item}: result = {state.result()}")
         else:
