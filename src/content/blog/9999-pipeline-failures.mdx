@@ -7,7 +7,7 @@ date: 2024-07-22
 image: /images/blog/9999-villain-seeing-failures.jpg
 category: DE
 tags: [SQL, DE, Best Practices, DBT, Prefect]
-draft: true
+draft: false
 ---
 
 ## 0. Motivation
@@ -93,6 +93,10 @@ Before triggering the Upload (U) step, it’s important to inspect DBT results a
 2. **Model-based filtering**. Build an allowlist of model names that finished with `success`, and restrict uploads to just those. This can be done by parsing the DBT `run_results.json`.
 
 Both strategies aim to prevent syncing stale or partial datasets while allowing the rest of the pipeline to proceed without a full rollback.
+
+<Notice type="info">
+  This selective approach protects downstream systems from receiving broken or incomplete data and reduces the risk of cascading failures.
+</Notice>
 
 #### 2.2.2. Handling Failures
 
@@ -314,11 +318,13 @@ Failures in upload jobs need no special treatment since there are no jobs that d
 
 Sometimes you don’t want the failure of a single task to stop an entire pipeline. For example, you may be downloading multiple tables from a CRM inside an ECS or EMR job. Each table is processed in series using a synchronous flow. If one fails, you'd still want the rest to run — and only after finishing, handle and report any failures. In parallel, multiple of these jobs (e.g., for different sources) may be triggered as independent async flows.
 
+<Notice type="info">
+  By default, Prefect raises exceptions when tasks fail, halting the flow. Setting `return_state=True` allows the flow to return a state object instead. This enables you to inspect and handle failures without interrupting the rest of the pipeline.
+</Notice>
+
 In this section, we’ll first show how to implement this behavior using synchronous flows — a simpler and more intuitive starting point — and then how to handle it in asynchronous flows running in parallel.
 
-The key to enabling this pattern is the argument `return_state=True`. When passed to a Prefect flow, it causes the flow to return its **state object** instead of raising exceptions on failure. This allows you to inspect each result and decide what to do next — all without stopping execution.
-
-Here you can see one example of how a failue in one extraction didn't block the other one and didn't stop the rest of the pipeline stages:
+Here you can see one example of how a failure in one extraction didn't block the other one and didn't stop the rest of the pipeline stages:
 
 ![Pipeline DAG example](../../images/posts/2025/9999-extract-failure.png)
 
