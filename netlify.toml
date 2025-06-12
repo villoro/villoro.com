@@ -173,7 +173,12 @@
 
 [[redirects]]
   from = "/post/python_environment_config"
-  to = "/blog/python-environmint-configuration"
+  to = "/blog/python-environment-configuration"
+  status = 301
+
+[[redirects]]
+  from = "/blog/python-environmint-configuration"
+  to = "/blog/python-environment-configuration"
   status = 301
 
 [[redirects]]
