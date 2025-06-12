@@ -1,7 +1,7 @@
 ---
 slug: solving-problem-small-files-data-lake
-title: Solving the probem with small files in the Data Lake
-meta_title: Solving the probem with small files in the Data Lake
+title: Solving the problem with small files in the Data Lake
+meta_title: Solving the problem with small files in the Data Lake
 description: This post addresses the common problem of small files in data lakes, which can lead to significant performance degradation and increased costs. It provides an in-depth guide on understanding the issues caused by small files, determining optimal file sizes, and effectively managing file sizes using tools like Apache Spark, AWS Athena, Delta Lake, and Apache Iceberg. The post also covers strategies for tracking file sizes and partitioning tables to optimize data processing and storage efficiency.
 date: 2024-10-23
 image: "/images/blog/0050-handling-small-files.jpg"
@@ -66,7 +66,7 @@ Similarly, the <FancyLink linkText="DuckDB | Parquet File Sizes" url="https://du
 The key to avoiding small files in your data lake is to control the number of files written during data processing.
 Ensuring that the files are of optimal size improves both performance and cost-efficiency.
 
-### 3.2. Spark
+### 3.1. Spark
 
 In Spark, you can control the number of files written by using the `sdf.repartition(n_files)` function, which allows you to specify the number of partitions (and hence the number of output files).
 Additionally, you can configure Spark to manage the size of files by setting the minimum and maximum number of rows per file through the configuration options `spark.sql.files.maxRecordsPerFile` and `spark.sql.files.minRecordsPerFile`.
@@ -76,7 +76,7 @@ Additionally, you can configure Spark to manage the size of files by setting the
   The number of partitions also affects Spark's parallelization; too few partitions can lead to underutilized resources, while too many can cause excessive overhead.
 </Notice>
 
-### 3.3. Athena with DBT
+### 3.2. Athena with DBT
 
 <Notice type="warning">
   In AWS Athena, **there is no direct way to control the number of files** written during query execution.

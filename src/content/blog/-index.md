@@ -1,5 +1,5 @@
 ---
 title: Blog
 meta_title: Blog
-description: TODO XXX
+description: Thoughts on programming, data engineering, and technology
 ---
