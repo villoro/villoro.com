@@ -57,16 +57,16 @@ First of all the average reading/writing times for each format.
 With the medium dataframe the results are very similar.
 
 <Notice type="warning">
- `xlsx` is a slow solution. I would only recommend it for small dataframes.
+`xlsx` is a slow solution. I would only recommend it for small dataframes.
 </Notice>
 
 <canvas id="chart_s1_i10_size" style="width:100%;height:300px;"></canvas>
 
-Regarding the file size both `xlsx` and `parquet` outperform the rest. If you look the pandas documentation you will see that **all extensions except `xlsx` and `feather` allow different types of compression.** Also `parquet` uses a more agresive compression by default. We need to test the formats and the different compressions.
+Regarding the file size both `xlsx` and `parquet` outperform the rest. If you look the pandas documentation you will see that **all extensions except `xlsx` and `feather` allow different types of compression.** Also `parquet` uses a more aggressive compression by default. We need to test the formats and the different compressions.
 
 ## 3. Test 2: Include compressions
 
-This time each extensions will be tested using all posible compressions. The results are:
+This time each extension will be tested using all possible compressions. The results are:
 
 | format      | compression | read [s] | write [s] | size [MB] |
 |:-----------:|:-----------:|---------:|----------:|----------:|
@@ -91,7 +91,7 @@ This time each extensions will be tested using all posible compressions. The res
 |             | xz          |     6.26 |    254.32 |     38.05 |
 |             | zip         |     2.07 |     17.86 |     55.43 |
 
-By plotting both reading and writing time is easier to se that writing times for `xz` compression are really slow.
+By plotting both reading and writing time it is easier to see that writing times for `xz` compression are really slow.
 
 <canvas id="chart_s1_i5_time" style="width:100%;height:300px;"></canvas>
 <canvas id="chart_s1_i5_size" style="width:100%;height:300px;"></canvas>

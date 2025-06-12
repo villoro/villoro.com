@@ -3,7 +3,7 @@ slug: pyspark-intro
 title: Pyspark Intro
 meta_title: Pyspark Intro
 description: Apache Spark is a very fast unified analytics engine for big data and machine learning.
-  This is a beginer tutorial of how to use spark to work with dataframes.
+  This is a beginner tutorial of how to use spark to work with dataframes.
 date: 2019-12-21
 image: "/images/blog/0025-apache-spark.jpg"
 category: DE
@@ -45,7 +45,7 @@ spark = SparkSession.builder.appName("pyspark_intro").getOrCreate()
 sdf = spark.read.format("csv").load("titanic_train.csv")
 ```
 
-It is even posible to use wildcards to read multiple files at one.
+It is even possible to use wildcards to read multiple files at once.
 
 ```python
 sdf = spark.read.format("csv").load("titanic_*.csv") # Read both train and test
@@ -53,8 +53,8 @@ sdf = spark.read.format("csv").load("titanic_*.csv") # Read both train and test
 
 ### 1.2. RDD
 
-It is posible to read raw files with spark and process them.
-As an example we are reading a csv and transform it to a datafram.
+It is possible to read raw files with spark and process them.
+As an example we are reading a csv and transform it to a dataframe.
 
 ```python
 from pyspark.sql import SparkSession, types
@@ -70,7 +70,7 @@ sdf = spark.createDataFrame(iris_data)
 ```
 
 <Notice type="warning">
-  It is only an example is better to read it directly as a dataframe
+  This is only an example; it is better to read it directly as a dataframe
 </Notice>
 
 ## 2. Inspect
@@ -94,7 +94,7 @@ There are some functions to get general info about the dataframe.
 ## 3. Slicing
 ### 3.1. First rows
 
-To retrive the first N rows you can either use `sdf.head(N)` or `sdf.take(N)`.
+To retrieve the first N rows you can either use `sdf.head(N)` or `sdf.take(N)`.
 
 ### 3.2. Filter columns
 
@@ -139,7 +139,7 @@ sdf[sdf["Name"].endswith(".")]
 sdf.select("Pclass").distinct()
 ```
 
-It is also posible to subtract values based on another list.
+It is also possible to subtract values based on another list.
 
 ```python
 sdf.select("Pclass").exceptAll(sdf.select("Survived"))
@@ -151,7 +151,7 @@ To modify a dataframe you need to update the original dataframe.
 For example you would do `sdf = do_something(sdf)`.
 
 <Notice type="warning">
-  It is posible to only call `do_something(sdf)` but **it won't update the dataframe**.
+  It is possible to only call `do_something(sdf)` but **it won't update the dataframe**.
 </Notice>
 
 ### 4.1. Add columns
@@ -221,7 +221,7 @@ sdf.drop_duplicates(["Pclass"])
 
 ### 4.7. User Defined Functions (UDF)
 
-It is posible to define new functions and apply them to a column.
+It is possible to define new functions and apply them to a column.
 To define it you need to specify the output type (int, str...).
 The transformation will be apply element wise.
 
@@ -279,7 +279,7 @@ sdf.write.format("parquet").mode("overwrite").save("titanic_train.parquet")
 
 ## 8. Interacting with python
 
-Some times you need to retrive some data from spark to python.
+Some times you need to retrieve some data from spark to python.
 
 For example you can always transform a dataframe to **pandas** with `sdf.toPandas()`.
 
@@ -293,7 +293,7 @@ To get a column as a python list use:
 sdf.select("Name").rdd.flatMap(lambda x: x).collect()
 ```
 
-And finally yo can use collect to retrive one value:
+And finally you can use collect to retrieve one value:
 
 ```python
 sdf.agg({"Age": "max"}).collect()[0][0]

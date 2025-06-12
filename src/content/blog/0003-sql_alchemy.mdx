@@ -58,7 +58,7 @@ More info about SQL engines at <FancyLink linkText="SQL Alchemy documentation" u
 
 ## 2. Read data from SQL
 
-To retrive a pandas dataframe it is easy. You can directly use pandas `read_sql_query` function:
+To retrieve a pandas dataframe it is easy. You can directly use pandas `read_sql_query` function:
 
 ```python
 with engine.connect() as connection:
@@ -76,7 +76,7 @@ with engine.connect() as connection:
 
 ## 4. Run stored procedures
 
-It is also posible to run stored procedures and to pass parameters to it. To do so you need to access the raw connection of the engine.
+It is also possible to run stored procedures and to pass parameters to it. To do so you need to access the raw connection of the engine.
 
 ```python
 with engine.raw_connection().cursor() as cursor:
