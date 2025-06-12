@@ -25,11 +25,11 @@ It also allows build and publishing packages to PyPI (or other sites).
 
 ## 1. Alternatives. Why Poetry?
 
-Before viewing why is **Poetry** a good solution let's check the more common alternatives.
+Before viewing why **Poetry** is a good solution let's check the more common alternatives.
 
 ### 1.1. Raw
 
-The easiest and least elegant why of handling dependencies is by simply installing all packages in the main environment.
+The easiest and least elegant way of handling dependencies is by simply installing all packages in the main environment.
 In other words this means installing packages only using:
 
 ```sh
@@ -47,11 +47,11 @@ This method will have some major problems:
 
 1. It will be difficult to install different versions for different projects (for example `pandas 0.25` for one project and `1.0` for another.)
 2. If requirements are added manually it is possible to forget some (when adding new ones or deleting unused)
-3. If requirements are added with `pip freeze` it will be difficult to differenciate between real dependencies and dependencies of the installed packages
-4. There will be no differenciation between **development dependencies** and **production dependencies**
+3. If requirements are added with `pip freeze` it will be difficult to differentiate between real dependencies and dependencies of the installed packages
+4. There will be no differentiation between **development dependencies** and **production dependencies**
 
 <Notice type="info">
-  It is true that you can create a `requirements_dev.txt` file to handle development dependencies but you will need to manually mantain it.
+  It is true that you can create a `requirements_dev.txt` file to handle development dependencies but you will need to manually maintain it.
 </Notice>
 
 ### 1.2. Virtualenv / Conda
