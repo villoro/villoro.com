@@ -4,7 +4,7 @@ title: Handling pipeline failures
 meta_title: How to Handle Failures in Modern Data Pipelines
 description: Learn how to make your data pipelines resilient by design using the ETU (Extract, Transform, Upload) approach. This guide covers failure handling strategies in DBT, Prefect, and more.
 date: 2025-06-12
-image: /images/blog/9999-villain-seeing-failures.jpg
+image: /images/blog/0058-villain-seeing-failures.jpg
 category: DE
 tags: [SQL, DE, Best Practices, DBT, Prefect]
 draft: false
@@ -47,7 +47,7 @@ In the final step, we push processed data back into third-party systems. This mi
 
 Here is a really simple example of how our pipeline looks like:
 
-![Pipeline DAG example](../../images/posts/2025/9999-pipeline-stages.jpg)
+![Pipeline DAG example](../../images/posts/2025/0058-pipeline-stages.jpg)
 
 ## 2. Handling Failures in Different Stages
 
@@ -326,7 +326,7 @@ In this section, we’ll first show how to implement this behavior using synchro
 
 Here you can see one example of how a failure in one extraction didn't block the other one and didn't stop the rest of the pipeline stages:
 
-![Pipeline DAG example](../../images/posts/2025/9999-extract-failure.png)
+![Pipeline DAG example](../../images/posts/2025/0058-extract-failure.png)
 
 ### 3.1. Handling Sync Flows
 
