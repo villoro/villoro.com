@@ -14,9 +14,9 @@ draft: true
 
 Failures are inevitable in any data pipeline — whether due to API timeouts, schema changes, network issues, or bugs in transformation logic. Over time, we’ve learned that simply reacting to failures as they occur leads to inconsistent data, broken downstream systems, and painful debugging sessions.
 
-This post outlines a more structured, proactive approach. By treating failure handling as a first-class citizen of the pipeline design — not just an afterthought — we can recover faster, minimize business impact, and maintain trust in our data products.The ETU framework and failure handling strategies described here are the result of real-world lessons and aim to create pipelines that are resilient by design.
+This post outlines a more structured, proactive approach. By treating failure handling as a first-class citizen of pipeline design — not just an afterthought — we can recover faster, minimize business impact, and maintain trust in our data products. The ETU framework and failure handling strategies described here are the result of real-world lessons and aim to create pipelines that are resilient by design.
 
-## 1. Pipeline Stages - ETU paradigm
+## 1. Pipeline Stages - ETU Paradigm
 
 Before we can talk about handling failures effectively, it's important to first describe the structure of our pipeline.
 
@@ -49,42 +49,40 @@ Here is a really simple example of how our pipeline looks like:
 
 ![Pipeline DAG example](../../images/posts/2025/9999-pipeline-stages.jpg)
 
-## 2. Handling failures in different stages
+## 2. Handling Failures in Different Stages
 
 ### 2.1. Failures in Extract & Load (E) ⬇️
 
-Since we follow an ETU paradigm, data needs to be successfully extracted and landed in the lake before DBT transformations can begin. These upstream extract jobs — often orchestrated outside DBT — are susceptible to failures, and how we handle those failures directly impacts downstream processing.
+Data needs to be successfully extracted and landed in the lake before DBT transformations can begin. These upstream extract jobs — often orchestrated outside DBT — are susceptible to failures, and how we handle those failures directly impacts downstream processing.
 
-In this scenario, two main options arise:
+Two main options arise:
 
 1. Exclude failed topics with an `exclude` (like `dbt build --exclude tag:salesforce`)
 2. Run DBT as usual without exclusions
 
 While skipping failed upstream tasks with option 1 might seem like a resource optimization, it introduces significant risks. DBT transformations are usually cheap to run — especially with incremental models — and skipping them can create inconsistencies.
 
+<Notice type="warning">
+  Avoid relying on `--exclude` unless you're fully confident about the implications.
+</Notice>
+
 For example, I have a job that transcribes audios (see <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/>).
 This job can partially succeed — transcribing some files but failing others due to server timeouts. To avoid redundant processing, I use a LEFT ANTI JOIN with the DBT-generated transcriptions table.
 
 However, when the transcription job partially failed and I excluded its tag in the DBT run, the corresponding models weren’t updated. This led to reprocessing already-transcribed files, inflating compute costs and duplicating results.
 
-<Notice type="warning">
-  Avoid relying on `--exclude` unless you're fully confident about the implications.
-</Notice>
-
 ### 2.2. Failures in Transform (T) ⚙️
 
-The Transform step (T) is where DBT takes raw data from the lake and builds structured models. If something goes wrong here, pushing bad or incomplete data into external systems can create inconsistencies or break business processes.
+The Transform step (T) is where DBT takes raw data from the lake and builds structured models. If something goes wrong in transformation, pushing bad or incomplete data into external systems can create inconsistencies or break business processes. For example, syncing `users` but not `sessions` could result in mismatched reporting.
 
-For example, if you're syncing both `users` and `sessions` but the transformation for `sessions` fails, you likely don’t want to upload only `users` — doing so could result in mismatched reporting or corrupted metrics.
-
-DBT assigns one of six statuses to each node during execution:
+DBT assigns one of six statuses to each node:
 
 * **error**: a `model` failure
 * **fail**: a `test` failure (with `fail` severity)
 * **warn**: a `test` problem with `warn` severity
-* **skipped**: a node that was not executed because of problems in predecessors
-* **success**: a `model` that ran without problems
-* **pass**: a `test` that complied with its requirements
+* **skipped**: a node skipped due to previous errors
+* **success**: a `model` that ran successfully
+* **pass**: a `test` that met requirements
 
 #### 2.2.1. Strategies to Handle Failures
 
