@@ -6,12 +6,11 @@ description: Discover how Astral's Rust-powered tools, uv and ruff, provide a bl
 date: 2025-03-14
 image: /images/blog/0055-astral.jpg
 category: python
-tags: [Python, Tools/Utils, Performance, Benchmark, Setup, Best Practices]
+tags: [Python, Tools, Performance, Benchmark, Setup, Best Practices]
 draft: false
 ---
 
 <script type="module" src="/js/posts/0055-plots-astral.js"></script>
-
 
 ## 0. Introduction: Virtual Environment and Linting Tools
 
@@ -58,7 +57,11 @@ uv add --script example.py 'requests<3' 'rich'
 ```
 
 <Notice type="info" className="mt-6">
-  More info at <FancyLink linkText="Declaring script dependencies | Astral uv" url="https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies"/>
+  More info at{" "}
+  <FancyLink
+    linkText="Declaring script dependencies | Astral uv"
+    url="https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies"
+  />
 </Notice>
 
 This makes `uv` an excellent choice for quick experiments or one-off scripts that need isolated dependencies.
@@ -88,7 +91,8 @@ uv venv --python=3.11 .venv
 ```
 
 <Notice type="warning" className="mt-6">
-  If a `.python-version` file exists, `uv` will automatically use the specified version.
+  If a `.python-version` file exists, `uv` will automatically use the specified
+  version.
 </Notice>
 
 ### 1.5. Installing Dependencies
@@ -176,7 +180,7 @@ For CI/CD workflows, you can use `pre-commit` with:
   rev: v0.5.6
   hooks:
     - id: ruff
-      args: [ --fix ]
+      args: [--fix]
     - id: ruff-format
 ```
 
@@ -210,25 +214,10 @@ uv run pytest # Or any other testing suite you use
 For GitHub Actions:
 
 <Accordion client:load title=".github/workflows/CI.yaml">
-  ```yaml
-  unit_tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-  
-      - name: Install UV
-        run: pip install uv
-  
-      - name: Set up virtual environment
-        run: uv venv .venv
-  
-      - name: Install dependencies
-        run: uv pip install --editable .
-  
-      - name: Run tests
-        run: uv run pytest .
-  ```
+  ```yaml unit_tests: runs-on: ubuntu-latest steps: - uses: actions/checkout@v3
+  - uses: actions/setup-python@v4 - name: Install UV run: pip install uv - name:
+  Set up virtual environment run: uv venv .venv - name: Install dependencies
+  run: uv pip install --editable . - name: Run tests run: uv run pytest . ```
 </Accordion>
 
 ### 3.4. Publishing to PyPI with `uv`
@@ -243,28 +232,18 @@ uv publish
 For automation, add this to GitHub Actions:
 
 <Accordion client:load title=".github/workflows/CD.yaml">
-  ```yaml
-  jobs:
-    publish_pypi:
-      runs-on: ubuntu-latest
-      steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-  
-      - name: Install uv
-        run: pip install uv
-  
-      - name: Build
-        run: uv build
-  
-      - name: Publish
-        run: uv publish
-  ```
+  ```yaml jobs: publish_pypi: runs-on: ubuntu-latest steps: - uses:
+  actions/checkout@v3 - uses: actions/setup-python@v4 - name: Install uv run:
+  pip install uv - name: Build run: uv build - name: Publish run: uv publish ```
 </Accordion>
 
 <Notice type="info">
-  I strongly suggest you set up <FancyLink linkText="Trusted publishers in pypi" url="https://docs.pypi.org/trusted-publishers/adding-a-publisher/"/> to avoid adding tokens.
-  It's the prefered way of uploading packages to pypi.
+  I strongly suggest you set up{" "}
+  <FancyLink
+    linkText="Trusted publishers in pypi"
+    url="https://docs.pypi.org/trusted-publishers/adding-a-publisher/"
+  />{" "}
+  to avoid adding tokens. It's the prefered way of uploading packages to pypi.
 </Notice>
 
 ## 4. Benchmarks: How Fast Are `uv` and `ruff`?

@@ -6,7 +6,7 @@ description: Discover how to clean up your Git history effortlessly with our ste
 date: 2024-03-17
 image: "/images/blog/0039-rewriting-history.jpg"
 category: git
-tags: [GIT]
+tags: [Git]
 draft: false
 ---
 
@@ -24,18 +24,20 @@ By rewriting Git history, you can eliminate unnecessary commits, squash related 
 ## 2. Step-by-Step Guide to Rewriting Git History
 
 <Notice type="danger">
-  Make sure to read all post before rewriting the history.
-  This way you might be able to use the code at the end to automate the process.
+  Make sure to read all post before rewriting the history. This way you might be
+  able to use the code at the end to automate the process.
 </Notice>
 
-Also you might want to read <FancyLink linkText="Git Rewriting History" url="https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History"/> 
+Also you might want to read <FancyLink linkText="Git Rewriting History" url="https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History"/>
 
 ### 2.1. Create a New main Branch
 
 To begin, create a new branch named `main` (or any preferred branch name) to perform the cleanup process without affecting the existing `master` branch.
 
 <Notice type="warning">
-  If you already had a `main` branch, rename it to `old_main` or something similar. Adapt the code in this post so that any reference to `master` is replaced by `old_main`
+  If you already had a `main` branch, rename it to `old_main` or something
+  similar. Adapt the code in this post so that any reference to `master` is
+  replaced by `old_main`
 </Notice>
 
 ### 2.2. Cherry Pick the Oldest Commit on `master`
@@ -47,7 +49,9 @@ git cherry-pick <commit_hash>
 ```
 
 <Notice type="info">
-  You might prefer using a git progrom such as <FancyLink linkText="Sublime Merge" url="https://www.sublimemerge.com/"/> instead.
+  You might prefer using a git progrom such as{" "}
+  <FancyLink linkText="Sublime Merge" url="https://www.sublimemerge.com/" />{" "}
+  instead.
 </Notice>
 
 ### 2.3. Edit the new `commit` date with
@@ -67,8 +71,8 @@ Remove the tag associated with the cherry-picked commit both locally and on GitH
 
 Apply the tag to the newly created commit on the main branch to maintain versioning consistency.
 
-
 ### 2.6. Push the New Tag to GitHub
+
 Ensure the updated tag is pushed to the remote repository on GitHub using the following command:
 
 ```bash
@@ -78,8 +82,9 @@ git push origin <tag_name> -f
 ## 3. Python Script for Automating the Process
 
 <Notice type="danger">
-  Before running the automated process I **strongly** suggest you first try it in a demo repository.
-  Any problem or issue with the code will mean **losing important data that can't be recovered**.
+  Before running the automated process I **strongly** suggest you first try it
+  in a demo repository. Any problem or issue with the code will mean **losing
+  important data that can't be recovered**.
 </Notice>
 
 You can use `gitpython` and some `python` code to automate the process.

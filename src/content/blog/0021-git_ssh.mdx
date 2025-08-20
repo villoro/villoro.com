@@ -6,7 +6,7 @@ description: Learn how to work securely with git by using SSH authentication wit
 date: 2019-06-15
 image: "/images/blog/0021-ssh-hacker.jpg"
 category: git
-tags: [GIT, Security, Setup]
+tags: [Git, Security, Setup]
 draft: false
 ---
 
@@ -22,7 +22,7 @@ First we will create a SSH key that will allow you to connect to github.
 
 ```sh
 ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
-```  
+```
 
 Then I suggest you save the SSH key with some usefull name like `/home/ubuntu/.ssh/github_ssh`
 
@@ -49,21 +49,19 @@ keychain --stop all
 ```
 
 <Notice type="info" className="mt-6">
-  You can check that only one ssh-agent is running with `ps -ef | grep ssh-agent`
+  You can check that only one ssh-agent is running with `ps -ef | grep
+  ssh-agent`
 </Notice>
 
 To set up **keychain** edit the `~/.bashrc` file so that **keychain** is started everytime you open a terminal.
 
-<TerminalOutput color="stone">
-  `~/.bashrc`
-</TerminalOutput>
-```sh
-# Add this line at the end
-eval `keychain --agents ssh --eval github_ssh`
+<TerminalOutput color="stone">`~/.bashrc`</TerminalOutput>
+```sh # Add this line at the end eval `keychain --agents ssh --eval github_ssh`
 ```
 
 <Notice type="info">
-  `github_ssh` is the name of the SSH key to import you could add more separating them by spaces
+  `github_ssh` is the name of the SSH key to import you could add more
+  separating them by spaces
 </Notice>
 
 ## 3. Add the SSH key to github
@@ -81,7 +79,7 @@ This guide focus on github but you can do the same following similar steps for o
 
 The first thing you should do is to **restart** the terminal so that changes can be applied.
 
-Run the following command: 
+Run the following command:
 
 ```sh
 ssh -T git@github.com

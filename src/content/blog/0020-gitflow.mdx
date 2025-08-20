@@ -6,7 +6,7 @@ description: "Development good practices: how to using gitflow as code control."
 date: 2019-06-04
 image: "/images/blog/0020-gitflow.jpg"
 category: git
-tags: [GIT, Best Practices]
+tags: [Git, Best Practices]
 draft: false
 ---
 
@@ -26,19 +26,45 @@ If you are using git from the command line you should check <FancyLink linkText=
 
 There are some famous 'git flows' in the industry such as:
 
-* <FancyLink linkText="Gitflow" url="https://danielkummer.github.io/git-flow-cheatsheet/" company="default" dark="true"/>
-* <FancyLink linkText="Gitlab flow" url="https://about.gitlab.com/2014/09/29/gitlab-flow/"/>
-* <FancyLink linkText="Github flow" url="https://guides.github.com/introduction/flow/"/>
-* <FancyLink linkText="Oneflow" url="https://www.endoflineblog.com/oneflow-a-git-branching-model-and-workflow" company="default" dark="true"/>
+- <FancyLink
+    linkText="Gitflow"
+    url="https://danielkummer.github.io/git-flow-cheatsheet/"
+    company="default"
+    dark="true"
+  />
+- <FancyLink
+    linkText="Gitlab flow"
+    url="https://about.gitlab.com/2014/09/29/gitlab-flow/"
+  />
+- <FancyLink
+    linkText="Github flow"
+    url="https://guides.github.com/introduction/flow/"
+  />
+- <FancyLink
+    linkText="Oneflow"
+    url="https://www.endoflineblog.com/oneflow-a-git-branching-model-and-workflow"
+    company="default"
+    dark="true"
+  />
 
 I strongly recommed using `gitflow` since is the more complete solution and will give you more flexibility.
 In this post I am going to explain how it works.
 
 <Notice type="error">
-  **Disclaimer:** After some years, I'd suggest you go with <FancyLink linkText="Github flow" url="https://guides.github.com/introduction/flow/"/> whenever possible since it greatly simplifies the workflow.
-  And only switch to <FancyLink linkText="Gitflow" url="https://danielkummer.github.io/git-flow-cheatsheet/" company="default" dark="true"/> if you actually needed to have **2 long lived branches** (`develop` + `main`)
+  **Disclaimer:** After some years, I'd suggest you go with{" "}
+  <FancyLink
+    linkText="Github flow"
+    url="https://guides.github.com/introduction/flow/"
+  />{" "}
+  whenever possible since it greatly simplifies the workflow. And only switch to{" "}
+  <FancyLink
+    linkText="Gitflow"
+    url="https://danielkummer.github.io/git-flow-cheatsheet/"
+    company="default"
+    dark="true"
+  />{" "}
+  if you actually needed to have **2 long lived branches** (`develop` + `main`)
 </Notice>
-
 
 ## 2. Gitflow
 
@@ -73,7 +99,8 @@ When they are closed they must merge the new changes to the `master` branch and 
 After closing the release it will add a tag to the `master` branch with the version like X.X.X.
 
 <Notice type="info">
-  To add the correct tag **release** branches should have the name of the new version you are creating preceded by `release/` like `release/x.x.x`
+  To add the correct tag **release** branches should have the name of the new
+  version you are creating preceded by `release/` like `release/x.x.x`
 </Notice>
 
 ### 2.2. Hotfixs
@@ -95,15 +122,15 @@ That means that when you finish a `feature` you should create a pull request to 
 After everybody (or a portion of the team) has checked the code it can be merged.
 
 <Notice type="warning">
-  It is important to merge **features** into the **develop** branch, not the **master** one.
+  It is important to merge **features** into the **develop** branch, not the
+  **master** one.
 </Notice>
 
 If you want you can also create pull requests to close a `release` or a `hotfix` but you need to make sure to do some things:
 
-* create the pull request to merge it into the `master` branch.
-* tag manually the `master` branch with the version.
-* after closing the pull request remember to also merge the `release`/`hotfix` into the `develop` branch.
-
+- create the pull request to merge it into the `master` branch.
+- tag manually the `master` branch with the version.
+- after closing the pull request remember to also merge the `release`/`hotfix` into the `develop` branch.
 
 ## 4. Using gitflow with some git programs
 
@@ -119,9 +146,9 @@ If you are using <FancyLink linkText="Sublime Merge" url="https://www.sublimemer
 When you are working with **gitflow** you are creating branches with some preffixes which can be customized.
 If you change them remember to specify it in the `README`. For example I usually use those preffixes since are shorter:
 
-* feature: `f/`
-* release: `r/`
-* hotfix: `h/`
+- feature: `f/`
+- release: `r/`
+- hotfix: `h/`
 
 ### 5.1. Version numbers
 
