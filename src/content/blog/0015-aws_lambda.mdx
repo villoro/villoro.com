@@ -18,16 +18,16 @@ AWS Lambda lets you run code without managing servers. Here we use it to start a
 
 AWS Lambda is a compute service that lets you run code without provisioning or managing servers. AWS Lambda executes your code only when needed and scales automatically, from a few requests per day to thousands per second.
 
-AWS lambdas should be used for small and light functions. For more complicated or time expensive functions it is better to use and `EC2` instance which can be turned on/off when needed to keep costs low.
+AWS lambdas should be used for small and light functions. For more complicated or time expensive functions it is better to use an `EC2` instance which can be turned on/off when needed to keep costs low.
 
 
 ## 2. Creating a lambda to start/stop instances
 
 The idea is to create a lambda that can start a system (both an `EC2` and `RDS`) using an API.
 
-This lambda allow users to start or stop instances through html requests. There is an URL and users can specify in **queryStringParameters** which system they want to act upon and what action they want (`start/stop/status`). For security reasons it is also needed to include a **token** in the headers.
+This lambda allows users to start or stop instances through html requests. There is a URL and users can specify in **queryStringParameters** which system they want to act upon and what action they want (`start/stop/status`). For security reasons it is also needed to include a **token** in the headers.
 
-And example of the data used would be:
+An example of the data used would be:
 ```python
 headers = {
   "token": ******
@@ -40,16 +40,16 @@ queryStringParameters = {
 ```
 
 ### 2.1. How it works
-These lambda is created in **python 3.6** and rely on aws **boto3** library. There are 2 files:
+This lambda is created in **python 3.6** and relies on aws **boto3** library. There are 2 files:
 
 * **aws.py:** this handles the start/stop of the instances. This file is shared in all lambdas
-* **lambda_function.py:** this has the loggic for deciding what to start/stop
+* **lambda_function.py:** this has the logic for deciding what to start/stop
 
 #### 2.1.1. aws.py
-First of all it will start an AWS session an it is important to start it in the correct region. There is no need to use any credentials since AWS has already put the ACCESS_KEY and SECRET_KEY as an environment vars and are used in _boto3_ background.
+First of all it will start an AWS session and it is important to start it in the correct region. There is no need to use any credentials since AWS has already put the ACCESS_KEY and SECRET_KEY as environment vars and are used in _boto3_ background.
 
 <Notice type="warning">
-  **Important:** use the appropiate region.
+  **Important:** use the appropriate region.
 </Notice>
 
 Then there are 2 functions:
@@ -65,7 +65,7 @@ The workflow is:
 
 #### 2.1.2. lambda_handler.py
 
-There is a dictionary with the infos of the instances that the lambdas can act upon. The idea is that users can only use the name of the system (```magento/vtiger```) and the dictionary will give the instance id.
+There is a dictionary with the info of the instances that the lambdas can act upon. The idea is that users can only use the name of the system (```magento/vtiger```) and the dictionary will give the instance id.
 
 Example of dictionary:
 
@@ -88,7 +88,7 @@ INSTANCES = {
 
 For the lambda **instances_api** there is some handling of the request. First it will check if the token is present and correct and if not it will return a json with a message of the actual problem.
 
-If the token is correct it will iterate over the **systems** presents in the request params and if it is found in the _INSTANCES_ dictionary and if the **action** is ```start/stop``` it will act. The lambda will return a json with the result of each system, like this:
+If the token is correct it will iterate over the **systems** present in the request params and if it is found in the _INSTANCES_ dictionary and if the **action** is ```start/stop``` it will act. The lambda will return a json with the result of each system, like this:
 
 ```json
 {
@@ -110,7 +110,7 @@ First of all there is some work to do in AWS IAM service. This will give the lam
 2. Act on `RDS` instances
 3. Write logs
 
-To do that first you will need to a **policy** and then assign it to a **role**.
+To do that first you will need to create a **policy** and then assign it to a **role**.
 
 #### 2.2.1. Create a IAM/Policy
 
@@ -192,13 +192,13 @@ The policy config is:
 
 ![AWS lambda screenshot](../../images/posts/2019/0015-aws_lambda_screenshot.png)
 
-<Notice type="info">
-  API Gateway is set used as a triger. Click at the left of the image, where it says add triger.
-</Notice>
+  <Notice type="info">
+    API Gateway is used as a trigger. Click at the left of the image, where it says add trigger.
+  </Notice>
 
 1. Go to AWS Lambda service
 2. Open **instances_api** function
-3. Add **API Gateway** triger
+3. Add **API Gateway** trigger
     1. Click it to configure it
     2. Select **new API**
     3. Security: **open**
@@ -211,12 +211,12 @@ One way to give more functions to this lambda is to set times to start or stop c
 
 You can do this by two ways. First would be to create a second lambda that calls the first using html requests. The second would be to simply hardcode the action (look at `lambda_handler_start.py`) to see this second option.
 
-And you need to set the time triger by using AWS CloudWatch.
+And you need to set the time trigger by using AWS CloudWatch.
 
 1. Go to AWS CloudWatch service
 2. Go to sidebar ```Events/rules```
     1. Select **schedule**
-    2. Select **cron expresion** and write expected cron
+    2. Select **cron expression** and write expected cron
     3. Add lambda function as **target**
 3. Configure
     1. Set name and description

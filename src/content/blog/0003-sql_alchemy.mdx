@@ -2,7 +2,7 @@
 slug: sql-alchemy-python
 title: SQL Alchemy with python
 meta_title: SQL Alchemy
-description: SQL is one of the most relevant language for databases. So at one point you will need to interact to get, store or modify some data. Fortunatelly you can do it in python using SQL Alchemy.
+description: SQL is one of the most relevant languages for databases. So at one point you will need to interact to get, store or modify some data. Fortunately you can do it in python using SQL Alchemy.
 date: 2019-02-08
 image: "/images/blog/0003-sql-alchemy.jpg"
 category: DE
@@ -12,9 +12,9 @@ draft: false
 
 ## 0. Why SQL with python?
 
-SQL is one of the most relevant language for databases. So at one point you will need to interact to get, store or modify some data. Fortunatelly you can do it in python using **SQL Alchemy**.
+SQL is one of the most relevant languages for databases. So at one point you will need to interact to get, store or modify some data. Fortunately you can do it in python using **SQL Alchemy**.
 
-In this post I will show to do it while giving some advices based on problems I had.
+In this post I will show how to do it while giving some advice based on problems I had.
 
 ## 1. Connect to a SQL database
 
@@ -38,7 +38,7 @@ engine = sa.create_engine(
 
 You obviously will need to use your credentials for `username`, `password`, `host` and `database`.
 
-For the `drivername` and `port` below you have and example for some popular SQL databases:
+For the `drivername` and `port` below you have an example for some popular SQL databases:
 
 ```yaml
 postgres:
@@ -88,14 +88,14 @@ If you don't have input parameters you can run `cursor.execute("my_stored_proced
 
 ## 5. Insert data to SQL
 
-Ideally to insert data to SQL is as easy as calling the datafram function `to_sql`. For example:
+Ideally to insert data to SQL is as easy as calling the dataframe function `to_sql`. For example:
 
 ```python
 df.to_sql(name="my_table", con=engine, if_exists="append", index=False)
 ```
 
 <Notice type="warning">
-  Be careful with using `if_exists="replace"` because it will delete the SQL table an create it another time. This caused me some problems when I was inserting japanese text in a table because the encoding was lost in the process.
+  Be careful with using `if_exists="replace"` because it will delete the SQL table and create it another time. This caused me some problems when I was inserting Japanese text in a table because the encoding was lost in the process.
 </Notice>
 
 

@@ -12,7 +12,7 @@ draft: false
   
 ## 0. Why?
 
-If you just created a blog you will probably want to have common and usefull features like:
+If you just created a blog you will probably want to have common and useful features like:
 
 * Analytics
 * Mailing list
@@ -27,7 +27,7 @@ It won't be a step by step guide, instead I will highlight the things I think ar
 ## 1. Google Analytics
 You should first register your web page and then copy and paste at the scripts part of your base template the code they provide.
 
-One thing I belive is really important is to **filter out your own traffic** to the webpage while you are developing or testing. In my case I did a filter to check if the host of the page is the bare domain of my page. This way I will efectively exclude visits from `localhost` or testing branches like `develop.villoro.com`.
+One thing I believe is really important is to **filter out your own traffic** to the webpage while you are developing or testing. In my case I did a filter to check if the host of the page is the bare domain of my page. This way I will effectively exclude visits from `localhost` or testing branches like `develop.villoro.com`.
 
 The complete code I am using is:
 
@@ -47,7 +47,7 @@ The complete code I am using is:
 </script>
 ```
 <Notice type="warning">
-  Remeber to replace `YOUR_ID` with the appropiate value. As a reference my id is `UA-116253568-1` yours will probably have a similar format.
+  Remember to replace `YOUR_ID` with the appropriate value. As a reference my id is `UA-116253568-1` yours will probably have a similar format.
 </Notice>
 
 Other ways of filtering the traffic would be:
@@ -56,12 +56,12 @@ Other ways of filtering the traffic would be:
 * Using cookies.
 
 ## 2. Mailchimp
-This service is the one that involves less code. Setting it up can be done through their webpage after singing up. I recommend that you customize some things:
+This service is the one that involves less code. Setting it up can be done through their webpage after signing up. I recommend that you customize some things:
 
-* Sing up form. There you will also get the URL that you will use in you site.
+* Sign up form. There you will also get the URL that you will use in your site.
 * Set up reCAPTCHA to avoid robot related problems.
 
-When you have finish that you can put a button in your page so that people can suscribe.
+When you have finished that you can put a button in your page so that people can subscribe.
 
 ```html
 <a href="http://URL_LINK"> <!-- Use your own URL -->
@@ -103,8 +103,8 @@ And then the javascript part:
 ```
 
 <Notice type="warning">
-  Remeber to change `this.page.url` with the full url to the current post and `this.page.identifier` with a unique id for everypost. Be sure that they are different in each post. And also change `s.src` with the url you just registered in disqus.
+  Remember to change `this.page.url` with the full url to the current post and `this.page.identifier` with a unique id for every post. Be sure that they are different in each post. And also change `s.src` with the url you just registered in disqus.
 </Notice>
 
 
-As you can see it is not that hard to use those tools from raw html. If you cannot access your blog source code there also integrations for most common technologies to use the same tools. For example to set up Google Analytics you will only need to write your site ID.
+As you can see it is not that hard to use those tools from raw html. If you cannot access your blog source code there are also integrations for most common technologies to use the same tools. For example to set up Google Analytics you will only need to write your site ID.

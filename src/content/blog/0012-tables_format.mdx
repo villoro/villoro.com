@@ -16,7 +16,7 @@ draft: false
 
 When working with **pandas** people usually need to store one or more tables. There are a lot of different formats to do that. In this post I am going to compare the performance between them.
 
-## 1. How test will be done
+## 1. How the test will be done
 To do the tests I downloaded 3 datasets of different sizes:
 
 <div class="flex justify-center">
@@ -25,7 +25,7 @@ To do the tests I downloaded 3 datasets of different sizes:
   <Button label="Large (6.62 GB)" link="https://www.kaggle.com/city-of-seattle/seattle-checkouts-by-title" style="solid" />
 </div>
 
-I downloaded them from kaggle, one of the best places to find datasets.
+I downloaded them from Kaggle, one of the best places to find datasets.
 
 The formats that I will test are:
 
@@ -144,7 +144,7 @@ With a file of this size it is clear that **parquet** is the best option. For co
   `parquet` is the best for big tables.
 </Notice>
 
-## 5. Conlusions
+## 5. Conclusions
 
 1. `Excel` is only useful for **small** files when you are planning to open with an Excel program.
 2. `csv` performs poorly

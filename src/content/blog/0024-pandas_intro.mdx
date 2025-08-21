@@ -35,10 +35,10 @@ print(pd.__version__)
 ```
 
 <Notice type="warning" className="mt-6">
-  This tutorial uses pandas **0.25.3** since it was the latest version avaible at the time this post was written.
+  This tutorial uses pandas **0.25.3** since it was the latest version available at the time this post was written.
 </Notice>
 
-## 1. Input/Output operations (reading and writting data).
+## 1. Input/Output operations (reading and writing data).
 
 ### 1.1. pd.DataFrame
 To create a new DataFrame from python objects use `pd.DataFrame`.
@@ -60,9 +60,9 @@ df = pd.read_csv("datasets/titanic_train.csv")
 df_iris = pd.read_excel("datasets/iris.xlsx")
 ```
 
-### 1.3. Writte
+### 1.3. Write
 Dataframes have functions that allows you to export them to almost any format.
-For example you can export it to `parquet` (a really eficient file format, more info <FancyLink linkText="Storing tables efficiently with Pandas" url="https://villoro.com/blog/storing-tables-efficiently-pandas/" dark="true"/>).
+For example you can export it to `parquet` (a really efficient file format, more info <FancyLink linkText="Storing tables efficiently with Pandas" url="https://villoro.com/blog/storing-tables-efficiently-pandas/" dark="true"/>).
 
 ```python
 df.to_parquet("datasets/output.parquet")
@@ -102,7 +102,7 @@ The other important function is:
 df.info(memory_usage='deep')
 ```
 
-This will show the types of each column and an aproximation of how much memory is used.
+This will show the types of each column and an approximation of how much memory is used.
 
 ### 2.3. View a column (Series)
 
@@ -220,7 +220,7 @@ So you must really get comfortable with it!
 It is important to see the data but it is usually not enough.
 
 ### 4.1. Basic modifications
-In general you can assing values by using the same functions that were used to acces data.
+In general you can assign values by using the same functions that were used to access data.
 For example:
 
 ```python
@@ -390,4 +390,4 @@ df.groupby("pclass").agg(age_avg=("age", "mean"), age_min=("age", "min"))
 ```
 
 And that would be a really good overview of the pandas library.
-In the future I will writte another post with more advanced **pandas** tricks.
+In the future I will write another post with more advanced **pandas** tricks.

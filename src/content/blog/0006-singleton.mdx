@@ -1,7 +1,7 @@
 ---
 slug: singleton-python
-title: Singleton in python
-meta_title: Singleton in python
+title: Singleton in Python
+meta_title: Singleton in Python
 description: The singleton pattern will help you have only one instance and allow you to call only one sync function.
 date: 2019-02-24
 image: "/images/blog/0006-singleton.jpg"
@@ -15,7 +15,7 @@ draft: false
 Python classes are very useful but sometimes they lack some features that might be very useful.
 
 ## 1. The problem
-Let's imagine you want to create a class that have some data. This class will also have a sync function to update the data. As an example let's create two loader instances of the same class.
+Let's imagine you want to create a class that has some data. This class will also have a sync function to update the data. As an example let's create two loader instances of the same class.
 
 ```python
 class loader:
@@ -54,7 +54,7 @@ loader2.get_value()
 If what you need is to use this data in multiple python files and you want to only call the sync function once and not in every python file this won't work as expected.
 
 ## 2. The singleton pattern
-What is needed is a class that can only have **one instance**. This is the singleton (more info at <FancyLink linkText="Python3 patterns and idioms" url="https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html" company="readthedocs"/>). The simpliest way to achive that is by creating a new python file since by design it will be unique.
+What is needed is a class that can only have **one instance**. This is the singleton (more info at <FancyLink linkText="Python3 patterns and idioms" url="https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html" company="readthedocs"/>). The simplest way to achieve that is by creating a new Python file since by design it will be unique.
 
 So for example let's create `single_loader.py`.
 
@@ -99,7 +99,7 @@ single_loader2.get_value()
   \> 1
 </TerminalOutput>
 
-### 2.1. On real example
+### 2.1. One real example
 
 While I was working with one of my <FancyLink linkText="Dash" url="https://plot.ly/products/dash/" company="plotly"/> projects I made use of that to create a `data_loader.py` file. You can view the code <FancyLink linkText="Expensor personal" url="https://github.com/villoro/expensor_personal/tree/4.3.3/src" dark="true"/>.
 
