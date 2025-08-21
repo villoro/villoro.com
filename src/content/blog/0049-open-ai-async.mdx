@@ -76,7 +76,7 @@ class GPTTokens(BaseModel):
 def count_tokens(messages, model=MODEL_TOKENIZER_DEFAULT):
     """Estimate the number of tokens used by the messages."""
 
-    # I belive the tokenization does not change between sub models
+    # I believe the tokenization does not change between sub models
     if model.startswith(MODEL_GPT_4):
         model = MODEL_GPT_4
 

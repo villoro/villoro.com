@@ -17,7 +17,7 @@ draft: false
   Instead, I suggest using something like <FancyLink linkText="Loguru" url="https://github.com/Delgan/loguru" dark="true"/>. I'm keeping this here for reference.
 </Notice>
 
-In almost every program that we write we will need to show some output. The first thing that developers use is the `print` function but this lacks some really important features such as providing the time when the message was produced and the ability to save the output to a file. This is way is better to use a `logging`.
+In almost every program that we write we will need to show some output. The first thing that developers use is the `print` function but this lacks some really important features such as providing the time when the message was produced and the ability to save the output to a file. This is why it is better to use `logging`.
 
 ## 1. pygogo
 
@@ -29,7 +29,7 @@ The key features I think it has are:
 * It can have different formats for `low` and `high`
 * It can be called from different files and handles well the different paths
 
-What I belive it lacks:
+What I believe it lacks:
 
 * Ability to show full information of errors
 * Easy way to have different formats for console handlers and file handlers.
@@ -40,7 +40,7 @@ What I belive it lacks:
 
 ## 2. v-log
 
-What I wanted was a `log` that would output good looking messages to the console while writting a properly formatted `csv` for further analysis. It is difficult to achive that with the regular `logging` library so I created `v-log`.
+What I wanted was a `log` that would output good looking messages to the console while writing a properly formatted `csv` for further analysis. It is difficult to achieve that with the regular `logging` library so I created `v-log`.
 
 ### 2.1. Using v-log
 
@@ -88,7 +88,7 @@ This is what you will see with the above example:
 
 `v-log` creates a `VLogger` class that is a wrapper that has 2 logs inside, one for the file output and another one for the terminal. This way if you call `log.info` it will call both `log_terminal.info` and `log_console.info` functions.
 
-The second intersting part is that you can pass `time` as and argument and it will process it. You can also pass an exception and it will show the **line** where the error happened, the **type** of error and the **details**.
+The second interesting part is that you can pass `time` as an argument and it will process it. You can also pass an exception and it will show the **line** where the error happened, the **type** of error and the **details**.
 
 ### 2.3. Customizating v-log
 
@@ -98,7 +98,7 @@ When creating the `VLogger` instance you can define:
 |-------------------|----------------------------------------------------|----------------|
 | module_name       | name of the module                                 | `"base"`       |
 | uri_log           | uri of the file where log will be stored           | `"log.csv"`    |
-| file_log_level    | minimum level of log events in order to be writed  | `logging.INFO` |
+| file_log_level    | minimum level of log events in order to be written | `logging.INFO` |
 | console_log_level | minimum level of log events in order to be printed | `logging.INFO` |
 | csv_separator     | csv separator                                      | `";"`          |
 | base_path         | name of the root folder of the execution           | `"src"`        |

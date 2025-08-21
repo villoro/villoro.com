@@ -129,7 +129,7 @@ if __name__ == "__main__":
     FREEZER.freeze()
 ```
 
-Now if you run `python src/freeze.py` you will crate the folder `src/build` with the static webpage.
+Now if you run `python src/freeze.py` you will create the folder `src/build` with the static webpage.
 
 ## 4. Using yamls
 In order to make it easier to customize the pages I suggest using `yaml` files. They are like `json` files but more compact.
@@ -160,7 +160,7 @@ APP = Flask(__name__)
 
 
 def _read_yaml(filename):
-    """ auxiliar function to raad a yaml """
+    """ auxiliary function to read a yaml """
 
     with open(f"src/content/{filename}.yaml", encoding="utf-8") as file:
         out = yaml.load(file)
@@ -197,7 +197,7 @@ To use custom `css` files and/or images simply place them in the folder `src/sta
 
 I strongly recommend using <FancyLink linkText="Netlify" url="https://www.netlify.com/"/> since they do a lot of things for free. Some of them you probably didn't know that you should do them (or at least I didn't).
 
-It is really easy to set up. The most imporant steps are:
+It is really easy to set up. The most important steps are:
 
 1. Login with your github account.
 2. Link to the repository where you have the project

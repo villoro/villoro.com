@@ -2,7 +2,7 @@
 slug: serving-python-app-nginx-gunicorn
 title: Serving python apps with nginx and gunicorn
 meta_title: Serving python apps
-description: How to set up Apache Airflow, the platform to programmatically author, schedule and monitor workflows.
+description: How to serve Python apps with nginx and gunicorn.
 date: 2019-03-21
 image: "/images/blog/0011-green-unicorn-cape.jpg"
 category: web
@@ -40,7 +40,7 @@ Another common choice would be <FancyLink linkText="Uwsgi" url="https://uwsgi-do
 The idea of this post is to set up `nginx` and `gunicorn`. To test them you can create a very simple app using <FancyLink linkText="Flask" url="http://flask.pocoo.org/" company="flask"/>. You can do the same with <FancyLink linkText="Django" url="https://www.djangoproject.com/"/> or <FancyLink linkText="Dash" url="https://plot.ly/products/dash/" company="plotly"/> apps.
 
 ### 1.4. Supervisor
-<FancyLink linkText="Supervisor" url="http://supervisord.org/" company="default" dark="true"/> is a system that allows users to monitor and control processes. This will make sure to restart the gunicorn process if it anything goes wrong. Without it you should do it yourself.
+<FancyLink linkText="Supervisor" url="http://supervisord.org/" company="default" dark="true"/> is a system that allows users to monitor and control processes. This will make sure to restart the gunicorn process if anything goes wrong. Without it you should do it yourself.
 
 <Notice type="info">
   You can read more about <FancyLink linkText="Why a web server and wsgi" url="https://serverfault.com/questions/331256/why-do-i-need-nginx-and-something-like-gunicorn"/>.
@@ -54,7 +54,7 @@ First you should create the flask app and test it. After you will install and co
  First let's create the `index.py` with the app:
 
 ```sh
-# Create html folder if neeeded
+# Create html folder if needed
 mkdir /var/www/html
 cd /var/www/html
 
@@ -95,12 +95,12 @@ You can now view it by going at `XX.XXX.XXX.XXX:PORT` (Use your EC2 IP and the p
 </Notice>
 
 #### 2.1.1. Open EC2 ports (optional)
-If you are using and **AWS EC2** it is possible that you don't have the port 80 opened. You can do it with:
+If you are using an **AWS EC2** it is possible that you don't have the port 80 opened. You can do it with:
 
 1. Go to AWS console and then to the EC2 page. Use the sidebar to go to `NETWORK & SECURITY/Security Groups`.
 2. Find the security group of your EC2 instance and edit the **Inbound** rules.
 3. Add `Custom TCP Rule` with port `5000` (or the one you used).
-4. If you are opening a port for testing, remeber to close it back when you are done.
+4. If you are opening a port for testing, remember to close it back when you are done.
 
 ### 2.2. WSGI
 
@@ -116,7 +116,7 @@ pip3 install gunicorn
 sudo apt install supervisor -y
 ```
 
-You will create an config file for your project, for example `/etc/supervisor/conf.d/flask_test.conf`:
+You will create a config file for your project, for example `/etc/supervisor/conf.d/flask_test.conf`:
 
 ```sh
 sudo nano /etc/supervisor/conf.d/flask_test.conf
@@ -212,7 +212,7 @@ sudo service nginx restart
 You can now go to `XX.XXX.XXX.XXX` and you should see the flask app `Hello World` message.
 
 <Notice type="warning">
-  If everything is working remeber to close the ports that you opened only for testing.
+  If everything is working remember to close the ports that you opened only for testing.
 </Notice>
 
 ## 3. Next steps
@@ -246,4 +246,4 @@ I strongly suggest you set up a SSL certificate for apps that are in production.
 You can learn how with <FancyLink linkText="How to secure nginx with let's encrypt" url="https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04"/>.
 
 While working on this post I set this app for my first time.
-It is normal to encounter difficultes but I was able to sort it out, you can do it too!
+It is normal to encounter difficulties but I was able to sort it out, you can do it too!

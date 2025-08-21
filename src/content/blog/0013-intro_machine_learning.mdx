@@ -12,7 +12,7 @@ draft: false
 
 ## 1. What is Machine Learning?
 
-Machine Learning is an application of Artificial Intelligence (AI) that allows computers to automatically learn from data without being explicitly programmed. Insted of using explicit instructions it relies on patterns and inference instead.
+Machine Learning is an application of Artificial Intelligence (AI) that allows computers to automatically learn from data without being explicitly programmed. Instead of using explicit instructions it relies on patterns and inference instead.
 
 ### 1.1. Types of Machine Learning
 
@@ -25,13 +25,13 @@ There are different tasks that ML can perform and they can be categorized in thr
 ![Machine Learning types](../../images/posts/2019/0013-machine_learning_types.jpg)
 
 #### 1.1.1. Supervised Learning
-Supervised Learning algorithms build a mathematical model from both the inputs and the desired outputs. Each training example has one or more inputs (features, usually represented as `x`) and at least one desired output (target, represented as `y`). It will have and objective function that will be optimized through iterations (training). After the training is completed the algorithm would be able to predict the target given the features of new examples.
+Supervised Learning algorithms build a mathematical model from both the inputs and the desired outputs. Each training example has one or more inputs (features, usually represented as `x`) and at least one desired output (target, represented as `y`). It will have an objective function that will be optimized through iterations (training). After the training is completed the algorithm would be able to predict the target given the features of new examples.
 
 Supervised learning algorithms include classification and regression.
 
 #### 1.1.2. Unsupervised Learning
 
-Unsupervised learning algorithms take a set of data that contains only the inputs and find a structure. The algorithm learn from unlabeled data and is able to create groups (clusters) of similar points.
+Unsupervised learning algorithms take a set of data that contains only the inputs and find a structure. The algorithm learns from unlabeled data and is able to create groups (clusters) of similar points.
 
 #### 1.1.3. Reinforcement Learning
 
@@ -54,7 +54,7 @@ Bike-sharing rental process is highly correlated to the environmental and season
 
 ### 2.1. How the data is used in a supervised learning problem
 
-The data will be splitted in 3 groups:
+The data will be split in 3 groups:
 
 * Training
 * Validation
@@ -77,18 +77,18 @@ The first thing we need to do is to handle the categorical features since machin
 We will create new dummy columns for all categorical features. For example there are four seasons so we will create **season_1**, **season_2**, **season_3** and **season_4** columns with `1` if the point is in that season and `0` otherwise.
 
 <Notice type="warning">
-  We cannot use only one column and `1`, `2`, `3` or `4` as the options since the seasons are not **linearly related**. That is to say that `sumer + spring = winter` does not make sense. To avoid this relations we create the four new columns.
+  We cannot use only one column and `1`, `2`, `3` or `4` as the options since the seasons are not **linearly related**. That is to say that `summer + spring = winter` does not make sense. To avoid these relations we create the four new columns.
 </Notice>
 
-Another important thing to do is to **normalize** the data. This step is mandatory for some algorithms and it never has a bad efect. To normalize the data we will calculate the mean and the standard deviation (std) of each column and then we will substract the mean to all values of the column and divide by the std. This will ensure that all columns have `mean = 0` and `std = 1`.
+Another important thing to do is to **normalize** the data. This step is mandatory for some algorithms and it never has a bad effect. To normalize the data we will calculate the mean and the standard deviation (std) of each column and then we will subtract the mean from all values of the column and divide by the std. This will ensure that all columns have `mean = 0` and `std = 1`.
 
-Let's also check the target we want to predict. In the dataset there are the rentals for `casual` and `registred` users as well as the sum of those two. This last one (`cnt`) will be our target.
+Let's also check the target we want to predict. In the dataset there are the rentals for `casual` and `registered` users as well as the sum of those two. This last one (`cnt`) will be our target.
 
 ![Preview target variable](../../images/posts/2019/0013-preview-target-variable.png)
 
 ### 2.3. Selecting the algorithm
 
-In this example we will use Support Vector Regression (SVR). It is an algorithm that is similar to a liniar regression but using a treshold. It is out of the scope of this post to explain how it works but you can read it <FancyLink linkText="Support Vector Regression Or SVR" url="https://medium.com/coinmonks/support-vector-regression-or-svr-8eb3acf6d0ff"/>.
+In this example we will use Support Vector Regression (SVR). It is an algorithm that is similar to a linear regression but using a threshold. It is out of the scope of this post to explain how it works but you can read it <FancyLink linkText="Support Vector Regression Or SVR" url="https://medium.com/coinmonks/support-vector-regression-or-svr-8eb3acf6d0ff"/>.
 
 ### 2.4. Training and parameter tuning
 
@@ -106,4 +106,4 @@ Now we will use the **test** data to ensure that everything is working well.
 
 ![Predictions vs target with test data](../../images/posts/2019/0013-predictions-vs-target-with-test-data.jpg)
 
-And it is indeed. It only has some problems around christmas since they are special days. One way to solve this would be to include more years so that the classifier can learn what happens on christmas 
+And it is indeed. It only has some problems around Christmas since they are special days. One way to solve this would be to include more years so that the classifier can learn what happens on Christmas.
