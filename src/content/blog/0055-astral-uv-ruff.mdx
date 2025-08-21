@@ -6,7 +6,7 @@ description: Discover how Astral's Rust-powered tools, uv and ruff, provide a bl
 date: 2025-03-14
 image: /images/blog/0055-astral.jpg
 category: python
-tags: [Python, Tools/Utils, Performance, Benchmark, Setup, Best Practices]
+tags: [Python, Tools, Performance, Benchmark, Setup, Best Practices, UV, Ruff]
 draft: false
 ---
 
@@ -176,7 +176,7 @@ For CI/CD workflows, you can use `pre-commit` with:
   rev: v0.5.6
   hooks:
     - id: ruff
-      args: [ --fix ]
+      args: [--fix]
     - id: ruff-format
 ```
 
