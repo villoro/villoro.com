@@ -18,19 +18,57 @@ draft: false
 
 ## 2. Why DuckDB is Faster Than You Expect
 
-At first glance, you might assume DuckDB can only handle small or medium-sized data. But that’s misleading—DuckDB is capable of crunching through hundreds of millions of rows on a laptop.
+At first glance, you might assume DuckDB is only good for medium-sized datasets—something that fits comfortably in memory. In reality, DuckDB can push the limits of what you think is possible on a single machine. 
+
+<Notice type="success">
+  Benchmarks consistently show it handling **hundreds of millions to billions of rows** interactively, often outperforming both Pandas and even distributed systems in local workloads.
+</Notice>
 
 ### 2.1. In-memory columnar engine
 
-DuckDB uses a **columnar storage format**, which makes analytical queries much faster than row-based engines. It’s optimized for scanning large amounts of data quickly.
+DuckDB uses a **vectorized, columnar format** for storage and execution:
+
+* Scans and aggregations are dramatically faster since only the relevant columns are read.
+* Compression is efficient: Parquet files in the **tens of gigabytes** can often be scanned on a laptop in seconds.
+* Internal benchmarks show DuckDB can process **\~1–5 GB/s of columnar data** depending on hardware.
+
+Compared to Pandas row-oriented in-memory storage, DuckDB scales far better. For example, on a 10M row dataset, DuckDB was about **5× faster than Pandas** (and \~1.5× faster than Polars) under identical conditions (Source: <FancyLink linkText="DuckDB, Polars and Pandas performance comparison" url="https://github.com/prrao87/duckdb-study" dark="true"/>).
 
 ### 2.2. Efficient query execution
 
-Its vectorized query engine processes batches of data at a time, taking advantage of modern CPU capabilities.
+DuckDB’s **vectorized execution model** processes data in chunks of \~1000 rows at a time, optimized for CPU caches and SIMD instructions. This avoids Python overhead and makes it highly competitive:
+
+* A **group by on 100M rows** can run in **under 10 seconds** on a modern laptop (<FancyLink linkText="DuckDB Benchmarks" url="https://duckdb.org/2024/06/26/benchmarks-over-time.html" dark="true"/>).
+* Joins across **two 1 GB Parquet files** complete in just a few seconds.
+* Parallel execution scales well: an 8-core machine often achieves **5–6× faster queries** compared to single-thread.
+
+Benchmarks show DuckDB beating Spark on some medium-scale jobs: e.g. a 40 GB aggregation took DuckDB **\~4 s vs. Spark’s 16 s** on the same 16-core machine (Source:
+<FancyLink linkText="Small-Scale Data Pipeline: DuckDB vs. chDB vs. Spark" url="https://www.digitalturbine.com/blog/small-scale-data-pipeline-spark-vs-chdb-vs-duckdb" dark="true" company="default"/>).
 
 ### 2.3. Surprising scale on a single machine
 
-You can query multi-gigabyte parquet files directly, join them, and even run complex aggregations—all without spinning up a cluster. DuckDB makes the “impossible” surprisingly routine.
+DuckDB is not limited to RAM size. Its query engine streams data off disk, enabling queries larger than memory:
+
+* On a MacBook Pro (M1, 16 GB RAM), DuckDB successfully aggregated **1 billion rows (\~50 GB)**, thanks to its out-of-core group-by algorithm ([DuckDB Labs](https://duckdb.org/2024/06/26/benchmarks-over-time.html)).
+* In production tests, a **40 GB Parquet dataset** was aggregated in seconds on a 16-core VM with 64 GB RAM ([Querify Labs](https://www.querifylabs.com/blog/duckdb-vs-spark-parquet)).
+* A real ETL pipeline processed **\~100 GB of raw CSV (897M rows)** on a 4-core, 32 GB RAM machine in about **26 minutes**, costing only \~\$0.15 in cloud compute ([Dagster case study](https://dagster.io/blog/duckdb-dagster-pipeline)).
+* On Microsoft Fabric, DuckDB remained competitive against Spark up to **700 GB of data** on one node; it only faltered at the **1 TB scale** due to hardware limits ([Microsoft Fabric blog](https://techcommunity.microsoft.com/t5/fasttrack-for-azure/duckdb-on-fabric-benchmarks/ba-p/4176372)).
+
+### 2.4. Performance improvements over time
+
+Another reason DuckDB feels “too fast to be true” is that it’s getting faster with every release. In DuckDB’s own [Benchmarks Over Time (June 2024)](https://duckdb.org/2024/06/26/benchmarks-over-time.html), the total runtime of their standard suite dropped from **\~500 seconds in 2021 to \~35 seconds in 2024** — a **14× improvement**.
+
+Some highlights:
+
+* **Aggregations:** \~12× faster.
+* **Joins:** \~4× faster.
+* **Window functions:** \~25× faster.
+* **CSV imports:** \~3× faster.
+* **Parquet exports:** \~4–5× faster.
+
+> **Proposed plot:** This would be a great place to insert a simple line chart showing DuckDB’s benchmark total runtime (seconds) over time (2021 → 2024), highlighting the \~14× speedup. It would visually reinforce the steady gains across versions.
+
+DuckDB’s continuous improvements, combined with its efficient design, explain why it often outperforms expectations on a single machine.
 
 ## 3. DuckDB SQL Superpowers
 
