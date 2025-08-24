@@ -63,15 +63,121 @@ Highlights on the same machine:
 
 ## 3. DuckDB SQL Superpowers
 
-DuckDB isn’t just about speed—it also provides a SQL dialect full of modern features.
+DuckDB’s speed is impressive, but its **SQL dialect is equally modern and friendly**. It adds features that make queries more concise, more powerful, and often easier to read than in traditional systems like PostgreSQL or Spark SQL. Many of these enhancements are captured in the official blog post <FancyLink linkText="Friendlier SQL for DuckDB" url="https://duckdb.org/2022/05/04/friendlier-sql.html" dark="true"/>.
 
 ### 3.1. Extended SQL syntax
 
-It comes with quality-of-life improvements like easy joins, better casting, and functions you wish existed in standard SQL.
+* **Select all `except` or `replace` some columns:**
+
+```sql
+SELECT * EXCLUDE (jar_jar_binks, midichlorians),
+       * REPLACE (UPPER(name) AS name)
+FROM star_wars;
+```
+
+This returns every column except the excluded ones, and also replaces the `name` column with an uppercased version. No need to type all columns manually.
+
+* **Query files directly:**
+
+```sql
+SELECT *
+FROM 'data/2025-*.parquet';
+```
+
+DuckDB can query CSV, Parquet, or JSON files directly, with support for wildcards. It auto-detects delimiters, headers, and column types. No need to pre-load or define schemas—just query the files.
+
+* **Column pattern matching:**
+
+```sql
+SELECT * LIKE 'name%'
+FROM people;
+```
+
+This selects all columns starting with `name`. You can also use `NOT LIKE`, `SIMILAR TO`, or `ILIKE` for case-insensitive matching. It even supports `COLUMNS('regex')` to dynamically match sets of columns.
+
+* **`GROUP BY ALL` and `ORDER BY ALL`:**
+
+```sql
+SELECT country, city, COUNT(*)
+FROM events
+GROUP BY ALL
+ORDER BY ALL;
+```
+
+Instead of listing all grouping or ordering columns, DuckDB lets you collapse it into `ALL`. This keeps queries shorter and resilient to schema changes.
+
+* **Trailing commas:**
+
+```sql
+SELECT
+    id,
+    name,
+    country, -- trailing comma allowed ✔
+FROM users;
+```
+
+DuckDB allows trailing commas in SELECT lists, GROUP BY, etc.—a small detail that makes editing queries less error-prone.
 
 ### 3.2. Built-in functions for analytics
 
-DuckDB includes **window functions, regex support, JSON handling, and the ability to read/write Parquet and CSV directly**.
+* **Window functions with QUALIFY:**
+
+```sql
+SELECT event, athlete, time,
+       ROW_NUMBER() OVER (PARTITION BY event ORDER BY time) AS r
+FROM results
+QUALIFY r = 3;
+```
+
+The `QUALIFY` clause lets you filter on window functions directly, instead of wrapping in a subquery.
+
+* **Pivot/Unpivot:**
+
+```sql
+SELECT *
+FROM cities
+PIVOT(sum(population) FOR year IN (2000, 2010, 2020) GROUP BY country);
+```
+
+Turn long tables into wide ones (and vice versa) in a single step, without complex joins or extensions.
+
+* **JSON and nested data:**
+
+```sql
+SELECT starfleet[10].model AS starship
+FROM 'content.json';
+```
+
+DuckDB automatically infers JSON into lists and structs. You can use dot notation to access nested fields and `unnest()` to flatten arrays into rows.
+
+* **Top-N aggregates:**
+
+```sql
+SELECT grp, max(val, 3) AS top3_vals
+FROM t1
+GROUP BY grp;
+```
+
+Functions like `max(col, N)` or `arg_max(val, key, N)` return the top N values per group as arrays.
+
+* **String slicing:**
+
+```sql
+SELECT name[1:4] AS short_name
+FROM users;
+```
+
+DuckDB supports Python-like slicing on strings (and arrays), making substring extraction more intuitive.
+
+* **Regex and pattern matching:**
+  DuckDB includes `LIKE`, `ILIKE`, `SIMILAR TO`, `GLOB`, and full regex support. For example:
+
+```sql
+SELECT regexp_extract(name, '(Mr|Ms)\\. (.*)', 2) AS cleaned
+FROM employees;
+```
+
+This extracts capture groups into columns directly.
 
 ### 3.3. Interoperability with Python/R
 
