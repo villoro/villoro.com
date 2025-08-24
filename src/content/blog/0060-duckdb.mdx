@@ -261,31 +261,34 @@ This combination means you can use Pandas/Polars for light data wrangling and Du
 
 ## 5. DuckLake: A Young but Promising Idea
 
-DuckDB is already powerful, but the community is pushing it further.
+DuckDB is already powerful on its own, but the community is pushing it further. One notable experiment is **DuckLake**, an emerging open table format and extension that adds full “lakehouse” capabilities on top of DuckDB. The goal is to combine DuckDB’s simplicity with the robust features of a data lakehouse – bringing in ACID transactions, time travel, schema evolution, and more, without the usual complexity of big-data frameworks.
 
-### 5.1. The concept of bringing data lakehouse features into DuckDB
+### 5.1. The concept of bringing lakehouse features into DuckDB
 
-**DuckLake** is an experimental layer that adds data lakehouse capabilities on top of DuckDB—things like ACID transactions and table formats.
+Traditional lakehouse formats like Apache Iceberg and Delta Lake manage metadata as **files** (logs, snapshots, schemas) in cloud storage. This avoids a centralized service, but comes at a cost: frequent updates create a flood of small metadata files. In some workloads, metadata grows faster than data itself, leading to slow queries and heavy maintenance.
+
+
+<FancyLink linkText="DuckDB" url="https://ducklake.select/" dark="true"/> flips the approach by storing all metadata in a **SQL database** instead of files. Snapshots, schemas, and statistics are tracked as tables, with each update being a single ACID transaction. Reading a DuckLake table means fetching the latest snapshot with one SQL query, not chasing dozens of JSON files on S3. Writing data doesn’t create cascades of new log files—small changes can even be inlined directly into the metadata store for sub‑millisecond commits. This makes concurrent writes much smoother and reduces the overhead of high‑frequency updates.
+
+The idea isn’t without precedent: cloud warehouses like BigQuery and Snowflake also use dedicated databases internally for metadata. DuckLake applies the same principle while keeping the data itself in open Parquet files. It’s a hybrid model: open storage for data, database‑backed catalogs for metadata.
 
 ### 5.2. Current state and potential
 
-It’s still early, but the vision is exciting: combining DuckDB’s simplicity with the robustness of lakehouse technologies. If it matures, DuckLake could make DuckDB even more relevant in production scenarios.
+DuckLake is still early, released as an **experimental DuckDB extension** (since v1.3.0). You can already create DuckLake tables backed by Parquet files on S3 or local storage, with metadata stored in DuckDB itself or an external database like Postgres. This brings features such as:
 
-## 6. Closing Thoughts
+* **ACID transactions** (including multi‑table commits)
+* **Time travel** with snapshot isolation
+* **Schema evolution** and support for complex types
+* **Partition pruning and statistics** for efficient queries
 
-DuckDB has quickly gone from a niche project to a serious tool in the data engineer’s toolbox.
+Because all metadata operations are SQL, there’s no need to run a separate Hive/Glue metastore or manage piles of JSON log files. For quick testing, you can even use a local DuckDB file as the catalog; for shared environments, simply plug in Postgres or MySQL. Data files are plain Parquet, and even compatible with Iceberg’s file formats—making migration possible if needed.
 
-### 6.1. Where DuckDB shines today
+The vision is compelling: DuckDB as a lightweight engine, DuckLake as the layer that brings governance, durability, and multi‑user safety. If the project matures, it could make DuckDB a serious contender for production analytics at scale—handling not only interactive analysis but also collaborative, transactional workloads on shared data lakes.
 
-* Local analytics at lightning speed
-* Simple exploration of large Parquet/CSV files
-* Acting as glue between different databases
-* Lightweight CI pipelines with DBT
+---
 
-### 6.2. Why it’s worth experimenting with DuckLake
+<FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/> is already reshaping how we think about analytics on a single machine:  
+fast, simple, and powerful. With DuckLake on the horizon, it could even become a lightweight lakehouse engine.  
 
-Even though DuckLake is still young, its vision aligns with the future of data: fast, simple, lakehouse-native.
+Either way, it’s worth giving it a try—you may be surprised by how much you can do with just your laptop.
 
-### 6.3. Final encouragement for readers to try it
-
-If you haven’t already, give DuckDB a try. Chances are, it’ll surprise you with how much you can accomplish with just your laptop.
