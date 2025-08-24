@@ -36,7 +36,7 @@ DuckDB’s engine is **columnar & vectorized** and aggressively **multithreaded*
 
 * **Single‑node pipeline vs Spark (40 GiB Parquet, 52 files, 94 cols, c2d‑standard‑16 16‑core/64 GB):** DuckDB finished the group‑by and wrote a single Parquet output in **3.99 s**. chDB took **9.30 s** and Spark **16.39 s** under the same setup. Source: <FancyLink linkText="Small‑Scale Data Pipeline: DuckDB vs. chDB vs. Spark" url="https://www.digitalturbine.com/blog/small-scale-data-pipeline-spark-vs-chdb-vs-duckdb" dark="true" company="default"/>.
 
-<canvas id="speed_by_tools" style="width:100%;height:350px;"></canvas>
+<canvas id="speed-by-tools" style="width:100%;height:350px;"></canvas>
 
 ### 2.3. Surprising scale on a single machine (larger‑than‑memory)
 
@@ -46,13 +46,20 @@ DuckDB’s **external (out‑of‑core) aggregation** lets you process data far 
 
 * **Parquet scan & simple aggregation (M1 Mac):** Copying a directory of Parquet logs to a single Parquet file took **\~4.91 s**; filtering & grouping returned in **\~0.073 s**. Source: <FancyLink linkText="How fast DuckDB can query Parquet files?" url="https://dev.l1x.be/posts/2023/03/26/how-fast-duckdb-can-query-parquet-files/" dark="true" company="default"/>.
 
-* **Scale gains on the same hardware:** Over the 2021→2024 period, DuckDB pushed group‑by and join scale to **\~10× larger** datasets on the same M1 MacBook (16 GB), thanks to larger‑than‑memory operators and memory‑manager upgrades. Source: <FancyLink linkText="Benchmarking Ourselves over Time" url="https://duckdb.org/2024/06/26/benchmarks-over-time.html" dark="true"/>.
-
 ### 2.4. It keeps getting faster (measured over time)
 
-On a standard benchmark suite (5 GB scale for mixed workloads; 50 GB for group‑bys/joins) run on an M1 MacBook Pro (16 GB), total runtime fell from **\~500 s (DuckDB 0.2.7, Jun 2021)** to **< 35 s (DuckDB 1.0.0, Jun 2024)**—a **\~14× improvement**. Highlights on the same machine: **aggregations \~12×**, **joins \~4×**, **window functions \~25×**, **CSV imports \~3×**, **Parquet exports \~4–5×**. Source: <FancyLink linkText="Benchmarking Ourselves over Time" url="https://duckdb.org/2024/06/26/benchmarks-over-time.html" dark="true"/>.
+On a standard benchmark suite (5 GB scale for mixed workloads; 50 GB for group‑bys/joins) run on an M1 MacBook Pro (16 GB), total runtime fell from **\~500 s (DuckDB 0.2.7, Jun 2021)** to **< 35 s (DuckDB 1.0.0, Jun 2024)**—a **\~14× improvement**. Source: <FancyLink linkText="Benchmarking Ourselves over Time" url="https://duckdb.org/2024/06/26/benchmarks-over-time.html" dark="true"/>.
 
-> **Proposed plot placement:** Right below this subsection, insert a simple line chart of *Total benchmark runtime (s)* per DuckDB version (0.2.7 → 1.0.0) from the article above to visualize the \~14× speedup.
+Highlights on the same machine: 
+
+* Window functions **\~25x**
+* Exports **\~10x**
+* Joins **\~4.5x**
+* CSV imports **\~3x**
+* Scan other formats **\~8.5x**.
+* Group by **\~13x**
+
+<canvas id="plot-duckdb-improvements" style="width:100%;height:350px;"></canvas>
 
 ## 3. DuckDB SQL Superpowers
 
