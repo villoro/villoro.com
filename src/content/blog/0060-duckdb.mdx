@@ -1,0 +1,337 @@
+---
+slug: duckdb-fast-analytics
+title: DuckDB and Beyond
+meta_title: DuckDB and Beyond - Fast SQL Analytics on Your Laptop
+description: "DuckDB is the “SQLite for analytics”: fast, modern SQL, and capable of billions of rows on a laptop. Learn its SQL superpowers, explore practical use cases, and discover the promise of DuckLake."
+date: 2025-08-24
+image: /images/blog/0060-duckdb.jpg
+category: tools
+tags: [Python, SQL, DE, Analytics]
+draft: true
+---
+
+<script type="module" src="/js/posts/0060-plots-duckdb.js"></script>
+
+## 1. What is DuckDB?
+
+<FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/> is often described as **“SQLite for analytics”**. Like SQLite, it’s an embedded database engine that runs directly on your machine, but it’s designed for analytical workloads rather than transactional ones. This makes it an incredibly convenient tool for anyone working with data: no server to install, no cluster to spin up—just query your data where it is.
+
+<Notice type="info">
+  Think of it as the *analytical cousin* of SQLite: lightweight, embedded, and always ready to run.
+</Notice>
+
+<FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/> sits in the sweet spot between lightweight tools like Pandas and heavyweight distributed systems like Spark. It’s fast, simple, and surprisingly powerful for working with large datasets on a single machine.
+
+## 2. Why DuckDB is Faster Than You Expect
+
+At first glance, you might assume DuckDB is only useful for medium-sized datasets that fit in memory. In reality, it consistently pushes the boundaries of what’s possible on a single machine.
+
+<Notice type="success">
+  In independent and first‑party benchmarks, DuckDB routinely handles **hundreds of millions to billions of rows** on commodity hardware and often beats heavier frameworks on local workloads—see the sources in each subsection below.
+</Notice>
+
+### 2.1. How it achieves speed (in short)
+
+DuckDB’s engine is **columnar & vectorized** and aggressively **multithreaded**, with a push‑based pipeline and out‑of‑core operators when memory is tight. If you want the gory details (and tuning tips), the official performance guide is a great, concise tour: <FancyLink linkText="DuckDB Performance Guide" url="https://duckdb.org/docs/stable/guides/performance/overview.html" dark="true"/>.
+
+### 2.2. What the numbers say (real‑world speed benchmarks)
+
+* **Against dataframes on a laptop (10M rows generation/joins):** On a MacBook Pro M2 (16 GB), DuckDB completed the task in **3.84 s**, vs **5.77 s** for Polars (\~**1.5×** slower) and **19.57 s** for Pandas (\~**5.1×** slower). Source: <FancyLink linkText="DuckDB, Polars and Pandas performance comparison" url="https://github.com/prrao87/duckdb-study" dark="true"/>.
+
+* **Single‑node pipeline vs Spark (40 GiB Parquet, 52 files, 94 cols, c2d‑standard‑16 16‑core/64 GB):** DuckDB finished the group‑by and wrote a single Parquet output in **3.99 s**. chDB took **9.30 s** and Spark **16.39 s** under the same setup. Source: <FancyLink linkText="Small‑Scale Data Pipeline: DuckDB vs. chDB vs. Spark" url="https://www.digitalturbine.com/blog/small-scale-data-pipeline-spark-vs-chdb-vs-duckdb" dark="true" company="default"/>.
+
+<canvas id="speed-by-tools" style="width:100%;height:350px;"></canvas>
+
+<Notice type="warning" className="mt-6">
+  Spark shines when scaling to terabytes across clusters, but on tens of GB, DuckDB often wins due to zero cluster overhead.
+</Notice>
+
+### 2.3. Surprising scale on a single machine (larger‑than‑memory)
+
+DuckDB’s **external (out‑of‑core) aggregation** lets you process data far bigger than RAM by spilling intelligently and recomputing pointers instead of (de)serializing.
+
+* **1 billion rows (\\~50 GB) on a 16 GB laptop:** Using the H2O.ai `G1` dataset, DuckDB completed all 10 aggregation queries on a 2020 MacBook Pro (16 GB). On an AWS `c6id.metal` (64 cores/128 threads, 256 GB), the hardest query (Q10) ran in **8.58 s**; on the laptop it took **\~264 s** (still completes). For reference, **Spark took 603.05 s** on the beefy `c6id.metal` for Q10. Source: <FancyLink linkText="External Aggregation in DuckDB (benchmarks & method)" url="https://duckdb.org/2024/03/29/external-aggregation.html" dark="true"/>.
+
+* **Parquet scan & simple aggregation (M1 Mac):** Copying a directory of Parquet logs to a single Parquet file took **\~4.91 s**; filtering & grouping returned in **\~0.073 s**. Source: <FancyLink linkText="How fast DuckDB can query Parquet files?" url="https://dev.l1x.be/posts/2023/03/26/how-fast-duckdb-can-query-parquet-files/" dark="true" company="default"/>.
+
+<Notice type="success">
+  DuckDB’s out-of-core operators allow billion-row queries on a laptop—something unheard of just a few years ago.
+</Notice>
+
+### 2.4. It keeps getting faster (measured over time)
+
+On a standard benchmark suite (5 GB scale for mixed workloads; 50 GB for group‑bys/joins) run on an M1 MacBook Pro (16 GB), total runtime fell from **\~500 s (DuckDB 0.2.7, Jun 2021)** to **< 35 s (DuckDB 1.0.0, Jun 2024)**—a **\~14× improvement**. Source: <FancyLink linkText="Benchmarking Ourselves over Time" url="https://duckdb.org/2024/06/26/benchmarks-over-time.html" dark="true"/>.
+
+Highlights on the same machine: 
+
+* Window functions **\~25x**
+* Exports **\~10x**
+* Joins **\~4.5x**
+* CSV imports **\~3x**
+* Scan other formats **\~8.5x**.
+* Group by **\~13x**
+
+<canvas id="plot-duckdb-improvements" style="width:100%;height:350px;"></canvas>
+
+<Notice type="success" className="mt-6">
+  DuckDB doesn’t just start fast—it’s getting faster with each release.
+</Notice>
+
+## 3. DuckDB SQL Superpowers
+
+DuckDB’s speed is impressive, but its **SQL dialect is equally modern and friendly**. It adds features that make queries more concise, more powerful, and often easier to read than in traditional systems like PostgreSQL or Spark SQL. Many of these enhancements are captured in the official blog post <FancyLink linkText="Friendlier SQL for DuckDB" url="https://duckdb.org/2022/05/04/friendlier-sql.html" dark="true"/> and in the docs <FancyLink linkText="Friendly SQL | DuckDB docs" url="https://duckdb.org/docs/stable/sql/dialect/friendly_sql.html" dark="true"/>.
+
+<Notice type="info">
+  DuckDB extends SQL in small but thoughtful ways: less boilerplate, more readability.
+</Notice>
+
+### 3.1. Extended SQL syntax
+
+* **Select all `except` or `replace` some columns:**
+
+```sql
+SELECT * EXCLUDE (jar_jar_binks, midichlorians),
+       * REPLACE (UPPER(name) AS name)
+FROM star_wars;
+```
+
+This returns every column except the excluded ones, and also replaces the `name` column with an uppercased version. No need to type all columns manually.
+
+* **Query files directly:**
+
+```sql
+SELECT *
+FROM 'data/2025-*.parquet';
+```
+
+DuckDB can query CSV, Parquet, or JSON files directly, with support for wildcards. It auto-detects delimiters, headers, and column types. No need to pre-load or define schemas—just query the files.
+
+* **Column pattern matching:**
+
+```sql
+SELECT * LIKE 'name%'
+FROM people;
+```
+
+This selects all columns starting with `name`. You can also use `NOT LIKE`, `SIMILAR TO`, or `ILIKE` for case-insensitive matching. It even supports `COLUMNS('regex')` to dynamically match sets of columns.
+
+* **`GROUP BY ALL` and `ORDER BY ALL`:**
+
+```sql
+SELECT country, city, COUNT(*)
+FROM events
+GROUP BY ALL
+ORDER BY ALL;
+```
+
+Instead of listing all grouping or ordering columns, DuckDB lets you collapse it into `ALL`. This keeps queries shorter and resilient to schema changes.
+
+* **Trailing commas:**
+
+```sql
+SELECT
+    id,
+    name,
+    country, -- trailing comma allowed ✔
+FROM users;
+```
+
+DuckDB allows trailing commas in SELECT lists, GROUP BY, etc.—a small detail that makes editing queries less error-prone.
+
+<Notice type="warning">
+  Once you’ve used `EXCLUDE`, `REPLACE`, or `GROUP BY ALL`, going back to standard SQL feels unnecessarily verbose.
+</Notice>
+
+### 3.2. Built-in functions for analytics
+
+* **Window functions with QUALIFY:**
+
+```sql
+SELECT event, athlete, time,
+       ROW_NUMBER() OVER (PARTITION BY event ORDER BY time) AS r
+FROM results
+QUALIFY r = 3;
+```
+
+The `QUALIFY` clause lets you filter on window functions directly, instead of wrapping in a subquery.
+
+* **Pivot/Unpivot:**
+
+```sql
+SELECT *
+FROM cities
+PIVOT(sum(population) FOR year IN (2000, 2010, 2020) GROUP BY country);
+```
+
+Turn long tables into wide ones (and vice versa) in a single step, without complex joins or extensions.
+
+* **JSON and nested data:**
+
+```sql
+SELECT starfleet[10].model AS starship
+FROM 'content.json';
+```
+
+DuckDB automatically infers JSON into lists and structs. You can use dot notation to access nested fields and `unnest()` to flatten arrays into rows.
+
+* **Top-N aggregates:**
+
+```sql
+SELECT grp, max(val, 3) AS top3_vals
+FROM t1
+GROUP BY grp;
+```
+
+Functions like `max(col, N)` or `arg_max(val, key, N)` return the top N values per group as arrays.
+
+* **String slicing:**
+
+```sql
+SELECT name[1:4] AS short_name
+FROM users;
+```
+
+DuckDB supports Python-like slicing on strings (and arrays), making substring extraction more intuitive.
+
+* **Regex and pattern matching:**
+  DuckDB includes `LIKE`, `ILIKE`, `SIMILAR TO`, `GLOB`, and full regex support. For example:
+
+```sql
+SELECT regexp_extract(name, '(Mr|Ms)\\. (.*)', 2) AS cleaned
+FROM employees;
+```
+
+This extracts capture groups into columns directly.
+
+<Notice type="success">
+  Many tasks that would take subqueries or UDFs elsewhere become one-liners in DuckDB.
+</Notice>
+
+## 4. Practical Examples
+
+DuckDB shines when put to work in everyday scenarios. Here are a few concrete ways it adds value.
+
+### 4.1. Exploring data locally
+
+Need to inspect a Parquet, CSV, or even JSON file? With DuckDB you can query it directly:
+
+```bash
+duckdb -ui
+```
+
+This launches an interactive shell where you can run SQL queries instantly—no setup required.
+
+```sql
+-- Query a single file
+SELECT country, city, COUNT(*)
+FROM 'data/events.parquet'
+GROUP BY ALL
+ORDER BY 3 DESC;
+
+-- Query multiple files with a wildcard
+SELECT COUNT(*) FROM 'logs/2025-*.csv';
+
+-- Query nested JSON fields
+SELECT user.name, user.age FROM 'data/users.json';
+```
+
+DuckDB also lets you `ATTACH` multiple databases or files, so you can explore Parquet, CSV, and SQLite/Postgres sources side by side.
+
+<Notice type="info">
+  DuckDB turns local files into queryable tables instantly—great for quick exploration.
+</Notice>
+
+### 4.2. Acting as a data mover
+
+DuckDB can serve as a **bridge** between systems, often in a single SQL statement.
+
+```sql
+-- Postgres → Parquet
+COPY (SELECT * FROM postgres_scan('dbname=mydb', 'SELECT * FROM users'))
+TO 'users.parquet' (FORMAT PARQUET);
+
+-- Parquet → Postgres
+COPY (SELECT * FROM 'users.parquet')
+TO postgres_scan('dbname=mydb', 'users') (FORMAT CSV);
+```
+
+It can even join across sources:
+
+```sql
+SELECT u.id, u.name, o.total
+FROM postgres_scan('dbname=mydb', 'SELECT * FROM users') u
+JOIN 'orders.parquet' o ON u.id = o.user_id;
+```
+
+This makes DuckDB a handy connector when you just want to move or combine data efficiently.
+
+<Notice type="success">
+  DuckDB doubles as a lightweight ETL tool: move data between systems or join across them with one query.
+</Notice>
+
+### 4.3. Using DuckDB in CI pipelines with DBT
+
+DuckDB is a fantastic choice for **testing transformations locally or in CI**. Instead of paying for a cloud warehouse, you can spin up DuckDB in GitHub Actions (or any CI runner) and validate logic:
+
+```bash
+dbt run --target duckdb
+```
+
+This approach is **fast, cheap, and isolated**, making it easy to catch issues early. You can read more about it at <FancyLink linkText="DBT testing with DuckDB" url="https://villoro.com/blog/dbt-testing-duckdb/" dark="true"/>.
+
+### 4.4. Interactive analysis in notebooks
+
+DuckDB isn’t just for the CLI. It integrates seamlessly with Python and R notebooks:
+
+```python
+import duckdb, pandas as pd
+
+# Create a DataFrame in Python
+df = pd.read_csv("data.csv")
+
+# Query it with DuckDB
+res = duckdb.sql("SELECT * FROM df EXCLUDE(unnecessary_col) WHERE value > 100").df()
+```
+
+This combination means you can use Pandas/Polars for light data wrangling and DuckDB’s SQL for heavy lifting—all without leaving your notebook.
+
+## 5. DuckLake: A Young but Promising Idea
+
+DuckDB is already powerful on its own, but the community is pushing it further. One notable experiment is **DuckLake**, an emerging open table format and extension that adds full “lakehouse” capabilities on top of DuckDB. The goal is to combine DuckDB’s simplicity with the robust features of a data lakehouse – bringing in ACID transactions, time travel, schema evolution, and more, without the usual complexity of big-data frameworks.
+
+### 5.1. The concept of bringing lakehouse features into DuckDB
+
+Traditional lakehouse formats like <FancyLink linkText="Apache Iceberg" url="https://iceberg.apache.org/" company="iceberg"/> and <FancyLink linkText="Delta Lake" url="https://delta.io/"/> manage metadata as **files** (logs, snapshots, schemas) in cloud storage. This avoids a centralized service, but comes at a cost: frequent updates create a flood of small metadata files. In some workloads, metadata grows faster than data itself, leading to slow queries and heavy maintenance.
+
+
+<FancyLink linkText="DuckDB" url="https://ducklake.select/" dark="true"/> flips the approach by storing all metadata in a **SQL database** instead of files. Snapshots, schemas, and statistics are tracked as tables, with each update being a single ACID transaction. Reading a DuckLake table means fetching the latest snapshot with one SQL query, not chasing dozens of JSON files on S3. Writing data doesn’t create cascades of new log files—small changes can even be inlined directly into the metadata store for sub‑millisecond commits. This makes concurrent writes much smoother and reduces the overhead of high‑frequency updates.
+
+<Notice type="warning">
+  <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/>/<FancyLink linkText="Delta" url="https://delta.io/"/> work well at large batch scales, but with frequent small updates metadata can explode—DuckLake’s SQL‑backed catalog aims to fix that.
+</Notice>
+
+The idea isn’t without precedent: cloud warehouses like BigQuery and Snowflake also use dedicated databases internally for metadata. DuckLake applies the same principle while keeping the data itself in open Parquet files. It’s a hybrid model: open storage for data, database‑backed catalogs for metadata.
+
+### 5.2. Current state and potential
+
+DuckLake is still early, released as an **experimental DuckDB extension** (since v1.3.0). You can already create DuckLake tables backed by Parquet files on S3 or local storage, with metadata stored in DuckDB itself or an external database like Postgres. This brings features such as:
+
+* **ACID transactions** (including multi‑table commits)
+* **Time travel** with snapshot isolation
+* **Schema evolution** and support for complex types
+* **Partition pruning and statistics** for efficient queries
+
+Because all metadata operations are SQL, there’s no need to run a separate Hive/Glue metastore or manage piles of JSON log files. For quick testing, you can even use a local DuckDB file as the catalog; for shared environments, simply plug in Postgres or MySQL. Data files are plain Parquet, and even compatible with Iceberg’s file formats—making migration possible if needed.
+
+The vision is compelling: DuckDB as a lightweight engine, DuckLake as the layer that brings governance, durability, and multi‑user safety. If the project matures, it could make DuckDB a serious contender for production analytics at scale—handling not only interactive analysis but also collaborative, transactional workloads on shared data lakes.
+
+<Notice type="success">
+  DuckLake is young, but its vision is bold: marrying DuckDB’s simplicity with the governance and durability of lakehouse formats.
+</Notice>
+
+---
+
+<FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/> is already reshaping how we think about analytics on a single machine:  
+fast, simple, and powerful. With DuckLake on the horizon, it could even become a lightweight lakehouse engine.
+
+Either way, it’s worth giving it a try—you may be surprised by how much you can do with just your laptop.
