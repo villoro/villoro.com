@@ -63,7 +63,7 @@ Highlights on the same machine:
 
 ## 3. DuckDB SQL Superpowers
 
-DuckDB’s speed is impressive, but its **SQL dialect is equally modern and friendly**. It adds features that make queries more concise, more powerful, and often easier to read than in traditional systems like PostgreSQL or Spark SQL. Many of these enhancements are captured in the official blog post <FancyLink linkText="Friendlier SQL for DuckDB" url="https://duckdb.org/2022/05/04/friendlier-sql.html" dark="true"/>.
+DuckDB’s speed is impressive, but its **SQL dialect is equally modern and friendly**. It adds features that make queries more concise, more powerful, and often easier to read than in traditional systems like PostgreSQL or Spark SQL. Many of these enhancements are captured in the official blog post <FancyLink linkText="Friendlier SQL for DuckDB" url="https://duckdb.org/2022/05/04/friendlier-sql.html" dark="true"/> and in the docs <FancyLink linkText="Friendly SQL | DuckDB docs" url="https://duckdb.org/docs/stable/sql/dialect/friendly_sql.html" dark="true"/>.
 
 ### 3.1. Extended SQL syntax
 
@@ -179,31 +179,13 @@ FROM employees;
 
 This extracts capture groups into columns directly.
 
-### 3.3. Interoperability with Python/R
-
-DuckDB integrates tightly with Python and R. You can query directly against DataFrames:
-
-```python
-import duckdb
-import pandas as pd
-
-# Create a DataFrame
-my_df = pd.DataFrame({"id": [1, 2, 3], "value": [10, 20, 30]})
-
-# Query the DataFrame with DuckDB
-df = duckdb.query("SELECT * FROM my_df WHERE value > 15").to_df()
-print(df)
-```
-
-This makes it perfect for combining the productivity of Pandas with the performance of SQL.
-
 ## 4. Practical Examples
 
-DuckDB shines when put to work in everyday scenarios.
+DuckDB shines when put to work in everyday scenarios. Here are a few concrete ways it adds value.
 
 ### 4.1. Exploring data locally
 
-Need to inspect a Parquet or CSV file? With DuckDB you can query it directly:
+Need to inspect a Parquet, CSV, or even JSON file? With DuckDB you can query it directly:
 
 ```bash
 duckdb -ui
@@ -212,26 +194,70 @@ duckdb -ui
 This launches an interactive shell where you can run SQL queries instantly—no setup required.
 
 ```sql
+-- Query a single file
 SELECT country, city, COUNT(*)
 FROM 'data/events.parquet'
 GROUP BY ALL
 ORDER BY 3 DESC;
+
+-- Query multiple files with a wildcard
+SELECT COUNT(*) FROM 'logs/2025-*.csv';
+
+-- Query nested JSON fields
+SELECT user.name, user.age FROM 'data/users.json';
 ```
+
+DuckDB also lets you `ATTACH` multiple databases or files, so you can explore Parquet, CSV, and SQLite/Postgres sources side by side.
 
 ### 4.2. Acting as a data mover
 
-DuckDB can serve as a **bridge** between systems. For example, you can read from Postgres or MySQL and export to Parquet, or the other way around.
+DuckDB can serve as a **bridge** between systems, often in a single SQL statement.
 
 ```sql
-COPY (SELECT * FROM postgres_scan('dbname=mydb', 'SELECT * FROM users')) 
+-- Postgres → Parquet
+COPY (SELECT * FROM postgres_scan('dbname=mydb', 'SELECT * FROM users'))
 TO 'users.parquet' (FORMAT PARQUET);
+
+-- Parquet → Postgres
+COPY (SELECT * FROM 'users.parquet')
+TO postgres_scan('dbname=mydb', 'users') (FORMAT CSV);
 ```
 
-This makes it a handy connector when you just want to move data around efficiently.
+It can even join across sources:
+
+```sql
+SELECT u.id, u.name, o.total
+FROM postgres_scan('dbname=mydb', 'SELECT * FROM users') u
+JOIN 'orders.parquet' o ON u.id = o.user_id;
+```
+
+This makes DuckDB a handy connector when you just want to move or combine data efficiently.
 
 ### 4.3. Using DuckDB in CI pipelines with DBT
 
-DuckDB is also a fantastic choice for testing transformations locally or in CI. You can run DBT models against DuckDB to validate logic without needing cloud infrastructure. (I’ve written a dedicated post on this—check it out!)
+DuckDB is a fantastic choice for **testing transformations locally or in CI**. Instead of paying for a cloud warehouse, you can spin up DuckDB in GitHub Actions (or any CI runner) and validate logic:
+
+```bash
+dbt run --target duckdb
+```
+
+This approach is **fast, cheap, and isolated**, making it easy to catch issues early. You can read more about it at <FancyLink linkText="DBT testing with DuckDB" url="https://villoro.com/blog/dbt-testing-duckdb/" dark="true"/>.
+
+### 4.4. Interactive analysis in notebooks
+
+DuckDB isn’t just for the CLI. It integrates seamlessly with Python and R notebooks:
+
+```python
+import duckdb, pandas as pd
+
+# Create a DataFrame in Python
+df = pd.read_csv("data.csv")
+
+# Query it with DuckDB
+res = duckdb.sql("SELECT * FROM df EXCLUDE(unnecessary_col) WHERE value > 100").df()
+```
+
+This combination means you can use Pandas/Polars for light data wrangling and DuckDB’s SQL for heavy lifting—all without leaving your notebook.
 
 ## 5. DuckLake: A Young but Promising Idea
 
