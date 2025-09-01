@@ -14,7 +14,27 @@ draft: false
 
 ### 1.1 The traditional setup: dev, test, sandbox, prod
 
+In software and data engineering, it’s common to separate work into multiple environments. Code is built in **dev**, validated in **test/staging**, sometimes explored in a **sandbox**, and only then deployed to **prod**. The idea is simple: keep experiments and errors away from the systems that matter.
+
+* **Dev**: engineers build and debug on small or sample data.
+* **Test/Staging**: a near-prod copy used to check everything works end-to-end.
+* **Sandbox**: optional space for ad-hoc experiments or prototyping.
+* **Prod**: the live environment, running on real data and serving the business.
+
+This layering reduces risk by catching problems earlier and isolating them from production.
+
 ### 1.2 What problems they try to solve
+
+Multiple environments exist to:
+
+* **Test safely** – experiment without risking real data.
+* **Prevent data loss** – mistakes in dev/test don’t wipe out prod tables.
+* **Contain breaking changes** – issues surface in lower envs first.
+* **Enable collaboration** – teams can work in parallel without stepping on prod.
+* **Support CI/CD** – changes move gradually from dev → test → prod, with checks at each step.
+
+In short: more environments mean more guardrails before code reaches production.
+
 
 
 ## 2. The DBT perspective
