@@ -60,9 +60,25 @@ The key idea is that there’s a **protected prefix** (like `prod_`) where only 
 
 ### 3.1 Running Python with only prod
 
+In a single-environment setup, all pipelines run directly on the production infrastructure. Developers read from production data, but write to **isolated outputs** so they never touch the official production tables. This way, you get the realism of working with full prod data and compute, while keeping live dashboards and reports safe.
+
 ### 3.2 Techniques: config flags, feature toggles, schema separation
 
+The trick is to separate outputs with configuration:
+
+* **Schema prefixes**: production jobs write to `prod_salesforce`, while a developer might use `villoro_salesforce`. Same warehouse, same data — different schemas.
+* **Environment variables**: pipelines read an `ENV` or `SCHEMA_PREFIX` variable to decide where to write. In prod, it’s `prod_`; in dev, it’s the user’s name.
+* **Feature toggles**: wrap sensitive actions in conditional checks. For example:
+
+  * In production, the pipeline actually sends emails to users.
+  * In development, the same code path is triggered but guarded by a toggle so it only runs `logger.info("[DEV] Would send email to X")`. This simulates the behavior without side effects.
+  * The same applies to actions like triggering external APIs, updating dashboards, or deleting data — in dev mode, they are replaced with safe no-ops or log statements.
+
+This gives developers confidence that they’re testing full flows, but ensures no accidental production impact.
+
 ### 3.3 Real-world patterns
+
+This mirrors dbt’s approach: one warehouse, multiple schemas. Developers get their own scratch schemas (e.g. `alice_salesforce`, `bob_salesforce`), while production runs always target the protected `prod_salesforce`. Permissions reinforce this separation — developers can’t write to `prod_` schemas, only to their own. Some teams even use clones or temp schemas for PR validation, cleaning them up automatically. The outcome is simple: everyone develops “in prod,” with full data and resources, but production outputs remain isolated and reliable.
 
 
 ## 4. Pros and cons
