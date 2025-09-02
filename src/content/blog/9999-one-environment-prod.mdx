@@ -36,14 +36,24 @@ Multiple environments exist to:
 In short: more environments mean more guardrails before code reaches production.
 
 
-
 ## 2. The DBT perspective
 
 ### 2.1 How DBT handles environments
 
+In dbt, environments live in the `profiles.yml`. Each profile contains one or more **targets** that describe how dbt should connect: warehouse, database, schema, and credentials. This design means your project code doesn’t change — dbt simply decides *where* to build models based on the target.
+
+The important piece is how dbt uses **database/schema naming conventions**. Instead of separate databases for dev and prod, dbt encourages using the same warehouse but isolating work with naming patterns. For example:
+
+* **Prod target** → writes to a protected schema with a prefix like `prod_salesforce`.
+* **Dev targets** → write to personal schemas using the developer’s name as prefix, e.g. `villoro_salesforce`.
+
+This allows everyone to work against the same production data and warehouse while keeping outputs separated. Developers can safely test changes in their own prefixed schemas without touching production tables.
+
 ### 2.2 Switching targets with profiles
 
-### 2.3 CI/CD workflows
+Profiles make it easy to switch between these targets. By default, a developer might run dbt with a personal target, which builds into `villoro_salesforce`. When deploying, the pipeline switches to the `prod` target, which builds into `prod_salesforce`.
+
+The key idea is that there’s a **protected prefix** (like `prod_`) where only automated production runs are allowed to write. Developers instead create prefixed schemas with their own names. Both environments use the same underlying warehouse and data, so development runs closely mimic production. The only difference is the schema prefix — `prod_` for production, `<user>_` for development. This convention ensures realistic testing, strict protection of production outputs, and seamless promotion from personal work to production.
 
 
 ## 3. One environment to rule them all
