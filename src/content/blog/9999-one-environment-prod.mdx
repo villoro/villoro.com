@@ -62,34 +62,42 @@ Both environments use the same underlying warehouse and data, so development run
 
 ## 3. One environment to rule them all
 
-### 3.1 Running Python with only prod
+The same idea can be applied outside of dbt. In Python projects, you can also run everything on production infrastructure while keeping outputs isolated.
 
-In a single-environment setup, all pipelines run directly on the production infrastructure. Developers read from production data, but write to **isolated outputs** so they never touch the official production tables. This way, you get the realism of working with full prod data and compute, while keeping live dashboards and reports safe.
+### 3.1 How to make it safe
 
-### 3.2 Techniques: config flags, feature toggles, schema separation
+* **Schema prefixes** – follow the same pattern as dbt: `prod_salesforce` for production, `villoro_salesforce` for a dev run. Everyone shares the same data and compute, but results go into different schemas.
+* **Environment variables** – control the prefix with an `ENV` or `SCHEMA_PREFIX` variable. Pipelines stay identical; only the destination changes.
+* **Permissions** – block developers from writing to `prod_` schemas. Even if someone misconfigures, they can’t damage production tables.
 
-The trick is to separate outputs with configuration:
+### 3.2 Dealing with side effects
 
-* **Schema prefixes**: production jobs write to `prod_salesforce`, while a developer might use `villoro_salesforce`. Same warehouse, same data — different schemas.
-* **Environment variables**: pipelines read an `ENV` or `SCHEMA_PREFIX` variable to decide where to write. In prod, it’s `prod_`; in dev, it’s the user’s name.
-* **Feature toggles**: wrap sensitive actions in conditional checks. For example:
-
-  * In production, the pipeline actually sends emails to users.
-  * In development, the same code path is triggered but guarded by a toggle so it only runs `logger.info("[DEV] Would send email to X")`. This simulates the behavior without side effects.
-  * The same applies to actions like triggering external APIs, updating dashboards, or deleting data — in dev mode, they are replaced with safe no-ops or log statements.
+Code often does more than write tables: send emails, call APIs, trigger dashboards. These actions can be dangerous in a prod-only setup.
 
 <Notice type="info">
-  Use feature toggles to **simulate side effects** in dev — log instead of sending emails, skip destructive operations, mock external APIs.
+  Use feature toggles to **simulate side effects**. In dev runs, log actions instead of executing them.
 </Notice>
 
-This gives developers confidence that they’re testing full flows, but ensures no accidental production impact.
+Example:
 
-### 3.3 Real-world patterns
+```python
+if env == "prod":
+    send_email(user)
+else:
+    logger.info(f"[DEV] Would send email to {user}")
+```
 
-This mirrors dbt’s approach: one warehouse, multiple schemas. Developers get their own scratch schemas (e.g. `alice_salesforce`, `bob_salesforce`), while production runs always target the protected `prod_salesforce`. Permissions reinforce this separation — developers can’t write to `prod_` schemas, only to their own. Some teams even use clones or temp schemas for PR validation, cleaning them up automatically. The outcome is simple: everyone develops “in prod,” with full data and resources, but production outputs remain isolated and reliable.
+The same trick applies to API calls, data deletions, or notifications.
+
+### 3.3 Patterns in practice
+
+Many teams use this approach:
+
+* Developers get personal schemas (`alice_salesforce`, `bob_salesforce`).
+* Production jobs write only to `prod_salesforce`.
+* CI/CD pipelines create temporary schemas for validation, then clean them up.
 
 > DIAGRAM IDEA: show a shared warehouse with `prod_salesforce` alongside `alice_salesforce` and `bob_salesforce`, arrows pointing to how dev and prod jobs isolate outputs.
-
 
 ## 4. Pros and cons
 
