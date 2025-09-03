@@ -33,8 +33,9 @@ Multiple environments exist to:
 * **Enable collaboration** – teams can work in parallel without stepping on prod.
 * **Support CI/CD** – changes move gradually from dev → test → prod, with checks at each step.
 
-In short: more environments mean more guardrails before code reaches production.
-
+<Notice type="info">
+  More environments mean more guardrails before code reaches production.
+</Notice>
 
 ## 2. The DBT perspective
 
@@ -53,8 +54,11 @@ This allows everyone to work against the same production data and warehouse whil
 
 Profiles make it easy to switch between these targets. By default, a developer might run dbt with a personal target, which builds into `villoro_salesforce`. When deploying, the pipeline switches to the `prod` target, which builds into `prod_salesforce`.
 
-The key idea is that there’s a **protected prefix** (like `prod_`) where only automated production runs are allowed to write. Developers instead create prefixed schemas with their own names. Both environments use the same underlying warehouse and data, so development runs closely mimic production. The only difference is the schema prefix — `prod_` for production, `<user>_` for development. This convention ensures realistic testing, strict protection of production outputs, and seamless promotion from personal work to production.
+<Notice type="warning">
+  The **protected prefix** (like `prod_`) is reserved for automated runs only. Developers shouldn't have permissions to write there.
+</Notice>
 
+Both environments use the same underlying warehouse and data, so development runs closely mimic production. The only difference is the schema prefix — `prod_` for production, `<user>_` for development. This convention ensures realistic testing, strict protection of production outputs, and seamless promotion from personal work to production.
 
 ## 3. One environment to rule them all
 
@@ -74,11 +78,17 @@ The trick is to separate outputs with configuration:
   * In development, the same code path is triggered but guarded by a toggle so it only runs `logger.info("[DEV] Would send email to X")`. This simulates the behavior without side effects.
   * The same applies to actions like triggering external APIs, updating dashboards, or deleting data — in dev mode, they are replaced with safe no-ops or log statements.
 
+<Notice type="info">
+  Use feature toggles to **simulate side effects** in dev — log instead of sending emails, skip destructive operations, mock external APIs.
+</Notice>
+
 This gives developers confidence that they’re testing full flows, but ensures no accidental production impact.
 
 ### 3.3 Real-world patterns
 
 This mirrors dbt’s approach: one warehouse, multiple schemas. Developers get their own scratch schemas (e.g. `alice_salesforce`, `bob_salesforce`), while production runs always target the protected `prod_salesforce`. Permissions reinforce this separation — developers can’t write to `prod_` schemas, only to their own. Some teams even use clones or temp schemas for PR validation, cleaning them up automatically. The outcome is simple: everyone develops “in prod,” with full data and resources, but production outputs remain isolated and reliable.
+
+> DIAGRAM IDEA: show a shared warehouse with `prod_salesforce` alongside `alice_salesforce` and `bob_salesforce`, arrows pointing to how dev and prod jobs isolate outputs.
 
 
 ## 4. Pros and cons
@@ -97,6 +107,10 @@ This mirrors dbt’s approach: one warehouse, multiple schemas. Developers get t
 * **Hard to stage big changes** – limited space for dry runs.
 * **Onboarding stress** – new devs must be careful from day one.
 
+<Notice type="error">
+  The main risk of prod-only is a **higher blast radius** — one mistake can affect critical data or workloads.
+</Notice>
+
 ### 4.3 Mitigation strategies
 
 * **Schema prefixes** – `prod_salesforce` for prod, `villoro_salesforce` for dev.
@@ -104,6 +118,9 @@ This mirrors dbt’s approach: one warehouse, multiple schemas. Developers get t
 * **Feature toggles** – in dev, replace side effects (e.g. email sending) with safe logs.
 * **CI in temp schemas** – build and test in throwaway schemas before merging.
 
+<Notice type="success">
+  Combining schema isolation, strict permissions, and feature toggles gives most of the safety of multi-env setups, without the overhead.
+</Notice>
 
 ## 5. Closing thoughts
 
@@ -120,3 +137,4 @@ This mirrors dbt’s approach: one warehouse, multiple schemas. Developers get t
 * Heavy experimentation and schema changes.
 * Regulated or sensitive data where staging is mandatory.
 
+> DIAGRAM IDEA: compare two flows side by side — traditional multi-env (dev → test → prod) vs. prod-only with prefixed schemas.
