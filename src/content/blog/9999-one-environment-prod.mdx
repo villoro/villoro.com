@@ -16,10 +16,7 @@ draft: false
 
 In software and data engineering, it’s common to separate work into multiple environments. Code is built in **dev**, validated in **test/staging**, sometimes explored in a **sandbox**, and only then deployed to **prod**. The idea is simple: keep experiments and errors away from the systems that matter.
 
-* **Dev**: engineers build and debug on small or sample data.
-* **Test/Staging**: a near-prod copy used to check everything works end-to-end.
-* **Sandbox**: optional space for ad-hoc experiments or prototyping.
-* **Prod**: the live environment, running on real data and serving the business.
+![Traditional Environments](../../images/posts/2025/9999-traditional-environments.jpg)
 
 This layering reduces risk by catching problems earlier and isolating them from production.
 
@@ -97,7 +94,7 @@ Many teams use this approach:
 * Production jobs write only to `prod_salesforce`.
 * CI/CD pipelines create temporary schemas for validation, then clean them up.
 
-> DIAGRAM IDEA: show a shared warehouse with `prod_salesforce` alongside `alice_salesforce` and `bob_salesforce`, arrows pointing to how dev and prod jobs isolate outputs.
+![DBT custom schemas](../../images/posts/2025/9999-dbt-custom-schemas.jpg)
 
 ## 4. Pros and cons
 
@@ -144,5 +141,3 @@ Many teams use this approach:
 * Workflows tied to external services.
 * Heavy experimentation and schema changes.
 * Regulated or sensitive data where staging is mandatory.
-
-> DIAGRAM IDEA: compare two flows side by side — traditional multi-env (dev → test → prod) vs. prod-only with prefixed schemas.
