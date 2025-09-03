@@ -1,0 +1,67 @@
+---
+slug: delta-lake-transactional-tables
+title: "Delta Lake: Transactional Tables on Your Data Lake"
+meta_title: "Delta Lake: Transactional Tables on Your Data Lake - Architecture, Features, and Best Practices"
+description: Discover Delta Lake, the open-source table format for ACID transactions on your data lake. Explore its internals, key features, how to query it, and the operations needed to maintain performance.
+date: 2025-09-03
+image: /images/blog/9999-delta-lake.jpg
+category: Tools
+tags: [DE]
+draft: false
+---
+
+## 1. Why Delta Lake?
+- Issues with raw Parquet and Hive tables
+- Comparison with Iceberg and Hudi
+
+## 2. Core Concepts
+- Delta log (_delta_log) and checkpoint Parquet files
+- Table protocol versions and feature flags
+- Data files vs. transaction log entries
+- Partitioning, statistics, and data skipping
+
+## 3. Inner Workings
+### 3.1 Transaction log structure (JSON + checkpoints)
+### 3.2 Commit protocol and optimistic concurrency
+### 3.3 Vacuum/retention model and tombstones
+### 3.4 Change Data Feed (CDF) internals
+### 3.5 Schema enforcement and evolution rules
+### 3.6 Deletion vectors and row-level operations
+
+## 4. Features
+- ACID transactions and schema enforcement
+- Time travel by version or timestamp
+- MERGE INTO, UPDATE, DELETE semantics
+- Z-Ordering and clustering strategies
+- Change Data Feed (CDF) for incremental pipelines
+- Unity Catalog integration
+
+## 5. How to Query & Interact
+- Spark SQL/DataFrame API (primary interface)
+- Delta-RS / delta-kernel for Trino, DuckDB, Presto
+- Delta in query engines (Databricks SQL, Athena via connectors)
+- Python support (delta-spark basics)
+
+## 6. Maintenance & Operations
+- OPTIMIZE (bin-packing) and Z-ORDER (clustering)
+- VACUUM and retention settings (risks and safety)
+- Managing small files
+- Schema changes (mergeSchema, overwriteSchema)
+- Performance tuning (data skipping, checkpoint intervals)
+- Observability (DESCRIBE HISTORY, logs, metrics)
+
+## 7. Pitfalls & Best Practices
+- Safe VACUUM (retention periods, external readers)
+- Choosing when/how to Z-ORDER
+- Concurrency hotspots in MERGE workloads
+- Protocol upgrades and compatibility
+
+## 8. Reference Architecture & Examples
+- Typical stack (S3/ADLS + Spark/Databricks + Delta)
+- Example SQL for MERGE, DELETE, UPDATE, time travel
+- Incremental ETL with CDF
+
+## 9. When to Choose Delta Lake
+- Spark/Databricks-first teams
+- Heavy MERGE workloads and CDF needs
+- Built-in maintenance ops (OPTIMIZE/Z-ORDER)

@@ -1,0 +1,68 @@
+---
+slug: apache-iceberg-table-format
+title: "Apache Iceberg: The Table Format for the Lakehouse"
+meta_title: "Apache Iceberg: The Table Format for the Lakehouse - Deep Dive into Concepts, Features, and Maintenance"
+description: Learn what Apache Iceberg is, how it works under the hood, the features it provides, how to query it across engines, and how to keep your tables healthy.
+date: 2025-09-03
+image: /images/blog/9999-iceberg-polar-bears.jpg
+category: Tools
+tags: [DE]
+draft: false
+---
+
+## 1. Why Iceberg?
+- Problem with plain Parquet on object storage
+- Comparison with Hive tables, Hudi, and Delta Lake
+
+## 2. Core Concepts
+- Table, snapshot, manifest list, manifest, data file
+- Metadata JSONs: current vs. historical
+- Partitioning: hidden vs. explicit (partition specs and transforms)
+- Identifiers: file-level vs. row-level semantics
+
+## 3. Inner Workings
+### 3.1 Snapshot lifecycle and atomicity
+### 3.2 Commit protocol and optimistic concurrency
+### 3.3 Manifest pruning and split planning
+### 3.4 Metadata/manifest evolution and versioning
+### 3.5 Deletes: position deletes vs. equality deletes
+### 3.6 Schema and partition spec evolution
+### 3.7 Row-level operations (merge-on-read vs. copy-on-write)
+
+## 4. Features
+- ACID transactions on object storage
+- Time travel and snapshot tagging/branching
+- Hidden partitioning and predicate pushdown
+- Row-level deletes/updates/merges
+- Multi-engine interoperability (Spark, Flink, Trino, Snowflake, Athena, DuckDB)
+- Catalogs: Glue, Nessie, Hive, JDBC
+
+## 5. How to Query & Interact
+- Creating tables (Spark, Flink, Trino SQL)
+- Spark DataFrame API and SQL usage
+- REST catalog interactions
+- Query planning benefits (partition/file pruning)
+- Python options (PyIceberg basics)
+
+## 6. Maintenance & Operations
+- Compaction: rewrite data files, clustering, bin-packing
+- Metadata/manifest compaction
+- Expire snapshots and remove orphan files
+- Optimizing partition specs over time
+- Handling small files
+- Observability: history, snapshots, metrics
+
+## 7. Pitfalls & Best Practices
+- Partition transform choices (bucket, truncate, time)
+- Equality vs. position deletes
+- Concurrency tuning and commit retries
+- Catalog selection and migrations
+
+## 8. Reference Architecture & Examples
+- Typical stack diagram (S3 + Glue + Spark/Trino)
+- Example SQL commands (create, insert, update, time travel)
+- Sample maintenance job schedules
+
+## 9. When to Choose Iceberg
+- Interoperability and long-term governance
+- Diverse engine support and schema evolution needs
