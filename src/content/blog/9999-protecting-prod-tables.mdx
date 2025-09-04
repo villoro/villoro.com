@@ -1,0 +1,101 @@
+---
+slug: protecting-prod-tables
+title: xxx
+meta_title: xxx
+description: xx
+date: 2025-09-04
+image: /images/blog/9999-greek-protecting-soldiers.jpg
+category: DE
+tags: [XXX]
+draft: false
+---
+
+## Protecting important tables from unexpected changes
+
+<TerminalOutput color="stone">
+  macros/data_diff.sql
+</TerminalOutput>
+```sql
+{% macro data_diff(baseline, compare_with, pk, select=[], exclude=[]) %}
+    {%- set cols = [] -%}
+    {%- for c in adapter.get_columns_in_relation(baseline) -%}
+        {%- if c.name == pk
+            or (select and c.name in select)
+            or (exclude and c.name not in exclude)
+            or (not select and not exclude)
+        -%}
+            {%- do cols.append(c) -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- set cols_str = cols | map(attribute='quoted') | join(', ') -%}
+
+    WITH a_except_b AS (
+        SELECT {{ cols_str }} FROM {{ baseline }}
+        {{ except() }}
+        SELECT {{ cols_str }} FROM {{ compare_with }}
+    ),
+    b_except_a AS (
+        SELECT {{ cols_str }} FROM {{ compare_with }}
+        {{ except() }}
+        SELECT {{ cols_str }} FROM {{ baseline }}
+
+    ),
+    different_pks AS (
+        SELECT {{ pk }} FROM a_except_b
+        UNION
+        SELECT {{ pk }} FROM b_except_a
+    ),
+    different_a AS (
+        SELECT '{{ baseline }}' AS relation, {{ cols_str }}
+        FROM {{ baseline }}
+        INNER JOIN different_pks USING ({{ pk }})
+    ),
+    different_b AS (
+        SELECT '{{ compare_with }}' AS relation, {{ cols_str }}
+        FROM {{ compare_with }}
+        INNER JOIN different_pks USING ({{ pk }})
+    ),
+    unioned_differences AS (
+        SELECT * FROM different_a
+        UNION ALL
+        SELECT * FROM different_b
+    )
+
+    SELECT * FROM unioned_differences
+    ORDER BY {{ pk }}, relation
+{% endmacro %}
+```
+
+<TerminalOutput color="stone">
+  macros/data_diff.yml
+</TerminalOutput>
+```yaml
+macros:
+  - name: data_diff
+    description: |
+      Returns the rows that are different between two models, comparing only specified columns.
+      The output table contains a `relation` column identifying the source model (`baseline` or `compare_with`),
+      along with all compared columns from the models. Results are ordered by pk and relation.
+
+    arguments:
+      - name: baseline
+        type: relation
+        description: The baseline model to compare against
+
+      - name: compare_with
+        type: relation
+        description: The model to compare with the baseline
+
+      - name: pk
+        type: string
+        description: The primary key column used to identify rows
+
+      - name: select
+        type: list
+        description: Optional list of columns to compare.
+
+      - name: exclude
+        type: list
+        description: Optional list of columns to exclude from comparison.
+```
+## Handling sensitive data
