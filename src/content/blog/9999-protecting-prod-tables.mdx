@@ -1,6 +1,6 @@
 ---
 slug: protecting-prod-tables-dbt
-title: xxx
+title: Protecting production tables in DBT
 meta_title: xxx
 description: xx
 date: 2025-09-04
@@ -10,13 +10,30 @@ tags: [XXX]
 draft: false
 ---
 
+## Ways of protecting production tables
+
+1. Protecting against bad data
+2. Protecting against unexpected changes
+3. Portecting sensitvie data
+
 ## Protecting against bad data
+
+The idea is simple, create an internal model (not exposed to end users) with the tests you need. And then a second model that depends on the first. This model will only be updated if the data is good (meaning that the tests on the internal model passed).
 
 ![Protecting against bad data](../../images/posts/2025/9999-protecting-bad-data.jpg)
 
+This should only be used when it's more important to have high quality data than fresh data. Generally I recommend this approach only when there is something that uses this table and that if it goes wrong could be really problematic. Like imagine if we are sending emails to users based on a table, we want to make sure we only notify them when it's needed to avoid sending unwanted emails.
+
 ## Protecting against unexpected changes
 
+What we want is to make sure we don't change the content of a table by mistake. This is useful when changes in a table trigger subsequent actions. For example, imagine we upload that data to some system and a lot of changes could mean a lot of expensive API calls. In that case, we want to protect that table.
+
+The idea is to have a model that compares the differences between the developer version of a table and the production one.
+This way the developer can check if those changes are inteded or not and go forward with the pull request based on that.
+
 ![Protecting against unexpected changes](../../images/posts/2025/9999-protect-unexpected-changes.jpg)
+
+This is achieved using the `data_diff` macro:
 
 <TerminalOutput color="stone">
   macros/data_diff.sql
@@ -72,6 +89,8 @@ draft: false
 {% endmacro %}
 ```
 
+That has this documentation:
+
 <TerminalOutput color="stone">
   macros/data_diff.yml
 </TerminalOutput>
@@ -103,6 +122,41 @@ macros:
       - name: exclude
         type: list
         description: Optional list of columns to exclude from comparison.
+```
+
+Then we would create the comparison model. For example it could be:
+
+```sql
+{# Enable it only on testing runs, you might need to change it #}
+{{ config(
+    enabled=target.name != 'pro' and target.type != 'duckdb'
+) }}
+
+{% set baseline = ref('salesforce__users') %}
+
+{# Here we hardcore the production table #}
+{% set compare_with = adapter.get_relation(
+    database='awsdatacatalog',
+    schema='pro__salesforce',
+    identifier='salesforce__users'
+) %}
+
+WITH data_diff AS (
+    {{ data_diff(
+        baseline,
+        compare_with,
+        pk='user_id',
+        select=[
+            'name',
+            'created_at',
+            'last_updated_at',
+            'p_extracted_at',
+        ]
+    ) }}
+)
+
+SELECT * FROM data_diff
+
 ```
 
 ## Protecting sentitive data
