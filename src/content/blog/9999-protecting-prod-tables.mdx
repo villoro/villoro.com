@@ -126,6 +126,9 @@ macros:
 
 Then we would create the comparison model. For example it could be:
 
+<TerminalOutput color="stone">
+  models/salesforce/data_diff__salesforce__users.sql
+</TerminalOutput>
 ```sql
 {# Enable it only on testing runs, you might need to change it #}
 {{ config(
@@ -161,4 +164,66 @@ SELECT * FROM data_diff
 
 ## Protecting sentitive data
 
+Imagine you have tables about the employers payrolls. It's really important that only a small subset of the users can read those raw tables.
+The idea is that you will end up creating aggregates that are not that sensitve but you don't want people being able to access raw data.
+
+To do that, you create a protected `database` that only `admins` (or any subset you want) can read it.
+But then, when developers try to run DBT it fails because they cannot access those tables.
+
+The idea for avoiding this problem is to have a `seed` for each protected table that mimics the real table but using fake data.
+
+Then you can dynamically read from the table or the seed based on the role/profile.
+
 ![Protecting sentitive data](../../images/posts/2025/9999-protect-sensitive-data.jpg)
+
+This would be done with something like:
+
+```sql
+WITH source AS (
+    /*
+        This allows us to use fake data when testing and real data in pro
+        It's meant for sensitive data protection
+    */
+    SELECT *
+    {% if is_scheduled_pro_run() -%}
+        FROM {{ source('nt_raw__a3', 'absenteeisms') }}
+    {% else -%}
+        FROM {{ ref('fake_absenteeisms') }}
+    {%- endif %}
+)
+-- downstream logic...
+SELECT * FROM source;
+```
+
+<Notice type="info">
+  Here we use `is_scheduled_pro_run` macro but the way you identify testing runs can be different.
+</Notice>
+
+It's really important to make sure the `seed` has the same schema as the real production table.
+We have most data for DBT sources as string so that schema changes are easier to handle.
+So we need to force the types on the seeds with something like:
+
+```yaml
+version: 2
+
+seeds:
+  - name: fake_absenteeisms
+    description: Contains fake data for A3 absenteeisms
+    meta:
+      owner: Villoro
+
+    columns:
+      - name: absenteeism_id
+        description: Absenteeisms pk.
+      - name: type_of_absenteeism
+        description: Category/type of IT absenteeism.
+      - name: employee_id
+        description: Reference to the employee related to the absenteeism.
+
+
+    config:
+      column_types:
+        absenteeism_id: string
+        type_of_absenteeism: string
+        employee_id: string
+```
