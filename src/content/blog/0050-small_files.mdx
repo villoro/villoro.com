@@ -6,7 +6,7 @@ description: This post addresses the common problem of small files in data lakes
 date: 2024-10-23
 image: "/images/blog/0050-handling-small-files.jpg"
 category: DE
-tags: [DE, Performance, Spark, DBT]
+tags: [DE, Performance, Spark, dbt]
 draft: false
 ---
 
@@ -76,14 +76,14 @@ Additionally, you can configure Spark to manage the size of files by setting the
   The number of partitions also affects Spark's parallelization; too few partitions can lead to underutilized resources, while too many can cause excessive overhead.
 </Notice>
 
-### 3.2. Athena with DBT
+### 3.2. Athena with dbt
 
 <Notice type="warning">
   In AWS Athena, **there is no direct way to control the number of files** written during query execution.
 </Notice>
 
-However, you can use DBT to manage this.
-By implementing a DBT post-hook, you can compact the files after they are written using the `OPTIMIZE` command, which merges smaller files into larger ones.
+However, you can use dbt to manage this.
+By implementing a dbt post-hook, you can compact the files after they are written using the `OPTIMIZE` command, which merges smaller files into larger ones.
 This will only work for <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/> tables.
 For more details, refer to the official documentation: <FancyLink linkText="Optimizing Iceberg tables" url="https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-data-optimization.html" company="aws"/>
 
@@ -290,7 +290,7 @@ While Iceberg can handle concurrent write operations, issues can sometimes occur
 Therefore, retries with <FancyLink linkText="Backoff" url="https://github.com/litl/backoff" dark="true"/> are recommended.
 For more information, see <FancyLink linkText="Concurrent write operations | Iceberg" url="https://iceberg.apache.org/docs/1.4.1/reliability/#concurrent-write-operations" company="iceberg"/>.
 
-#### 5.1.2. Iceberg in Athena with DBT
+#### 5.1.2. Iceberg in Athena with dbt
 
 You can query the `files` metadata with:
 
@@ -419,7 +419,7 @@ models:
 Now that we have a table with a snapshot of the metadata for each table whenever there is a write, we can create a table that tracks the latest state by day.
 This table will help us monitor partitioning problems.
 
-Here is the DBT model for that:
+Here is the dbt model for that:
 
 <TerminalOutput color="stone">
   models/files_by_day.sql

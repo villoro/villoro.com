@@ -2,11 +2,11 @@
 slug: handling-pipeline-failures
 title: Handling pipeline failures
 meta_title: How to Handle Failures in Modern Data Pipelines
-description: Learn how to make your data pipelines resilient by design using the ETU (Extract, Transform, Upload) approach. This guide covers failure handling strategies in DBT, Prefect, and more.
+description: Learn how to make your data pipelines resilient by design using the ETU (Extract, Transform, Upload) approach. This guide covers failure handling strategies in dbt, Prefect, and more.
 date: 2025-06-12
 image: /images/blog/0058-hero-handling-failure.jpg
 category: DE
-tags: [SQL, DE, Best Practices, DBT, Prefect]
+tags: [SQL, DE, Best Practices, dbt, Prefect]
 draft: false
 ---
 
@@ -31,7 +31,7 @@ In this first phase, we move data from various external sources into our data la
 
 ### 1.2. ⚙️ Transform (T)
 
-Once the raw data lands in the lake, we use DBT to transform it into clean, structured, and enriched datasets. These transformations include filtering, joining, and applying business logic to create models that are ready for analysis or operational use.
+Once the raw data lands in the lake, we use dbt to transform it into clean, structured, and enriched datasets. These transformations include filtering, joining, and applying business logic to create models that are ready for analysis or operational use.
 
 ### 1.3. ⬆️ Upload (U)
 
@@ -42,7 +42,7 @@ In the final step, we push processed data back into third-party systems. This mi
 | Stage                 | Goal                                  | Tools / Mechanism | Output / Target                               |
 | --------------------- | ------------------------------------- | ----------------- | --------------------------------------------- |
 | ⬇️ Extract & Load (E)  | Centralize raw data                   | Python jobs       | Iceberg tables on S3 + Glue Catalog           |
-| ⚙️ Transform (T)      | Create trustworthy, reusable datasets | DBT on Athena     | Cleaned, versioned Iceberg tables             |
+| ⚙️ Transform (T)      | Create trustworthy, reusable datasets | dbt on Athena     | Cleaned, versioned Iceberg tables             |
 | ⬆️ Upload (U)          | Activate data in external tools       | Python jobs       | Synced data in external systems (like CRM/ad) |
 
 Here is a really simple example of how our pipeline looks like:
@@ -53,29 +53,29 @@ Here is a really simple example of how our pipeline looks like:
 
 ### 2.1. Failures in Extract & Load (E) ⬇️
 
-Data needs to be successfully extracted and landed in the lake before DBT transformations can begin. These upstream extract jobs — often orchestrated outside DBT — are susceptible to failures, and how we handle those failures directly impacts downstream processing.
+Data needs to be successfully extracted and landed in the lake before dbt transformations can begin. These upstream extract jobs — often orchestrated outside dbt — are susceptible to failures, and how we handle those failures directly impacts downstream processing.
 
 Two main options arise:
 
 1. Exclude failed topics with an `exclude` (like `dbt build --exclude tag:salesforce`)
-2. Run DBT as usual without exclusions
+2. Run dbt as usual without exclusions
 
-While skipping failed upstream tasks with option 1 might seem like a resource optimization, it introduces significant risks. DBT transformations are usually cheap to run — especially with incremental models — and skipping them can create inconsistencies.
+While skipping failed upstream tasks with option 1 might seem like a resource optimization, it introduces significant risks. dbt transformations are usually cheap to run — especially with incremental models — and skipping them can create inconsistencies.
 
 <Notice type="warning">
   Avoid relying on `--exclude` unless you're fully confident about the implications.
 </Notice>
 
 For example, I have a job that transcribes audios (see <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/>).
-This job can partially succeed — transcribing some files but failing others due to server timeouts. To avoid redundant processing, I use a LEFT ANTI JOIN with the DBT-generated transcriptions table.
+This job can partially succeed — transcribing some files but failing others due to server timeouts. To avoid redundant processing, I use a LEFT ANTI JOIN with the dbt-generated transcriptions table.
 
-However, when the transcription job partially failed and I excluded its tag in the DBT run, the corresponding models weren’t updated. This led to reprocessing already-transcribed files, inflating compute costs and duplicating results.
+However, when the transcription job partially failed and I excluded its tag in the dbt run, the corresponding models weren’t updated. This led to reprocessing already-transcribed files, inflating compute costs and duplicating results.
 
 ### 2.2. Failures in Transform (T) ⚙️
 
-The Transform step (T) is where DBT takes raw data from the lake and builds structured models. If something goes wrong in transformation, pushing bad or incomplete data into external systems can create inconsistencies or break business processes. For example, syncing `users` but not `sessions` could result in mismatched reporting.
+The Transform step (T) is where dbt takes raw data from the lake and builds structured models. If something goes wrong in transformation, pushing bad or incomplete data into external systems can create inconsistencies or break business processes. For example, syncing `users` but not `sessions` could result in mismatched reporting.
 
-DBT assigns one of six statuses to each node:
+dbt assigns one of six statuses to each node:
 
 * **error**: a `model` failure
 * **fail**: a `test` failure (with `fail` severity)
@@ -86,11 +86,11 @@ DBT assigns one of six statuses to each node:
 
 #### 2.2.1. Strategies to Handle Failures
 
-Before triggering the Upload (U) step, it’s important to inspect DBT results and decide which entities can safely be synced. We've used two main approaches:
+Before triggering the Upload (U) step, it’s important to inspect dbt results and decide which entities can safely be synced. We've used two main approaches:
 
-1. **Tag-based filtering**. Only upload data associated with models that belong to a specific tag and completed successfully. This relies on defining clear ownership via tags in your DBT project.
+1. **Tag-based filtering**. Only upload data associated with models that belong to a specific tag and completed successfully. This relies on defining clear ownership via tags in your dbt project.
 
-2. **Model-based filtering**. Build an allowlist of model names that finished with `success`, and restrict uploads to just those. This can be done by parsing the DBT `run_results.json`.
+2. **Model-based filtering**. Build an allowlist of model names that finished with `success`, and restrict uploads to just those. This can be done by parsing the dbt `run_results.json`.
 
 Both strategies aim to prevent syncing stale or partial datasets while allowing the rest of the pipeline to proceed without a full rollback.
 
@@ -105,12 +105,12 @@ The idea is to be able to know which models succeeded and which failed.
 This can be done by:
 
 1. Getting a unique ID for the execution
-2. Exporting DBT run results
+2. Exporting dbt run results
 3. Reading run results
 
 ##### 2.2.2.1. Getting a Unique Execution ID
 
-It is really important to pass some ID to DBT so that we can match the run results with the actual run.
+It is really important to pass some ID to dbt so that we can match the run results with the actual run.
 
 With Prefect, it can be done like this:
 
@@ -128,15 +128,15 @@ def get_flow_run_id():
         raise RuntimeError(msg)
 ```
 
-##### 2.2.2.2. Exporting DBT Run Results
+##### 2.2.2.2. Exporting dbt Run Results
 
-I already described this in a previous post. You can read it at <FancyLink linkText="Running DBT with AWS ECS (Fargate) | 8.2. DBT run results" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/#82-dbt-run-results" dark="true"/>.
+I already described this in a previous post. You can read it at <FancyLink linkText="Running dbt with AWS ECS (Fargate) | 8.2. dbt run results" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/#82-dbt-run-results" dark="true"/>.
 
-The important part is to pass the `flow_run_id` to DBT so that it can be added as a column. This will allow us to filter later the run results we want.
+The important part is to pass the `flow_run_id` to dbt so that it can be added as a column. This will allow us to filter later the run results we want.
 
 ##### 2.2.2.3. Reading the results
 
-Here is how we can query the results of a DBT run:
+Here is how we can query the results of a dbt run:
 
 <TerminalOutput color="stone">
   QUERY_FAILURES
@@ -183,7 +183,7 @@ STATUS_MAPPING = {
 @task(name="prefect.dbt.run.get_failures")
 def get_dbt_results(env, flow_run_id):
     logger = get_run_logger()
-    logger.info(f"Checking if there were DBT failures for {flow_run_id=}")
+    logger.info(f"Checking if there were dbt failures for {flow_run_id=}")
 
     yesterday = date.today() - timedelta(days=1)
     query = QUERY_FAILURES.format(yesterday=yesterday, flow_run_id=flow_run_id)
@@ -192,9 +192,9 @@ def get_dbt_results(env, flow_run_id):
     df["level"] = df["status"].map(STATUS_MAPPING)
 
     if errors := df.loc[df["level"] < 0, "unique_id"].to_list():
-        logger.warning(f"There were {len(errors)} failures in DBT: {errors=}")
+        logger.warning(f"There were {len(errors)} failures in dbt: {errors=}")
     else:
-        logger.info("There were no failures in DBT")
+        logger.info("There were no failures in dbt")
 
     return df
 ```
@@ -293,7 +293,7 @@ UPLOAD_JOBS = {
 }
 
 async def run_uploads(flow_run_id, env: Literal["snd", "pro"] = "pro"):
-    """Runs post-DBT jobs based on DBT validation results."""
+    """Runs post-dbt jobs based on dbt validation results."""
     logger = get_run_logger()
 
     dbt_results = dbt.get_dbt_results(env, flow_run_id)
@@ -303,7 +303,7 @@ async def run_uploads(flow_run_id, env: Literal["snd", "pro"] = "pro"):
         if are_results_good(dbt_results, **expectations):
             jobs.append(func)
         else:
-            logger.warning(f"Skipping {func=} because of DBT failures")
+            logger.warning(f"Skipping {func=} because of dbt failures")
 
     await prefect_utils.run_flows_async(
         flows=jobs, flow_name="3h.post_dbt", env=env

@@ -6,7 +6,7 @@ description: Learn how AWS Glue schema version limits can silently break Athena 
 date: 2025-04-10
 image: /images/blog/0056-athenea.jpg
 category: DE
-tags: [DE, AWS, Best Practices, Performance, DBT, Glue]
+tags: [DE, AWS, Best Practices, Performance, dbt, Glue]
 draft: false
 ---
 
@@ -16,7 +16,7 @@ draft: false
 
 We hit a strange issue with dbt Athena where no queries were running:
 
-![DBT athena logs failure](../../images/posts/2025/0056-dbt-athena-failure.jpg)
+![dbt athena logs failure](../../images/posts/2025/0056-dbt-athena-failure.jpg)
 
 After digging we discovered the culprit: **Glue table version limits**.
 
@@ -59,7 +59,7 @@ We’re mostly using `materialized = table`, which means dbt **recreates the tab
 
 However, **views are a different story**. Since they’re not dropped and recreated, each run updates the definition, which **adds a new Glue version every time**.
 
-dbt does support version cleanup using the `expire_glue_table_versions` macro, and you can configure how many versions to keep using the `versions_to_keep` parameter (see <FancyLink linkText="DBT Athena config | High availability" url="https://docs.getdbt.com/reference/resource-configs/athena-configs#high-availability-ha-table"/> for more info).
+dbt does support version cleanup using the `expire_glue_table_versions` macro, and you can configure how many versions to keep using the `versions_to_keep` parameter (see <FancyLink linkText="dbt Athena config | High availability" url="https://docs.getdbt.com/reference/resource-configs/athena-configs#high-availability-ha-table"/> for more info).
 
 This is especially useful when working with **incremental Iceberg models** or when using **Hive tables with high availability (HA)** — the two cases where Glue version bloat can accumulate rapidly. By default, `versions_to_keep` is set to 4, but this can be customized.
 
