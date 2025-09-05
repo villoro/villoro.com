@@ -1,36 +1,36 @@
 ---
 slug: running-dbt-with-aws-ecs-fargate
-title: Running DBT with AWS ECS (Fargate)
-meta_title: Running DBT with AWS ECS
-description: Guide to setting up and running DBT on AWS ECS (Fargate), covering Dockerization, package handling, Docker images, integration with Prefect and exporting results.
+title: Running dbt with AWS ECS (Fargate)
+meta_title: Running dbt with AWS ECS
+description: Guide to setting up and running dbt on AWS ECS (Fargate), covering Dockerization, package handling, Docker images, integration with Prefect and exporting results.
 date: 2024-06-07
 image: "/images/blog/0044-running-dbt-fargate.jpg"
 category: DE
-tags: [SQL, DE, AWS, Setup, Tutorial, DBT]
+tags: [SQL, DE, AWS, Setup, Tutorial, dbt]
 draft: false
 ---
 
 ## 0. Motivation
 
-<FancyLink linkText="DBT" url="https://www.getdbt.com/"/> serves as a gateway for SQL practitioners to engage more deeply in data engineering tasks.
-While DBT Cloud offers a managed solution, budget constraints may lead to exploring self-hosting options.
+<FancyLink linkText="dbt" url="https://www.getdbt.com/"/> serves as a gateway for SQL practitioners to engage more deeply in data engineering tasks.
+While dbt Cloud offers a managed solution, budget constraints may lead to exploring self-hosting options.
 Leveraging <FancyLink linkText="AWS ECS" url="https://aws.amazon.com/en/ecs/" company="aws"/> (Fargate) aligns with our existing AWS infrastructure and offers cost-effective scalability.
-By self-hosting DBT on AWS ECS (Fargate), we gain better control and observability over our data transformation processes.
+By self-hosting dbt on AWS ECS (Fargate), we gain better control and observability over our data transformation processes.
 
 When setting this up, I got a lot of information and direction from these posts:
 
 * <FancyLink linkText="Running dbt-core in production on AWS using ECS Fargate and Airflow" url="https://data-dive.com/deploy-dbt-on-aws-using-ecs-fargate-with-airflow-scheduling/" company="default" dark="true"/>
 * <FancyLink linkText="Deploying and Running dbt on AWS Fargate" url="https://medium.com/hashmapinc/deploying-and-running-dbt-on-aws-fargate-872db84065e4" dark="true"/>
 
-However, I still think I have multiple improvements to share, such as handling it with `poetry`, integrating with `prefect`, exporting DBT run results, among other things. This is why I'm documenting everything.
+However, I still think I have multiple improvements to share, such as handling it with `poetry`, integrating with `prefect`, exporting dbt run results, among other things. This is why I'm documenting everything.
 
 ## 1. The components
 
-In our setup, we combine `DBT`, `Docker`, and `AWS ECS (Fargate)` to streamline the execution of data transformation pipelines:
+In our setup, we combine `dbt`, `Docker`, and `AWS ECS (Fargate)` to streamline the execution of data transformation pipelines:
 
-* **DBT** enables SQL practitioners to efficiently transform and model data.
-* **Docker** containerizes the necessary Python code for DBT, ensuring consistency and reproducibility.
-* **AWS ECS (Fargate)** executes Docker containers, providing a lightweight and serverless solution for running DBT.
+* **dbt** enables SQL practitioners to efficiently transform and model data.
+* **Docker** containerizes the necessary Python code for dbt, ensuring consistency and reproducibility.
+* **AWS ECS (Fargate)** executes Docker containers, providing a lightweight and serverless solution for running dbt.
 
 <Notice type="success">
   Teams using AWS EKS can replicate this setup with minimal effort, leveraging existing Kubernetes clusters.
@@ -49,12 +49,12 @@ Here you can see a diagram of the overall architecture:
 
 ## 2. Handling packages in docker
 
-From the beginning, I wanted to have a simple Docker image that is independent of the DBT code.
-This way, changes to DBT itself won't require creating a new image and uploading it to ECR.
+From the beginning, I wanted to have a simple Docker image that is independent of the dbt code.
+This way, changes to dbt itself won't require creating a new image and uploading it to ECR.
 
 The solution is to create two `.tar.gz` files:
 
-* `package.tar.gz`: contains all DBT code
+* `package.tar.gz`: contains all dbt code
 * `venv.tar.gz`: contains the virtual environment, so packages don't need to be installed at runtime
 
 Both files are downloaded at runtime and are versioned, allowing us to use older versions if needed.
@@ -125,7 +125,7 @@ RUN python -m pip install --upgrade \
 ### 3.2. Docker.venv
 
 This image creates a virtual environment with all dependencies.
-It also packages all DBT code. Finally, it exports both as a `.tar.gz` file.
+It also packages all dbt code. Finally, it exports both as a `.tar.gz` file.
 
 <TerminalOutput color="stone">
   .github/docker/Dockerfile.venv
@@ -161,14 +161,14 @@ COPY --from=base /usr/app/dbt/dist/*.tar.gz /dist/
 </Notice>
 
 <Notice type="info" className="mt-6">
-  The `dbt_src` is the folder that contains the actual `DBT` code. That includes `dbt_project.yml`, `models`, `tests`, `macros` folders, etc.
+  The `dbt_src` is the folder that contains the actual `dbt` code. That includes `dbt_project.yml`, `models`, `tests`, `macros` folders, etc.
 </Notice>
 
 ### 3.3. Docker.ecs
 
 This image runs in `Fargate`.
 Here, I set up the connection to `prefect` (more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>).
-I also export all the needed scripts to download all DBT code.
+I also export all the needed scripts to download all dbt code.
 
 <TerminalOutput color="stone">
   .github/docker/Dockerfile.ecs
@@ -187,7 +187,7 @@ ENV PREFECT_API_URL=${PREFECT_API_URL}
 # Copy the scripts needed for setting up the environment
 COPY scripts .
 
-# This will download the needed files + install poetry environment + execute all DBT commands by default
+# This will download the needed files + install poetry environment + execute all dbt commands by default
 ENTRYPOINT ["/bin/bash", "./setup_and_run_dbt.sh"]
 ```
 
@@ -303,7 +303,7 @@ def upload_all(env):
     upload_to_s3(bucket, "pyproject.toml", f"{s3_code}/pyproject.toml")
     upload_to_s3(bucket, "poetry.lock", f"{s3_code}/poetry.lock")
 
-    # DBT config
+    # dbt config
     profile = aws_config["filenames"]["profiles_by_env"]
     upload_to_s3(bucket, profile.format(env=env), f"{s3_code}/profiles.yml")
     upload_dbt_package(bucket, s3_dist, s3_venv)
@@ -508,7 +508,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### 5.3. Setup and run DBT
+### 5.3. Setup and run dbt
 
 This script:
 
@@ -529,7 +529,7 @@ poetry config virtualenvs.in-project true
 echo "3. Downloading all Poetry code"
 poetry run python download_code.py
 
-echo 5. Running all DBT commands. Using args="$@"
+echo 5. Running all dbt commands. Using args="$@"
 poetry run python run.py "$@"
 ```
 
@@ -537,9 +537,9 @@ poetry run python run.py "$@"
   The `"$@"` is used to pass all arguments from the Docker container to the `run.py` script.
 </Notice>
 
-## 6. Running DBT
+## 6. Running dbt
 
-While running DBT as a CLI is an option, it limits our ability to:
+While running dbt as a CLI is an option, it limits our ability to:
 
 * Integrate with Prefect
 * Add custom logs for certain events
@@ -564,7 +564,7 @@ dbtRunner().invoke(args)
 
 ### 7.1. Tasks
 
-For better observability, I recommend defining each DBT command as a Prefect task. This involves adding the `@task` decorator, like so:
+For better observability, I recommend defining each dbt command as a Prefect task. This involves adding the `@task` decorator, like so:
 
 ```python
 from dbt.cli.main import dbtRunner
@@ -589,15 +589,15 @@ if __name__ == '__main__':
 
 ### 7.2. Adding logs
 
-A valuable feature of DBT is the ability to register callbacks (<FancyLink linkText="Registering callbacks | Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations#registering-callbacks"/>).
-With callbacks, you can easily add custom logs, particularly handy for sending logs from DBT to Prefect. To achieve this, you need to:
+A valuable feature of dbt is the ability to register callbacks (<FancyLink linkText="Registering callbacks | Programmatic invocations" url="https://docs.getdbt.com/reference/programmatic-invocations#registering-callbacks"/>).
+With callbacks, you can easily add custom logs, particularly handy for sending logs from dbt to Prefect. To achieve this, you need to:
 
 1. Create a callback function to handle the logs.
 2. Set up the logger. However, this isn't straightforward as it needs to be tied to a Prefect task.
 
 #### 7.2.1. Create a `callback`
 
-The concept here involves capturing information from the DBT events and sending the log based on the severity level.
+The concept here involves capturing information from the dbt events and sending the log based on the severity level.
 
 <TerminalOutput color="stone">
   dbt_src/utils.py
@@ -690,8 +690,8 @@ def run_dbt_command(args):
 
 There are two things you might want to export:
 
-1. <FancyLink linkText="DBT docs" url="https://docs.getdbt.com/reference/resource-configs/docs"/> 
-2. <FancyLink linkText="DBT run results" url="https://docs.getdbt.com/reference/artifacts/run-results-json"/> 
+1. <FancyLink linkText="dbt docs" url="https://docs.getdbt.com/reference/resource-configs/docs"/> 
+2. <FancyLink linkText="dbt run results" url="https://docs.getdbt.com/reference/artifacts/run-results-json"/> 
 
 ### 8.1. Docs
 
@@ -701,7 +701,7 @@ The idea here is to combine the following files into one:
 * `manifest.json`
 * `catalog.json`
 
-The solution I use is based on <FancyLink linkText="Export DBT documentation" url="https://github.com/dbt-labs/dbt-docs/issues/53#issuecomment-1011053807" dark="true"/>.
+The solution I use is based on <FancyLink linkText="Export dbt documentation" url="https://github.com/dbt-labs/dbt-docs/issues/53#issuecomment-1011053807" dark="true"/>.
 
 <TerminalOutput color="stone">
   dbt_src/docs.py
@@ -749,7 +749,7 @@ def merge_docs():
   Once exported, you simply need to upload the `docs` file into `S3`.
 </Notice>
 
-### 8.2. DBT run results
+### 8.2. dbt run results
 
 The idea is to extract information about the `runs` and `run_results` from the `target/run_results.json` file.
 This is done with some `pandas` code and then exported to `glue` with `awswrangler`.
@@ -847,7 +847,7 @@ def export_execution_and_run_results():
 
 We've seen parts of the `run.py`, but I think it's useful to see the complete code.
 The only missing part to describe is that I use <FancyLink linkText="click" url="https://github.com/pallets/click" dark="true"/>.
-With it, I can catch the parameters passed to the `docker` so that they are later used by `DBT`.
+With it, I can catch the parameters passed to the `docker` so that they are later used by `dbt`.
 
 Here is the complete code:
 
@@ -875,19 +875,19 @@ def clean():
 
 @task(name="dbt.deps")
 def deps():
-    """Install DBT dependencies"""
+    """Install dbt dependencies"""
     utils.run_dbt_command(["deps"])
 
 
 @task(name="dbt.debug")
 def run_debug():
-    """Check for DBT problems"""
+    """Check for dbt problems"""
     utils.run_dbt_command(["debug"])
 
 
 @task(name="dbt.docs.generate")
 def docs_generate():
-    """Generate DBT docs"""
+    """Generate dbt docs"""
     utils.run_dbt_command(["docs", "generate"])
 
 
@@ -907,7 +907,7 @@ def docs(upload_docs):
 
 @task(name="dbt.build")
 def build(target, select, exclude, full_refresh):
-    """Perform DBT build (seed + run + test)"""
+    """Perform dbt build (seed + run + test)"""
     command = ["build"]
 
     if target:
@@ -924,7 +924,7 @@ def build(target, select, exclude, full_refresh):
 
 @flow(name="dbt")
 def run_all(env, target, select, exclude, full_refresh, debug):
-    """Run all DBT commands"""
+    """Run all dbt commands"""
 
     clean()
     deps()
@@ -939,17 +939,17 @@ def run_all(env, target, select, exclude, full_refresh, debug):
 def notify_failure(env, exception):
     if env == "pro":
         slack = SlackWebhook.load("slack")
-        slack.notify(f"DBT failed: {exception}")
+        slack.notify(f"dbt failed: {exception}")
 
 
 @click.command()
-@click.option("--target", "-t", default=None, help="DBT target")
-@click.option("--select", "-s", default=None, help="Selected DBT models")
-@click.option("--exclude", "-e", default=None, help="Excluded DBT models")
+@click.option("--target", "-t", default=None, help="dbt target")
+@click.option("--select", "-s", default=None, help="Selected dbt models")
+@click.option("--exclude", "-e", default=None, help="Excluded dbt models")
 @click.option("--full_refresh", "--full-refresh", "-f", is_flag=True, default=False)
 @click.option("--debug", "-d", is_flag=True, default=False, help="If true do debug")
 def main(target, select, exclude, full_refresh, debug):
-    logger.info(f"Starting DBT project")
+    logger.info(f"Starting dbt project")
 
     target_default, target_type = utils.get_target_info_from_profiles()
 

@@ -269,7 +269,7 @@ This makes DuckDB a handy connector when you just want to move or combine data e
   DuckDB doubles as a lightweight ETL tool: move data between systems or join across them with one query.
 </Notice>
 
-### 4.3. Using DuckDB in CI pipelines with DBT
+### 4.3. Using DuckDB in CI pipelines with dbt
 
 DuckDB is a fantastic choice for **testing transformations locally or in CI**. Instead of paying for a cloud warehouse, you can spin up DuckDB in GitHub Actions (or any CI runner) and validate logic:
 
@@ -277,7 +277,7 @@ DuckDB is a fantastic choice for **testing transformations locally or in CI**. I
 dbt run --target duckdb
 ```
 
-This approach is **fast, cheap, and isolated**, making it easy to catch issues early. You can read more about it at <FancyLink linkText="DBT testing with DuckDB" url="https://villoro.com/blog/dbt-testing-duckdb/" dark="true"/>.
+This approach is **fast, cheap, and isolated**, making it easy to catch issues early. You can read more about it at <FancyLink linkText="dbt testing with DuckDB" url="https://villoro.com/blog/dbt-testing-duckdb/" dark="true"/>.
 
 ### 4.4. Interactive analysis in notebooks
 

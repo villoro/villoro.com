@@ -1,23 +1,23 @@
 ---
 slug: dbt-testing-duckdb
-title: DBT testing with DuckDB
-meta_title: DBT testing with DuckDB
-description: Learn how to test DBT projects using DuckDB to ensure high-quality, consistent SQL code. This guide covers setting up a SQL linter with Sqlfluff, automating testing with pre-commit hooks, and creating a streamlined CI pipeline for efficient testing.
+title: dbt testing with DuckDB
+meta_title: dbt testing with DuckDB
+description: Learn how to test dbt projects using DuckDB to ensure high-quality, consistent SQL code. This guide covers setting up a SQL linter with Sqlfluff, automating testing with pre-commit hooks, and creating a streamlined CI pipeline for efficient testing.
 date: 2024-06-19
 image: "/images/blog/0045-dbt-testing-duckdb.jpg"
 category: DE
-tags: [SQL, DE, Best Practices, DBT]
+tags: [SQL, DE, Best Practices, dbt]
 draft: false
 ---
 
 ## 0. Intro
 
-In our previous post, we discussed how to self-host DBT on AWS ECS (Fargate) for cost-effective scalability and better control over data transformation processes.
-If you haven't read that post, see <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
-This time, we'll take it a step further by diving into testing DBT projects with DuckDB, ensuring the quality and consistency of your SQL code.
+In our previous post, we discussed how to self-host dbt on AWS ECS (Fargate) for cost-effective scalability and better control over data transformation processes.
+If you haven't read that post, see <FancyLink linkText="Running dbt with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
+This time, we'll take it a step further by diving into testing dbt projects with DuckDB, ensuring the quality and consistency of your SQL code.
 
-<FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>, an embedded analytical database, offers a fast, lightweight SQL engine, perfect for testing DBT models.
-By integrating SQL linting, smoke testing, and automation, we can maintain high-quality DBT projects.
+<FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>, an embedded analytical database, offers a fast, lightweight SQL engine, perfect for testing dbt models.
+By integrating SQL linting, smoke testing, and automation, we can maintain high-quality dbt projects.
 This guide will cover setting up a SQL linter with Sqlfluff, automating testing with pre-commit hooks, and creating a streamlined continuous integration (CI) pipeline.
 
 ## 1. SQL Linter
@@ -25,9 +25,9 @@ This guide will cover setting up a SQL linter with Sqlfluff, automating testing 
 The idea is to have a SQL linter that helps get well-formatted SQL code with a unified style inside the repo.
 As the linter, I recommend using <FancyLink linkText="Sqlfluff" url="https://github.com/sqlfluff/sqlfluff" dark="true"/>.
 
-### 1.1. Integrating it with DBT
+### 1.1. Integrating it with dbt
 
-To correctly parse DBT code (especially the templating part), we need to set it up properly.
+To correctly parse dbt code (especially the templating part), we need to set it up properly.
 The easiest way is to create the `.sqlfluff` file in the repo root as follows:
 
 <TerminalOutput color="stone">
@@ -54,8 +54,8 @@ profiles_dir = ./.github/
 
 Notice that we are using DuckDB as the dialect and that we need to set a couple of directories:
 
-1. `project_dir`: with the root of the DBT project
-2. `profiles_dir`: with the path where a DBT profile can be found (only for linting purposes).
+1. `project_dir`: with the root of the dbt project
+2. `profiles_dir`: with the path where a dbt profile can be found (only for linting purposes).
 
 And here is the very simple profile I use:
 
@@ -122,16 +122,16 @@ Here we are using 2 jobs:
 
 ## 2. Smoke testing with DuckDB
 
-The testing strategy I've seen in most DBT projects is to rely on users to manually run DBT to validate that the code works.
+The testing strategy I've seen in most dbt projects is to rely on users to manually run dbt to validate that the code works.
 This is problematic since users might not run those tests (especially first-time contributors).
 
-To have some guarantees over the DBT code, we can do **smoke testing** using <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>.
-The idea is to have some testing data (it can either be anonymized prod data or synthetic data) so that we can run DBT using <FancyLink linkText="dbt-duckdb" url="https://github.com/duckdb/dbt-duckdb" dark="true"/>.
+To have some guarantees over the dbt code, we can do **smoke testing** using <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>.
+The idea is to have some testing data (it can either be anonymized prod data or synthetic data) so that we can run dbt using <FancyLink linkText="dbt-duckdb" url="https://github.com/duckdb/dbt-duckdb" dark="true"/>.
 This can be automated to run at every pull request, ensuring some guarantees about the code.
 
 ## 3. Testing data
 
-The idea is to have some files that define each table and to have a script that exports all of that into a duckdb file that can be used for DBT.
+The idea is to have some files that define each table and to have a script that exports all of that into a duckdb file that can be used for dbt.
 
 It should be something like:
 
@@ -399,11 +399,11 @@ if __name__ == "__main__":
 
 ## 4. Running dbt-duckdb
 
-To do the smoke test, you can run DBT the same way you run it in production.
-That could be `dbt build --select xx --exclude yy` or using a Python script as described in <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
+To do the smoke test, you can run dbt the same way you run it in production.
+That could be `dbt build --select xx --exclude yy` or using a Python script as described in <FancyLink linkText="Running dbt with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
 
 There might be some models or tests that you don't want to test during CI (such as testing data freshness).
-To handle that, I use the `no_test` tag and pass `--exclude tag:no_test` when running DBT.
+To handle that, I use the `no_test` tag and pass `--exclude tag:no_test` when running dbt.
 
 ### 4.1. In memory vs working with a file
 
@@ -416,8 +416,8 @@ Option 1 is the simplest given that we have a duckdb file with the testing data.
 With this option, each model run will be exported in the duckdb file.
 This is very useful when debugging since you can do manual queries to inspect the results and/or manually retry failed queries.
 
-However, this way of working implies I/O operations which makes DBT run sequentially and not in parallel.
-To speed this up, we can run DBT in memory and attach a file for the testing data.
+However, this way of working implies I/O operations which makes dbt run sequentially and not in parallel.
+To speed this up, we can run dbt in memory and attach a file for the testing data.
 This is what I recommend doing during CI.
 
 Here is how you would declare both profiles:
@@ -447,7 +447,7 @@ dbt_northius:
 ### 4.3. Duckdb filename
 
 You might wonder why the duckdb file is called `awsdatacatalog.duckdb`, and behind that name, there is a very interesting trick.
-In production, I'm using Athena (see <FancyLink linkText="Running DBT with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>) and there the default catalog is called `awsdatacatalog`.
+In production, I'm using Athena (see <FancyLink linkText="Running dbt with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>) and there the default catalog is called `awsdatacatalog`.
 If you want to query the table `athena_history` inside the `bronze__metadata` schema you can either do:
 
 ```sql
@@ -455,7 +455,7 @@ SELECT * FROM bronze__metadata.athena_history
 SELECT * FROM awsdatacatalog.bronze__metadata.athena_history
 ```
 
-That allows us to define the DBT sources like:
+That allows us to define the dbt sources like:
 
 ```yaml
 sources:
@@ -480,7 +480,7 @@ With duckdb, that implies that `source(xx)` will be read from the `awsdatacatalo
 
 ## 5. Continuous Integration (CI)
 
-Once you are able to run DBT locally with DuckDB, you can set up the Continuous Integration (CI) job.
+Once you are able to run dbt locally with DuckDB, you can set up the Continuous Integration (CI) job.
 With that, it will run at each commit done in a pull request.
 
 ```yaml
@@ -537,7 +537,7 @@ You probably will use another engine in production instead of duckdb.
 In my case, I use <FancyLink linkText="dbt-athena" url="https://github.com/dbt-athena/dbt-athena" dark="true"/>.
 The problem with that is that some SQL functions will be different and you will need to adapt your code so that it works with both engines.
 
-The way to solve that problem is with DBT macros that do different things based on the engine (or dbt adapter) you are using. You can do that by calling `adapter.type()`.
+The way to solve that problem is with dbt macros that do different things based on the engine (or dbt adapter) you are using. You can do that by calling `adapter.type()`.
 
 For example, imagine you want to get the last element of an array column. In duckdb, you can do `last` but in Athena, you should do `last_value`.
 By defining the `last` macro you could handle that difference:
@@ -554,7 +554,7 @@ By defining the `last` macro you could handle that difference:
 
 Another situation that you might need to handle differently is when you want to run table maintenance operations such as `OPTIMIZE` for <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/>.
 
-That kind of operation is usually done with a `post-hook` (see <FancyLink linkText="DBT | pre-hook & post-hook" url="https://docs.getdbt.com/reference/resource-configs/pre-hook-post-hook"/>).
+That kind of operation is usually done with a `post-hook` (see <FancyLink linkText="dbt | pre-hook & post-hook" url="https://docs.getdbt.com/reference/resource-configs/pre-hook-post-hook"/>).
 
 So insted of adding the `optimize` there like:
 
@@ -588,11 +588,11 @@ Then you can simply call it with:
 
 ## 7. Conclusion
 
-Testing is a critical part of any data engineering workflow, and integrating DBT with DuckDB for testing can significantly enhance the reliability of your data transformation processes.
-By setting up SQL linting, automating tests with pre-commit hooks, and establishing a CI pipeline, you can ensure that your DBT models are robust and error-free.
+Testing is a critical part of any data engineering workflow, and integrating dbt with DuckDB for testing can significantly enhance the reliability of your data transformation processes.
+By setting up SQL linting, automating tests with pre-commit hooks, and establishing a CI pipeline, you can ensure that your dbt models are robust and error-free.
 
-In this post, we've shown how to leverage DuckDB for efficient testing and provided detailed steps to implement these practices in your DBT projects.
+In this post, we've shown how to leverage DuckDB for efficient testing and provided detailed steps to implement these practices in your dbt projects.
 By following these guidelines, you can maintain high standards for your SQL code and improve the overall quality of your data workflows.
 
-We hope you find this guide helpful and encourage you to explore these testing strategies to keep your DBT projects running smoothly.
+We hope you find this guide helpful and encourage you to explore these testing strategies to keep your dbt projects running smoothly.
 As always, feel free to share your feedback or any questions you might have. Happy testing!

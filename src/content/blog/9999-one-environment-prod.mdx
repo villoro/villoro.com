@@ -34,9 +34,9 @@ Multiple environments exist to:
   More environments mean more guardrails before code reaches production.
 </Notice>
 
-## 2. The DBT perspective
+## 2. The dbt perspective
 
-### 2.1 How DBT handles environments
+### 2.1 How dbt handles environments
 
 In dbt, environments live in the `profiles.yml`. Each profile contains one or more **targets** that describe how dbt should connect: warehouse, database, schema, and credentials. This design means your project code doesn’t change — dbt simply decides *where* to build models based on the target.
 
@@ -49,7 +49,7 @@ This allows everyone to work against the same production data and warehouse whil
 
 ### 2.2 Switching targets with profiles
 
-Profiles make it easy to switch between these targets. By default, a developer might run dbt with a personal target, which builds into `villoro_salesforce`. When deploying, the pipeline switches to the `prod` target, which builds into `prod_salesforce`. You can read more about it at <FancyLink linkText="DBT | Understanding custom schemas" url="https://docs.getdbt.com/docs/build/custom-schemas#understanding-custom-schemas"/>.
+Profiles make it easy to switch between these targets. By default, a developer might run dbt with a personal target, which builds into `villoro_salesforce`. When deploying, the pipeline switches to the `prod` target, which builds into `prod_salesforce`. You can read more about it at <FancyLink linkText="dbt | Understanding custom schemas" url="https://docs.getdbt.com/docs/build/custom-schemas#understanding-custom-schemas"/>.
 
 <Notice type="warning">
   The **protected prefix** (like `prod_`) is reserved for automated runs only. Developers shouldn't have permissions to write there.
@@ -94,7 +94,7 @@ Many teams use this approach:
 * Production jobs write only to `prod_salesforce`.
 * CI/CD pipelines create temporary schemas for validation, then clean them up.
 
-![DBT custom schemas](../../images/posts/2025/9999-dbt-custom-schemas.jpg)
+![dbt custom schemas](../../images/posts/2025/9999-dbt-custom-schemas.jpg)
 
 ## 4. Pros and cons
 

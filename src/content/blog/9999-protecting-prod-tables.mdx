@@ -1,12 +1,12 @@
 ---
 slug: protecting-prod-tables-dbt
-title: Protecting Production Tables in DBT
-meta_title: Protecting Production Tables in DBT - Strategies for Data Quality and Security
-description: "Learn three proven strategies to safeguard production tables in DBT: protecting against bad data, preventing unexpected changes, and securing sensitive data with seeds."
+title: Protecting Production Tables in dbt
+meta_title: Protecting Production Tables in dbt - Strategies for Data Quality and Security
+description: "Learn three proven strategies to safeguard production tables in dbt: protecting against bad data, preventing unexpected changes, and securing sensitive data with seeds."
 date: 2025-09-04
 image: /images/blog/9999-greek-protecting-soldiers.jpg
 category: DE
-tags: [DBT, SQL, Data Engineering]
+tags: [dbt, SQL, Data Engineering]
 draft: true
 ---
 
@@ -184,7 +184,7 @@ SELECT * FROM data_diff
 
 Finally, some tables are too sensitive to expose — like payroll data. Access should be restricted to a small subset of users.
 
-The challenge is that DBT needs to compile and run models even for developers without permission to query the real tables.
+The challenge is that dbt needs to compile and run models even for developers without permission to query the real tables.
 
 The solution: use **seeds with fake data** that mimic the real tables’ schema. Then dynamically switch between the real source (in production runs) and the seed (in dev/test runs).
 
