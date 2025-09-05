@@ -12,6 +12,8 @@ draft: false
 
 ## Ways of protecting production tables
 
+Those are the 3 ways we protect production data at my company.
+
 1. Protecting against bad data
 2. Protecting against unexpected changes
 3. Portecting sensitvie data
@@ -195,9 +197,37 @@ WITH source AS (
 SELECT * FROM source;
 ```
 
-<Notice type="info">
-  Here we use `is_scheduled_pro_run` macro but the way you identify testing runs can be different.
-</Notice>
+Here we use `is_scheduled_pro_run` macro but the way you identify testing runs can be different.
+Here you have the macro (and the macros involved) definition:
+
+```sql
+{%- macro get_environment() -%}
+    {%- if adapter.type() != "athena" -%}
+        {{ return("ci") }}
+    {%- else -%}
+        {%- if "pro" in target.name -%}
+            {{ return("pro") }}
+        {%- elif "snd" in target.name -%}
+            {{ return("snd") }}
+        {%- else -%}
+            {# Defaulting to 'PRE' #}
+            {{ return("pre") }}
+        {% endif %}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro get_user() -%}
+    {{ return(target.name.split("_")[0]) }}
+{%- endmacro -%}
+
+{%- macro is_manual_run() -%}
+    {{ return(get_user() != var('user_pro'))}}
+{%- endmacro -%}
+
+{%- macro is_scheduled_pro_run() -%}
+    {{ return(not is_manual_run() and (get_environment() == "pro"))}}
+{%- endmacro -%}
+```
 
 It's really important to make sure the `seed` has the same schema as the real production table.
 We have most data for DBT sources as string so that schema changes are easier to handle.
