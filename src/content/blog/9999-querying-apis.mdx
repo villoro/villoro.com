@@ -1,0 +1,159 @@
+---
+slug: querying-apis-best-practices
+title: Querying APIs best practices
+meta_title: xxx
+description: xx
+date: 2025-09-16
+image: /images/blog/9999-greek-protecting-soldiers.jpg
+category: xx
+tags: []
+draft: false
+---
+
+## 1. xx
+
+## Create a class
+
+```python
+class QlikClient:
+    def __init__(self, timeout_s=180, page_size=100, max_calls=900, debug=False):
+        # Defaults
+        self.timeout_s = timeout_s
+        self.page_size = page_size
+        self.max_calls = max_calls
+
+    def _get(self, url=None, params=None, headers=None, timeout=None):
+        """Do one query to an url"""
+        pass
+
+    def query_all(self, endpoint, params=None):
+        """Query until all items are retrived"""
+        pass
+```
+
+## Reuse session
+
+```python
+# Declare session
+self.session = requests.Session()
+
+# Reuse session
+response = self.session.get(url, params=params, timeout=timeout)
+```
+
+## Log intent
+
+```python
+def _get(self, url=None, params=None, headers=None, timeout=None):
+    logger = get_run_logger()
+    params = params or {}
+    headers = headers or {}
+    timeout = timeout or self.timeout_s
+
+    logger.info(f"Querying API with {url=} ({params=}, {timeout=})")
+    response = self.session.get(
+        url, headers=headers, params=params, timeout=timeout
+    )
+
+    response.raise_for_status()
+    return response.json()
+```
+
+## Timeouts
+
+```python
+response = self.session.get(
+    url, headers=headers, params=params, timeout=timeout
+)
+```
+
+## Raise any unhandled status
+
+```python
+response = self.session.get(
+    url, headers=headers, params=params, timeout=timeout
+)
+
+if response.status_code in xx:
+    do_something()
+    return something_else
+
+# Raise the error for anything else
+response.raise_for_status()
+```
+
+## for/else max_calls
+
+```python
+class MaxApiCallsExceeded(Exception):
+    pass
+
+def query_all(self, url, params=None):
+    logger = get_run_logger()
+    params = params or {}
+
+    next_url = None
+    results = []
+    for i in range(1, self.max_calls + 1):
+        response = self._get(url=next_url or url, params=params)
+
+        data = response.get("data") or []
+        results += data
+        next_url = response.get("next")
+
+        prefix = f"[Page {i}/{self.max_calls}]"
+        total = len(results)
+        logger.info(
+            f"{prefix} Retrieved {len(data)} rows ({total=}, {url=})"
+        )
+
+        if not next_url:
+            logger.info(f"{prefix} No next cursor → stopping")
+            break
+
+    else:
+        raise MaxApiCallsExceeded(
+            f"{self.max_calls=} reached when querying {url=}"
+        )
+```
+
+## No pandas/spark in the client
+
+Separate concerns by having a client that **only** handes API calls and not data processing/exporting.
+
+## Batches
+
+When needed, export data in batches to avoid OOM.
+
+## Backoff for known external failures
+
+```python
+import backoff
+from whatever import KnownException # Adapt to the API or declare a custom one
+
+@backoff.on_exception(backoff.expo, KnownException, max_tries=5)
+def _query_data(self, url, params):
+    pass
+```
+
+> Might be used when the rate limit is hit
+
+## Avoid self calling
+
+When you need to implement retries, do them in a for/else loop or with backoff, not by self calling the function. This way you avoid the max recursion limit that you can reach after 100 failures.
+
+## Export current data after failures
+
+```python
+results = []
+try:
+    for i in range(max_calls):
+        results += query_api()
+
+except Exception as exception:
+    logger.error(f"Unexpected {exception=}")
+    if results:
+        logger.info(f"Exporting {len(results)} results after a failure")
+        export_results(results)
+    raise  # Relaunches the exception
+```
