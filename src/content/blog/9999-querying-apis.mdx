@@ -12,9 +12,16 @@ draft: false
 
 ## 0. Building a Robust Python API Client
 
-Extracting large datasets from APIs reliably can be tricky — timeouts, rate limits, and memory issues are common pitfalls. A well‑designed API client can make data extraction both safer and more efficient.
+APIs are one of the most common ways to move data into your pipelines, but they come with pitfalls: timeouts, rate limits, transient errors, and memory issues. A fragile client can make extractions unreliable and hard to debug.
 
-This post covers **practical tips** for building resilient API clients in Python, with code examples you can adapt. The focus is on reliability, separation of concerns, and handling edge cases.
+This guide distills **battle-tested practices** for building API clients in Python. Each tip is practical, with code snippets you can adapt. The sections are grouped into:
+
+1. Structure
+2. Safety & performance
+3. Error handling
+4. Advanced usage
+
+So you can build from the basics up to production-ready patterns.
 
 ## 1. Structure & Basics
 
@@ -338,14 +345,13 @@ You can read more about this at <FancyLink linkText="Processing new data | Self-
 
 ## Conclusion
 
-These practices help you build API clients that are **reliable, efficient, and safe**:
+A resilient API client is more than a `requests.get()` wrapped in a loop. By layering in the practices we covered — from structuring your client class, to enforcing timeouts, handling pagination, adding backoff, and building idempotent incremental loads — you can turn brittle scripts into reliable building blocks for your pipelines.
 
-* Encapsulate logic in a class
-* Reuse sessions for performance
-* Log, set timeouts, and raise errors properly
-* Handle pagination safely
-* Keep concerns separate and export in batches
-* Add resilience with backoff and rate limit handling
-* Stream data, close resources, and save partial results
+These techniques help you build clients that are:
 
-By combining these, you can extract data from APIs at scale without nasty surprises.
+* **Reliable**: failures are handled gracefully, not silently ignored.
+* **Efficient**: sessions are reused, requests are paced, and data is streamed.
+* **Safe**: partial results are saved, sensitive data isn’t logged, and production tables aren’t polluted.
+
+Combine them, and you’ll be able to extract data from APIs at scale — without nasty surprises, late-night alerts, or duplicated rows.
+
