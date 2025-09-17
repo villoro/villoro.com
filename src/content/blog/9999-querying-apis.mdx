@@ -16,7 +16,9 @@ Extracting large datasets from APIs reliably can be tricky — timeouts, rate li
 
 This post covers **practical tips** for building resilient API clients in Python, with code examples you can adapt. The focus is on reliability, separation of concerns, and handling edge cases.
 
-## 1. Encapsulate in a Class
+## 1. Structure & Basics
+
+### 1.1. Encapsulate in a Class
 
 Encapsulate all API logic inside a client class. This keeps configuration and state in one place and avoids global variables.
 
@@ -42,7 +44,7 @@ class QlikClient:
   Using a class makes it easy to reuse settings and ensures a single responsibility: the client only handles API calls.
 </Notice>
 
-## 2. Reuse the Session
+### 1.2. Reuse the Session
 
 Use a `requests.Session` to reuse TCP connections and reduce latency.
 
@@ -60,7 +62,7 @@ This avoids reconnecting on each call, which can **significantly improve perform
   Always close the session when done (`self.session.close()`) or implement `__enter__`/`__exit__` for context manager support.
 </Notice>
 
-## 3. Log Intent
+### 1.3. Log Intent
 
 Log what the client is doing, especially the URL and parameters.
 
@@ -84,7 +86,9 @@ def _get(self, url=None, params=None, headers=None, timeout=None):
   Be careful not to log sensitive info like API keys or tokens. Mask or omit them.
 </Notice>
 
-## 4. Timeouts
+## 2. Safety & Performance
+
+### 2.1. Timeouts
 
 Always set timeouts to avoid hanging requests.
 
@@ -100,28 +104,7 @@ Here we use a **connect timeout of 5s** and a **read timeout of 30s**. See <Fanc
   Choose sensible defaults. For APIs, a few seconds connect timeout and a higher read timeout is typical.
 </Notice>
 
-## 5. Raise for Errors
-
-Never ignore HTTP errors. Use `raise_for_status()` for unknown responses.
-
-```python
-response = self.session.get(url, params=params, timeout=self.timeout_s)
-
-if response.status_code == 204:  # No content, stop gracefully
-    return []
-
-if response.status_code == 429:
-    # Too many requests → could retry with backoff
-    handle_rate_limit()
-
-response.raise_for_status()  # Raise for all other errors
-```
-
-<Notice type="warning" className="mt-6">
-  Fail fast on unexpected errors — silent failures can corrupt downstream data.
-</Notice>
-
-## 6. Handle Pagination with for/else
+### 2.2. Handle Pagination with for/else
 
 Prevent infinite loops by limiting max pages.
 
@@ -158,7 +141,7 @@ def query_all(self, url, params=None):
   Python’s `for/else` lets you raise an error if the loop never breaks — a safeguard against infinite pagination.
 </Notice>
 
-## 7. Separate Concerns
+### 2.3. Separate Concerns
 
 The client should **only handle API calls** — not data processing.
 
@@ -166,7 +149,7 @@ The client should **only handle API calls** — not data processing.
   Don’t mix Pandas/Spark into your client. Keep it lightweight and focused. Transformation belongs downstream.
 </Notice>
 
-## 8. Export in Batches
+### 2.4. Export in Batches
 
 For large datasets, don’t keep everything in memory. Process or export in chunks.
 
@@ -179,57 +162,7 @@ for page in client.query_all(endpoint):
         results = []
 ```
 
-## 9. Backoff for Transient Failures
-
-Use exponential backoff for rate limits or known errors.
-
-```python
-import backoff
-
-class RateLimitError(Exception):
-    pass
-
-@backoff.on_exception(backoff.expo, RateLimitError, max_tries=5)
-def _query_data(self, url, params):
-    response = self.session.get(url, params=params)
-
-    if response.status_code == 429:
-        raise RateLimitError("Hit rate limit")
-
-    response.raise_for_status()
-    return response.json()
-```
-
-<Notice type="info" className="mt-6">
-  Backoff reduces stress on APIs and increases resilience. See <FancyLink linkText="backoff docs" url="https://pypi.org/project/backoff/"/>.
-</Notice>
-
-## 10. Avoid Self‑Recursion
-
-Don’t retry by recursively calling the same function. Use loops or backoff instead.
-
-<Notice type="warning">
-  Recursive retries can hit Python’s recursion limit (~1000) and crash the program.
-</Notice>
-
-## 11. Export Partial Results on Failure
-
-Always save what you have if extraction fails mid‑way.
-
-```python
-results = []
-try:
-    for i in range(self.max_calls):
-        results += query_api()
-except Exception as e:
-    logger.error(f"Unexpected {e=}")
-    if results:
-        logger.info(f"Exporting {len(results)} results after failure")
-        export_results(results)
-    raise  # Relaunches the exception
-```
-
-## 12. Respect Rate Limits
+### 2.5. Respect Rate Limits
 
 Don’t just react to 429s — **pace your calls proactively**. A minimal, readable approach is to space requests evenly and honor common headers when present. For advanced concurrency + rate limiting, see <FancyLink linkText="Concurrent Async Calls to OpenAI with Rate Limiting" url="https://villoro.com/blog/async-openai-calls-rate-limiter/" dark="true"/>.
 
@@ -258,7 +191,82 @@ for payload in payloads:
   Rate limits are provider‑specific. Prefer header‑driven sleeps (`Retry-After`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`) over hardcoded delays. Check docs, e.g. <FancyLink linkText="GitHub API rate limits" url="https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting" dark="true"/>.
 </Notice>
 
-## 13. Stream or Yield Data
+## 3. Error Handling & Reliability
+
+### 3.1. Raise for Errors
+
+Never ignore HTTP errors. Use `raise_for_status()` for unknown responses.
+
+```python
+response = self.session.get(url, params=params, timeout=self.timeout_s)
+
+if response.status_code == 204:  # No content, stop gracefully
+    return []
+
+if response.status_code == 429:
+    # Too many requests → could retry with backoff
+    handle_rate_limit()
+
+response.raise_for_status()  # Raise for all other errors
+```
+
+<Notice type="warning" className="mt-6">
+  Fail fast on unexpected errors — silent failures can corrupt downstream data.
+</Notice>
+
+### 3.2. Backoff for Transient Failures
+
+Use exponential backoff for rate limits or known errors.
+
+```python
+import backoff
+
+class RateLimitError(Exception):
+    pass
+
+@backoff.on_exception(backoff.expo, RateLimitError, max_tries=5)
+def _query_data(self, url, params):
+    response = self.session.get(url, params=params)
+
+    if response.status_code == 429:
+        raise RateLimitError("Hit rate limit")
+
+    response.raise_for_status()
+    return response.json()
+```
+
+<Notice type="info" className="mt-6">
+  Backoff reduces stress on APIs and increases resilience. See <FancyLink linkText="backoff docs" url="https://pypi.org/project/backoff/"/>.
+</Notice>
+
+### 3.3. Avoid Self‑Recursion
+
+Don’t retry by recursively calling the same function. Use loops or backoff instead.
+
+<Notice type="warning">
+  Recursive retries can hit Python’s recursion limit (~1000) and crash the program.
+</Notice>
+
+### 3.4. Export Partial Results on Failure
+
+Always save what you have if extraction fails mid‑way.
+
+```python
+results = []
+try:
+    for i in range(self.max_calls):
+        results += query_api()
+except Exception as e:
+    logger.error(f"Unexpected {e=}")
+    if results:
+        logger.info(f"Exporting {len(results)} results after failure")
+        export_results(results)
+    raise  # Relaunches the exception
+```
+
+## 4. Advanced Usage
+
+### 4.1. Stream or Yield Data
 
 For very large responses, yield results instead of accumulating.
 
@@ -278,7 +286,7 @@ def query_all(self, url, params=None):
   Streaming reduces memory usage. See <FancyLink linkText="requests streaming" url="https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests"/>.
 </Notice>
 
-## 14. Clean Up Resources
+### 4.2. Clean Up Resources
 
 Support context managers so the session is always closed.
 
@@ -302,7 +310,7 @@ with QlikClient() as client:
   If you are running your code on ephemeral infrastructure, you can skip this since your machine is terminated after running the extraction.
 </Notice>
 
-## 15. Query From the Last Successful Extraction (Not “Yesterday”)
+### 4.3. Query From the Last Successful Extraction (Not “Yesterday”)
 
 Rather than hard‑coding time windows (e.g., *yesterday*), use your **destination as the source of truth**:
 
