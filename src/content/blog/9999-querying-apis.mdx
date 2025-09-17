@@ -233,7 +233,7 @@ except Exception as e:
 
 ## 12. Respect Rate Limits
 
-Don’t just react to 429s — **pace your calls proactively**. A minimal, readable approach is to space requests evenly and honor common headers when present.
+Don’t just react to 429s — **pace your calls proactively**. A minimal, readable approach is to space requests evenly and honor common headers when present. For advanced concurrency + rate limiting, see <FancyLink linkText="Concurrent rate‑limited requests" url="/blog/xxxx-concurrent-rate-limit" dark="true"/>.
 
 ```python
 import time
@@ -257,10 +257,8 @@ for payload in payloads:
 ```
 
 <Notice type="warning">
-  Rate limits are provider‑specific. Prefer header‑driven sleeps (`Retry-After`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`) over hardcoded delays. Check docs, e.g. [GitHub API rate limits](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting).
+  Rate limits are provider‑specific. Prefer header‑driven sleeps (`Retry-After`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`) over hardcoded delays. Check docs, e.g. <FancyLink linkText="GitHub API rate limits" url="https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting" dark="true"/>.
 </Notice>
-
-For advanced concurrency + rate limiting, see <FancyLink linkText="Concurrent rate‑limited requests" url="/blog/xxxx-concurrent-rate-limit" dark="true"/>.
 
 * **Why**: Spacing calls avoids bursty traffic; honoring `Retry-After` prevents hammering the API.
 * **When to upgrade**: If you need parallelism, move to a queue + worker model with a shared limiter (see the linked post).
@@ -330,7 +328,7 @@ write(data, table=TABLE)
 ```
 
 <Notice type="warning">
-  You will need to handle deduplication later.
+  It's important to handle dededuplication later.
 </Notice>
 
 You can read more about this at <FancyLink linkText="Processing new data | Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/#2-processing-new-data" dark="true"/>.
