@@ -233,20 +233,37 @@ except Exception as e:
 
 ## 12. Respect Rate Limits
 
-Don’t just react to 429s — proactively throttle requests.
+Don’t just react to 429s — **pace your calls proactively**. A minimal, readable approach is to space requests evenly and honor common headers when present.
 
 ```python
 import time
 
 MAX_CALLS_PER_MIN = 100
-INTERVAL = 60 / MAX_CALLS_PER_MIN
+SLEEP_S = 60 / MAX_CALLS_PER_MIN  # simple pacing
 
-for url in urls:
-    call_api(url)
-    time.sleep(INTERVAL)
+for payload in payloads:
+    resp = session.get(BASE_URL, params=payload, timeout=30)
+
+    # If the API guides you, follow it
+    retry_after = resp.headers.get("Retry-After")
+    if resp.status_code == 429 and retry_after:
+        time.sleep(float(retry_after))  # seconds
+        resp = session.get(BASE_URL, params=payload, timeout=30)
+
+    resp.raise_for_status()
+    handle(resp.json())
+
+    time.sleep(SLEEP_S)  # spread calls to avoid bursts
 ```
 
-Many APIs return headers like `X-RateLimit-Remaining`. Check docs, e.g. [GitHub API rate limits](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting).
+<Notice type="warning">
+  Rate limits are provider‑specific. Prefer header‑driven sleeps (`Retry-After`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`) over hardcoded delays. Check docs, e.g. [GitHub API rate limits](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting).
+</Notice>
+
+For advanced concurrency + rate limiting, see <FancyLink linkText="Concurrent rate‑limited requests" url="/blog/xxxx-concurrent-rate-limit" dark="true"/>.
+
+* **Why**: Spacing calls avoids bursty traffic; honoring `Retry-After` prevents hammering the API.
+* **When to upgrade**: If you need parallelism, move to a queue + worker model with a shared limiter (see the linked post).
 
 ## 13. Stream or Yield Data
 
@@ -291,6 +308,32 @@ with QlikClient() as client:
 <Notice type="info">
   If you are running your code on ephemeral infrastructure, you can skip this since your machine is terminated after running the extractiong.
 </Notice>
+
+## 15. Query From the Last Successful Extraction (Not “Yesterday”)
+
+Rather than hard‑coding time windows (e.g., *yesterday*), use your **destination as the source of truth**:
+
+1. Read the destination watermark: `max(last_modified_at)` (or similar).
+2. Subtract a small **margin** (e.g., 60 s) for clock skew/late writes.
+3. Use that timestamp as `min_ts` / `updated_since` in the API.
+
+Minimal sketch with generic helpers:
+
+```python
+TABLE = "dest.users"
+
+# max(last_modified_at) from destination with a margin
+min_ts = infer_min_ts(table=TABLE, col="last_modified_at", margin_s=60)
+
+data = query_all(endpoing, min_ts)
+write(data, table=TABLE)
+```
+
+<Notice type="warning">
+  You will need to handle deduplication later.
+</Notice>
+
+You can read more about this at <FancyLink linkText="Processing new data | Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/#2-processing-new-data" dark="true"/>.
 
 ## Conclusion
 
