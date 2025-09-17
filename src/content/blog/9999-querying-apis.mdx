@@ -211,7 +211,7 @@ def _query_data(self, url, params):
 Don’t retry by recursively calling the same function. Use loops or backoff instead.
 
 <Notice type="warning">
-  Recursive retries can hit Python’s recursion limit (\~1000) and crash the program.
+  Recursive retries can hit Python’s recursion limit (~1000) and crash the program.
 </Notice>
 
 ## 11. Export Partial Results on Failure
@@ -304,7 +304,7 @@ with QlikClient() as client:
 ```
 
 <Notice type="info">
-  If you are running your code on ephemeral infrastructure, you can skip this since your machine is terminated after running the extractiong.
+  If you are running your code on ephemeral infrastructure, you can skip this since your machine is terminated after running the extraction.
 </Notice>
 
 ## 15. Query From the Last Successful Extraction (Not “Yesterday”)
@@ -323,12 +323,12 @@ TABLE = "dest.users"
 # max(last_modified_at) from destination with a margin
 min_ts = infer_min_ts(table=TABLE, col="last_modified_at", margin_s=60)
 
-data = query_all(endpoing, min_ts)
+data = query_all(endpoint, min_ts)
 write(data, table=TABLE)
 ```
 
 <Notice type="warning">
-  It's important to handle dededuplication later.
+  It's important to handle deduplication later.
 </Notice>
 
 You can read more about this at <FancyLink linkText="Processing new data | Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/#2-processing-new-data" dark="true"/>.
