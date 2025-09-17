@@ -202,7 +202,7 @@ def _query_data(self, url, params):
     return response.json()
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   Backoff reduces stress on APIs and increases resilience. See [backoff docs](https://pypi.org/project/backoff/).
 </Notice>
 
@@ -233,7 +233,7 @@ except Exception as e:
 
 ## 12. Respect Rate Limits
 
-Don’t just react to 429s — **pace your calls proactively**. A minimal, readable approach is to space requests evenly and honor common headers when present. For advanced concurrency + rate limiting, see <FancyLink linkText="Concurrent rate‑limited requests" url="/blog/xxxx-concurrent-rate-limit" dark="true"/>.
+Don’t just react to 429s — **pace your calls proactively**. A minimal, readable approach is to space requests evenly and honor common headers when present. For advanced concurrency + rate limiting, see <FancyLink linkText="Concurrent Async Calls to OpenAI with Rate Limiting" url="https://villoro.com/blog/async-openai-calls-rate-limiter/" dark="true"/>.
 
 ```python
 import time
@@ -256,12 +256,9 @@ for payload in payloads:
     time.sleep(SLEEP_S)  # spread calls to avoid bursts
 ```
 
-<Notice type="warning">
+<Notice type="warning" className="mt-6">
   Rate limits are provider‑specific. Prefer header‑driven sleeps (`Retry-After`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`) over hardcoded delays. Check docs, e.g. <FancyLink linkText="GitHub API rate limits" url="https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting" dark="true"/>.
 </Notice>
-
-* **Why**: Spacing calls avoids bursty traffic; honoring `Retry-After` prevents hammering the API.
-* **When to upgrade**: If you need parallelism, move to a queue + worker model with a shared limiter (see the linked post).
 
 ## 13. Stream or Yield Data
 
@@ -279,7 +276,7 @@ def query_all(self, url, params=None):
             break
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   Streaming reduces memory usage. See [requests streaming](https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests).
 </Notice>
 
@@ -303,7 +300,7 @@ with QlikClient() as client:
     data = client.query_all("/endpoint")
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   If you are running your code on ephemeral infrastructure, you can skip this since your machine is terminated after running the extraction.
 </Notice>
 
@@ -327,7 +324,7 @@ data = query_all(endpoint, min_ts)
 write(data, table=TABLE)
 ```
 
-<Notice type="warning">
+<Notice type="warning" className="mt-6">
   It's important to handle deduplication later.
 </Notice>
 
