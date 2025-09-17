@@ -54,7 +54,7 @@ self.session = requests.Session()
 response = self.session.get(url, params=params, timeout=timeout)
 ```
 
-This avoids reconnecting on each call, which can **significantly improve performance** ([requests docs](https://requests.readthedocs.io/en/latest/user/advanced/#session-objects)).
+This avoids reconnecting on each call, which can **significantly improve performance** (More info at <FancyLink linkText="requests docs" url="https://requests.readthedocs.io/en/latest/user/advanced/#session-objects"/>).
 
 <Notice type="warning">
   Always close the session when done (`self.session.close()`) or implement `__enter__`/`__exit__` for context manager support.
@@ -94,7 +94,7 @@ response = self.session.get(
 )
 ```
 
-Here we use a **connect timeout of 5s** and a **read timeout of 30s**. See [requests timeout docs](https://requests.readthedocs.io/en/latest/user/advanced/#timeouts).
+Here we use a **connect timeout of 5s** and a **read timeout of 30s**. See <FancyLink linkText="requests timeout docs" url="https://requests.readthedocs.io/en/latest/user/advanced/#timeouts"/>.
 
 <Notice type="info">
   Choose sensible defaults. For APIs, a few seconds connect timeout and a higher read timeout is typical.
@@ -179,8 +179,6 @@ for page in client.query_all(endpoint):
         results = []
 ```
 
-See [Requests streaming docs](https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests) for large payloads.
-
 ## 9. Backoff for Transient Failures
 
 Use exponential backoff for rate limits or known errors.
@@ -203,7 +201,7 @@ def _query_data(self, url, params):
 ```
 
 <Notice type="info" className="mt-6">
-  Backoff reduces stress on APIs and increases resilience. See [backoff docs](https://pypi.org/project/backoff/).
+  Backoff reduces stress on APIs and increases resilience. See <FancyLink linkText="backoff docs" url="https://pypi.org/project/backoff/"/>.
 </Notice>
 
 ## 10. Avoid Self‑Recursion
@@ -277,7 +275,7 @@ def query_all(self, url, params=None):
 ```
 
 <Notice type="info" className="mt-6">
-  Streaming reduces memory usage. See [requests streaming](https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests).
+  Streaming reduces memory usage. See <FancyLink linkText="requests streaming" url="https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests"/>.
 </Notice>
 
 ## 14. Clean Up Resources
