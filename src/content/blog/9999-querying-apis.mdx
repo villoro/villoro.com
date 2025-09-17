@@ -10,40 +10,63 @@ tags: []
 draft: false
 ---
 
-## 1. xx
+## 0. Building a Robust Python API Client
 
-## Create a class
+Extracting large datasets from APIs reliably can be tricky — timeouts, rate limits, and memory issues are common pitfalls. A well‑designed API client can make data extraction both safer and more efficient.
+
+This post covers **practical tips** for building resilient API clients in Python, with code examples you can adapt. The focus is on reliability, separation of concerns, and handling edge cases.
+
+## 1. Encapsulate in a Class
+
+Encapsulate all API logic inside a client class. This keeps configuration and state in one place and avoids global variables.
 
 ```python
 class QlikClient:
     def __init__(self, timeout_s=180, page_size=100, max_calls=900, debug=False):
-        # Defaults
         self.timeout_s = timeout_s
         self.page_size = page_size
         self.max_calls = max_calls
+        self.debug = debug
+        self.session = requests.Session()
 
     def _get(self, url=None, params=None, headers=None, timeout=None):
-        """Do one query to an url"""
+        """Do one query to a URL."""
         pass
 
     def query_all(self, endpoint, params=None):
-        """Query until all items are retrived"""
+        """Query until all items are retrieved."""
         pass
 ```
 
-## Reuse session
+<Notice type="info" className="mt-6">
+  Using a class makes it easy to reuse settings and ensures a single responsibility: the client only handles API calls.
+</Notice>
+
+## 2. Reuse the Session
+
+Use a `requests.Session` to reuse TCP connections and reduce latency.
 
 ```python
-# Declare session
+# Inside __init__
 self.session = requests.Session()
 
-# Reuse session
+# Later
 response = self.session.get(url, params=params, timeout=timeout)
 ```
 
-## Log intent
+This avoids reconnecting on each call, which can **significantly improve performance** ([requests docs](https://requests.readthedocs.io/en/latest/user/advanced/#session-objects)).
+
+<Notice type="warning">
+  Always close the session when done (`self.session.close()`) or implement `__enter__`/`__exit__` for context manager support.
+</Notice>
+
+## 3. Log Intent
+
+Log what the client is doing, especially the URL and parameters.
 
 ```python
+from prefect import get_run_logger
+
 def _get(self, url=None, params=None, headers=None, timeout=None):
     logger = get_run_logger()
     params = params or {}
@@ -51,38 +74,56 @@ def _get(self, url=None, params=None, headers=None, timeout=None):
     timeout = timeout or self.timeout_s
 
     logger.info(f"Querying API with {url=} ({params=}, {timeout=})")
-    response = self.session.get(
-        url, headers=headers, params=params, timeout=timeout
-    )
+    response = self.session.get(url, headers=headers, params=params, timeout=timeout)
 
     response.raise_for_status()
     return response.json()
 ```
 
-## Timeouts
+<Notice type="warning" className="mt-6">
+  Be careful not to log sensitive info like API keys or tokens. Mask or omit them.
+</Notice>
+
+## 4. Timeouts
+
+Always set timeouts to avoid hanging requests.
 
 ```python
 response = self.session.get(
-    url, headers=headers, params=params, timeout=timeout
+    url, headers=headers, params=params, timeout=(5, 30)
 )
 ```
 
-## Raise any unhandled status
+Here we use a **connect timeout of 5s** and a **read timeout of 30s**. See [requests timeout docs](https://requests.readthedocs.io/en/latest/user/advanced/#timeouts).
+
+<Notice type="info">
+  Choose sensible defaults. For APIs, a few seconds connect timeout and a higher read timeout is typical.
+</Notice>
+
+## 5. Raise for Errors
+
+Never ignore HTTP errors. Use `raise_for_status()` for unknown responses.
 
 ```python
-response = self.session.get(
-    url, headers=headers, params=params, timeout=timeout
-)
+response = self.session.get(url, params=params, timeout=self.timeout_s)
 
-if response.status_code in xx:
-    do_something()
-    return something_else
+if response.status_code == 204:  # No content, stop gracefully
+    return []
 
-# Raise the error for anything else
-response.raise_for_status()
+if response.status_code == 429:
+    # Too many requests → could retry with backoff
+    handle_rate_limit()
+
+response.raise_for_status()  # Raise for all other errors
 ```
 
-## for/else max_calls
+<Notice type="warning" className="mt-6">
+  Fail fast on unexpected errors — silent failures can corrupt downstream data.
+</Notice>
+
+## 6. Handle Pagination with for/else
+
+Prevent infinite loops by limiting max pages.
 
 ```python
 class MaxApiCallsExceeded(Exception):
@@ -102,58 +143,165 @@ def query_all(self, url, params=None):
         next_url = response.get("next")
 
         prefix = f"[Page {i}/{self.max_calls}]"
-        total = len(results)
-        logger.info(
-            f"{prefix} Retrieved {len(data)} rows ({total=}, {url=})"
-        )
+        logger.info(f"{prefix} Retrieved {len(data)} rows (total={len(results)})")
 
         if not next_url:
             logger.info(f"{prefix} No next cursor → stopping")
             break
-
     else:
-        raise MaxApiCallsExceeded(
-            f"{self.max_calls=} reached when querying {url=}"
-        )
+        raise MaxApiCallsExceeded(f"{self.max_calls} reached when querying {url}")
+
+    return results
 ```
 
-## No pandas/spark in the client
+<Notice type="info" className="mt-6">
+  Python’s `for/else` lets you raise an error if the loop never breaks — a safeguard against infinite pagination.
+</Notice>
 
-Separate concerns by having a client that **only** handes API calls and not data processing/exporting.
+## 7. Separate Concerns
 
-## Batches
+The client should **only handle API calls** — not data processing.
 
-When needed, export data in batches to avoid OOM.
+<Notice type="warning">
+  Don’t mix Pandas/Spark into your client. Keep it lightweight and focused. Transformation belongs downstream.
+</Notice>
 
-## Backoff for known external failures
+## 8. Export in Batches
+
+For large datasets, don’t keep everything in memory. Process or export in chunks.
+
+```python
+results = []
+for page in client.query_all(endpoint):
+    process_page(page)
+    if len(results) > 10_000:
+        export_results(results)
+        results = []
+```
+
+See [Requests streaming docs](https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests) for large payloads.
+
+## 9. Backoff for Transient Failures
+
+Use exponential backoff for rate limits or known errors.
 
 ```python
 import backoff
-from whatever import KnownException # Adapt to the API or declare a custom one
 
-@backoff.on_exception(backoff.expo, KnownException, max_tries=5)
-def _query_data(self, url, params):
+class RateLimitError(Exception):
     pass
+
+@backoff.on_exception(backoff.expo, RateLimitError, max_tries=5)
+def _query_data(self, url, params):
+    response = self.session.get(url, params=params)
+
+    if response.status_code == 429:
+        raise RateLimitError("Hit rate limit")
+
+    response.raise_for_status()
+    return response.json()
 ```
 
-> Might be used when the rate limit is hit
+<Notice type="info">
+  Backoff reduces stress on APIs and increases resilience. See [backoff docs](https://pypi.org/project/backoff/).
+</Notice>
 
-## Avoid self calling
+## 10. Avoid Self‑Recursion
 
-When you need to implement retries, do them in a for/else loop or with backoff, not by self calling the function. This way you avoid the max recursion limit that you can reach after 100 failures.
+Don’t retry by recursively calling the same function. Use loops or backoff instead.
 
-## Export current data after failures
+<Notice type="warning">
+  Recursive retries can hit Python’s recursion limit (\~1000) and crash the program.
+</Notice>
+
+## 11. Export Partial Results on Failure
+
+Always save what you have if extraction fails mid‑way.
 
 ```python
 results = []
 try:
-    for i in range(max_calls):
+    for i in range(self.max_calls):
         results += query_api()
-
-except Exception as exception:
-    logger.error(f"Unexpected {exception=}")
+except Exception as e:
+    logger.error(f"Unexpected {e=}")
     if results:
-        logger.info(f"Exporting {len(results)} results after a failure")
+        logger.info(f"Exporting {len(results)} results after failure")
         export_results(results)
     raise  # Relaunches the exception
 ```
+
+## 12. Respect Rate Limits
+
+Don’t just react to 429s — proactively throttle requests.
+
+```python
+import time
+
+MAX_CALLS_PER_MIN = 100
+INTERVAL = 60 / MAX_CALLS_PER_MIN
+
+for url in urls:
+    call_api(url)
+    time.sleep(INTERVAL)
+```
+
+Many APIs return headers like `X-RateLimit-Remaining`. Check docs, e.g. [GitHub API rate limits](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting).
+
+## 13. Stream or Yield Data
+
+For very large responses, yield results instead of accumulating.
+
+```python
+def query_all(self, url, params=None):
+    next_url = url
+
+    for i in range(1, self.max_calls + 1):
+        response = self._get(url=next_url, params=params)
+        yield response.get("data", [])
+
+        if not (next_url := response.get("next")):
+            break
+```
+
+<Notice type="info">
+  Streaming reduces memory usage. See [requests streaming](https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests).
+</Notice>
+
+## 14. Clean Up Resources
+
+Support context managers so the session is always closed.
+
+```python
+class QlikClient:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+```
+
+Usage:
+
+```python
+with QlikClient() as client:
+    data = client.query_all("/endpoint")
+```
+
+<Notice type="info">
+  If you are running your code on ephemeral infrastructure, you can skip this since your machine is terminated after running the extractiong.
+</Notice>
+
+## Conclusion
+
+These practices help you build API clients that are **reliable, efficient, and safe**:
+
+* Encapsulate logic in a class
+* Reuse sessions for performance
+* Log, set timeouts, and raise errors properly
+* Handle pagination safely
+* Keep concerns separate and export in batches
+* Add resilience with backoff and rate limit handling
+* Stream data, close resources, and save partial results
+
+By combining these, you can extract data from APIs at scale without nasty surprises.
