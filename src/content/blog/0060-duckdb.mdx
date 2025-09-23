@@ -269,7 +269,27 @@ This makes DuckDB a handy connector when you just want to move or combine data e
   DuckDB doubles as a lightweight ETL tool: move data between systems or join across them with one query.
 </Notice>
 
-### 4.3. Using DuckDB in CI pipelines with dbt
+### 4.3. Data transformation
+
+DuckDB isn’t limited to querying data, it can also be used for heavy-duty transformations like converting formats or casting columns at scale. Because it can stream data efficiently and leverage parallelism, it’s surprisingly effective for one-off ETL tasks.
+
+```sql
+COPY (SELECT 
+         CAST(id AS BIGINT) AS id,
+         LOWER(email) AS email,
+         created_at :: DATE AS created_at
+      FROM 'raw/users.csv')
+TO 'clean/users.parquet' (FORMAT PARQUET);
+```
+
+This makes it trivial to clean up types, normalize strings, or restructure data in the same step as exporting it to a new format.
+
+<Notice type="success">
+  In one real-world case, DuckDB ingested and transformed a **75 GB CSV (≈897M rows)** into Parquet on modest hardware, something that failed with other tools. Source: <FancyLink linkText="75 GB CSV ingestion with DuckDB" url="https://www.reddit.com/r/dataengineering/comments/1mxgerm/problems_trying_to_ingest_75_gb_yes_gigabyte_csv/"/>
+</Notice>
+
+
+### 4.4. Using DuckDB in CI pipelines with dbt
 
 DuckDB is a fantastic choice for **testing transformations locally or in CI**. Instead of paying for a cloud warehouse, you can spin up DuckDB in GitHub Actions (or any CI runner) and validate logic:
 
@@ -279,7 +299,7 @@ dbt run --target duckdb
 
 This approach is **fast, cheap, and isolated**, making it easy to catch issues early. You can read more about it at <FancyLink linkText="dbt testing with DuckDB" url="https://villoro.com/blog/dbt-testing-duckdb/" dark="true"/>.
 
-### 4.4. Interactive analysis in notebooks
+### 4.5. Interactive analysis in notebooks
 
 DuckDB isn’t just for the CLI. It integrates seamlessly with Python and R notebooks:
 
