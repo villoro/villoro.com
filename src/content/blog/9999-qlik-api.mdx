@@ -1,0 +1,174 @@
+---
+slug: qlik
+title: Qlik
+meta_title: xxx
+description: xx
+date: 2025-10-02
+image: /images/blog/9999-qlik-magnifying-glass.jpg
+category: DE
+tags: [Python, APIs, Data Engineering, Best Practices]
+draft: false
+---
+
+# Querying Qlik Cloud with Python (Sync Version)
+
+When you’re just getting started with Qlik’s REST API, asynchronous code may feel overwhelming. In this post we’ll build a synchronous Python client with `requests` that covers the most common use cases: authentication, pagination, fetching app metadata, and triggering reloads.
+
+## Authentication
+
+Qlik Cloud requires a bearer token. We’ll store it in AWS Secrets Manager and load it when creating our client:
+
+```python
+import requests
+from ecs_northius.common.aws.secrets import get_secret
+
+BASE_URL = "https://campustraining.eu.qlikcloud.com/api/v1"
+SECRET_NAME = "qlik/api"
+
+class QlikClient:
+    def __init__(self, timeout_s=180, page_size=100, max_calls=900, debug=False):
+        secret = get_secret(SECRET_NAME)
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {secret['api_key']}"
+        }
+        self.session = requests.Session()
+        self.timeout_s = timeout_s
+        self.page_size = page_size
+        self.max_calls = max_calls
+        self.debug = debug
+```
+
+## Simple GET request
+
+We’ll start with a helper method to query any Qlik endpoint:
+
+```python
+def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None):
+    params = params or {}
+    headers = {**self.headers, **(headers or {})}
+    timeout = timeout or self.timeout_s
+
+    if (endpoint is None) == (url is None):
+        raise ValueError("Provide exactly one of endpoint or url")
+
+    if url is None:
+        params["limit"] = params.get("limit", self.page_size)
+        if params["limit"] <= 0 or params["limit"] > 100:
+            raise ValueError("limit must be in (0, 100]")
+        url = f"{BASE_URL}/{endpoint}"
+
+    response = self.session.get(url, headers=headers, params=params, timeout=timeout)
+    if not self.debug:
+        response.raise_for_status()
+    return response.json()
+```
+
+This handles:
+
+* Defaulting `limit`
+* Assembling the URL
+* Raising errors unless `debug=True`
+
+## Pagination: Query all items
+
+Many Qlik endpoints are paginated. To fetch all pages:
+
+```python
+def query_all(self, endpoint, params=None):
+    params = params or {}
+    next_url = None
+    results = []
+
+    for i in range(1, self.max_calls + 1):
+        if next_url:
+            response = self._get(url=next_url)
+        else:
+            response = self._get(endpoint=endpoint, params=params)
+
+        data = response.get("data") or []
+        results.extend(data)
+        next_url = response.get("links", {}).get("next", {}).get("href")
+
+        if not next_url:
+            break
+    else:
+        raise Exception("Max API calls exceeded")
+
+    return results
+```
+
+Example:
+
+```python
+client = QlikClient()
+apps = client.query_all("items", params={"resourceType": "app"})
+print(f"Fetched {len(apps)} apps")
+```
+
+## App metadata
+
+Once you have an app ID, you can fetch its metadata:
+
+```python
+import uuid
+
+def query_app_metadata(self, app_id):
+    try:
+        uuid.UUID(str(app_id))
+    except ValueError:
+        raise ValueError("app_id must be a valid UUID")
+    return self._get(endpoint=f"apps/{app_id}/data/metadata")
+```
+
+## Triggering reloads
+
+Reloading an app is a `POST` request:
+
+```python
+def _post(self, endpoint, json=None, params=None, headers=None, timeout=None):
+    url = f"{BASE_URL}/{endpoint}"
+    headers = {**self.headers, **(headers or {})}
+    response = self.session.post(url, headers=headers, params=params, json=json, timeout=timeout)
+    if not self.debug:
+        response.raise_for_status()
+    return response.json()
+
+def reload_app(self, app_id):
+    return self._post("reloads", json={"appId": str(app_id)})
+```
+
+This returns a `reload_id` you can poll.
+
+## Polling reload status
+
+Qlik returns reload status updates. A simple polling loop looks like this:
+
+```python
+def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
+    import time
+    start = time.monotonic()
+
+    while time.monotonic() - start < max_time_s:
+        details = self._get(endpoint=f"reloads/{reload_id}")
+        status = details.get("status", "").upper()
+
+        if status in {"SUCCEEDED", "COMPLETED", "SUCCESS"}:
+            return details
+        if status in {"FAILED", "ERROR", "ABORTED"}:
+            raise RuntimeError(f"Reload {reload_id} failed: {details}")
+
+        time.sleep(poll_every_s)
+
+    raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
+```
+
+## Wrapping up
+
+With this client you can:
+
+* List all your Qlik apps with pagination
+* Fetch metadata for a specific app
+* Trigger reloads and wait for completion
+
+This sync version is simple and easy to understand. In a future post we can extend it with async support for higher throughput and concurrency.
