@@ -14,7 +14,7 @@ draft: false
 
 Most teams meet Qlik Cloud through dashboards, but as a data engineer you eventually need to **automate** it: list apps, harvest metadata, and trigger reloads from your pipelines. Qlik’s API supports async, bulk, and webhooks, but the fastest path to reliable automation is a **small, synchronous client** you understand end-to-end.
 
-This guide builds that client in incremental steps with `requests`, focusing on code you can copy/paste into a production repo. We’ll keep the surface area tight, explain the trade‑offs, and leave clear seams for upgrading to async later.
+This guide builds that client in incremental steps with `requests`, focusing on code you can copy/paste into a production repo. We’ll keep the surface area tight, explain the trade-offs, and leave clear seams for upgrading to async later.
 
 **What you’ll build**
 
@@ -65,7 +65,7 @@ Next, we’ll add a safe request helper that wraps `requests` with timeouts, opt
 
 ## 2. `_get` helper
 
-Every client needs a **single choke‑point** for read requests. Centralizing GET logic gives you one place to set defaults (headers, timeouts), enforce invariants (pagination limit), and add behavior (debug, retries, logging) without touching call‑sites.
+Every client needs a **single choke-point** for read requests. Centralizing GET logic gives you one place to set defaults (headers, timeouts), enforce invariants (pagination limit), and add behavior (debug, retries, logging) without touching call-sites.
 
 ```python
 def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None):
@@ -101,7 +101,7 @@ Why an internal `_get`:
 
 * **Consistency** – all reads go through one path, so headers, timeouts, and query rules stay in sync.
 * **Safety** – early validation (e.g., `limit`) catches mistakes before hitting the API.
-* **Pagination‑ready** – supports either `endpoint` or `next_url` without duplicating code.
+* **Pagination-ready** – supports either `endpoint` or `next_url` without duplicating code.
 * **Easier evolution** – add logging, metrics, retries, or auth refresh later in a single place.
 
 <Notice type="success" className="mt-6">
@@ -163,7 +163,7 @@ Many Qlik endpoints default to returning only 100 items per page so in order to 
 
 ## 4. Custom public methods
 
-Some endpoints need **special treatment** (validation, parameter shaping, friendlier errors). Expose these as **public methods** on your client and keep the one‑off logic inside them, while leaving `_get` small and generic.
+Some endpoints need **special treatment** (validation, parameter shaping, friendlier errors). Expose these as **public methods** on your client and keep the one-off logic inside them, while leaving `_get` small and generic.
 
 Here’s a pattern that validates the app UUID before calling the API:
 
@@ -188,11 +188,11 @@ def query_app_metadata(self, app_id):
 Why a public method here?
 
 * **Guardrails** – catch invalid IDs early with a helpful error message.
-* **Room for quirks** – if the endpoint ever needs extra headers/params, you add them here without touching call‑sites.
+* **Room for quirks** – if the endpoint ever needs extra headers/params, you add them here without touching call-sites.
 * **Better DX** – callers don’t need to remember paths; they call `query_app_metadata(app_id)`.
 
 <Notice type="success" className="mt-6">
-  Keep `_get` generic. Put endpoint‑specific checks (like UUID validation) into small, public methods. This avoids conditionals leaking into all callers.
+  Keep `_get` generic. Put endpoint-specific checks (like UUID validation) into small, public methods. This avoids conditionals leaking into all callers.
 </Notice>
 
 <Notice type="info" className="mt-6">
@@ -240,10 +240,10 @@ print("Reload response:", resp)
 # {'id': '68dd3685...', 'status': 'QUEUED', ...}
 ```
 
-Keep `_post` generic just like `_get`. Endpoint‑specific quirks (e.g., required JSON shape) belong in small public methods such as `reload_app`.
+Keep `_post` generic just like `_get`. Endpoint-specific quirks (e.g., required JSON shape) belong in small public methods such as `reload_app`.
 
 <Notice type="info" className="mt-6">
-  Qlik often answers with `202 Accepted` for fire‑and‑forget operations. Returning `{}` from `_post` in that case avoids JSON decode errors and keeps call‑sites simple.
+  Qlik often answers with `202 Accepted` for fire-and-forget operations. Returning `{}` from `_post` in that case avoids JSON decode errors and keeps call-sites simple.
 </Notice>
 
 ## 6. Polling reload status
@@ -255,7 +255,6 @@ import time
 
 def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
     
-
     # Basic floors to avoid foot-guns
     poll_every_s = max(1, int(poll_every_s))
     max_time_s = max(poll_every_s, int(max_time_s))
@@ -309,9 +308,9 @@ Things to watch out for:
 * **Invalid IDs**: Always validate UUIDs before sending.
 * **Rate limits / 429**: Wrap `_get`/`_post` with a retry library like `backoff`.
 * **Timeouts**: Decide whether to fail fast or alert and retry later.
-* **Non‑JSON bodies**: Fail helpfully if the response isn’t JSON.
+* **Non-JSON bodies**: Fail helpfully if the response isn’t JSON.
 
-Example with `backoff` (drop‑in wrapper that keeps call‑sites unchanged):
+Example with `backoff` (drop-in wrapper that keeps call-sites unchanged):
 
 ```python
 import requests
@@ -336,7 +335,7 @@ def _safe_post(self, *args, **kwargs):
     return self._post(*args, **kwargs)
 ```
 
-You can then swap call‑sites incrementally:
+You can then swap call-sites incrementally:
 
 ```python
 apps = self._safe_get(endpoint="items", params={"resourceType": "app"})
@@ -361,4 +360,4 @@ With this sync client you can:
 * Fetch metadata
 * Trigger reloads and monitor progress
 
-This is enough for most day‑to‑day data engineering needs. When performance and concurrency matter (e.g., polling many reloads), evolve to an async client. Starting sync keeps things clear, testable, and reliable.
+This is enough for most day-to-day data engineering needs. When performance and concurrency matter (e.g., polling many reloads), evolve to an async client. Starting sync keeps things clear, testable, and reliable.
