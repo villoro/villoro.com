@@ -28,7 +28,7 @@ This guide builds that client in incremental steps with `requests`, focusing on 
 
 We will create a class because it provides a clean way to encapsulate authentication, session reuse, and default settings. This makes it easier to extend later with helpers for pagination, reloads, and metadata.
 
-Qlik Cloud requires a bearer token. In production, you’ll want to store the key securely (e.g., in AWS Secrets Manager). For now, let’s fetch it at init time:
+Qlik Cloud requires a bearer token. In production, you’ll want to store the key securely (e.g., in AWS Secrets Manager). For now, let’s fetch it at `__init__`:
 
 ```python
 import requests
@@ -73,6 +73,9 @@ def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None)
     headers = {**self.headers, **(headers or {})}
     timeout = timeout or self.timeout_s
 
+    # Only positive timeouts
+    assert timeout > 0, "timeout must be > 0"
+
     # Exactly one of endpoint or full URL
     if (endpoint is None) == (url is None):
         raise ValueError("Provide exactly one of endpoint or url")
@@ -114,6 +117,9 @@ Why an internal `_get`:
 Many Qlik endpoints return a `links.next.href` for the next page. Here’s how to walk them:
 
 ```python
+class MaxApiCallsExceeded(Exception):
+    pass
+
 def query_all(self, endpoint, params=None):
     params = params or {}
     next_url = None
@@ -132,7 +138,7 @@ def query_all(self, endpoint, params=None):
         if not next_url:
             break
     else:
-        raise Exception("Max API calls exceeded")
+        raise MaxApiCallsExceeded("Max API calls exceeded")
 
     return results
 ```
@@ -193,23 +199,52 @@ Why a public method here?
   You can reuse `_check_uuid` for other endpoints (e.g., reloads, automations) by passing named arguments: `self._check_uuid(reload_id=rid)`.
 </Notice>
 
-## 5. Triggering reloads with post
+## 5. Triggering reloads with `_post`
 
-Reloads are submitted with a POST. Qlik returns a `reload_id` to track progress:
+Reloads are submitted with a POST. Qlik returns a `reload_id` you can use to track progress.
 
 ```python
 def _post(self, endpoint, json=None, params=None, headers=None, timeout=None):
     url = f"{BASE_URL}/{endpoint}"
     headers = {**self.headers, **(headers or {})}
-    response = self.session.post(url, headers=headers, params=params, json=json, timeout=timeout)
+    timeout = timeout or self.timeout_s
+
+    resp = self.session.post(
+        url, headers=headers, params=params or {}, json=json, timeout=timeout
+    )
+
     if not self.debug:
-        response.raise_for_status()
-    return response.json()
+        resp.raise_for_status()
+
+    # Some gateways reply 202/204 or empty body; prefer JSON but fail helpfully
+    if resp.status_code in (202, 204) or resp.headers.get("Content-Length") == "0":
+        return {}
+
+    try:
+        return resp.json()
+    except ValueError:
+        raise ValueError(f"Expected JSON from {url}, got: {resp.text[:200]}")
+
 
 def reload_app(self, app_id):
+    # Optionally validate app_id with self._check_uuid(app_id=app_id)
     return self._post("reloads", json={"appId": str(app_id)})
 ```
 
+Example:
+
+```python
+client = QlikClient()
+resp = client.reload_app("24212eff-0964-4536-90f1-ad80c5677bdd")
+print("Reload response:", resp)
+# {'id': '68dd3685...', 'status': 'QUEUED', ...}
+```
+
+Keep `_post` generic just like `_get`. Endpoint‑specific quirks (e.g., required JSON shape) belong in small public methods such as `reload_app`.
+
+<Notice type="info" className="mt-6">
+  Qlik often answers with `202 Accepted` for fire‑and‑forget operations. Returning `{}` from `_post` in that case avoids JSON decode errors and keeps call‑sites simple.
+</Notice>
 
 ## 6. Polling reload status
 
