@@ -10,49 +10,56 @@ tags: [Python, APIs, Data Engineering, Best Practices]
 draft: false
 ---
 
-When building data pipelines, Qlik often sits between your data sources and your analytics layer. You may need to list apps, fetch metadata, or trigger reloads programmatically. While Qlik’s API supports async, starting with a **synchronous client** in Python keeps things simple and easy to debug.
+## 0. Intro 
 
-This post shows how to:
+Most teams meet Qlik Cloud through dashboards, but as a data engineer you eventually need to **automate** it: list apps, harvest metadata, and trigger reloads from your pipelines. Qlik’s API supports async, bulk, and webhooks, but the fastest path to reliable automation is a **small, synchronous client** you understand end-to-end.
 
-* Authenticate against the Qlik API
-* Paginate through results
-* Fetch app metadata
-* Trigger reloads and poll their status
-* Handle errors and timeouts gracefully
+This guide builds that client in incremental steps with `requests`, focusing on code you can copy/paste into a production repo. We’ll keep the surface area tight, explain the trade‑offs, and leave clear seams for upgrading to async later.
 
-We’ll use `requests` (instead of `aiohttp`) and keep the code small and testable.
+**What you’ll build**
 
+* A minimal Qlik client that authenticates with a bearer token
+* A safe `GET` helper + **pagination** across `links.next.href`
+* App **metadata** lookup with UUID validation
+* Trigger **reloads** and **poll** status until success/failure/timeout
+* Pragmatic **error handling** and retry pointers
 
-## Authentication
+## 1. Authentication
+
+We will create a class because it provides a clean way to encapsulate authentication, session reuse, and default settings. This makes it easier to extend later with helpers for pagination, reloads, and metadata.
 
 Qlik Cloud requires a bearer token. In production, you’ll want to store the key securely (e.g., in AWS Secrets Manager). For now, let’s fetch it at init time:
 
 ```python
 import requests
-from ecs_northius.common.aws.secrets import get_secret
+from xxx import get_secret
 
 BASE_URL = "https://campustraining.eu.qlikcloud.com/api/v1"
 SECRET_NAME = "qlik/api"
 
 class QlikClient:
     def __init__(self, timeout_s=180, page_size=100, max_calls=900, debug=False):
-        secret = get_secret(SECRET_NAME)
+        secret = get_secret(SECRET_NAME) # Out of scope
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {secret['api_key']}"
         }
         self.session = requests.Session()
+        self.debug = debug
+
+        # Defaults
         self.timeout_s = timeout_s
         self.page_size = page_size
         self.max_calls = max_calls
-        self.debug = debug
 ```
 
-### Why this matters
+<Notice type="success" className="mt-6">
+  **Session reuse** speeds up multiple API calls.
+</Notice>
 
-* **Session reuse** speeds up multiple API calls.
-* **Debug mode** lets you skip `raise_for_status` so you can inspect error payloads without exceptions interrupting.
-
+<Notice type="info" className="mt-6">
+  **Debug mode** lets you skip `raise_for_status` so you can inspect error payloads without exceptions interrupting.
+</Notice>
 
 ## GET helper
 
