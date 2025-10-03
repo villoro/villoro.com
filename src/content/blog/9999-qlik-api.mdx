@@ -1,0 +1,363 @@
+---
+slug: querying-qlik-api-python
+title: Querying Qlik API with Python
+meta_title: Querying Qlik API with Python
+description: A practical, step-by-step guide to building a minimal synchronous Python client for Qlik Cloud—covering authentication, pagination, metadata, reloads, polling, and retries.
+date: 2025-10-02
+image: /images/blog/9999-qlik-magnifying-glass.jpg
+category: DE
+tags: [Python, APIs, Data Engineering, Best Practices]
+draft: true
+---
+
+## 0. Intro
+
+Most teams meet Qlik Cloud through dashboards, but as a data engineer you eventually need to **automate** it: list apps, harvest metadata, and trigger reloads from your pipelines. Qlik’s API supports async, bulk, and webhooks, but the fastest path to reliable automation is a **small, synchronous client** you understand end-to-end.
+
+This guide builds that client in incremental steps with `requests`, focusing on code you can copy/paste into a production repo. We’ll keep the surface area tight, explain the trade-offs, and leave clear seams for upgrading to async later.
+
+**What you’ll build**
+
+* A minimal Qlik client that authenticates with a bearer token
+* A safe `GET` helper + **pagination** across `links.next.href`
+* App **metadata** lookup with UUID validation
+* Trigger **reloads** and **poll** status until success/failure/timeout
+* Pragmatic **error handling** and retry pointers
+
+## 1. Authentication
+
+We will create a class because it provides a clean way to encapsulate authentication, session reuse, and default settings. This makes it easier to extend later with helpers for pagination, reloads, and metadata.
+
+Qlik Cloud requires a bearer token. In production, you’ll want to store the key securely (e.g., in AWS Secrets Manager). For now, let’s fetch it at `__init__`:
+
+```python
+import requests
+from xxx import get_secret
+
+BASE_URL = "https://campustraining.eu.qlikcloud.com/api/v1"
+SECRET_NAME = "qlik/api"
+
+class QlikClient:
+    def __init__(self, timeout_s=180, page_size=100, max_calls=900, debug=False):
+        secret = get_secret(SECRET_NAME)  # Out of scope
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {secret['api_key']}"
+        }
+        self.session = requests.Session()
+        self.debug = debug
+
+        # Defaults
+        self.timeout_s = timeout_s
+        self.page_size = page_size
+        self.max_calls = max_calls
+```
+
+<Notice type="success" className="mt-6">
+  **Session reuse** speeds up multiple API calls and reduces connection overhead.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  **Debug mode** lets you skip `raise_for_status` so you can inspect error payloads without exceptions interrupting. Use carefully, and never in production.
+</Notice>
+
+Next, we’ll add a safe request helper that wraps `requests` with timeouts, optional retries, and debug-aware error handling.
+
+## 2. `_get` helper
+
+Every client needs a **single choke-point** for read requests. Centralizing GET logic gives you one place to set defaults (headers, timeouts), enforce invariants (pagination limit), and add behavior (debug, retries, logging) without touching call-sites.
+
+```python
+def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None):
+    params = params or {}
+    headers = {**self.headers, **(headers or {})}
+    timeout = timeout or self.timeout_s
+
+    # Only positive timeouts
+    assert timeout > 0, "timeout must be > 0"
+
+    # Exactly one of endpoint or full URL
+    if (endpoint is None) == (url is None):
+        raise ValueError("Provide exactly one of endpoint or url")
+
+    # Normalize endpoint-style requests and enforce pagination bounds
+    if url is None:
+        params["limit"] = params.get("limit", self.page_size)
+        if params["limit"] <= 0 or params["limit"] > 100:
+            raise ValueError("limit must be in (0, 100]")
+        url = f"{BASE_URL}/{endpoint}"
+
+    # Optional: Qlik quirks—booleans often need to be strings
+    # params = {k: (str(v) if isinstance(v, bool) else v) for k, v in params.items()}
+
+    response = self.session.get(url, headers=headers, params=params, timeout=timeout)
+    if not self.debug:
+        response.raise_for_status()
+
+    return response.json()
+```
+
+Why an internal `_get`:
+
+* **Consistency** – all reads go through one path, so headers, timeouts, and query rules stay in sync.
+* **Safety** – early validation (e.g., `limit`) catches mistakes before hitting the API.
+* **Pagination-ready** – supports either `endpoint` or `next_url` without duplicating code.
+* **Easier evolution** – add logging, metrics, retries, or auth refresh later in a single place.
+
+<Notice type="success" className="mt-6">
+  Centralizing GETs means when you later add retries (e.g., with `backoff`) or structured logging, you do it once and every call benefits.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  If you see 400s with boolean query params, try casting them to strings (see the commented line). Some gateways expect `true`/`false` as strings.
+</Notice>
+
+## 3. Pagination
+
+Many Qlik endpoints return a `links.next.href` for the next page. Here’s how to walk them:
+
+```python
+class MaxApiCallsExceeded(Exception):
+    pass
+
+def query_all(self, endpoint, params=None):
+    params = params or {}
+    next_url = None
+    results = []
+
+    for i in range(1, self.max_calls + 1):
+        if next_url:
+            response = self._get(url=next_url)
+        else:
+            response = self._get(endpoint=endpoint, params=params)
+
+        data = response.get("data") or []
+        results.extend(data)
+        next_url = response.get("links", {}).get("next", {}).get("href")
+
+        if not next_url:
+            break
+    else:
+        raise MaxApiCallsExceeded("Max API calls exceeded")
+
+    return results
+```
+
+Example:
+
+```python
+client = QlikClient()
+apps = client.query_all("items", params={"resourceType": "app"})
+print(f"Fetched {len(apps)} apps")
+```
+
+Many Qlik endpoints default to returning only 100 items per page so in order to get all data you need to use pagination.
+
+<Notice type="success" className="mt-6">
+  By centralizing pagination in `query_all`, every endpoint (items, users, etc.) gets consistent paging without copy/paste.
+</Notice>
+
+<Notice type="warning" className="mt-6">
+  Tune `self.max_calls` to protect your jobs from runaway loops (e.g., if the API keeps returning a next link). Add logging around `i` if you need visibility.
+</Notice>
+
+## 4. Custom public methods
+
+Some endpoints need **special treatment** (validation, parameter shaping, friendlier errors). Expose these as **public methods** on your client and keep the one-off logic inside them, while leaving `_get` small and generic.
+
+Here’s a pattern that validates the app UUID before calling the API:
+
+```python
+# inside QlikClient
+import uuid
+
+def _check_uuid(self, **ids):
+    for name, value in ids.items():
+        if value is None:
+            raise ValueError(f"{name}=None is not allowed")
+        try:
+            uuid.UUID(str(value))
+        except ValueError as e:
+            raise ValueError(f"{name} must be a valid UUID") from e
+
+def query_app_metadata(self, app_id):
+    self._check_uuid(app_id=app_id)
+    return self._get(endpoint=f"apps/{app_id}/data/metadata")
+```
+
+Why a public method here?
+
+* **Guardrails** – catch invalid IDs early with a helpful error message.
+* **Room for quirks** – if the endpoint ever needs extra headers/params, you add them here without touching call-sites.
+* **Better DX** – callers don’t need to remember paths; they call `query_app_metadata(app_id)`.
+
+<Notice type="success" className="mt-6">
+  Keep `_get` generic. Put endpoint-specific checks (like UUID validation) into small, public methods. This avoids conditionals leaking into all callers.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  You can reuse `_check_uuid` for other endpoints (e.g., reloads, automations) by passing named arguments: `self._check_uuid(reload_id=reload_id)`.
+</Notice>
+
+## 5. Triggering reloads with `_post`
+
+Reloads are submitted with a POST. Qlik returns a `reload_id` you can use to track progress.
+
+```python
+def _post(self, endpoint, json=None, params=None, headers=None, timeout=None):
+    url = f"{BASE_URL}/{endpoint}"
+    headers = {**self.headers, **(headers or {})}
+    timeout = timeout or self.timeout_s
+
+    resp = self.session.post(
+        url, headers=headers, params=params or {}, json=json, timeout=timeout
+    )
+
+    if not self.debug:
+        resp.raise_for_status()
+
+    # Some gateways reply 202/204 or empty body; prefer JSON but fail helpfully
+    if resp.status_code in (202, 204) or resp.headers.get("Content-Length") == "0":
+        return {}
+
+    try:
+        return resp.json()
+    except ValueError:
+        raise ValueError(f"Expected JSON from {url}, got: {resp.text[:200]}")
+
+
+def reload_app(self, app_id):
+    # Optionally validate app_id with self._check_uuid(app_id=app_id)
+    return self._post("reloads", json={"appId": str(app_id)})
+```
+
+Example:
+
+```python
+client = QlikClient()
+resp = client.reload_app("24212eff-0964-4536-90f1-ad80c5677bdd")
+print("Reload response:", resp)
+# {'id': '68dd3685...', 'status': 'QUEUED', ...}
+```
+
+Keep `_post` generic just like `_get`. Endpoint-specific quirks (e.g., required JSON shape) belong in small public methods such as `reload_app`.
+
+<Notice type="info" className="mt-6">
+  Qlik often answers with `202 Accepted` for fire-and-forget operations. Returning `{}` from `_post` in that case avoids JSON decode errors and keeps call-sites simple.
+</Notice>
+
+## 6. Polling reload status
+
+Reloads may take minutes. You can’t assume they finish instantly, so polling is essential. Below is a simple, sync poller that uses `time.monotonic()` and caps total wait time.
+
+```python
+import time
+
+def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
+    
+    # Basic floors to avoid foot-guns
+    poll_every_s = max(1, int(poll_every_s))
+    max_time_s = max(poll_every_s, int(max_time_s))
+
+    start_time = time.monotonic()
+
+    max_iters = max(int((max_time_s + poll_every_s - 1) // poll_every_s), 1)
+
+    for i in range(max_iters):
+        details = self._get(endpoint=f"reloads/{reload_id}")
+        status = details.get("status", "").upper()
+
+        if status in {"SUCCEEDED", "COMPLETED", "SUCCESS"}:
+            return details
+        if status in {"FAILED", "ERROR", "ABORTED"}:
+            raise RuntimeError(f"Reload {reload_id} failed: {details}")
+
+        if time.monotonic() >= start_time + max_time_s:
+            break
+
+        time.sleep(poll_every_s)
+
+    raise TimeoutError(
+        f"Reload {reload_id} did not finish in {max_time_s} seconds"
+    )
+```
+
+Example (trigger + poll):
+
+```python
+from loguru import logger
+
+client = QlikClient()
+response = client.reload_app("24212eff-0964-4536-90f1-ad80c5677bdd")
+
+if reload_id := response.get("id"):
+    final_status = client.wait_for_reload(reload_id).get("status")
+    logger.info(f"{final_status}")
+```
+
+Why polling is necessary
+
+* Reloads may be queued behind others.
+* A single reload can outlive your HTTP timeout.
+* Polling gives you control over total wait time and backoff cadence.
+
+## 7. Error handling and retries
+
+Things to watch out for:
+
+* **Invalid IDs**: Always validate UUIDs before sending.
+* **Rate limits / 429**: Wrap `_get`/`_post` with a retry library like `backoff`.
+* **Timeouts**: Decide whether to fail fast or alert and retry later.
+* **Non-JSON bodies**: Fail helpfully if the response isn’t JSON.
+
+Example with `backoff` (drop-in wrapper that keeps call-sites unchanged):
+
+```python
+import requests
+import backoff
+
+@backoff.on_exception(
+    backoff.expo,
+    (requests.exceptions.RequestException,),
+    max_tries=5,
+    jitter=backoff.full_jitter,
+)
+def _safe_get(self, *args, **kwargs):
+    return self._get(*args, **kwargs)
+
+@backoff.on_exception(
+    backoff.expo,
+    (requests.exceptions.RequestException,),
+    max_tries=5,
+    jitter=backoff.full_jitter,
+)
+def _safe_post(self, *args, **kwargs):
+    return self._post(*args, **kwargs)
+```
+
+You can then swap call-sites incrementally:
+
+```python
+apps = self._safe_get(endpoint="items", params={"resourceType": "app"})
+# ...or
+resp = self._safe_post(endpoint="reloads", json={"appId": app_id})
+```
+
+<Notice type="info" className="mt-6">
+  Keep `_get`/`_post` minimal; layer retries in thin wrappers (`_safe_get`/`_safe_post`). This preserves a single place to change backoff policy later.
+</Notice>
+
+<Notice type="warning" className="mt-6">
+  Backoff isn’t a silver bullet: protect with `max_tries`, log final errors, and avoid retrying on 4xx you know won’t succeed (validate early).
+</Notice>
+
+## Wrapping up
+
+With this sync client you can:
+
+* Authenticate against Qlik Cloud
+* List apps with pagination
+* Fetch metadata
+* Trigger reloads and monitor progress
+
+This is enough for most day-to-day data engineering needs. When performance and concurrency matter (e.g., polling many reloads), evolve to an async client. Starting sync keeps things clear, testable, and reliable.
