@@ -248,14 +248,23 @@ Keep `_post` generic just like `_get`. Endpoint‑specific quirks (e.g., require
 
 ## 6. Polling reload status
 
-Reloads may take minutes. You can’t assume they finish instantly, so polling is essential:
+Reloads may take minutes. You can’t assume they finish instantly, so polling is essential. Below is a simple, sync poller that uses `time.monotonic()` and caps total wait time.
 
 ```python
-def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
-    import time
-    start = time.monotonic()
+import time
 
-    while time.monotonic() - start < max_time_s:
+def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
+    
+
+    # Basic floors to avoid foot-guns
+    poll_every_s = max(1, int(poll_every_s))
+    max_time_s = max(poll_every_s, int(max_time_s))
+
+    start_time = time.monotonic()
+
+    max_iters = max(int((max_time_s + poll_every_s - 1) // poll_every_s), 1)
+
+    for i in range(max_iters):
         details = self._get(endpoint=f"reloads/{reload_id}")
         status = details.get("status", "").upper()
 
@@ -264,17 +273,34 @@ def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
         if status in {"FAILED", "ERROR", "ABORTED"}:
             raise RuntimeError(f"Reload {reload_id} failed: {details}")
 
+        if time.monotonic() >= start_time + max_time_s:
+            break
+
         time.sleep(poll_every_s)
 
-    raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
+    raise TimeoutError(
+        f"Reload {reload_id} did not finish in {max_time_s} seconds"
+    )
+```
+
+Example (trigger + poll):
+
+```python
+from loguru import logger
+
+client = QlikClient()
+response = client.reload_app("24212eff-0964-4536-90f1-ad80c5677bdd")
+
+if reload_id := response.get("id"):
+    final_status = client.wait_for_reload(reload_id).get("status")
+    logger.info(f"{final_status}")
 ```
 
 Why polling is necessary
 
 * Reloads may be queued behind others.
-* A single reload can take longer than your HTTP timeout.
-* Polling gives you control over max wait time.
-
+* A single reload can outlive your HTTP timeout.
+* Polling gives you control over total wait time and backoff cadence.
 
 ## 7. Error handling and retries
 
@@ -293,7 +319,6 @@ import backoff
 def safe_get(self, *args, **kwargs):
     return self._get(*args, **kwargs)
 ```
-
 
 ## Wrapping up
 
