@@ -155,25 +155,45 @@ Many Qlik endpoints default to returning only 100 items per page so in order to 
   Tune `self.max_calls` to protect your jobs from runaway loops (e.g., if the API keeps returning a next link). Add logging around `i` if you need visibility.
 </Notice>
 
-## Metadata lookup
+## 4. Custom public methods
 
-Each app has a UUID. Validating it prevents hard-to-debug API errors:
+Some endpoints need **special treatment** (validation, parameter shaping, friendlier errors). Expose these as **public methods** on your client and keep the one‑off logic inside them, while leaving `_get` small and generic.
+
+Here’s a pattern that validates the app UUID before calling the API:
 
 ```python
+# inside QlikClient
 import uuid
 
+def _check_uuid(self, **ids):
+    for name, value in ids.items():
+        if value is None:
+            raise ValueError(f"{name}=None is not allowed")
+        try:
+            uuid.UUID(str(value))
+        except ValueError as e:
+            raise ValueError(f"{name} must be a valid UUID") from e
+
 def query_app_metadata(self, app_id):
-    try:
-        uuid.UUID(str(app_id))
-    except ValueError:
-        raise ValueError("app_id must be a valid UUID")
+    self._check_uuid(app_id=app_id)
     return self._get(endpoint=f"apps/{app_id}/data/metadata")
 ```
 
-This ensures you don’t accidentally send invalid IDs downstream.
+Why a public method here?
 
+* **Guardrails** – catch invalid IDs early with a helpful error message.
+* **Room for quirks** – if the endpoint ever needs extra headers/params, you add them here without touching call‑sites.
+* **Better DX** – callers don’t need to remember paths; they call `query_app_metadata(app_id)`.
 
-## Triggering reloads
+<Notice type="success" className="mt-6">
+  Keep `_get` generic. Put endpoint‑specific checks (like UUID validation) into small, public methods. This avoids conditionals leaking into all callers.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  You can reuse `_check_uuid` for other endpoints (e.g., reloads, automations) by passing named arguments: `self._check_uuid(reload_id=rid)`.
+</Notice>
+
+## 5. Triggering reloads with post
 
 Reloads are submitted with a POST. Qlik returns a `reload_id` to track progress:
 
@@ -191,7 +211,7 @@ def reload_app(self, app_id):
 ```
 
 
-## Polling reload status
+## 6. Polling reload status
 
 Reloads may take minutes. You can’t assume they finish instantly, so polling is essential:
 
@@ -214,14 +234,14 @@ def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
     raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
 ```
 
-### Why polling is necessary
+Why polling is necessary
 
 * Reloads may be queued behind others.
 * A single reload can take longer than your HTTP timeout.
 * Polling gives you control over max wait time.
 
 
-## Error handling and retries
+## 7. Error handling and retries
 
 Things to watch out for:
 
