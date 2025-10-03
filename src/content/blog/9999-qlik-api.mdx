@@ -10,11 +10,22 @@ tags: [Python, APIs, Data Engineering, Best Practices]
 draft: false
 ---
 
-When you’re just getting started with Qlik’s REST API, asynchronous code may feel overwhelming. In this post we’ll build a synchronous Python client with `requests` that covers the most common use cases: authentication, pagination, fetching app metadata, and triggering reloads.
+When building data pipelines, Qlik often sits between your data sources and your analytics layer. You may need to list apps, fetch metadata, or trigger reloads programmatically. While Qlik’s API supports async, starting with a **synchronous client** in Python keeps things simple and easy to debug.
+
+This post shows how to:
+
+* Authenticate against the Qlik API
+* Paginate through results
+* Fetch app metadata
+* Trigger reloads and poll their status
+* Handle errors and timeouts gracefully
+
+We’ll use `requests` (instead of `aiohttp`) and keep the code small and testable.
+
 
 ## Authentication
 
-Qlik Cloud requires a bearer token. We’ll store it in AWS Secrets Manager and load it when creating our client:
+Qlik Cloud requires a bearer token. In production, you’ll want to store the key securely (e.g., in AWS Secrets Manager). For now, let’s fetch it at init time:
 
 ```python
 import requests
@@ -37,9 +48,15 @@ class QlikClient:
         self.debug = debug
 ```
 
-## Simple GET request
+### Why this matters
 
-We’ll start with a helper method to query any Qlik endpoint:
+* **Session reuse** speeds up multiple API calls.
+* **Debug mode** lets you skip `raise_for_status` so you can inspect error payloads without exceptions interrupting.
+
+
+## GET helper
+
+Every API client needs a safe way to GET data. Here’s ours:
 
 ```python
 def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None):
@@ -62,15 +79,15 @@ def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None)
     return response.json()
 ```
 
-This handles:
+### Design decisions
 
-* Defaulting `limit`
-* Assembling the URL
-* Raising errors unless `debug=True`
+* Validate `limit` early to avoid silent API errors.
+* Support both `endpoint` and `next_url` for pagination.
 
-## Pagination: Query all items
 
-Many Qlik endpoints are paginated. To fetch all pages:
+## Pagination
+
+Many Qlik endpoints return a `links.next.href` for the next page. Here’s how to walk them:
 
 ```python
 def query_all(self, endpoint, params=None):
@@ -104,9 +121,14 @@ apps = client.query_all("items", params={"resourceType": "app"})
 print(f"Fetched {len(apps)} apps")
 ```
 
-## App metadata
+### Why it matters
 
-Once you have an app ID, you can fetch its metadata:
+Pagination is non-negotiable: many Qlik endpoints default to returning only 100 items per page.
+
+
+## Metadata lookup
+
+Each app has a UUID. Validating it prevents hard-to-debug API errors:
 
 ```python
 import uuid
@@ -119,9 +141,12 @@ def query_app_metadata(self, app_id):
     return self._get(endpoint=f"apps/{app_id}/data/metadata")
 ```
 
+This ensures you don’t accidentally send invalid IDs downstream.
+
+
 ## Triggering reloads
 
-Reloading an app is a `POST` request:
+Reloads are submitted with a POST. Qlik returns a `reload_id` to track progress:
 
 ```python
 def _post(self, endpoint, json=None, params=None, headers=None, timeout=None):
@@ -136,11 +161,10 @@ def reload_app(self, app_id):
     return self._post("reloads", json={"appId": str(app_id)})
 ```
 
-This returns a `reload_id` you can poll.
 
 ## Polling reload status
 
-Qlik returns reload status updates. A simple polling loop looks like this:
+Reloads may take minutes. You can’t assume they finish instantly, so polling is essential:
 
 ```python
 def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
@@ -161,12 +185,39 @@ def wait_for_reload(self, reload_id, poll_every_s=10, max_time_s=600):
     raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
 ```
 
+### Why polling is necessary
+
+* Reloads may be queued behind others.
+* A single reload can take longer than your HTTP timeout.
+* Polling gives you control over max wait time.
+
+
+## Error handling and retries
+
+Things to watch out for:
+
+* **Invalid IDs**: Always validate UUIDs before sending.
+* **Rate limits / 429**: Wrap `_get`/`_post` with a retry library like `backoff`.
+* **Timeouts**: Decide whether to fail fast or alert and retry later.
+
+Example with `backoff`:
+
+```python
+import backoff
+
+@backoff.on_exception(backoff.expo, (requests.exceptions.RequestException,), max_tries=5)
+def safe_get(self, *args, **kwargs):
+    return self._get(*args, **kwargs)
+```
+
+
 ## Wrapping up
 
-With this client you can:
+With this sync client you can:
 
-* List all your Qlik apps with pagination
-* Fetch metadata for a specific app
-* Trigger reloads and wait for completion
+* Authenticate against Qlik Cloud
+* List apps with pagination
+* Fetch metadata
+* Trigger reloads and monitor progress
 
-This sync version is simple and easy to understand. In a future post we can extend it with async support for higher throughput and concurrency.
+This is enough for most day-to-day data engineering needs. When performance and concurrency matter (e.g. polling many reloads), you can evolve this into an async client. But starting sync keeps things clear, testable, and reliable.
