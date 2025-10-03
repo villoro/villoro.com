@@ -309,16 +309,48 @@ Things to watch out for:
 * **Invalid IDs**: Always validate UUIDs before sending.
 * **Rate limits / 429**: Wrap `_get`/`_post` with a retry library like `backoff`.
 * **Timeouts**: Decide whether to fail fast or alert and retry later.
+* **Non‑JSON bodies**: Fail helpfully if the response isn’t JSON.
 
-Example with `backoff`:
+Example with `backoff` (drop‑in wrapper that keeps call‑sites unchanged):
 
 ```python
+import requests
 import backoff
 
-@backoff.on_exception(backoff.expo, (requests.exceptions.RequestException,), max_tries=5)
-def safe_get(self, *args, **kwargs):
+@backoff.on_exception(
+    backoff.expo,
+    (requests.exceptions.RequestException,),
+    max_tries=5,
+    jitter=backoff.full_jitter,
+)
+def _safe_get(self, *args, **kwargs):
     return self._get(*args, **kwargs)
+
+@backoff.on_exception(
+    backoff.expo,
+    (requests.exceptions.RequestException,),
+    max_tries=5,
+    jitter=backoff.full_jitter,
+)
+def _safe_post(self, *args, **kwargs):
+    return self._post(*args, **kwargs)
 ```
+
+You can then swap call‑sites incrementally:
+
+```python
+apps = self._safe_get(endpoint="items", params={"resourceType": "app"})
+# ...or
+resp = self._safe_post(endpoint="reloads", json={"appId": app_id})
+```
+
+<Notice type="info" className="mt-6">
+  Keep `_get`/`_post` minimal; layer retries in thin wrappers (`_safe_get`/`_safe_post`). This preserves a single place to change backoff policy later.
+</Notice>
+
+<Notice type="warning" className="mt-6">
+  Backoff isn’t a silver bullet: protect with `max_tries`, log final errors, and avoid retrying on 4xx you know won’t succeed (validate early).
+</Notice>
 
 ## Wrapping up
 
@@ -329,4 +361,4 @@ With this sync client you can:
 * Fetch metadata
 * Trigger reloads and monitor progress
 
-This is enough for most day-to-day data engineering needs. When performance and concurrency matter (e.g. polling many reloads), you can evolve this into an async client. But starting sync keeps things clear, testable, and reliable.
+This is enough for most day‑to‑day data engineering needs. When performance and concurrency matter (e.g., polling many reloads), evolve to an async client. Starting sync keeps things clear, testable, and reliable.
