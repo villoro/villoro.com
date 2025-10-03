@@ -10,7 +10,7 @@ tags: [Python, APIs, Data Engineering, Best Practices]
 draft: false
 ---
 
-## 0. Intro 
+## 0. Intro
 
 Most teams meet Qlik Cloud through dashboards, but as a data engineer you eventually need to **automate** it: list apps, harvest metadata, and trigger reloads from your pipelines. Qlik’s API supports async, bulk, and webhooks, but the fastest path to reliable automation is a **small, synchronous client** you understand end-to-end.
 
@@ -39,7 +39,7 @@ SECRET_NAME = "qlik/api"
 
 class QlikClient:
     def __init__(self, timeout_s=180, page_size=100, max_calls=900, debug=False):
-        secret = get_secret(SECRET_NAME) # Out of scope
+        secret = get_secret(SECRET_NAME)  # Out of scope
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {secret['api_key']}"
@@ -54,16 +54,18 @@ class QlikClient:
 ```
 
 <Notice type="success" className="mt-6">
-  **Session reuse** speeds up multiple API calls.
+  **Session reuse** speeds up multiple API calls and reduces connection overhead.
 </Notice>
 
 <Notice type="info" className="mt-6">
-  **Debug mode** lets you skip `raise_for_status` so you can inspect error payloads without exceptions interrupting.
+  **Debug mode** lets you skip `raise_for_status` so you can inspect error payloads without exceptions interrupting. Use carefully, and never in production.
 </Notice>
 
-## GET helper
+Next, we’ll add a safe request helper that wraps `requests` with timeouts, optional retries, and debug-aware error handling.
 
-Every API client needs a safe way to GET data. Here’s ours:
+## 2. `_get` helper
+
+Every client needs a **single choke‑point** for read requests. Centralizing GET logic gives you one place to set defaults (headers, timeouts), enforce invariants (pagination limit), and add behavior (debug, retries, logging) without touching call‑sites.
 
 ```python
 def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None):
@@ -71,26 +73,41 @@ def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None)
     headers = {**self.headers, **(headers or {})}
     timeout = timeout or self.timeout_s
 
+    # Exactly one of endpoint or full URL
     if (endpoint is None) == (url is None):
         raise ValueError("Provide exactly one of endpoint or url")
 
+    # Normalize endpoint-style requests and enforce pagination bounds
     if url is None:
         params["limit"] = params.get("limit", self.page_size)
         if params["limit"] <= 0 or params["limit"] > 100:
             raise ValueError("limit must be in (0, 100]")
         url = f"{BASE_URL}/{endpoint}"
 
+    # Optional: Qlik quirks—booleans often need to be strings
+    # params = {k: (str(v) if isinstance(v, bool) else v) for k, v in params.items()}
+
     response = self.session.get(url, headers=headers, params=params, timeout=timeout)
     if not self.debug:
         response.raise_for_status()
+
     return response.json()
 ```
 
-### Design decisions
+Why an internal `_get`:
 
-* Validate `limit` early to avoid silent API errors.
-* Support both `endpoint` and `next_url` for pagination.
+* **Consistency** – all reads go through one path, so headers, timeouts, and query rules stay in sync.
+* **Safety** – early validation (e.g., `limit`) catches mistakes before hitting the API.
+* **Pagination‑ready** – supports either `endpoint` or `next_url` without duplicating code.
+* **Easier evolution** – add logging, metrics, retries, or auth refresh later in a single place.
 
+<Notice type="success" className="mt-6">
+  Centralizing GETs means when you later add retries (e.g., with `backoff`) or structured logging, you do it once and every call benefits.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  If you see 400s with boolean query params, try casting them to strings (see the commented line). Some gateways expect `true`/`false` as strings.
+</Notice>
 
 ## Pagination
 
