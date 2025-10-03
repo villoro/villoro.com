@@ -109,7 +109,7 @@ Why an internal `_get`:
   If you see 400s with boolean query params, try casting them to strings (see the commented line). Some gateways expect `true`/`false` as strings.
 </Notice>
 
-## Pagination
+## 3. Pagination
 
 Many Qlik endpoints return a `links.next.href` for the next page. Here’s how to walk them:
 
@@ -145,10 +145,15 @@ apps = client.query_all("items", params={"resourceType": "app"})
 print(f"Fetched {len(apps)} apps")
 ```
 
-### Why it matters
+Many Qlik endpoints default to returning only 100 items per page so in order to get all data you need to use pagination.
 
-Pagination is non-negotiable: many Qlik endpoints default to returning only 100 items per page.
+<Notice type="success" className="mt-6">
+  By centralizing pagination in `query_all`, every endpoint (items, users, etc.) gets consistent paging without copy/paste.
+</Notice>
 
+<Notice type="warning" className="mt-6">
+  Tune `self.max_calls` to protect your jobs from runaway loops (e.g., if the API keeps returning a next link). Add logging around `i` if you need visibility.
+</Notice>
 
 ## Metadata lookup
 
