@@ -16,7 +16,6 @@ In the previous post we built a **synchronous client** for Qlik Cloud. It was si
 
 With Python’s `asyncio` and `aiohttp`, you can scale to **dozens or hundreds of API calls concurrently**, without threads or processes. This post shows how to rebuild the client with async foundations, keeping the same principles: copy/paste‑ready code, tight surface area, and clear seams for production use.
 
-
 ### 1. Async foundations
 
 Why bother?
@@ -133,20 +132,36 @@ Fire reloads, then poll in parallel:
                 resp.raise_for_status()
                 return await resp.json()
 
-    async def wait_for_reload(self, reload_id, poll_every=5, max_time=300):
-        import time
-        deadline = time.monotonic() + max_time
+import time
 
-        while time.monotonic() < deadline:
-            status = await self._get(url=f"https://.../api/v1/reloads/{reload_id}")
-            s = status.get("status", "").upper()
-            if s in ("SUCCEEDED",):
-                return status
-            if s in ("FAILED", "ABORTED"):
-                raise RuntimeError(f"Reload failed: {status}")
-            await asyncio.sleep(poll_every)
+MIN_POLLING_SECONDS = 60
 
-        raise TimeoutError(f"Reload {reload_id} not finished after {max_time}s")
+    async def wait_for_reload(self, reload_id, poll_every_s=5, max_time_s=None):
+        assert max_time_s is not None, "max_time_s is required"
+
+        # Floors
+        poll_every_s = max(1, int(poll_every_s))
+        max_time_s = max(MIN_POLLING_SECONDS, int(max_time_s))
+
+        start = time.monotonic()
+        # ceil division; guarantee at least one iteration
+        max_iters = max(int((max_time_s + poll_every_s - 1) // poll_every_s), 1)
+
+        for i in range(max_iters):
+            details = await self._get(endpoint=f"reloads/{reload_id}")
+            status = details.get("status", "").upper()
+
+            if status in {"SUCCEEDED", "COMPLETED", "SUCCESS"}:
+                return details
+            if status in {"FAILED", "ERROR", "ABORTED"}:
+                raise RuntimeError(f"Reload {reload_id} failed: {details}")
+
+            if time.monotonic() >= start + max_time_s:
+                break
+
+            await asyncio.sleep(poll_every_s)
+
+        raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
 ```
 
 Example: trigger many reloads at once
