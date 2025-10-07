@@ -1,0 +1,60 @@
+---
+slug: async-qlik-api-python
+title: "Async APIs with Python: Scaling Qlik Queries"
+meta_title: "Async APIs with Python: Scaling Qlik Queries"
+description: Learn how to scale Qlik Cloud automation with Python’s asyncio and aiohttp. This post builds an async client for concurrent reloads, pagination, retries, and error handling.
+date: 2025-10-09
+image: /images/blog/9999-qlik-multiple-magnifying-glasses.jpg
+category: DE
+tags: [Python, APIs, AsyncIO, Data Engineering]
+draft: false
+---
+
+### 0. Intro
+
+* Recap: in the last post we built a synchronous client.
+* Problem: when you trigger multiple reloads or need to poll many items, sync = bottleneck.
+* Async lets you run **tens or hundreds of requests concurrently** without threads.
+
+### 1. Async foundations
+
+* Why `asyncio` + `aiohttp` over `requests`.
+* Key concepts: event loop, coroutines, `async with`.
+
+### 2. Rebuilding the client
+
+* Class `QlikAsyncClient`:
+
+  * Session lifecycle (`__aenter__`, `__aexit__`, `_ensure_session`).
+  * GET/POST helpers using `aiohttp.ClientSession`.
+  * Concurrency control with `asyncio.Semaphore`.
+
+### 3. Pagination, async style
+
+* `async def query_all` with async iteration.
+* Use of `async for` or manual `while` loops with `await`.
+
+### 4. Triggering & polling reloads concurrently
+
+* Kick off N reloads with `asyncio.gather`.
+* Poll status for each reload in parallel.
+* Add `max_time_s` to bound wait time.
+
+### 5. Error handling & retries
+
+* Use `backoff` with async functions.
+* Handling transient network errors, 429s, and expired sessions.
+
+### 6. Notifications (optional advanced)
+
+* Show pattern for injecting an `on_error` callback (e.g., Slack).
+* Notify just before raising, without breaking flow.
+
+### 7. Trade-offs and takeaways
+
+* Async = faster when many calls, but more complex.
+* Start sync, move to async if:
+
+  * You batch reloads.
+  * You hit API throughput limits.
+  * You need responsive pipelines.
