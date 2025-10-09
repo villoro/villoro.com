@@ -12,7 +12,7 @@ draft: false
 
 ## 0. Intro
 
-In the previous post we built a **synchronous client** for Qlik Cloud. It was simple, debuggable, and covered the basics: auth, pagination, reloads, and retries. But when you start to automate **multiple reloads** or poll **many apps at once**, sync becomes a bottleneck.
+In the previous post (<FancyLink linkText="Querying Qlik API with Python" url="https://villoro.com/blog/querying-qlik-api-python/" dark="true"/>) we built a **synchronous client** for Qlik Cloud. It was simple, debuggable, and covered the basics: auth, pagination, reloads, and retries. But when you start to automate **multiple reloads** or poll **many apps at once**, sync becomes a bottleneck.
 
 With Python’s `asyncio` and `aiohttp`, you can scale to **dozens or hundreds of API calls concurrently**, without threads or processes. This post shows how to rebuild the client with async foundations, keeping the same principles: copy/paste‑ready code, tight surface area, and clear seams for production use.
 
@@ -185,17 +185,10 @@ This mirrors the sync `_get`, but uses `await`, a semaphore, and optional retrie
 
 ```python
 import aiohttp
-import backoff
 
 class QlikAsyncClient:
     # ... (init / __aenter__ / __aexit__ / _ensure_session from Section 2)
 
-    @backoff.on_exception(
-        backoff.expo,
-        (aiohttp.ClientError,),
-        max_tries=5,
-        jitter=backoff.full_jitter,
-    )
     async def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None):
         params = params or {}
         headers = {**self.headers, **(headers or {})}
@@ -229,7 +222,6 @@ class QlikAsyncClient:
 
 * `await` on I/O so other tasks can run while this request is in flight.
 * `async with self._semaphore` caps concurrency globally (cheap backpressure).
-* `backoff` integrates with async—same decorator, different exception type.
 * Still one place to normalize URLs, apply headers, and validate `limit`.
 
 <Notice type="success">
@@ -370,30 +362,106 @@ async def main(app_ids):
 
 ## 6. Error handling & retries
 
-* `backoff` works with async.
-* Retry transient network errors, not business logic errors.
-* Wrap only `_get`/`_post` so high-level methods stay clean.
+Async doesn’t change the fundamentals: retry what can succeed later (network hiccups), fail fast on what won’t (bad input/permissions). Keep retries close to your low‑level request helpers so the rest of the code stays clean.
 
-<Notice type="warning">
-  Don’t retry 400s or 403s—they won’t succeed no matter how many times you retry.
+```python
+# inside QlikAsyncClient
+import asyncio
+import aiohttp
+import backoff
+
+NON_RETRYABLE_STATUS = {400, 401, 403, 404, 409}
+
+def _retry_giveup(exc):
+    # Don’t retry client/business errors; do retry timeouts & transient network failures
+    if isinstance(exc, aiohttp.ClientResponseError):
+        return exc.status in NON_RETRYABLE_STATUS
+    return False
+
+@backoff.on_exception(
+    backoff.expo,
+    (aiohttp.ClientError, asyncio.TimeoutError, aiohttp.ClientResponseError),
+    max_tries=5,
+    giveup=_retry_giveup,
+    jitter=backoff.full_jitter,
+)
+async def _request(self, method, url=None, endpoint=None, params=None, json=None, headers=None, timeout=None):
+    # ... your shared request logic (build url, merge headers, semaphore, etc)
+    return await self._send(method, url, params, headers, json, timeout)
+
+async def _get(self, **kwargs):
+    return await self._request("GET", **kwargs)
+
+async def _post(self, **kwargs):
+    return await self._request("POST", **kwargs)
+```
+
+Why this shape
+
+* **Selective retries** – `_retry_giveup` filters 4xx you know won’t recover.
+* **Single policy** – the decorator sits on `_request`, so every `_get`/`_post` call inherits it.
+* **Jittered backoff** – `full_jitter` spreads retries across time to avoid thundering herds.
+
+<Notice type="warning" className="mt-6">
+  Don’t retry 400/401/403/404/409. Validate early (UUIDs, payload shape), and surface clear errors to callers.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  If you need different policies (e.g., more aggressive on metadata reads than reload posts), add thin wrappers like `_request_read` / `_request_write` with different decorators, but keep the core logic in one place.
 </Notice>
 
 ## 7. Optional: Notifications
 
-Inject a callback to notify on error:
+You often want a heads‑up when a reload fails or times out. Make it **pluggable**: accept an async callback and call it just before raising. That keeps transport details (Slack, email, PagerDuty) outside the client.
 
 ```python
-async def slack_notifier(ctx):
-    print("Send Slack message", ctx)
+# A simple callback signature
+async def notify(ctx):
+    # ctx might include app_id, reload_id, status, error, elapsed, owner, etc.
+    print("Notify:", ctx)
 
-async def reload_with_notify(client, app_id):
-    try:
-        result = await client.reload_app(app_id)
-        await client.wait_for_reload(result["id"])
-    except Exception as e:
-        await slack_notifier({"app_id": app_id, "error": str(e)})
-        raise
+# Call from a failure path (e.g., inside wait_for_reload)
+async def wait_for_reload(self, reload_id, poll_every_s=5, max_time_s=None, on_error=None):
+    # ... bounded polling setup
+
+    for i in range(max_iters):
+        details = await self._get(endpoint=f"reloads/{reload_id}")
+        status = (details.get("status") or "").upper()
+
+        if status in {"SUCCEEDED", "COMPLETED", "SUCCESS"}:
+            return details
+        if status in {"FAILED", "ERROR", "ABORTED"}:
+            if on_error:
+                await on_error({
+                    "where": "wait_for_reload",
+                    "reload_id": reload_id,
+                    "status": status,
+                    "details": details,
+                })
+            raise RuntimeError(f"Reload {reload_id} failed: {details}")
+
+        # ... sleep and continue until deadline
+
+    # Timed out
+    if on_error:
+        await on_error({
+            "where": "wait_for_reload",
+            "reload_id": reload_id,
+            "status": "TIMEOUT",
+            "details": {"poll_every_s": poll_every_s, "max_time_s": max_time_s},
+        })
+    raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
 ```
+
+Why callbacks, not logging hooks
+
+* **Separation of concerns** – the client reports *what happened*; your notifier decides *how* to alert.
+* **Testability** – pass a fake `on_error` in unit tests to assert payloads without hitting external services.
+* **Flexibility** – swap Slack for anything else without touching the client.
+
+<Notice type="success">
+  Keep the callback optional and fire it only on terminal failures (FAILED/ERROR/ABORTED/TIMEOUT). Success paths should remain silent.
+</Notice>
 
 ## 8. Trade-offs and takeaways
 
