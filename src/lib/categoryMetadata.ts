@@ -1,11 +1,12 @@
 export const categoryMetadata = {
-  python: { name: "🐍 Python" },
-  web: { name: "🌍 Web" },
-  hardware: { name: "🖥️ Hardware"},
+  AI: { name: "🤖 ML/AI" },
+  API: { name: "🔌 API" },
   DE: { name: "⚙️ DE" },
   cloud_devops: { name: "☁️ Cloud/DevOps" },
-  tools: { name: "🛠️ Tools/Utils" },
-  AI: { name: "🤖 ML/AI" },
   git: { name: "🔀 GIT" },
+  hardware: { name: "🖥️ Hardware"},
   others: { name: "📦 Others" },
+  python: { name: "🐍 Python" },
+  tools: { name: "🛠️ Tools/Utils" },
+  web: { name: "🌍 Web" },
 };

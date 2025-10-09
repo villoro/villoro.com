@@ -1,0 +1,476 @@
+---
+slug: async-qlik-api-python
+title: "Async APIs with Python: Scaling Qlik Queries"
+meta_title: "Async APIs with Python: Scaling Qlik Queries"
+description: Learn how to scale Qlik Cloud automation with Python’s asyncio and aiohttp. This post builds an async client for concurrent reloads, pagination, retries, and error handling.
+date: 2025-10-07
+image: /images/blog/9999-qlik-multiple-magnifying-glasses.jpg
+category: API
+tags: [Python, API, AsyncIO, Data Engineering]
+draft: true
+---
+
+## 0. Intro
+
+In the previous post (<FancyLink linkText="Querying Qlik API with Python" url="https://villoro.com/blog/querying-qlik-api-python/" dark="true"/>) we built a **synchronous client** for Qlik Cloud. It was simple, debuggable, and covered the basics: auth, pagination, reloads, and retries. But when you start to automate **multiple reloads** or poll **many apps at once**, sync becomes a bottleneck.
+
+With Python’s `asyncio` and `aiohttp`, you can scale to **dozens or hundreds of API calls concurrently**, without threads or processes. This post shows how to rebuild the client with async foundations, keeping the same principles: copy/paste‑ready code, tight surface area, and clear seams for production use.
+
+## 1. Async foundations (with tiny, practical examples)
+
+Why bother?
+
+* **`requests`** is blocking. Each call waits for I/O.
+* **`aiohttp`** is async. Calls yield control while waiting, letting others run.
+
+Goal: show what async *is* with minimal, standalone snippets. No Qlik yet.
+
+### 1.1 Blocking vs async waiting
+
+**Blocking**: the loop sleeps *serially*.
+
+```python
+import time
+
+for i in range(3):
+    time.sleep(1)
+    print(f"done {i}")
+# ~3s total
+```
+
+**Async**: tasks sleep *concurrently* using a single thread.
+
+```python
+import asyncio
+
+async def work(i):
+    await asyncio.sleep(1)
+    print(f"done {i}")
+
+async def main():
+    tasks = [work(i) for i in range(3)]
+    await asyncio.gather(*tasks)
+
+asyncio.run(main())
+# ~1s total
+```
+
+<Notice type="info" className="mt-6">
+  **Idea:** `await` yields control while the task is waiting (I/O, sleep), so other tasks can run.
+</Notice>
+
+### 1.2 Async context managers
+
+Use `async with` to manage resources (e.g., network sessions, DB connections):
+
+```python
+import asyncio
+
+class Dummy:
+    async def __aenter__(self):
+        print("open")
+        return self
+    async def __aexit__(self, *args):
+        print("close")
+
+async def main():
+    async with Dummy() as d:
+        await asyncio.sleep(0.1)
+
+asyncio.run(main())
+```
+
+### 1.3 Bounded concurrency with a semaphore
+
+Limit how many tasks run at once to avoid overwhelming services.
+
+```python
+import asyncio
+
+sem = asyncio.Semaphore(2)  # at most 2 concurrent tasks
+
+async def job(i):
+    async with sem:
+        await asyncio.sleep(0.3)
+        print(f"job {i} done")
+
+async def main():
+    await asyncio.gather(*[job(i) for i in range(5)])
+
+asyncio.run(main())
+```
+
+### 1.4 Mapping work over inputs (no `while` loops)
+
+Create tasks from inputs and collect results.
+
+```python
+import asyncio
+
+async def fetch(x):
+    await asyncio.sleep(0.1)
+    return x * 2
+
+async def main():
+    tasks = [fetch(x) for x in [1, 2, 3, 4]]
+    results = await asyncio.gather(*tasks)
+    print(results)  # [2, 4, 6, 8]
+
+asyncio.run(main())
+```
+
+---
+
+**Rules of thumb:**
+
+1. Use `asyncio.run(...)` only at the entrypoint.
+2. Prefer `asyncio.gather` over manual scheduling when you can.
+3. Add a semaphore when calling external services to cap concurrency.
+
+## 2. Rebuilding the client
+
+We’ll mirror the sync client, but use async building blocks from Section 1: `async def`, `await`, `async with`, and a semaphore for back‑pressure.
+
+```python
+import aiohttp
+import asyncio
+import backoff
+
+class QlikAsyncClient:
+    def __init__(self, timeout_s=180, page_size=100, max_calls=900, debug=False, concurrency=10):
+        # Defaults
+        self.timeout_s = timeout_s
+        self.page_size = page_size
+        self.max_calls = max_calls
+        self.debug = debug
+
+        # Runtime internals
+        self._session = None  # created lazily
+        self._semaphore = asyncio.Semaphore(concurrency)  # cap concurrent requests
+
+        # Auth headers (fetch from your secret store in real code)
+        self.headers = {
+            "Authorization": "Bearer <YOUR_API_KEY>",
+            "Content-Type": "application/json",
+        }
+
+    async def __aenter__(self):
+        await self._ensure_session()
+        return self
+
+    async def __aexit__(self, *args):
+        if self._session and not self._session.closed:
+            await self._session.close()
+
+    async def _ensure_session(self):
+        if self._session is None or self._session.closed:
+            timeout = aiohttp.ClientTimeout(total=self.timeout_s)
+            # Default headers live on the session; per‑request headers can still override later
+            self._session = aiohttp.ClientSession(timeout=timeout, headers=self.headers)
+```
+
+**What’s going on:**
+
+* `__aenter__/__aexit__` make the client usable with `async with`, ensuring the HTTP session is opened once and properly closed.
+* `_ensure_session` lazily creates an `aiohttp.ClientSession` with a global timeout and default headers.
+* `asyncio.Semaphore` limits in‑flight requests, preventing you from overwhelming Qlik (or your network) when we add concurrency later.
+
+<Notice type="success" className="mt-6">
+  The semaphore is your safety valve. Start conservative (e.g., 5–10). You can raise it after measuring Qlik tenant limits and your runner’s bandwidth.
+</Notice>
+
+## 3. Async GET helper
+
+This mirrors the sync `_get`, but uses `await`, a semaphore, and optional retries. One choke‑point keeps headers, limits, and error handling consistent.
+
+```python
+import aiohttp
+
+class QlikAsyncClient:
+    # ... (init / __aenter__ / __aexit__ / _ensure_session from Section 2)
+
+    async def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None):
+        params = params or {}
+        headers = {**self.headers, **(headers or {})}
+        timeout = timeout or self.timeout_s
+
+        # Exactly one of endpoint or full URL
+        if (endpoint is None) == (url is None):
+            raise ValueError("Provide exactly one of endpoint or url")
+
+        # Enforce pagination bounds when using endpoint form
+        if url is None:
+            params["limit"] = params.get("limit", self.page_size)
+            if params["limit"] <= 0 or params["limit"] > 100:
+                raise ValueError("limit must be in (0, 100]")
+            url = f"{self.base_url}/{endpoint}"
+
+        # Optional: Qlik quirks—booleans sometimes need to be strings
+        # params = {k: (str(v) if isinstance(v, bool) else v) for k, v in params.items()}
+
+        async with self._semaphore:
+            async with self._session.get(url, params=params, headers=headers, timeout=timeout) as resp:
+                if not self.debug:
+                    resp.raise_for_status()
+                # Some endpoints reply 202/204 or empty body; prefer JSON but tolerate empty
+                if resp.status in (202, 204) or resp.content_length == 0:
+                    return {}
+                return await resp.json()
+```
+
+**What’s new vs sync:**
+
+* `await` on I/O so other tasks can run while this request is in flight.
+* `async with self._semaphore` caps concurrency globally (cheap backpressure).
+* Still one place to normalize URLs, apply headers, and validate `limit`.
+
+<Notice type="success">
+  Keep `_get` generic and strict: normalize URL, enforce bounds, handle empty bodies. Put endpoint‑specific quirks in small public methods.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  If you hit 400s when sending boolean query params, cast them to strings (`"true"/"false"`). Gateways differ.
+</Notice>
+
+## 4. Pagination, async style
+
+We follow Qlik’s `links.next.href` cursor until it disappears. No `while` loops: we bound work with a `for` capped by `max_calls`, then break when there’s no next link.
+
+```python
+async def query_all(self, endpoint, params=None):
+    # Default page size; copy to avoid mutating caller dict
+    params = dict(params or {})
+    params.setdefault("limit", self.page_size)
+
+    url = f"{BASE_URL}/{endpoint}"
+    results = []
+
+    # Bounded pagination: at most max_calls requests
+    for i in range(1, self.max_calls + 1):
+        page = await self._get(url=url, params=params)
+
+        data = page.get("data") or []
+        results.extend(data)
+
+        next_url = page.get("links", {}).get("next", {}).get("href")
+        if not next_url:
+            break  # no more pages
+
+        url = next_url  # follow server-provided cursor
+    else:
+        # Only runs if the loop didn't break → cursor never ended
+        raise RuntimeError(f"max_calls={self.max_calls} exceeded for endpoint={endpoint!r}")
+
+    return results
+```
+
+Why this shape:
+
+* **Deterministic** – the upper bound (`max_calls`) prevents runaway loops.
+* **Cursor-first** – we trust `links.next.href`, not hand-made offsets.
+* **Side-effect free** – we `setdefault` on a copy of `params`.
+
+<Notice type="info">
+  Most Qlik endpoints paginate with <code>links.next.href</code>. Follow it until it’s <code>None</code>; do not build offsets yourself.
+</Notice>
+
+<Notice type="warning" className="mt-6">
+  If you routinely hit <code>max_calls</code>, log the last page payload and review server-side filters or page size.
+</Notice>
+
+## 5. Triggering & polling reloads concurrently
+
+Reloads are fire‑and‑forget: you `POST` to start, then **poll** a status endpoint until success/failure/timeout. Async lets you trigger many reloads at once and poll them in parallel without threads.
+
+```python
+import uuid
+import asyncio
+import time
+
+MIN_POLLING_SECONDS = 60
+RELOAD_GOOD_STATUS = {"SUCCEEDED", "COMPLETED", "SUCCESS"}
+RELOAD_BAD_STATUS  = {"FAILED", "ERROR", "ABORTED"}
+
+# inside QlikAsyncClient
+async def reload_app(self, app_id):
+    payload = {"appId": str(uuid.UUID(str(app_id)))}  # validate format
+    async with self._sem:  # backpressure
+        async with self._session.post(f"{BASE_URL}/reloads", json=payload) as resp:
+            if not self.debug:
+                resp.raise_for_status()
+            # Some gateways return 202/204; prefer JSON when present
+            if resp.status in (202, 204):
+                return {}
+            return await resp.json()
+
+async def wait_for_reload(self, reload_id, poll_every_s=5, max_time_s=None):
+    assert max_time_s is not None, "max_time_s is required"
+
+    # Floors
+    poll_every_s = max(1, int(poll_every_s))
+    max_time_s = max(MIN_POLLING_SECONDS, int(max_time_s))
+
+    start = time.monotonic()
+    # ceil division; guarantee at least one iteration
+    max_iters = max(int((max_time_s + poll_every_s - 1) // poll_every_s), 1)
+
+    for i in range(max_iters):
+        details = await self._get(endpoint=f"reloads/{reload_id}")
+        status = details.get("status", "").upper()
+
+        if status in RELOAD_GOOD_STATUS:
+            return details
+        if status in RELOAD_BAD_STATUS:
+            raise RuntimeError(f"Reload {reload_id} failed: {details}")
+
+        if time.monotonic() >= start + max_time_s:
+            break
+
+        await asyncio.sleep(poll_every_s)
+
+    raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
+```
+
+Example: trigger and poll several reloads at once
+
+```python
+async def main(app_ids):
+    async with QlikAsyncClient() as client:
+        # Kick off all reloads concurrently
+        reload_responses = await asyncio.gather(
+            *[client.reload_app(aid) for aid in app_ids]
+        )
+
+        # Extract IDs that actually returned a reload id
+        reload_ids = [r.get("id") for r in reload_responses if r.get("id")]
+
+        # Poll all of them concurrently (bounded by the client's semaphore)
+        return await asyncio.gather(
+            *[client.wait_for_reload(rid, max_time_s=900) for rid in reload_ids]
+        )
+
+# asyncio.run(main(["id1", "id2", "id3"]))
+```
+
+<Notice type="success" className="mt-6">
+  Launching N reloads and polling them with `asyncio.gather` keeps your job responsive while respecting backpressure via the client's semaphore.
+</Notice>
+
+<Notice type="warning" className="mt-6">
+  Always cap total wait (`max_time_s`) and use a **bounded loop** (no `while True`). If you need jittered polling or cancellation, this method is the single place to enhance.
+</Notice>
+
+## 6. Error handling & retries
+
+Async doesn’t change the fundamentals: retry what can succeed later (network hiccups), fail fast on what won’t (bad input/permissions). Keep retries close to your low‑level request helpers so the rest of the code stays clean.
+
+```python
+# inside QlikAsyncClient
+import asyncio
+import aiohttp
+import backoff
+
+NON_RETRYABLE_STATUS = {400, 401, 403, 404, 409}
+
+def _retry_giveup(exc):
+    # Don’t retry client/business errors; do retry timeouts & transient network failures
+    if isinstance(exc, aiohttp.ClientResponseError):
+        return exc.status in NON_RETRYABLE_STATUS
+    return False
+
+@backoff.on_exception(
+    backoff.expo,
+    (aiohttp.ClientError, asyncio.TimeoutError, aiohttp.ClientResponseError),
+    max_tries=5,
+    giveup=_retry_giveup,
+    jitter=backoff.full_jitter,
+)
+async def _request(self, method, url=None, endpoint=None, params=None, json=None, headers=None, timeout=None):
+    # ... your shared request logic (build url, merge headers, semaphore, etc)
+    return await self._send(method, url, params, headers, json, timeout)
+
+async def _get(self, **kwargs):
+    return await self._request("GET", **kwargs)
+
+async def _post(self, **kwargs):
+    return await self._request("POST", **kwargs)
+```
+
+Why this shape
+
+* **Selective retries** – `_retry_giveup` filters 4xx you know won’t recover.
+* **Single policy** – the decorator sits on `_request`, so every `_get`/`_post` call inherits it.
+* **Jittered backoff** – `full_jitter` spreads retries across time to avoid thundering herds.
+
+<Notice type="warning" className="mt-6">
+  Don’t retry 400/401/403/404/409. Validate early (UUIDs, payload shape), and surface clear errors to callers.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  If you need different policies (e.g., more aggressive on metadata reads than reload posts), add thin wrappers like `_request_read` / `_request_write` with different decorators, but keep the core logic in one place.
+</Notice>
+
+## 7. Optional: Notifications
+
+You often want a heads‑up when a reload fails or times out. Make it **pluggable**: accept an async callback and call it just before raising. That keeps transport details (Slack, email, PagerDuty) outside the client.
+
+```python
+# A simple callback signature
+async def notify(ctx):
+    # ctx might include app_id, reload_id, status, error, elapsed, owner, etc.
+    print("Notify:", ctx)
+
+# Call from a failure path (e.g., inside wait_for_reload)
+async def wait_for_reload(self, reload_id, poll_every_s=5, max_time_s=None, on_error=None):
+    # ... bounded polling setup
+
+    for i in range(max_iters):
+        details = await self._get(endpoint=f"reloads/{reload_id}")
+        status = (details.get("status") or "").upper()
+
+        if status in {"SUCCEEDED", "COMPLETED", "SUCCESS"}:
+            return details
+        if status in {"FAILED", "ERROR", "ABORTED"}:
+            if on_error:
+                await on_error({
+                    "where": "wait_for_reload",
+                    "reload_id": reload_id,
+                    "status": status,
+                    "details": details,
+                })
+            raise RuntimeError(f"Reload {reload_id} failed: {details}")
+
+        # ... sleep and continue until deadline
+
+    # Timed out
+    if on_error:
+        await on_error({
+            "where": "wait_for_reload",
+            "reload_id": reload_id,
+            "status": "TIMEOUT",
+            "details": {"poll_every_s": poll_every_s, "max_time_s": max_time_s},
+        })
+    raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
+```
+
+Why callbacks, not logging hooks
+
+* **Separation of concerns** – the client reports *what happened*; your notifier decides *how* to alert.
+* **Testability** – pass a fake `on_error` in unit tests to assert payloads without hitting external services.
+* **Flexibility** – swap Slack for anything else without touching the client.
+
+<Notice type="success">
+  Keep the callback optional and fire it only on terminal failures (FAILED/ERROR/ABORTED/TIMEOUT). Success paths should remain silent.
+</Notice>
+
+## 8. Trade-offs and takeaways
+
+* **Async = faster** when you need many concurrent calls.
+* **Complexity = higher**, but it’s isolated inside the client (semaphore, session, bounded polling) so call‑sites stay simple.
+* Start sync, move to async when:
+
+  * You batch reloads.
+  * You need more responsive pipelines.
+  * You hit throughput limits.
+
+That’s it: you now have both a **sync** and **async** client for Qlik Cloud. Choose the right one for your workload, and extend from here (automation, orchestration, or error monitoring).
