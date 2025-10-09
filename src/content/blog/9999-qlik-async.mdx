@@ -129,23 +129,30 @@ asyncio.run(main())
 
 ## 2. Rebuilding the client
 
-We’ll mirror the synchronous client, but with async idioms.
+We’ll mirror the sync client, but use async building blocks from Section 1: `async def`, `await`, `async with`, and a semaphore for back‑pressure.
 
 ```python
 import aiohttp
 import asyncio
 import backoff
-import uuid
 
 class QlikAsyncClient:
     def __init__(self, timeout_s=180, page_size=100, max_calls=900, debug=False, concurrency=10):
+        # Defaults
         self.timeout_s = timeout_s
         self.page_size = page_size
         self.max_calls = max_calls
         self.debug = debug
-        self._session = None
-        self._sem = asyncio.Semaphore(concurrency)
-        self.headers = {"Authorization": "Bearer ...", "Content-Type": "application/json"}
+
+        # Runtime internals
+        self._session = None  # created lazily
+        self._sem = asyncio.Semaphore(concurrency)  # cap concurrent requests
+
+        # Auth headers (fetch from your secret store in real code)
+        self.headers = {
+            "Authorization": "Bearer <YOUR_API_KEY>",
+            "Content-Type": "application/json",
+        }
 
     async def __aenter__(self):
         await self._ensure_session()
@@ -156,13 +163,20 @@ class QlikAsyncClient:
             await self._session.close()
 
     async def _ensure_session(self):
-        if not self._session or self._session.closed:
+        if self._session is None or self._session.closed:
             timeout = aiohttp.ClientTimeout(total=self.timeout_s)
-            self._session = aiohttp.ClientSession(headers=self.headers, timeout=timeout)
+            # Default headers live on the session; per‑request headers can still override later
+            self._session = aiohttp.ClientSession(timeout=timeout, headers=self.headers)
 ```
 
+**What’s going on**
+
+* `__aenter__/__aexit__` make the client usable with `async with`, ensuring the HTTP session is opened once and properly closed.
+* `_ensure_session` lazily creates an `aiohttp.ClientSession` with a global timeout and default headers.
+* `asyncio.Semaphore` limits in‑flight requests, preventing you from overwhelming Qlik (or your network) when we add concurrency later.
+
 <Notice type="success" className="mt-6">
-  Use a semaphore (`asyncio.Semaphore`) to prevent accidental overload (e.g. sending 500 reloads at once).
+  The semaphore is your safety valve. Start conservative (e.g., 5–10). You can raise it after measuring Qlik tenant limits and your runner’s bandwidth.
 </Notice>
 
 ## 3. Async GET helper
