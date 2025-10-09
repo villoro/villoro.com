@@ -16,22 +16,116 @@ In the previous post we built a **synchronous client** for Qlik Cloud. It was si
 
 With Python’s `asyncio` and `aiohttp`, you can scale to **dozens or hundreds of API calls concurrently**, without threads or processes. This post shows how to rebuild the client with async foundations, keeping the same principles: copy/paste‑ready code, tight surface area, and clear seams for production use.
 
-## 1. Async foundations
+## 1. Async foundations (with tiny, practical examples)
 
 Why bother?
 
 * **`requests`** is blocking. Each call waits for I/O.
 * **`aiohttp`** is async. Calls yield control while waiting, letting others run.
 
-Key concepts:
+Goal: show what async *is* with minimal, standalone snippets. No Qlik yet.
 
-* `async def` defines a coroutine.
-* `await` yields back to the event loop until the operation completes.
-* `async with` manages async context (e.g. HTTP sessions).
+### 1.1 Blocking vs async waiting
 
-<Notice type="info">
-  Don’t mix `asyncio.run()` inside existing event loops (like Prefect or Jupyter). Only use it at the entrypoint of your script.
+**Blocking**: the loop sleeps *serially*.
+
+```python
+import time
+
+for i in range(3):
+    time.sleep(1)
+    print(f"done {i}")
+# ~3s total
+```
+
+**Async**: tasks sleep *concurrently* using a single thread.
+
+```python
+import asyncio
+
+async def work(i):
+    await asyncio.sleep(1)
+    print(f"done {i}")
+
+async def main():
+    tasks = [work(i) for i in range(3)]
+    await asyncio.gather(*tasks)
+
+asyncio.run(main())
+# ~1s total
+```
+
+<Notice type="info" className="mt-6">
+  **Idea:** `await` yields control while the task is waiting (I/O, sleep), so other tasks can run.
 </Notice>
+
+### 1.2 Async context managers
+
+Use `async with` to manage resources (e.g., network sessions, DB connections):
+
+```python
+import asyncio
+
+class Dummy:
+    async def __aenter__(self):
+        print("open")
+        return self
+    async def __aexit__(self, *args):
+        print("close")
+
+async def main():
+    async with Dummy() as d:
+        await asyncio.sleep(0.1)
+
+asyncio.run(main())
+```
+
+### 1.3 Bounded concurrency with a semaphore
+
+Limit how many tasks run at once to avoid overwhelming services.
+
+```python
+import asyncio
+
+sem = asyncio.Semaphore(2)  # at most 2 concurrent tasks
+
+async def job(i):
+    async with sem:
+        await asyncio.sleep(0.3)
+        print(f"job {i} done")
+
+async def main():
+    await asyncio.gather(*[job(i) for i in range(5)])
+
+asyncio.run(main())
+```
+
+### 1.4 Mapping work over inputs (no `while` loops)
+
+Create tasks from inputs and collect results.
+
+```python
+import asyncio
+
+async def fetch(x):
+    await asyncio.sleep(0.1)
+    return x * 2
+
+async def main():
+    tasks = [fetch(x) for x in [1, 2, 3, 4]]
+    results = await asyncio.gather(*tasks)
+    print(results)  # [2, 4, 6, 8]
+
+asyncio.run(main())
+```
+
+---
+
+**Rules of thumb:**
+
+1. Use `asyncio.run(...)` only at the entrypoint.
+2. Prefer `asyncio.gather` over manual scheduling when you can.
+3. Add a semaphore when calling external services to cap concurrency.
 
 ## 2. Rebuilding the client
 
@@ -67,7 +161,7 @@ class QlikAsyncClient:
             self._session = aiohttp.ClientSession(headers=self.headers, timeout=timeout)
 ```
 
-<Notice type="success">
+<Notice type="success" className="mt-6">
   Use a semaphore (`asyncio.Semaphore`) to prevent accidental overload (e.g. sending 500 reloads at once).
 </Notice>
 
@@ -116,7 +210,7 @@ Same role as sync `_get`, but async:
         return results
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   Most Qlik endpoints paginate with `links.next.href`. Follow until `None`.
 </Notice>
 
