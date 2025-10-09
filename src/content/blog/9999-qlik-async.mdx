@@ -10,13 +10,13 @@ tags: [Python, APIs, AsyncIO, Data Engineering]
 draft: false
 ---
 
-### 0. Intro
+## 0. Intro
 
 In the previous post we built a **synchronous client** for Qlik Cloud. It was simple, debuggable, and covered the basics: auth, pagination, reloads, and retries. But when you start to automate **multiple reloads** or poll **many apps at once**, sync becomes a bottleneck.
 
 With Python’s `asyncio` and `aiohttp`, you can scale to **dozens or hundreds of API calls concurrently**, without threads or processes. This post shows how to rebuild the client with async foundations, keeping the same principles: copy/paste‑ready code, tight surface area, and clear seams for production use.
 
-### 1. Async foundations
+## 1. Async foundations
 
 Why bother?
 
@@ -33,7 +33,7 @@ Key concepts:
   Don’t mix `asyncio.run()` inside existing event loops (like Prefect or Jupyter). Only use it at the entrypoint of your script.
 </Notice>
 
-### 2. Rebuilding the client
+## 2. Rebuilding the client
 
 We’ll mirror the synchronous client, but with async idioms.
 
@@ -71,7 +71,7 @@ class QlikAsyncClient:
   Use a semaphore (`asyncio.Semaphore`) to prevent accidental overload (e.g. sending 500 reloads at once).
 </Notice>
 
-### 3. Async GET helper
+## 3. Async GET helper
 
 Same role as sync `_get`, but async:
 
@@ -94,7 +94,7 @@ Same role as sync `_get`, but async:
                 return await resp.json()
 ```
 
-### 4. Pagination, async style
+## 4. Pagination, async style
 
 ```python
     async def query_all(self, endpoint, params=None):
@@ -120,7 +120,7 @@ Same role as sync `_get`, but async:
   Most Qlik endpoints paginate with `links.next.href`. Follow until `None`.
 </Notice>
 
-### 5. Triggering & polling reloads concurrently
+## 5. Triggering & polling reloads concurrently
 
 Fire reloads, then poll in parallel:
 
@@ -180,7 +180,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### 6. Error handling & retries
+## 6. Error handling & retries
 
 * `backoff` works with async.
 * Retry transient network errors, not business logic errors.
@@ -190,7 +190,7 @@ asyncio.run(main())
   Don’t retry 400s or 403s—they won’t succeed no matter how many times you retry.
 </Notice>
 
-### 7. Optional: Notifications
+## 7. Optional: Notifications
 
 Inject a callback to notify on error:
 
@@ -207,7 +207,7 @@ async def reload_with_notify(client, app_id):
         raise
 ```
 
-### 8. Trade-offs and takeaways
+## 8. Trade-offs and takeaways
 
 * **Async = faster** when you need many concurrent calls.
 * **Complexity = higher**, but isolated inside client.
