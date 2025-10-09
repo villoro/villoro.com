@@ -6,7 +6,7 @@ description: Learn how to scale Qlik Cloud automation with Python’s asyncio an
 date: 2025-10-09
 image: /images/blog/9999-qlik-multiple-magnifying-glasses.jpg
 category: API
-tags: [Python, APIs, AsyncIO, Data Engineering]
+tags: [Python, API, AsyncIO, Data Engineering]
 draft: false
 ---
 
@@ -288,63 +288,85 @@ Why this shape:
 
 ## 5. Triggering & polling reloads concurrently
 
-Fire reloads, then poll in parallel:
+Reloads are fire‑and‑forget: you `POST` to start, then **poll** a status endpoint until success/failure/timeout. Async lets you trigger many reloads at once and poll them in parallel without threads.
 
 ```python
-    async def reload_app(self, app_id):
-        payload = {"appId": str(uuid.UUID(app_id))}
-        async with self._semaphore:
-            async with self._session.post("https://.../api/v1/reloads", json=payload) as resp:
-                resp.raise_for_status()
-                return await resp.json()
-
+import uuid
+import asyncio
 import time
 
 MIN_POLLING_SECONDS = 60
+RELOAD_GOOD_STATUS = {"SUCCEEDED", "COMPLETED", "SUCCESS"}
+RELOAD_BAD_STATUS  = {"FAILED", "ERROR", "ABORTED"}
 
-    async def wait_for_reload(self, reload_id, poll_every_s=5, max_time_s=None):
-        assert max_time_s is not None, "max_time_s is required"
+# inside QlikAsyncClient
+async def reload_app(self, app_id):
+    payload = {"appId": str(uuid.UUID(str(app_id)))}  # validate format
+    async with self._sem:  # backpressure
+        async with self._session.post(f"{BASE_URL}/reloads", json=payload) as resp:
+            if not self.debug:
+                resp.raise_for_status()
+            # Some gateways return 202/204; prefer JSON when present
+            if resp.status in (202, 204):
+                return {}
+            return await resp.json()
 
-        # Floors
-        poll_every_s = max(1, int(poll_every_s))
-        max_time_s = max(MIN_POLLING_SECONDS, int(max_time_s))
+async def wait_for_reload(self, reload_id, poll_every_s=5, max_time_s=None):
+    assert max_time_s is not None, "max_time_s is required"
 
-        start = time.monotonic()
-        # ceil division; guarantee at least one iteration
-        max_iters = max(int((max_time_s + poll_every_s - 1) // poll_every_s), 1)
+    # Floors
+    poll_every_s = max(1, int(poll_every_s))
+    max_time_s = max(MIN_POLLING_SECONDS, int(max_time_s))
 
-        for i in range(max_iters):
-            details = await self._get(endpoint=f"reloads/{reload_id}")
-            status = details.get("status", "").upper()
+    start = time.monotonic()
+    # ceil division; guarantee at least one iteration
+    max_iters = max(int((max_time_s + poll_every_s - 1) // poll_every_s), 1)
 
-            if status in {"SUCCEEDED", "COMPLETED", "SUCCESS"}:
-                return details
-            if status in {"FAILED", "ERROR", "ABORTED"}:
-                raise RuntimeError(f"Reload {reload_id} failed: {details}")
+    for i in range(max_iters):
+        details = await self._get(endpoint=f"reloads/{reload_id}")
+        status = details.get("status", "").upper()
 
-            if time.monotonic() >= start + max_time_s:
-                break
+        if status in RELOAD_GOOD_STATUS:
+            return details
+        if status in RELOAD_BAD_STATUS:
+            raise RuntimeError(f"Reload {reload_id} failed: {details}")
 
-            await asyncio.sleep(poll_every_s)
+        if time.monotonic() >= start + max_time_s:
+            break
 
-        raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
+        await asyncio.sleep(poll_every_s)
+
+    raise TimeoutError(f"Reload {reload_id} did not finish in {max_time_s} seconds")
 ```
 
-Example: trigger many reloads at once
+Example: trigger and poll several reloads at once
 
 ```python
-async def main():
+async def main(app_ids):
     async with QlikAsyncClient() as client:
-        reloads = await asyncio.gather(
-            *[client.reload_app(app_id) for app_id in ["id1", "id2", "id3"]]
+        # Kick off all reloads concurrently
+        reload_responses = await asyncio.gather(
+            *[client.reload_app(aid) for aid in app_ids]
         )
-        statuses = await asyncio.gather(
-            *[client.wait_for_reload(r["id"]) for r in reloads]
-        )
-        print(statuses)
 
-asyncio.run(main())
+        # Extract IDs that actually returned a reload id
+        reload_ids = [r.get("id") for r in reload_responses if r.get("id")]
+
+        # Poll all of them concurrently (bounded by the client's semaphore)
+        return await asyncio.gather(
+            *[client.wait_for_reload(rid, max_time_s=900) for rid in reload_ids]
+        )
+
+# asyncio.run(main(["id1", "id2", "id3"]))
 ```
+
+<Notice type="success" className="mt-6">
+  Launching N reloads and polling them with `asyncio.gather` keeps your job responsive while respecting backpressure via the client's semaphore.
+</Notice>
+
+<Notice type="warning" className="mt-6">
+  Always cap total wait (`max_time_s`) and use a **bounded loop** (no `while True`). If you need jittered polling or cancellation, this method is the single place to enhance.
+</Notice>
 
 ## 6. Error handling & retries
 
