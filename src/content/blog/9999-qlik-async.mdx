@@ -169,7 +169,7 @@ class QlikAsyncClient:
             self._session = aiohttp.ClientSession(timeout=timeout, headers=self.headers)
 ```
 
-**What’s going on**
+**What’s going on:**
 
 * `__aenter__/__aexit__` make the client usable with `async with`, ensuring the HTTP session is opened once and properly closed.
 * `_ensure_session` lazily creates an `aiohttp.ClientSession` with a global timeout and default headers.
@@ -225,7 +225,7 @@ class QlikAsyncClient:
                 return await resp.json()
 ```
 
-**What’s new vs sync**
+**What’s new vs sync:**
 
 * `await` on I/O so other tasks can run while this request is in flight.
 * `async with self._semaphore` caps concurrency globally (cheap backpressure).
@@ -242,28 +242,48 @@ class QlikAsyncClient:
 
 ## 4. Pagination, async style
 
+We follow Qlik’s `links.next.href` cursor until it disappears. No `while` loops: we bound work with a `for` capped by `max_calls`, then break when there’s no next link.
+
 ```python
-    async def query_all(self, endpoint, params=None):
-        url = f"https://.../api/v1/{endpoint}"
-        params = params or {"limit": self.page_size}
+async def query_all(self, endpoint, params=None):
+    # Default page size; copy to avoid mutating caller dict
+    params = dict(params or {})
+    params.setdefault("limit", self.page_size)
 
-        calls = 0
-        results = []
+    url = f"{BASE_URL}/{endpoint}"
+    results = []
 
-        while url:
-            if calls >= self.max_calls:
-                raise RuntimeError("Max API calls exceeded")
+    # Bounded pagination: at most max_calls requests
+    for i in range(1, self.max_calls + 1):
+        page = await self._get(url=url, params=params)
 
-            data = await self._get(url=url, params=params)
-            results.extend(data.get("data", []))
-            url = data.get("links", {}).get("next", {}).get("href")
-            calls += 1
+        data = page.get("data") or []
+        results.extend(data)
 
-        return results
+        next_url = page.get("links", {}).get("next", {}).get("href")
+        if not next_url:
+            break  # no more pages
+
+        url = next_url  # follow server-provided cursor
+    else:
+        # Only runs if the loop didn't break → cursor never ended
+        raise RuntimeError(f"max_calls={self.max_calls} exceeded for endpoint={endpoint!r}")
+
+    return results
 ```
 
-<Notice type="info" className="mt-6">
-  Most Qlik endpoints paginate with `links.next.href`. Follow until `None`.
+Why this shape:
+
+* **Deterministic** – the upper bound (`max_calls`) prevents runaway loops.
+* **Cursor-first** – we trust `links.next.href`, not hand-made offsets.
+* **Side-effect free** – we `setdefault` on a copy of `params`.
+
+<Notice type="info">
+  Most Qlik endpoints paginate with <code>links.next.href</code>. Follow it until it’s <code>None</code>; do not build offsets yourself.
+</Notice>
+
+<Notice type="warning" className="mt-6">
+  If you routinely hit <code>max_calls</code>, log the last page payload and review server-side filters or page size.
 </Notice>
 
 ## 5. Triggering & polling reloads concurrently
