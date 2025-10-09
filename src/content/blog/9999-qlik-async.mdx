@@ -146,7 +146,7 @@ class QlikAsyncClient:
 
         # Runtime internals
         self._session = None  # created lazily
-        self._sem = asyncio.Semaphore(concurrency)  # cap concurrent requests
+        self._semaphore = asyncio.Semaphore(concurrency)  # cap concurrent requests
 
         # Auth headers (fetch from your secret store in real code)
         self.headers = {
@@ -181,26 +181,64 @@ class QlikAsyncClient:
 
 ## 3. Async GET helper
 
-Same role as sync `_get`, but async:
+This mirrors the sync `_get`, but uses `await`, a semaphore, and optional retries. One choke‑point keeps headers, limits, and error handling consistent.
 
 ```python
-    @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=5)
-    async def _get(self, endpoint=None, url=None, params=None):
-        if not (endpoint or url):
-            raise ValueError("Need either endpoint or url")
-        if params and "limit" in params and params["limit"] > self.page_size:
-            raise ValueError("Limit exceeds page_size")
+import aiohttp
+import backoff
 
-        url = url or f"https://.../api/v1/{endpoint}"
+class QlikAsyncClient:
+    # ... (init / __aenter__ / __aexit__ / _ensure_session from Section 2)
 
-        async with self._sem:
-            async with self._session.get(url, params=params) as resp:
+    @backoff.on_exception(
+        backoff.expo,
+        (aiohttp.ClientError,),
+        max_tries=5,
+        jitter=backoff.full_jitter,
+    )
+    async def _get(self, endpoint=None, url=None, params=None, headers=None, timeout=None):
+        params = params or {}
+        headers = {**self.headers, **(headers or {})}
+        timeout = timeout or self.timeout_s
+
+        # Exactly one of endpoint or full URL
+        if (endpoint is None) == (url is None):
+            raise ValueError("Provide exactly one of endpoint or url")
+
+        # Enforce pagination bounds when using endpoint form
+        if url is None:
+            params["limit"] = params.get("limit", self.page_size)
+            if params["limit"] <= 0 or params["limit"] > 100:
+                raise ValueError("limit must be in (0, 100]")
+            url = f"{self.base_url}/{endpoint}"
+
+        # Optional: Qlik quirks—booleans sometimes need to be strings
+        # params = {k: (str(v) if isinstance(v, bool) else v) for k, v in params.items()}
+
+        async with self._semaphore:
+            async with self._session.get(url, params=params, headers=headers, timeout=timeout) as resp:
                 if not self.debug:
                     resp.raise_for_status()
-                if resp.status in (202, 204):
+                # Some endpoints reply 202/204 or empty body; prefer JSON but tolerate empty
+                if resp.status in (202, 204) or resp.content_length == 0:
                     return {}
                 return await resp.json()
 ```
+
+**What’s new vs sync**
+
+* `await` on I/O so other tasks can run while this request is in flight.
+* `async with self._semaphore` caps concurrency globally (cheap backpressure).
+* `backoff` integrates with async—same decorator, different exception type.
+* Still one place to normalize URLs, apply headers, and validate `limit`.
+
+<Notice type="success">
+  Keep `_get` generic and strict: normalize URL, enforce bounds, handle empty bodies. Put endpoint‑specific quirks in small public methods.
+</Notice>
+
+<Notice type="info" className="mt-6">
+  If you hit 400s when sending boolean query params, cast them to strings (`"true"/"false"`). Gateways differ.
+</Notice>
 
 ## 4. Pagination, async style
 
@@ -235,7 +273,7 @@ Fire reloads, then poll in parallel:
 ```python
     async def reload_app(self, app_id):
         payload = {"appId": str(uuid.UUID(app_id))}
-        async with self._sem:
+        async with self._semaphore:
             async with self._session.post("https://.../api/v1/reloads", json=payload) as resp:
                 resp.raise_for_status()
                 return await resp.json()
