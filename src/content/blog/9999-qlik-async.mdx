@@ -3,7 +3,7 @@ slug: async-qlik-api-python
 title: "Async APIs with Python: Scaling Qlik Queries"
 meta_title: "Async APIs with Python: Scaling Qlik Queries"
 description: Learn how to scale Qlik Cloud automation with Python’s asyncio and aiohttp. This post builds an async client for concurrent reloads, pagination, retries, and error handling.
-date: 2025-10-09
+date: 2025-10-07
 image: /images/blog/9999-qlik-multiple-magnifying-glasses.jpg
 category: API
 tags: [Python, API, AsyncIO, Data Engineering]
@@ -466,10 +466,11 @@ Why callbacks, not logging hooks
 ## 8. Trade-offs and takeaways
 
 * **Async = faster** when you need many concurrent calls.
-* **Complexity = higher**, but isolated inside client.
+* **Complexity = higher**, but it’s isolated inside the client (semaphore, session, bounded polling) so call‑sites stay simple.
 * Start sync, move to async when:
+
   * You batch reloads.
-  * You need responsive pipelines.
+  * You need more responsive pipelines.
   * You hit throughput limits.
 
 That’s it: you now have both a **sync** and **async** client for Qlik Cloud. Choose the right one for your workload, and extend from here (automation, orchestration, or error monitoring).
