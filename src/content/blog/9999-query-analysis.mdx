@@ -1,0 +1,63 @@
+---
+slug: static-query-anlysis-sqlglot
+title: xx
+meta_title: xx
+description: xx
+date: 2025-10-14
+image: /images/blog/9999-glass-bridge.jpg
+category: DE
+tags: []
+draft: true
+---
+
+## Outline: Extracting Query Insights with Sqlglot
+
+### 1. Problem
+
+* Context: Teams often have thousands of historical Athena queries but lack structured insights on what’s being queried and how.
+* Goal: Build a static analysis pipeline to understand query structure, complexity, and potential inefficiencies.
+* Motivation: Improve performance, define best practices, and reduce cost (e.g., by correlating joins, unions, and SELECT * with GB scanned).
+
+### 2. Extracting Query History (optional section)
+
+* Explain how to retrieve Athena query logs (via `GetQueryExecution` or internal history tables).
+* Mention what data you capture: query text, execution time, data scanned, etc.
+* If scope feels too broad, skip this section and focus solely on static analysis.
+
+### 3. Sqlglot
+
+* Overview of sqlglot as a fast, dialect-aware SQL parser and transpiler.
+* Explain why it’s suited for this task: AST-level analysis, lightweight, supports Athena syntax.
+* Mention adoption and reliability (used by dbt, DuckDB, etc.).
+
+### 4. SqlAnalyzer
+
+* Present the class as the core of your analysis pipeline.
+* Subsections for each group of methods:
+
+  * **Table lineage:** extracting all referenced, inserted, and created tables.
+  * **Join & union metrics:** count and classify joins/unions.
+  * **Structural complexity:** count CTEs, subqueries, window functions, AST depth.
+  * **Predicate & projection metrics:** number of columns, OR chains, LIKE wildcards, functions in predicates.
+  * **Best-practice flags:** SELECT \*, ORDER BY without LIMIT, etc.
+  * **Command classification:** detect INSERT, CREATE, UNLOAD, DROP.
+* Explain how these metrics map to potential performance or maintainability issues.
+
+### 5. Pipeline for Extracting Data
+
+* Describe how queries are processed in batch (Prefect or ECS task).
+* Mention parallelization strategy if applicable.
+* Show how results are stored in a table (Bronze layer) and then transformed in dbt (Staging layer).
+* Summarize how each query becomes an `AnalysisResult` record.
+
+### 6. Next Steps
+
+* Analyze trends: e.g., most common join types, frequency of SELECT \*, or AST depth distribution.
+* Use the insights to establish internal SQL style and efficiency guidelines.
+* Potential extensions: integrate cost metrics, visualize in Superset, or feed into a query quality dashboard.
+
+### 7. (Optional) Learnings and Challenges
+
+* Lessons learned from parsing thousands of queries.
+* How to handle parsing errors, malformed queries, or recursive ASTs.
+* Future improvements: caching, multiprocessing, or using sqlglot’s Rust tokenizer.
