@@ -477,10 +477,144 @@ class SqlAnalyzer:
 
 ## 6. Pipeline for Extracting Data
 
-* Describe how queries are processed in batch (Prefect or ECS task).
-* Mention parallelization strategy if applicable.
-* Show how results are stored in a table (Bronze layer) and then transformed in dbt (Staging layer).
-* Summarize how each query becomes an `AnalysisResult` record.
+This section shows how the analyzer runs in batch (Prefect/ECS) and how results are materialized to the **Bronze** layer. We focus on how each query becomes an `AnalysisResult` record.
+
+### 6.1 Result schema (Pydantic) and `analyze`
+
+We attach a `query_id` to every result so downstream systems can trace metrics back to the original query. Failures are represented with `is_success=False`.
+
+```python
+from typing import Dict, List, Optional
+from pydantic import BaseModel
+
+class AnalysisResult(BaseModel):
+    query_id: Optional[str] = None
+    is_success: bool = True
+
+class SuccessfulAnalysisResult(AnalysisResult):
+    tables: List[str]
+    joins_by_kind: Dict[str, int]
+    commands_by_kind: Dict[str, int]
+    insert_target: Optional[str] = None
+    create_target: Optional[str] = None
+
+    count_joins_total: int
+    count_unions_total: int
+    count_union_all: int
+    count_union_distinct: int
+    count_commands_total: int
+    count_ctes_defined: int
+    count_subqueries: int
+    count_exists_subqueries: int
+    count_cross_joins: int
+    count_distinct_calls: int
+    count_group_by_cols: int
+    count_order_by_cols: int
+    count_window_functions: int
+    count_projected_columns: int
+    count_referenced_columns_total: int
+    count_referenced_columns_distinct: int
+    count_or_chain_max: int
+    count_in_list_max: int
+    count_like_leading_wildcards: int
+    count_max_ast_depth: int
+
+    has_select_star: bool
+    has_select_distinct: bool
+    has_order_by_without_limit: bool
+```
+
+The `SqlAnalyzer.analyze` method runs all `get_*` metrics and produces this schema in one step:
+
+```python
+class SqlAnalyzer:
+    def analyze(self, query_id=None):
+        joins_total, joins_by_kind = self.get_joins()
+        unions_total, union_all, union_distinct = self.get_unions()
+        commands_total, commands_by_kind = self.get_commands()
+        rc_total, rc_distinct = self.get_columns_referenced_counts()
+
+        return SuccessfulAnalysisResult(
+            query_id=query_id,
+            tables=self.get_tables(),
+            joins_by_kind=joins_by_kind,
+            commands_by_kind=commands_by_kind,
+            insert_target=self.get_insert_target(),
+            create_target=self.get_create_target(),
+            count_joins_total=joins_total,
+            count_unions_total=unions_total,
+            count_union_all=union_all,
+            count_union_distinct=union_distinct,
+            count_commands_total=commands_total,
+            count_ctes_defined=self.get_count_ctes_defined(),
+            count_subqueries=self.get_count_subqueries(),
+            count_exists_subqueries=self.get_count_exists_subqueries(),
+            count_cross_joins=self.get_count_cross_joins(),
+            count_distinct_calls=self.get_count_distinct_calls(),
+            count_group_by_cols=self.get_count_group_by_cols(),
+            count_order_by_cols=self.get_count_order_by_cols(),
+            count_window_functions=self.get_count_window_functions(),
+            count_projected_columns=self.get_count_projected_columns(),
+            count_referenced_columns_total=rc_total,
+            count_referenced_columns_distinct=rc_distinct,
+            count_or_chain_max=self.get_count_or_chain_max(),
+            count_in_list_max=self.get_count_in_list_max(),
+            count_like_leading_wildcards=self.get_count_like_leading_wildcards(),
+            count_max_ast_depth=self.get_count_max_ast_depth(),
+            has_select_star=self.get_has_select_star(),
+            has_select_distinct=self.get_has_select_distinct(),
+            has_order_by_without_limit=self.get_has_order_by_without_limit(),
+        )
+```
+
+### 6.2 Batch extraction task (Prefect/ECS)
+
+This task queries recent Athena statements, runs the analyzer for each, and writes the results to an Iceberg-backed Bronze table.
+
+<Notice type="info">
+  We simplify the logic here — how the queries are fetched from Athena is **out of scope**.
+</Notice>
+
+```python
+import pandas as pd
+from prefect import task
+from prefect import get_run_logger
+from sqlglot.errors import ParseError, TokenError
+
+from xxx.metadata.query_parser import AnalysisResult, SqlAnalyzer
+
+def get_queries_to_process():
+    # Placeholder: logic to retrieve the queries is out of scope
+    # Typically this reads from a table or API with query_id + raw_query
+    return {"query_id_1": "SELECT * FROM my_table", "query_id_2": "..."}
+
+@task
+def extract_batch():
+    logger = get_run_logger()
+    queries = get_queries_to_process()
+
+    failures = 0
+    data = []
+    for i, (query_id, query) in enumerate(queries.items(), start=1):
+        try:
+            result = SqlAnalyzer(query).analyze(query_id=query_id)
+        except (ParseError, TokenError):
+            logger.warning(f"Unable to process {query_id=} ({query=})")
+            result = AnalysisResult(query_id=query_id, is_success=False)
+            failures += 1
+
+        data.append(result.model_dump())
+
+    df_out = pd.DataFrame(data)
+    # Placeholder: write results to Iceberg or S3
+    # athena.write_iceberg(df_out, DATABASE, TABLE, as_strings=True)
+```
+
+<Notice type="warning" className="mt-6">
+  The parser is expected to fail on some queries (e.g., malformed SQL or proprietary syntax). These failures are captured with `AnalysisResult(is_success=False)` while preserving `query_id`, ensuring traceability without halting the batch.
+</Notice>
+
+Each batch produces a DataFrame of analysis results, where each row represents one query and all computed metrics from `SqlAnalyzer.analyze()`.
 
 ## 7. Next Steps
 
