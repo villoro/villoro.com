@@ -52,9 +52,23 @@ The next sections detail the tools, parser, and pipeline that make this process 
 
 ## 4. Sqlglot
 
-* Overview of sqlglot as a fast, dialect-aware SQL parser and transpiler.
-* Explain why it’s suited for this task: AST-level analysis, lightweight, supports Athena syntax.
-* Mention adoption and reliability (used by dbt, DuckDB, etc.).
+<FancyLink linkText="sqlglot" url="https://github.com/tobymao/sqlglot" dark="true"/> is an open-source SQL parser and transpiler that converts SQL text into an **Abstract Syntax Tree (AST)**. It’s fast, stable, and supports a wide range of dialects — including Athena, BigQuery, Presto, and Snowflake — making it a strong foundation for static query analysis.
+
+Under the hood, `sqlglot` leverages **Rust** for tokenization and parsing performance, allowing it to efficiently handle thousands of queries with minimal overhead. This makes it suitable for large-scale, production-grade workflows.
+
+Unlike simple regex-based approaches, `sqlglot` fully understands SQL grammar. This allows you to:
+
+* Parse complex queries with nested CTEs, subqueries, and window functions.
+* Traverse and inspect every part of the query structure (tables, joins, predicates, etc.).
+* Reuse the same parsing logic across different engines by switching dialects.
+
+It’s used in popular tools like **dbt**, **DuckDB**, and **DataHub**, which speaks to its reliability and performance in production-grade pipelines.
+
+In this project, `sqlglot` serves as the backbone for the **SqlAnalyzer** class — converting raw query text into a structured AST that can be iterated over to count joins, detect anti-patterns, and extract lineage information.
+
+<Notice type="warning">
+  While `sqlglot` can handle a large variety of dialects, some engine-specific extensions or macros (e.g., Athena comments or dbt Jinja syntax) may require pre-processing before parsing. Always sanitize queries before feeding them into the parser.
+</Notice>
 
 ## 5. SqlAnalyzer
 
