@@ -44,11 +44,75 @@ The next sections detail the tools, parser, and pipeline that make this process 
   This approach focuses solely on **static analysis** — it inspects query text, not execution results. Runtime metrics like execution time, data scanned, or bytes processed should be retrieved directly from your query engine’s system tables or APIs to complement this analysis.
 </Notice>
 
-## 3. Extracting Query History (optional section)
+## 3. Extracting Query History (optional)
 
-* Explain how to retrieve Athena query logs (via `GetQueryExecution` or internal history tables).
-* Mention what data you capture: query text, execution time, data scanned, etc.
-* If scope feels too broad, skip this section and focus solely on static analysis.
+<Notice type="info">
+  This section is optional and **Athena-specific**. The post focuses on static parsing, but if you need sample input data, here’s a minimal way to fetch Athena query history. Other engines have different APIs/system tables; adjust the listing & detail calls accordingly.
+</Notice>
+
+**Other engines at a glance**
+
+* **BigQuery**: Jobs API (`jobs.list`, `jobs.get` → `statistics.query.totalBytesProcessed`, etc.)
+* **Snowflake**: `QUERY_HISTORY` / `QUERY_HISTORY_BY_*` views
+* **Databricks**: system tables (e.g., `system.query`) or REST APIs
+* **Presto/Trino**: coordinator query REST API or server logs
+
+Minimal, list-first approach using a **generator** for pagination and a compact batch fetch. This yields pages of IDs so you stay memory-light and can early-stop cleanly.
+
+```python
+import boto3
+
+athena = boto3.client("athena")
+
+def get_query_execution_ids(max_iterations=1000):
+    """Yield pages (lists) of QueryExecutionIds."""
+    resp = athena.list_query_executions()
+    yield resp.get("QueryExecutionIds", [])
+
+    next_token = resp.get("NextToken")
+    for _ in range(max_iterations):
+        if not next_token:
+            break
+        resp = athena.list_query_executions(NextToken=next_token)
+        yield resp.get("QueryExecutionIds", [])
+        next_token = resp.get("NextToken")
+
+
+def get_query_executions(ids, batch_size=50):
+    """Return a list[dict] with only the fields we need."""
+    out = []
+    for i in range(0, len(ids), batch_size):
+        batch = ids[i:i + batch_size]
+        resp = athena.batch_get_query_execution(QueryExecutionIds=batch)
+        for qe in resp.get("QueryExecutions", []):
+            status = qe.get("Status", {})
+            stats = qe.get("Statistics", {})
+            if not status.get("CompletionDateTime"):
+                continue  # keep only completed
+            out.append({
+                "query_id": qe.get("QueryExecutionId"),
+                "raw_query": qe.get("Query"),
+                "state": status.get("State"),
+                "started_at": status.get("SubmissionDateTime"),
+                "finished_at": status.get("CompletionDateTime"),
+                "engine_ms": stats.get("EngineExecutionTimeInMillis"),
+                "bytes_scanned": stats.get("DataScannedInBytes"),
+            })
+    return out
+
+# Usage: flatten IDs from the generator, then fetch details in batches
+ids = []
+for page in get_query_execution_ids(max_iterations=500):
+    if not page:
+        continue
+    ids.extend(page)
+
+executions = get_query_executions(ids)
+```
+
+<Notice type="warning" className="mt-6">
+  Keep `max_iterations` conservative to control costs and latency. Add retries/backoff and time filtering (`started_at`) in production.
+</Notice>
 
 ## 4. Sqlglot
 
