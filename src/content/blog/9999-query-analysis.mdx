@@ -1,36 +1,62 @@
 ---
 slug: static-query-anlysis-sqlglot
-title: xx
+title: Static Query Analysis with Sqlglot
 meta_title: xx
 description: xx
 date: 2025-10-14
 image: /images/blog/9999-glass-bridge.jpg
 category: DE
 tags: []
-draft: true
+draft: false
 ---
 
-## Outline: Extracting Query Insights with Sqlglot
+## 1. Overview
 
-### 1. Problem
+This post explains how to extract and structure SQL query insights from Athena using **sqlglot** and a custom Python parser. The focus is on building a foundation for later performance analysis rather than interpreting the results yet.
 
-* Context: Teams often have thousands of historical Athena queries but lack structured insights on what’s being queried and how.
-* Goal: Build a static analysis pipeline to understand query structure, complexity, and potential inefficiencies.
-* Motivation: Improve performance, define best practices, and reduce cost (e.g., by correlating joins, unions, and SELECT * with GB scanned).
+The goal is to transform raw query history into a rich metadata dataset containing structural features, such as the number of joins, unions, CTEs, and flags for patterns like `SELECT *` or `ORDER BY` without `LIMIT`. These metrics help assess query complexity and prepare for identifying inefficient or costly query patterns across your organization.
 
-### 2. Extracting Query History (optional section)
+This guide is especially relevant if you want to:
+
+* Automatically parse large query logs (e.g., from Athena, BigQuery, or Snowflake).
+* Build an internal SQL insights dataset for cost/performance optimization.
+* Create a reproducible static analysis pipeline for SQL queries.
+
+## 2. Problem
+
+Data teams often accumulate thousands of historical SQL queries across BI tools, pipelines, and ad-hoc analysis. However, this data remains underutilized — stored as text without structure or insight.
+
+Common challenges include:
+
+* **Lack of visibility:** No systematic way to see which tables are used most, which queries are complex, or which teams produce heavy workloads.
+* **Rising costs:** In systems like Athena, cost scales with data scanned. Inefficient queries (e.g., full-table scans, large joins, `SELECT *`) can silently drive up bills.
+* **No feedback loop:** Engineers rarely get structured feedback about their query design.
+
+The objective here is to **extract meaningful features from query text**. By parsing SQL with sqlglot, you can transform unstructured SQL into measurable metadata that supports:
+
+* Identifying slow or expensive patterns.
+* Designing best practices around query efficiency.
+* Benchmarking how query design evolves over time.
+
+The next sections detail the tools, parser, and pipeline that make this process scalable and maintainable.
+
+<Notice type="warning">
+  This approach focuses solely on **static analysis** — it inspects query text, not execution results. Runtime metrics like execution time, data scanned, or bytes processed should be retrieved directly from your query engine’s system tables or APIs to complement this analysis.
+</Notice>
+
+## 3. Extracting Query History (optional section)
 
 * Explain how to retrieve Athena query logs (via `GetQueryExecution` or internal history tables).
 * Mention what data you capture: query text, execution time, data scanned, etc.
 * If scope feels too broad, skip this section and focus solely on static analysis.
 
-### 3. Sqlglot
+## 4. Sqlglot
 
 * Overview of sqlglot as a fast, dialect-aware SQL parser and transpiler.
 * Explain why it’s suited for this task: AST-level analysis, lightweight, supports Athena syntax.
 * Mention adoption and reliability (used by dbt, DuckDB, etc.).
 
-### 4. SqlAnalyzer
+## 5. SqlAnalyzer
 
 * Present the class as the core of your analysis pipeline.
 * Subsections for each group of methods:
@@ -43,20 +69,20 @@ draft: true
   * **Command classification:** detect INSERT, CREATE, UNLOAD, DROP.
 * Explain how these metrics map to potential performance or maintainability issues.
 
-### 5. Pipeline for Extracting Data
+## 6. Pipeline for Extracting Data
 
 * Describe how queries are processed in batch (Prefect or ECS task).
 * Mention parallelization strategy if applicable.
 * Show how results are stored in a table (Bronze layer) and then transformed in dbt (Staging layer).
 * Summarize how each query becomes an `AnalysisResult` record.
 
-### 6. Next Steps
+## 7. Next Steps
 
 * Analyze trends: e.g., most common join types, frequency of SELECT \*, or AST depth distribution.
 * Use the insights to establish internal SQL style and efficiency guidelines.
 * Potential extensions: integrate cost metrics, visualize in Superset, or feed into a query quality dashboard.
 
-### 7. (Optional) Learnings and Challenges
+## 8. (Optional) Learnings and Challenges
 
 * Lessons learned from parsing thousands of queries.
 * How to handle parsing errors, malformed queries, or recursive ASTs.
