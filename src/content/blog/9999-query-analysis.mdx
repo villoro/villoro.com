@@ -166,18 +166,299 @@ print(f"Tables used in the query: {tables}")
 * `parse_one(..., read="athena")` builds an AST you can traverse.
 * `find_all(exp.Table)` retrieves table nodes; you can assemble `db.table` easily.
 
-## 5. SqlAnalyzer
+## 5. SqlAnalyzer (methods)
 
-* Present the class as the core of your analysis pipeline.
-* Subsections for each group of methods:
+This section focuses **only on the methods** used to extract static insights from SQL text.
+We’ll introduce the constructor and then group the public `get_*` methods by topic. Internal helpers (`_…`) are shown inline the first time they’re referenced (inside accordions).
 
-  * **Table lineage:** extracting all referenced, inserted, and created tables.
-  * **Join & union metrics:** count and classify joins/unions.
-  * **Structural complexity:** count CTEs, subqueries, window functions, AST depth.
-  * **Predicate & projection metrics:** number of columns, OR chains, LIKE wildcards, functions in predicates.
-  * **Best-practice flags:** SELECT \*, ORDER BY without LIMIT, etc.
-  * **Command classification:** detect INSERT, CREATE, UNLOAD, DROP.
-* Explain how these metrics map to potential performance or maintainability issues.
+### 5.0 Constructor
+
+```python
+class SqlAnalyzer:
+    def __init__(self, query, engine="athena"):
+        self.engine = engine
+        self.tree = parse_one(query.strip(), read=self.engine)
+```
+
+### 5.1 Table lineage
+
+Identify **read** sources and **write** targets.
+
+```python
+    def get_cte_names(self):
+        names = set()
+        for w in self.tree.find_all(exp.With):
+            for cte in w.find_all(exp.CTE):
+                name = None
+                if cte.alias:
+                    name = cte.alias
+                elif getattr(cte, "this", None) and getattr(cte.this, "alias", None):
+                    name = cte.this.alias
+                if isinstance(name, str):
+                    names.add(name.lower())
+        return names
+
+    def get_tables(self, include_cte=False, include_insert_target=False, include_create_target=False):
+        cte_names = self.get_cte_names()
+        out = set()
+        for table in self.tree.find_all(exp.Table):
+            if not include_insert_target and self._is_insert_target(table):
+                continue
+            if not include_create_target and self._is_create_target(table):
+                continue
+            if not include_cte and table.name and table.name.lower() in cte_names:
+                continue
+            fq = self._fq_from_tablelike(table)
+            if fq:
+                out.add(fq)
+        return sorted(out)
+
+    def get_insert_target(self):
+        for ins in self.tree.find_all(exp.Insert):
+            return self._fq_from_tablelike(ins.this)
+        return None
+
+    def get_create_target(self):
+        for cr in self.tree.find_all(exp.Create):
+            return self._fq_from_tablelike(cr.this)
+        return None
+```
+
+<Accordion client:load title="Internal helpers used above">
+
+```python
+    def _is_create_target(self, table):
+        node = table
+        while node is not None:
+            parent = node.parent
+            if isinstance(parent, exp.Create):
+                target = parent.this
+                if node is target:
+                    return True
+                if isinstance(target, exp.Schema):
+                    for x in target.find_all(exp.Table):
+                        if node is x:
+                            return True
+            node = parent
+        return False
+
+    def _is_insert_target(self, table):
+        node = table
+        while node is not None:
+            parent = node.parent
+            if isinstance(parent, exp.Insert):
+                target = parent.this
+                if node is target:
+                    return True
+                if isinstance(target, exp.Schema):
+                    for x in target.find_all(exp.Table):
+                        if node is x:
+                            return True
+            node = parent
+        return False
+
+    def _fq_from_tablelike(self, node):
+        if isinstance(node, exp.Table):
+            fq = f"{node.db}.{node.name}".replace('"', "")
+            return fq.lower() if fq else None
+        if isinstance(node, exp.Schema):
+            for t in node.find_all(exp.Table):
+                return self._fq_from_tablelike(t)
+        return None
+```
+
+</Accordion>
+
+### 5.2 Join & union metrics
+
+```python
+    def get_joins(self, by_kind=True):
+        total = 0
+        kinds = {}
+        for j in self.tree.find_all(exp.Join):
+            total += 1
+            kind = (j.args.get("kind") or "INNER").upper()
+            kinds[kind] = kinds.get(kind, 0) + 1
+        return total, (kinds if by_kind else {})
+
+    def get_unions(self):
+        total = 0
+        union_all = 0
+        for u in self.tree.find_all(exp.Union):
+            total += 1
+            is_distinct = u.args.get("distinct", True)
+            if not is_distinct:
+                union_all += 1
+        return total, union_all, total - union_all
+```
+
+### 5.3 Structural complexity
+
+```python
+    def get_count_ctes_defined(self):
+        return len(self.get_cte_names())
+
+    def get_count_subqueries(self):
+        return sum(1 for _ in self.tree.find_all(exp.Subquery))
+
+    def get_count_exists_subqueries(self):
+        return sum(1 for _ in self.tree.find_all(exp.Exists))
+
+    def get_count_window_functions(self):
+        return sum(1 for _ in self.tree.find_all(exp.Window))
+
+    def get_count_max_ast_depth(self):
+        maxd = 0
+        stack = [(self.tree, 1)]
+        seen = set()
+        while stack:
+            node, depth = stack.pop()
+            nid = id(node)
+            if nid in seen:
+                continue
+            seen.add(nid)
+            if depth > maxd:
+                maxd = depth
+            for ch in node.iter_expressions():
+                if ch is not None:
+                    stack.append((ch, depth + 1))
+        return maxd
+```
+
+### 5.4 Predicate & projection metrics
+
+```python
+    def get_columns_referenced_counts(self):
+        total = 0
+        distinct = set()
+        for c in self.tree.find_all(exp.Column):
+            total += 1
+            t = getattr(c, "table", None)
+            n = getattr(c, "name", None)
+            if t and n:
+                distinct.add(f"{t}.{n}".lower())
+            elif n:
+                distinct.add(str(n).lower())
+            else:
+                distinct.add(str(c).lower())
+        return total, len(distinct)
+
+    def get_count_projected_columns(self):
+        cnt = 0
+        for s in self.tree.find_all(exp.Select):
+            exprs = s.expressions or []
+            cnt += len(exprs)
+        return cnt
+
+    def get_count_or_chain_max(self):
+        mx = 0
+        for p in self._predicates():
+            for node in p.find_all(exp.Or):
+                mx = max(mx, self._flatten_or_terms(node))
+        return mx
+
+    def get_count_in_list_max(self):
+        mx = 0
+        for n in self.tree.find_all(exp.In):
+            right = n.args.get("expressions") or n.args.get("query")
+            if isinstance(right, exp.Tuple):
+                mx = max(mx, len(right.expressions or []))
+            elif isinstance(right, exp.Array):
+                mx = max(mx, len(right.expressions or []))
+        return mx
+
+    def get_count_like_leading_wildcards(self):
+        k = 0
+        for n in self.tree.find_all(exp.Like):
+            pat = n.args.get("expression") or n.args.get("right")
+            if isinstance(pat, exp.Literal) and pat.is_string:
+                s = (pat.this or "").strip().strip("'").strip('"')
+                if s.startswith("%"):
+                    k += 1
+        return k
+
+    def get_count_funcs_in_predicates(self):
+        k = 0
+        for p in self._predicates():
+            for f in p.find_all(exp.Func):
+                has_col = any(True for _ in f.find_all(exp.Column))
+                if has_col:
+                    k += 1
+        return k
+```
+
+<Accordion client:load title="Internal helpers used above">
+
+```python
+    def _predicates(self):
+        preds = []
+        for where in self.tree.find_all(exp.Where):
+            if where.this is not None:
+                preds.append(where.this)
+        for j in self.tree.find_all(exp.Join):
+            on = j.args.get("on")
+            if on is not None:
+                preds.append(on)
+        return preds
+
+    def _flatten_or_terms(self, node):
+        if not isinstance(node, exp.Or):
+            return 1
+        return self._flatten_or_terms(node.left) + self._flatten_or_terms(node.right)
+```
+
+</Accordion>
+
+### 5.5 Best-practice flags
+
+```python
+    def get_has_select_star(self):
+        return any(True for _ in self.tree.find_all(exp.Star))
+
+    def get_has_select_distinct(self):
+        for s in self.tree.find_all(exp.Select):
+            if s.args.get("distinct"):
+                return True
+        return False
+
+    def get_has_order_by_without_limit(self):
+        for s in self.tree.find_all(exp.Select):
+            has_order = s.args.get("order") is not None
+            has_limit = s.args.get("limit") is not None
+            if has_order and not has_limit:
+                return True
+        return False
+```
+
+### 5.6 Command classification
+
+```python
+COMMANDS = {
+    "INSERT": exp.Insert,
+    "CREATE": exp.Create,
+    "ALTER": exp.Alter,
+    "DROP": exp.Drop,
+}
+
+class SqlAnalyzer:
+    # ...
+    def get_commands(self):
+        kinds = {}
+        for cmd in self.tree.find_all(exp.Command):
+            kind = str(getattr(cmd, "this", "")).upper()
+            if kind:
+                kinds[kind] = kinds.get(kind, 0) + 1
+        for name, expression in COMMANDS.items():
+            total = sum(1 for _ in self.tree.find_all(expression))
+            if total:
+                kinds[name] = kinds.get(name, 0) + total
+        total = sum(kinds.values())
+        return total, kinds
+```
+
+<Notice type="warning">
+  These methods provide **static** insights. Correlate with runtime metrics (execution time, bytes scanned, rows output) from your engine to prioritize remediation.
+</Notice>
 
 ## 6. Pipeline for Extracting Data
 
