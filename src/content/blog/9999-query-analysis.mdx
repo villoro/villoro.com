@@ -70,6 +70,38 @@ In this project, `sqlglot` serves as the backbone for the **SqlAnalyzer** class 
   While `sqlglot` can handle a large variety of dialects, some engine-specific extensions or macros (e.g., Athena comments or dbt Jinja syntax) may require pre-processing before parsing. Always sanitize queries before feeding them into the parser.
 </Notice>
 
+### 4.1 Minimal example: parsing and inspecting a query
+
+```python
+from sqlglot import parse_one
+from sqlglot import exp
+
+sql = """
+SELECT u.id, COUNT(*)
+FROM mycatalog.analytics.users u
+JOIN mycatalog.analytics.orders o ON o.user_id = u.id
+WHERE u.country LIKE 'ES%'
+GROUP BY 1
+ORDER BY 2 DESC
+"""
+
+# Parse once (Athena dialect in this project)
+tree = parse_one(sql, read="athena")
+
+# List fully-qualified tables
+tables = []
+for t in tree.find_all(exp.Table):
+    if fq := f"{t.db}.{t.name}":
+        tables.append(fq)
+
+print(f"Tables used in the query: {tables}")
+```
+
+**What this shows**
+
+* `parse_one(..., read="athena")` builds an AST you can traverse.
+* `find_all(exp.Table)` retrieves table nodes; you can assemble `db.table` easily.
+
 ## 5. SqlAnalyzer
 
 * Present the class as the core of your analysis pipeline.
