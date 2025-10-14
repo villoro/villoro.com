@@ -1,0 +1,646 @@
+---
+slug: static-query-anlysis-sqlglot
+title: Static Query Analysis with Sqlglot
+meta_title: Static SQL Query Analysis with Sqlglot for Data Engineering
+description: Learn how to perform static query analysis using Sqlglot to extract query structure, joins, and performance indicators without executing SQL.
+date: 2025-10-14
+image: /images/blog/9999-query-tree.jpg
+category: DE
+tags: [SQL, DE, sqlglot, Performance, Analytics]
+draft: true
+---
+
+## 1. Overview
+
+This post explains how to extract and structure SQL query insights from Athena using **sqlglot** and a custom Python parser. The focus is on building a foundation for later performance analysis rather than interpreting the results yet.
+
+The goal is to transform raw query history into a rich metadata dataset containing structural features, such as the number of joins, unions, CTEs, and flags for patterns like `SELECT *` or `ORDER BY` without `LIMIT`. These metrics help assess query complexity and prepare for identifying inefficient or costly query patterns across your organization.
+
+This guide is especially relevant if you want to:
+
+* Automatically parse large query logs (e.g., from Athena, BigQuery, or Snowflake).
+* Build an internal SQL insights dataset for cost/performance optimization.
+* Create a reproducible static analysis pipeline for SQL queries.
+
+## 2. Problem
+
+Data teams often accumulate thousands of historical SQL queries across BI tools, pipelines, and ad-hoc analysis. However, this data remains underutilized — stored as text without structure or insight.
+
+Common challenges include:
+
+* **Lack of visibility:** No systematic way to see which tables are used most, which queries are complex, or which teams produce heavy workloads.
+* **Rising costs:** In systems like Athena, cost scales with data scanned. Inefficient queries (e.g., full-table scans, large joins, `SELECT *`) can silently drive up bills.
+* **No feedback loop:** Engineers rarely get structured feedback about their query design.
+
+The objective here is to **extract meaningful features from query text**. By parsing SQL with sqlglot, you can transform unstructured SQL into measurable metadata that supports:
+
+* Identifying slow or expensive patterns.
+* Designing best practices around query efficiency.
+* Benchmarking how query design evolves over time.
+
+The next sections detail the tools, parser, and pipeline that make this process scalable and maintainable.
+
+<Notice type="warning">
+  This approach focuses solely on **static analysis** — it inspects query text, not execution results. Runtime metrics like execution time, data scanned, or bytes processed should be retrieved directly from your query engine’s system tables or APIs to complement this analysis.
+</Notice>
+
+## 3. Extracting Query History (optional)
+
+<Notice type="info">
+  This section is optional and **Athena-specific**. The post focuses on static parsing, but if you need sample input data, here’s a minimal way to fetch Athena query history. Other engines have different APIs/system tables; adjust the listing & detail calls accordingly.
+</Notice>
+
+**Other engines at a glance**
+
+* **BigQuery**: Jobs API (`jobs.list`, `jobs.get` → `statistics.query.totalBytesProcessed`, etc.)
+* **Snowflake**: `QUERY_HISTORY` / `QUERY_HISTORY_BY_*` views
+* **Databricks**: system tables (e.g., `system.query`) or REST APIs
+* **Presto/Trino**: coordinator query REST API or server logs
+
+Minimal, list-first approach using a **generator** for pagination and a compact batch fetch. This yields pages of IDs so you stay memory-light and can early-stop cleanly.
+
+```python
+import boto3
+
+athena = boto3.client("athena")
+
+def get_query_execution_ids(max_iterations=1000):
+    """Yield pages (lists) of QueryExecutionIds."""
+    resp = athena.list_query_executions()
+    yield resp.get("QueryExecutionIds", [])
+
+    next_token = resp.get("NextToken")
+    for _ in range(max_iterations):
+        if not next_token:
+            break
+        resp = athena.list_query_executions(NextToken=next_token)
+        yield resp.get("QueryExecutionIds", [])
+        next_token = resp.get("NextToken")
+
+
+def get_query_executions(ids, batch_size=50):
+    """Return a list[dict] with only the fields we need."""
+    out = []
+    for i in range(0, len(ids), batch_size):
+        batch = ids[i:i + batch_size]
+        resp = athena.batch_get_query_execution(QueryExecutionIds=batch)
+        for qe in resp.get("QueryExecutions", []):
+            status = qe.get("Status", {})
+            stats = qe.get("Statistics", {})
+            if not status.get("CompletionDateTime"):
+                continue  # keep only completed
+            out.append({
+                "query_id": qe.get("QueryExecutionId"),
+                "raw_query": qe.get("Query"),
+                "state": status.get("State"),
+                "started_at": status.get("SubmissionDateTime"),
+                "finished_at": status.get("CompletionDateTime"),
+                "engine_ms": stats.get("EngineExecutionTimeInMillis"),
+                "bytes_scanned": stats.get("DataScannedInBytes"),
+            })
+    return out
+
+# Usage: flatten IDs from the generator, then fetch details in batches
+ids = []
+for page in get_query_execution_ids(max_iterations=500):
+    if not page:
+        continue
+    ids.extend(page)
+
+executions = get_query_executions(ids)
+```
+
+<Notice type="warning" className="mt-6">
+  Keep `max_iterations` conservative to control costs and latency. Add retries/backoff and time filtering (`started_at`) in production.
+</Notice>
+
+## 4. Sqlglot
+
+<FancyLink linkText="sqlglot" url="https://github.com/tobymao/sqlglot" dark="true"/> is an open-source SQL parser and transpiler that converts SQL text into an **Abstract Syntax Tree (AST)**. It’s fast, stable, and supports a wide range of dialects — including Athena, BigQuery, Presto, and Snowflake — making it a strong foundation for static query analysis.
+
+Under the hood, `sqlglot` leverages **Rust** for tokenization and parsing performance, allowing it to efficiently handle thousands of queries with minimal overhead. This makes it suitable for large-scale, production-grade workflows.
+
+Unlike simple regex-based approaches, `sqlglot` fully understands SQL grammar. This allows you to:
+
+* Parse complex queries with nested CTEs, subqueries, and window functions.
+* Traverse and inspect every part of the query structure (tables, joins, predicates, etc.).
+* Reuse the same parsing logic across different engines by switching dialects.
+
+It’s used in popular tools like **dbt**, **DuckDB**, and **DataHub**, which speaks to its reliability and performance in production-grade pipelines.
+
+In this project, `sqlglot` serves as the backbone for the **SqlAnalyzer** class — converting raw query text into a structured AST that can be iterated over to count joins, detect anti-patterns, and extract lineage information.
+
+<Notice type="warning">
+  While `sqlglot` can handle a large variety of dialects, some engine-specific extensions or macros (e.g., Athena comments or dbt Jinja syntax) may require pre-processing before parsing. Always sanitize queries before feeding them into the parser.
+</Notice>
+
+### 4.1 Minimal example: parsing and inspecting a query
+
+```python
+from sqlglot import parse_one
+from sqlglot import exp
+
+sql = """
+SELECT u.id, COUNT(*)
+FROM mycatalog.analytics.users u
+JOIN mycatalog.analytics.orders o ON o.user_id = u.id
+WHERE u.country LIKE 'ES%'
+GROUP BY 1
+ORDER BY 2 DESC
+"""
+
+# Parse once (Athena dialect in this project)
+tree = parse_one(sql, read="athena")
+
+# List fully-qualified tables
+tables = []
+for t in tree.find_all(exp.Table):
+    if fq := f"{t.db}.{t.name}":
+        tables.append(fq)
+
+print(f"Tables used in the query: {tables}")
+```
+
+**What this shows**
+
+* `parse_one(..., read="athena")` builds an AST you can traverse.
+* `find_all(exp.Table)` retrieves table nodes; you can assemble `db.table` easily.
+
+## 5. SqlAnalyzer (methods)
+
+This section focuses **only on the methods** used to extract static insights from SQL text.
+We introduce the constructor and then group the public `get_*` methods by topic. Internal helpers (`_…`) appear the first time they’re referenced (inside accordions).
+
+### 5.0 Constructor
+
+Parses once per query using the chosen dialect (Athena here). Everything else reads from the AST (`self.tree`).
+
+```python
+class SqlAnalyzer:
+    def __init__(self, query, engine="athena"):
+        self.engine = engine
+        self.tree = parse_one(query.strip(), read=self.engine)
+```
+
+### 5.1 Table lineage
+
+**What you learn:** which tables the query **reads** and which tables it **writes** to (INSERT/CTAS). This lets you attribute cost and time to specific tables and build lineage.
+
+```python
+    def get_cte_names(self):
+        names = set()
+        for w in self.tree.find_all(exp.With):
+            for cte in w.find_all(exp.CTE):
+                name = None
+                if cte.alias:
+                    name = cte.alias
+                elif getattr(cte, "this", None) and getattr(cte.this, "alias", None):
+                    name = cte.this.alias
+                if isinstance(name, str):
+                    names.add(name.lower())
+        return names
+
+    def get_tables(self, include_cte=False, include_insert_target=False, include_create_target=False):
+        cte_names = self.get_cte_names()
+        out = set()
+        for table in self.tree.find_all(exp.Table):
+            if not include_insert_target and self._is_insert_target(table):
+                continue
+            if not include_create_target and self._is_create_target(table):
+                continue
+            if not include_cte and table.name and table.name.lower() in cte_names:
+                continue
+            fq = self._fq_from_tablelike(table)
+            if fq:
+                out.add(fq)
+        return sorted(out)
+
+    def get_insert_target(self):
+        for ins in self.tree.find_all(exp.Insert):
+            return self._fq_from_tablelike(ins.this)
+        return None
+
+    def get_create_target(self):
+        for cr in self.tree.find_all(exp.Create):
+            return self._fq_from_tablelike(cr.this)
+        return None
+```
+
+<Accordion client:load title="Internal helpers used above">
+
+```python
+    def _is_create_target(self, table):
+        node = table
+        while node is not None:
+            parent = node.parent
+            if isinstance(parent, exp.Create):
+                target = parent.this
+                if node is target:
+                    return True
+                if isinstance(target, exp.Schema):
+                    for x in target.find_all(exp.Table):
+                        if node is x:
+                            return True
+            node = parent
+        return False
+
+    def _is_insert_target(self, table):
+        node = table
+        while node is not None:
+            parent = node.parent
+            if isinstance(parent, exp.Insert):
+                target = parent.this
+                if node is target:
+                    return True
+                if isinstance(target, exp.Schema):
+                    for x in target.find_all(exp.Table):
+                        if node is x:
+                            return True
+            node = parent
+        return False
+
+    def _fq_from_tablelike(self, node):
+        if isinstance(node, exp.Table):
+            fq = f"{node.db}.{node.name}".replace('"', "")
+            return fq.lower() if fq else None
+        if isinstance(node, exp.Schema):
+            for t in node.find_all(exp.Table):
+                return self._fq_from_tablelike(t)
+        return None
+```
+
+</Accordion>
+
+### 5.2 Join & union metrics
+
+**What you learn:** amount and type of data combination and deduplication. More joins → larger intermediate data; `UNION DISTINCT` forces dedupe.
+
+```python
+    def get_joins(self, by_kind=True):
+        total = 0
+        kinds = {}
+        for j in self.tree.find_all(exp.Join):
+            total += 1
+            kind = (j.args.get("kind") or "INNER").upper()
+            kinds[kind] = kinds.get(kind, 0) + 1
+        return total, (kinds if by_kind else {})
+
+    def get_unions(self):
+        total = 0
+        union_all = 0
+        for u in self.tree.find_all(exp.Union):
+            total += 1
+            is_distinct = u.args.get("distinct", True)
+            if not is_distinct:
+                union_all += 1
+        return total, union_all, total - union_all
+```
+
+### 5.3 Structural complexity
+
+**What you learn:** how deep/complex the query is (CTEs, subqueries, windows, nesting). Higher values often correlate with slower planning and heavier shuffles.
+
+```python
+    def get_count_ctes_defined(self):
+        return len(self.get_cte_names())
+
+    def get_count_subqueries(self):
+        return sum(1 for _ in self.tree.find_all(exp.Subquery))
+
+    def get_count_exists_subqueries(self):
+        return sum(1 for _ in self.tree.find_all(exp.Exists))
+
+    def get_count_window_functions(self):
+        return sum(1 for _ in self.tree.find_all(exp.Window))
+
+    def get_count_max_ast_depth(self):
+        maxd = 0
+        stack = [(self.tree, 1)]
+        seen = set()
+        while stack:
+            node, depth = stack.pop()
+            nid = id(node)
+            if nid in seen:
+                continue
+            seen.add(nid)
+            if depth > maxd:
+                maxd = depth
+            for ch in node.iter_expressions():
+                if ch is not None:
+                    stack.append((ch, depth + 1))
+        return maxd
+```
+
+### 5.4 Predicate & projection metrics
+
+**What you learn:** how selective and wide the query is. Large `IN` lists, long `OR` chains, function-wrapped columns, and leading-wildcard `LIKE` patterns often kill pruning and inflate scans.
+
+```python
+    def get_columns_referenced_counts(self):
+        total = 0
+        distinct = set()
+        for c in self.tree.find_all(exp.Column):
+            total += 1
+            t = getattr(c, "table", None)
+            n = getattr(c, "name", None)
+            if t and n:
+                distinct.add(f"{t}.{n}".lower())
+            elif n:
+                distinct.add(str(n).lower())
+            else:
+                distinct.add(str(c).lower())
+        return total, len(distinct)
+
+    def get_count_projected_columns(self):
+        cnt = 0
+        for s in self.tree.find_all(exp.Select):
+            exprs = s.expressions or []
+            cnt += len(exprs)
+        return cnt
+
+    def get_count_or_chain_max(self):
+        mx = 0
+        for p in self._predicates():
+            for node in p.find_all(exp.Or):
+                mx = max(mx, self._flatten_or_terms(node))
+        return mx
+
+    def get_count_in_list_max(self):
+        mx = 0
+        for n in self.tree.find_all(exp.In):
+            right = n.args.get("expressions") or n.args.get("query")
+            if isinstance(right, exp.Tuple):
+                mx = max(mx, len(right.expressions or []))
+            elif isinstance(right, exp.Array):
+                mx = max(mx, len(right.expressions or []))
+        return mx
+
+    def get_count_like_leading_wildcards(self):
+        k = 0
+        for n in self.tree.find_all(exp.Like):
+            pat = n.args.get("expression") or n.args.get("right")
+            if isinstance(pat, exp.Literal) and pat.is_string:
+                s = (pat.this or "").strip().strip("'").strip('"')
+                if s.startswith("%"):
+                    k += 1
+        return k
+
+    def get_count_funcs_in_predicates(self):
+        k = 0
+        for p in self._predicates():
+            for f in p.find_all(exp.Func):
+                has_col = any(True for _ in f.find_all(exp.Column))
+                if has_col:
+                    k += 1
+        return k
+```
+
+<Accordion client:load title="Internal helpers used above">
+
+```python
+    def _predicates(self):
+        preds = []
+        for where in self.tree.find_all(exp.Where):
+            if where.this is not None:
+                preds.append(where.this)
+        for j in self.tree.find_all(exp.Join):
+            on = j.args.get("on")
+            if on is not None:
+                preds.append(on)
+        return preds
+
+    def _flatten_or_terms(self, node):
+        if not isinstance(node, exp.Or):
+            return 1
+        return self._flatten_or_terms(node.left) + self._flatten_or_terms(node.right)
+```
+
+</Accordion>
+
+### 5.5 Best-practice flags
+
+**What you learn:** quick red flags that typically inflate cost or latency.
+
+* `SELECT *` reads every column (expensive on columnar stores).
+* `SELECT DISTINCT` and `ORDER BY` without `LIMIT` trigger costly global operations.
+
+```python
+    def get_has_select_star(self):
+        return any(True for _ in self.tree.find_all(exp.Star))
+
+    def get_has_select_distinct(self):
+        for s in self.tree.find_all(exp.Select):
+            if s.args.get("distinct"):
+                return True
+        return False
+
+    def get_has_order_by_without_limit(self):
+        for s in self.tree.find_all(exp.Select):
+            has_order = s.args.get("order") is not None
+            has_limit = s.args.get("limit") is not None
+            if has_order and not has_limit:
+                return True
+        return False
+```
+
+### 5.6 Command classification
+
+**What you learn:** whether a query performs reads only, or also DDL/DML (useful for governance and change tracking). `exp.Command` captures things like `UNLOAD`; explicit classes cover `INSERT/CREATE/ALTER/DROP`.
+
+```python
+COMMANDS = {
+    "INSERT": exp.Insert,
+    "CREATE": exp.Create,
+    "ALTER": exp.Alter,
+    "DROP": exp.Drop,
+}
+
+class SqlAnalyzer:
+    # ...
+    def get_commands(self):
+        kinds = {}
+        for cmd in self.tree.find_all(exp.Command):
+            kind = str(getattr(cmd, "this", "")).upper()
+            if kind:
+                kinds[kind] = kinds.get(kind, 0) + 1
+        for name, expression in COMMANDS.items():
+            total = sum(1 for _ in self.tree.find_all(expression))
+            if total:
+                kinds[name] = kinds.get(name, 0) + total
+        total = sum(kinds.values())
+        return total, kinds
+```
+
+<Notice type="warning">
+  These methods provide **static** insights. Correlate with runtime metrics (execution time, bytes scanned, rows output) from your engine to prioritize remediation.
+</Notice>
+
+## 6. Pipeline for Extracting Data
+
+This section shows how the analyzer runs in batch (Prefect/ECS) and how results are materialized to the **Bronze** layer. We focus on how each query becomes an `AnalysisResult` record.
+
+### 6.1 Result schema (Pydantic) and `analyze`
+
+We attach a `query_id` to every result so downstream systems can trace metrics back to the original query. Failures are represented with `is_success=False`.
+
+```python
+from typing import Dict, List, Optional
+from pydantic import BaseModel
+
+class AnalysisResult(BaseModel):
+    query_id: Optional[str] = None
+    is_success: bool = True
+
+class SuccessfulAnalysisResult(AnalysisResult):
+    tables: List[str]
+    joins_by_kind: Dict[str, int]
+    commands_by_kind: Dict[str, int]
+    insert_target: Optional[str] = None
+    create_target: Optional[str] = None
+
+    count_joins_total: int
+    count_unions_total: int
+    count_union_all: int
+    count_union_distinct: int
+    count_commands_total: int
+    count_ctes_defined: int
+    count_subqueries: int
+    count_exists_subqueries: int
+    count_cross_joins: int
+    count_distinct_calls: int
+    count_group_by_cols: int
+    count_order_by_cols: int
+    count_window_functions: int
+    count_projected_columns: int
+    count_referenced_columns_total: int
+    count_referenced_columns_distinct: int
+    count_or_chain_max: int
+    count_in_list_max: int
+    count_like_leading_wildcards: int
+    count_max_ast_depth: int
+
+    has_select_star: bool
+    has_select_distinct: bool
+    has_order_by_without_limit: bool
+```
+
+The `SqlAnalyzer.analyze` method runs all `get_*` metrics and produces this schema in one step:
+
+```python
+class SqlAnalyzer:
+    def analyze(self, query_id=None):
+        joins_total, joins_by_kind = self.get_joins()
+        unions_total, union_all, union_distinct = self.get_unions()
+        commands_total, commands_by_kind = self.get_commands()
+        rc_total, rc_distinct = self.get_columns_referenced_counts()
+
+        return SuccessfulAnalysisResult(
+            query_id=query_id,
+            tables=self.get_tables(),
+            joins_by_kind=joins_by_kind,
+            commands_by_kind=commands_by_kind,
+            insert_target=self.get_insert_target(),
+            create_target=self.get_create_target(),
+            count_joins_total=joins_total,
+            count_unions_total=unions_total,
+            count_union_all=union_all,
+            count_union_distinct=union_distinct,
+            count_commands_total=commands_total,
+            count_ctes_defined=self.get_count_ctes_defined(),
+            count_subqueries=self.get_count_subqueries(),
+            count_exists_subqueries=self.get_count_exists_subqueries(),
+            count_cross_joins=self.get_count_cross_joins(),
+            count_distinct_calls=self.get_count_distinct_calls(),
+            count_group_by_cols=self.get_count_group_by_cols(),
+            count_order_by_cols=self.get_count_order_by_cols(),
+            count_window_functions=self.get_count_window_functions(),
+            count_projected_columns=self.get_count_projected_columns(),
+            count_referenced_columns_total=rc_total,
+            count_referenced_columns_distinct=rc_distinct,
+            count_or_chain_max=self.get_count_or_chain_max(),
+            count_in_list_max=self.get_count_in_list_max(),
+            count_like_leading_wildcards=self.get_count_like_leading_wildcards(),
+            count_max_ast_depth=self.get_count_max_ast_depth(),
+            has_select_star=self.get_has_select_star(),
+            has_select_distinct=self.get_has_select_distinct(),
+            has_order_by_without_limit=self.get_has_order_by_without_limit(),
+        )
+```
+
+### 6.2 Batch extraction task (Prefect/ECS)
+
+This task queries recent Athena statements, runs the analyzer for each, and writes the results to an Iceberg-backed Bronze table.
+
+<Notice type="info">
+  We simplify the logic here — how the queries are fetched from Athena is **out of scope**.
+</Notice>
+
+```python
+import pandas as pd
+from prefect import task
+from prefect import get_run_logger
+from sqlglot.errors import ParseError, TokenError
+
+from xxx.metadata.query_parser import AnalysisResult, SqlAnalyzer
+
+def get_queries_to_process():
+    # Placeholder: logic to retrieve the queries is out of scope
+    # Typically this reads from a table or API with query_id + raw_query
+    return {"query_id_1": "SELECT * FROM my_table", "query_id_2": "..."}
+
+@task
+def extract_batch():
+    logger = get_run_logger()
+    queries = get_queries_to_process()
+
+    failures = 0
+    data = []
+    for i, (query_id, query) in enumerate(queries.items(), start=1):
+        try:
+            result = SqlAnalyzer(query).analyze(query_id=query_id)
+        except (ParseError, TokenError):
+            logger.warning(f"Unable to process {query_id=} ({query=})")
+            result = AnalysisResult(query_id=query_id, is_success=False)
+            failures += 1
+
+        data.append(result.model_dump())
+
+    df_out = pd.DataFrame(data)
+    # Placeholder: write results to Iceberg or S3
+    # athena.write_iceberg(df_out, DATABASE, TABLE, as_strings=True)
+```
+
+<Notice type="warning" className="mt-6">
+  The parser is expected to fail on some queries (e.g., malformed SQL or proprietary syntax). These failures are captured with `AnalysisResult(is_success=False)` while preserving `query_id`, ensuring traceability without halting the batch.
+</Notice>
+
+Each batch produces a DataFrame of analysis results, where each row represents one query and all computed metrics from `SqlAnalyzer.analyze()`.
+
+## 7. Next Steps
+
+Once the data is extracted and stored, the next phase is **analysis**. The goal is to turn raw static metrics into actionable insights for improving SQL practices across your organization.
+
+### 7.1 Analyze trends
+
+Examine global patterns to understand how queries are written and evolve over time:
+
+* Distribution of **join types** (INNER, LEFT, CROSS) to identify common patterns or misuse.
+* Frequency of **`SELECT *`** to quantify non-selective queries.
+* Typical **AST depth** and **subquery counts** to estimate structural complexity.
+* Top N tables appearing across queries to detect heavily queried datasets.
+
+### 7.2 Establish SQL quality guidelines
+
+Use these findings to propose internal standards:
+
+* Enforce limits on nesting or cross joins.
+* Encourage explicit column selection.
+* Track usage of complex CTEs and window functions for maintainability.
+
+By periodically running this pipeline, you can detect regressions (e.g., more `SELECT *` or deeper nesting) and drive continuous improvements in your data engineering practices.
+
+### 7.3 Future extensions
+
+* **Cost integration:** correlate metrics with runtime cost (e.g., bytes scanned) for deeper efficiency analysis.
+* **Visualization:** load metrics into **Superset** or other BI tools for dashboards and trend tracking.
+* **Quality scoring:** create a query-level quality index combining static metrics and execution performance.
