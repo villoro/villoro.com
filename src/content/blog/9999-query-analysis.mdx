@@ -618,12 +618,29 @@ Each batch produces a DataFrame of analysis results, where each row represents o
 
 ## 7. Next Steps
 
-* Analyze trends: e.g., most common join types, frequency of SELECT \*, or AST depth distribution.
-* Use the insights to establish internal SQL style and efficiency guidelines.
-* Potential extensions: integrate cost metrics, visualize in Superset, or feed into a query quality dashboard.
+Once the data is extracted and stored, the next phase is **analysis**. The goal is to turn raw static metrics into actionable insights for improving SQL practices across your organization.
 
-## 8. (Optional) Learnings and Challenges
+### 7.1 Analyze trends
 
-* Lessons learned from parsing thousands of queries.
-* How to handle parsing errors, malformed queries, or recursive ASTs.
-* Future improvements: caching, multiprocessing, or using sqlglot’s Rust tokenizer.
+Examine global patterns to understand how queries are written and evolve over time:
+
+* Distribution of **join types** (INNER, LEFT, CROSS) to identify common patterns or misuse.
+* Frequency of **`SELECT *`** to quantify non-selective queries.
+* Typical **AST depth** and **subquery counts** to estimate structural complexity.
+* Top N tables appearing across queries to detect heavily queried datasets.
+
+### 7.2 Establish SQL quality guidelines
+
+Use these findings to propose internal standards:
+
+* Enforce limits on nesting or cross joins.
+* Encourage explicit column selection.
+* Track usage of complex CTEs and window functions for maintainability.
+
+By periodically running this pipeline, you can detect regressions (e.g., more `SELECT *` or deeper nesting) and drive continuous improvements in your data engineering practices.
+
+### 7.3 Future extensions
+
+* **Cost integration:** correlate metrics with runtime cost (e.g., bytes scanned) for deeper efficiency analysis.
+* **Visualization:** load metrics into **Superset** or other BI tools for dashboards and trend tracking.
+* **Quality scoring:** create a query-level quality index combining static metrics and execution performance.
