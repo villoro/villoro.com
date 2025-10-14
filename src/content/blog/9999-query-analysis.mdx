@@ -169,9 +169,11 @@ print(f"Tables used in the query: {tables}")
 ## 5. SqlAnalyzer (methods)
 
 This section focuses **only on the methods** used to extract static insights from SQL text.
-We’ll introduce the constructor and then group the public `get_*` methods by topic. Internal helpers (`_…`) are shown inline the first time they’re referenced (inside accordions).
+We introduce the constructor and then group the public `get_*` methods by topic. Internal helpers (`_…`) appear the first time they’re referenced (inside accordions).
 
 ### 5.0 Constructor
+
+Parses once per query using the chosen dialect (Athena here). Everything else reads from the AST (`self.tree`).
 
 ```python
 class SqlAnalyzer:
@@ -182,7 +184,7 @@ class SqlAnalyzer:
 
 ### 5.1 Table lineage
 
-Identify **read** sources and **write** targets.
+**What you learn:** which tables the query **reads** and which tables it **writes** to (INSERT/CTAS). This lets you attribute cost and time to specific tables and build lineage.
 
 ```python
     def get_cte_names(self):
@@ -271,6 +273,8 @@ Identify **read** sources and **write** targets.
 
 ### 5.2 Join & union metrics
 
+**What you learn:** amount and type of data combination and deduplication. More joins → larger intermediate data; `UNION DISTINCT` forces dedupe.
+
 ```python
     def get_joins(self, by_kind=True):
         total = 0
@@ -293,6 +297,8 @@ Identify **read** sources and **write** targets.
 ```
 
 ### 5.3 Structural complexity
+
+**What you learn:** how deep/complex the query is (CTEs, subqueries, windows, nesting). Higher values often correlate with slower planning and heavier shuffles.
 
 ```python
     def get_count_ctes_defined(self):
@@ -326,6 +332,8 @@ Identify **read** sources and **write** targets.
 ```
 
 ### 5.4 Predicate & projection metrics
+
+**What you learn:** how selective and wide the query is. Large `IN` lists, long `OR` chains, function-wrapped columns, and leading-wildcard `LIKE` patterns often kill pruning and inflate scans.
 
 ```python
     def get_columns_referenced_counts(self):
@@ -411,6 +419,11 @@ Identify **read** sources and **write** targets.
 
 ### 5.5 Best-practice flags
 
+**What you learn:** quick red flags that typically inflate cost or latency.
+
+* `SELECT *` reads every column (expensive on columnar stores).
+* `SELECT DISTINCT` and `ORDER BY` without `LIMIT` trigger costly global operations.
+
 ```python
     def get_has_select_star(self):
         return any(True for _ in self.tree.find_all(exp.Star))
@@ -431,6 +444,8 @@ Identify **read** sources and **write** targets.
 ```
 
 ### 5.6 Command classification
+
+**What you learn:** whether a query performs reads only, or also DDL/DML (useful for governance and change tracking). `exp.Command` captures things like `UNLOAD`; explicit classes cover `INSERT/CREATE/ALTER/DROP`.
 
 ```python
 COMMANDS = {
