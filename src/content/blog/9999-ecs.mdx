@@ -96,25 +96,25 @@ tests/
   Venv tarballs and lockfiles are **versioned** (e.g., `uv`, `0.7.1`). Run any version in prod with `-v <version>` which is great for hotfixes and A/B verification.
 </Notice>
 
-## 2. Building the venv (`Dockerfile.venv`)
+## 2. Building and Publishing the venv (`Dockerfile.venv` + `upload_all.py`)
 
-We use **`uv`** for speed and determinism: it resolves from a lock file (`uv.lock`), creates a clean in-project venv, and installs **our code** into that venv so the tarball is fully self-contained for prod.
+We use **`uv`** for speed and determinism: it resolves from a lock file (`uv.lock`), creates a clean in-project venv, installs **our code**, and then packages everything for production. The resulting `venv_<version>.tar.gz` is fully self-contained and versioned for autonomous deployment.
 
 ### 2.1 Why two base images (uv + python)?
 
-* **`ghcr.io/astral-sh/uv` stage (distroless)** → provides only the `uv`/`uvx` binaries. We *copy* them in, avoiding `curl`/`apt` in the builder. This keeps the surface minimal and repeatable.
-* **`python:3.12-slim-bookworm` builder** → gives us a small Debian-based Python with GNU `tar` and `gzip` to package the venv. We don’t pull compilers or OS build tools.
+* **`ghcr.io/astral-sh/uv` stage (distroless)** → provides only the `uv` and `uvx` binaries. We *copy* them in, avoiding `curl`/`apt` installations and keeping the surface minimal.
+* **`python:3.12-slim-bookworm` builder** → provides a small Debian-based runtime with GNU `tar` and `gzip` for packaging. It’s slim, reproducible, and doesn’t need build tools.
 
 <Notice type="info">
-  Copying the `uv` binaries (instead of installing `uv` with a package manager) **reduces image size**, **avoids network flakiness**, and keeps the build **hermetic**. The Python slim base is only used to create the venv and pack it.
+  Copying the `uv` binaries (instead of installing them dynamically) keeps the image **small**, **stable**, and **hermetic**. The Python slim base is used solely to build and compress the venv.
 </Notice>
 
 ### 2.2 Make the venv self-contained
 
-Besides third‑party deps, we **install `ecs_northius` into the venv** (non‑editable). That means the resulting `venv_<version>.tar.gz` already contains *your* package and can run jobs in prod with no extra steps.
+In addition to third-party dependencies, we **install `ecs_northius` into the venv** (non-editable). This means the `venv_<version>.tar.gz` already contains our package and can execute jobs directly in ECS.
 
 <Notice type="success">
-  This is key: the venv tarball alone is enough to execute code in ECS; the runtime image only needs to download + activate it.
+  The venv tarball is a plug-and-play runtime: download it, activate it, run the entrypoint — no extra setup required.
 </Notice>
 
 ### 2.3 Dockerfile (optimized for cache & reproducibility)
@@ -148,7 +148,6 @@ RUN uv --version && uvx --version
 COPY pyproject.toml uv.lock ./
 
 # 3. Create in-project venv and install deps (no dev if prod-only)
-#    Use --copies to avoid symlink surprises when extracting the tarball later.
 RUN uv venv --python 3.12 --copies && uv sync --frozen --no-dev
 
 # 4. Add source and install it INTO the venv (non-editable)
@@ -170,7 +169,7 @@ COPY --from=base /dist/venv_*.tar.gz /dist/
 Build and export:
 
 ```bash
-docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_VERSION=0.1.0 # whatever version
+docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_VERSION=0.1.0
 ```
 
 <Notice type="info" className="mt-6">
@@ -180,13 +179,72 @@ docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_V
 ### 2.4 Extra optimizations & tricks
 
 * **`.dockerignore` aggressively**: exclude `.git`, `tests/`, build artifacts, local caches. Smaller build context = faster.
-* **Cache-friendly layering**: copy `pyproject.toml` + `uv.lock` **before** project sources to maximize `uv sync` cache hits.
-* **Symlink safety**: `uv venv --copies` avoids symlink issues on extraction (pairs well with `tar.extractall(..., filter="fully_trusted")` at runtime).
-* **Prune bytecode** *(optional)*: `find .venv -name "__pycache__" -type d -exec rm -rf {} +` to shave a few MB.
-* **BuildKit caches** *(optional for repeated CI)*: with Docker BuildKit, you can use `--mount=type=cache,target=/root/.cache/uv` on the `uv sync` layer to speed rebuilds.
+* **Cache-friendly layering**: copy `pyproject.toml` + `uv.lock` before project sources to maximize `uv sync` cache hits.
+* **Symlink safety**: `uv venv --copies` avoids symlink issues when unpacking later.
+* **Prune bytecode** *(optional)*: remove `__pycache__` dirs to shave MBs.
+* **BuildKit caches** *(optional)*: use `--mount=type=cache,target=/root/.cache/uv` on the `uv sync` layer for faster CI builds.
 
 <Notice type="warning">
-  Don’t install compilers or OS build tools in the builder unless you truly need to compile native deps. Prefer manylinux/prebuilt wheels to keep the venv portable and small.
+  Avoid compilers and build tools unless you need to compile native deps. Prefer prebuilt manylinux wheels for portability.
+</Notice>
+
+### 2.5 Publishing the artifact (`upload_all.py`)
+
+Once built, we publish the venv and its companion files to S3. The **`upload_all.py`** script handles this automatically.
+It can also optionally upload the requested version as `latest`.
+
+```python
+from time import time
+import boto3
+import click
+import utils as u
+from loguru import logger
+
+
+def upload_to_s3(origin, dest, bucket=u.BUCKET):
+    logger.info(f"Uploading from {origin=} to {dest=}")
+    boto3.client("s3").upload_file(origin, bucket, dest)
+
+
+@click.command()
+@click.option("--version", "-v", help="Package version")
+@click.option("--latest", is_flag=True, default=False, help="Upload latest version?")
+def upload_all(version, latest):
+    t0 = time()
+    logger.info(f"Uploading all files ({version=}, {latest=})")
+
+    versions = [version]
+    if latest:
+        versions.append("latest")
+    else:
+        logger.warning("Skipping upload of 'latest' (local-only builds)")
+
+    for x in versions:
+        # 1. Upload uv config
+        upload_to_s3("pyproject.toml", f"{u.S3_UV}/pyproject_{x}.toml")
+        upload_to_s3("uv.lock", f"{u.S3_UV}/uv_{x}.lock")
+
+        # 2. Upload entrypoint
+        upload_to_s3("deploy/entrypoint.py", f"{u.S3_ENTRY}/entrypoint_{x}.py")
+
+        # 3. Upload venv
+        upload_to_s3(f"dist/venv_{version}.tar.gz", f"{u.S3_VENV}/venv_{x}.tar.gz")
+
+    logger.success(f"All uploads done in {round(time() - t0, 2)} seconds")
+
+
+if __name__ == "__main__":
+    upload_all()
+```
+
+**Purpose:**
+
+* Uploads all versioned build artifacts (`pyproject`, `uv.lock`, `entrypoint`, `venv`).
+* Ensures every build can be referenced independently (`-v 0.7.1.villoro`) or via `latest`.
+* Enables developers to deploy and test new versions in prod *without* rebuilding or redeploying Docker images — simply upload and point ECS to a new version.
+
+<Notice type="success">
+  This closes the loop: every artifact is versioned, uploaded, and retrievable by the runtime.
 </Notice>
 
 ## 3. The Runtime (`Dockerfile.runtime`)
