@@ -75,9 +75,7 @@ Run **small images** and **fetch the environment at runtime**. This plays to Far
   Developers can iterate fast: compile a custom version, upload the four artifacts, and run it in prod with `-v <version>` with **no image rebuilds**. Roll forward/back by switching only the version.
 </Notice>
 
-### 1.3. Files & Layout (at a glance)
-
-Files & Layout (at a glance)
+### 1.3. Files & Layout
 
 ```plaintext
 deploy/
@@ -96,7 +94,7 @@ tests/
   Venv tarballs and lockfiles are **versioned** (e.g., `uv`, `0.7.1`). Run any version in prod with `-v <version>` which is great for hotfixes and A/B verification.
 </Notice>
 
-## 2. Building and Publishing the venv (`Dockerfile.venv` + `upload_all.py`)
+## 2. Building venv and Publishing
 
 We use **`uv`** for speed and determinism: it resolves from a lock file (`uv.lock`), creates a clean in-project venv, installs **our code**, and then packages everything for production. The resulting `venv_<version>.tar.gz` is fully self-contained and versioned for autonomous deployment.
 
@@ -117,8 +115,11 @@ In addition to third-party dependencies, we **install `ecs_northius` into the ve
   The venv tarball is a plug-and-play runtime: download it, activate it, run the entrypoint — no extra setup required.
 </Notice>
 
-### 2.3 Dockerfile (optimized for cache & reproducibility)
+### 2.3 Dockerfile.venv
 
+<TerminalOutput color="stone">
+  `deploy/docker/Dockerfile.venv`
+</TerminalOutput>
 ```bash
 # 0. Pull images
 ARG BUILD_FOR=linux/amd64
@@ -188,11 +189,14 @@ docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_V
   Avoid compilers and build tools unless you need to compile native deps. Prefer prebuilt manylinux wheels for portability.
 </Notice>
 
-### 2.5 Publishing the artifact (`upload_all.py`)
+### 2.5 Publishing the artifacts
 
 Once built, we publish the venv and its companion files to S3. The **`upload_all.py`** script handles this automatically.
 It can also optionally upload the requested version as `latest`.
 
+<TerminalOutput color="stone">
+  `deploy/scripts/upload_all.py`
+</TerminalOutput>
 ```python
 from time import time
 import boto3
@@ -247,13 +251,16 @@ if __name__ == "__main__":
   This closes the loop: every artifact is versioned, uploaded, and retrievable by the runtime.
 </Notice>
 
-## 3. The Runtime (image, setup & download)
+## 3. The Runtime
 
 At runtime, **speed and simplicity** take priority; no compilers, no `uv`, no dependency resolution.
 The container just downloads, activates, and executes.
 
-### 3.1 Runtime Image (`Dockerfile.runtime`)
+### 3.1 Runtime Image
 
+<TerminalOutput color="stone">
+  `deploy/docker/Dockerfile.runtime`
+</TerminalOutput>
 ```bash
 ARG BUILD_FOR=linux/amd64
 FROM --platform=${BUILD_FOR} python:3.12-slim-bookworm AS runtime
@@ -277,10 +284,13 @@ The size can increase with big libraries such as awswrangler.
   The runtime image is lightweight — no compilers, no dependency resolution. It starts quickly and scales efficiently across short-lived ECS tasks.
 </Notice>
 
-### 3.2 Runtime Bootstrap Script (`setup_and_run.sh`)
+### 3.2 Runtime Bootstrap Script
 
 Executed automatically when the container starts:
 
+<TerminalOutput color="stone">
+  `deploy/scripts/setup_and_run.sh`
+</TerminalOutput>
 ```bash
 echo 1. Downloading venv and config
 python download_all.py "$@"
@@ -307,10 +317,13 @@ python entrypoint.py "$@"
   The bootstrap keeps tasks reproducible and fast — it only fetches what’s needed for the specified version.
 </Notice>
 
-### 3.3 Download Script (`download_all.py`)
+### 3.3 Download Script
 
 This script fetches all necessary artifacts (venv, entrypoint, and config) from S3 and prepares the environment for execution.
 
+<TerminalOutput color="stone">
+  `deploy/scripts/download_all.py`
+</TerminalOutput>
 ```python
 import pathlib
 import tarfile
@@ -395,11 +408,13 @@ At runtime the container:
 
 ## 4. CI/CD Flow
 
-We keep **testing**, **venv publishing**, and **runtime image pushes** as separate jobs.
-This speeds up iteration (you rarely need to rebuild the runtime docker image) and preserves reproducibility (each venv is versioned).
+We keep **testing**, **venv publishing**, and **runtime image pushes** as separate jobs. This speeds up iteration (you rarely need to rebuild the runtime docker image) and preserves reproducibility (each venv is versioned).
 
-### 4.1. CI: Tests with `uv` (quick and cache-friendly)
+### 4.1. CI: Tests with `uv`
 
+<TerminalOutput color="stone">
+  `.gihtub/workflows/CI.yaml`
+</TerminalOutput>
 ```yaml
 name: CI
 
@@ -435,8 +450,11 @@ jobs:
 
 ### 4.2. CD: Build & Publish venv to S3
 
-Triggers when app code, dependency files, or deployment config changes. Produces a **versioned quartet**: `pyproject_<v>.toml`, `uv_<v>.lock`, `entrypoint_<v>.py`, `venv_<v>.tar.gz`. Optionally also tags `latest`.
+Triggers when app code, dependency files, or deployment config changes. Produces a **versioned quartet**: `pyproject_<v>.toml`, `uv_<v>.lock`, `entrypoint_<v>.py`, `venv_<v>.tar.gz`.
 
+<TerminalOutput color="stone">
+  `.gihtub/workflows/CD_venv.yaml`
+</TerminalOutput>
 ```yaml
 name: CD Venv
 
@@ -490,6 +508,9 @@ jobs:
 
 This job changes infrequently (scripts or the runtime Dockerfile). It tags with the version from `pyproject.toml` and with `latest`.
 
+<TerminalOutput color="stone">
+  `.gihtub/workflows/CD_docker.yaml`
+</TerminalOutput>
 ```yaml
 name: CD Docker
 
@@ -552,18 +573,20 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 ```
 
-### 4.4. Practical tips
+### 4.4. Deployment workflow summary:
+
+1. **CI** runs tests on every PR as a mandatory step.
+2. On merge to `main`, **CD Venv** builds `venv_<version>.tar.gz` and uploads all versioned artifacts to S3.
+3. **CD Docker** rebuilds and pushes the runtime image to ECR (only if there are changes).
+4. **ECS tasks** start containers using the latest runtime image, fetching the desired venv version dynamically with `-v <version>`.
+
+### 4.5. Practical tips
 
 * **Gate CD on CI**: require the test job to pass before venv/image jobs run.
 * **Pin Python versions**: keep GitHub Action Python versions aligned with Dockerfiles.
 * **Cache `uv`**: already included; it makes PR validation fast.
-* **Use OIDC**: you’re using GitHub→AWS OIDC; no static secrets.
 * **S3/ECR VPC endpoints**: set them to avoid NAT costs in private subnets.
 * **Immutable versions + `latest`**: publish both; production can point at `latest` while you can roll forward/back with a version flag.
-
-<Notice type="success">
-  Deploy flow: merge to `main` → CI runs tests → CD builds `venv_<version>.tar.gz` and uploads versioned artifacts → runtime image is rebuilt only when its sources change → ECS tasks select the desired version at launch (`-v <version>`).
-</Notice>
 
 ## 5. Key Takeaways
 
