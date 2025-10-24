@@ -98,29 +98,71 @@ tests/
 
 ## 2. Building the venv (`Dockerfile.venv`)
 
-We use `uv` because it’s fast, deterministic, and simple — a great fit for reproducible builds.
+We use **`uv`** for speed and determinism: it resolves from a lock file (`uv.lock`), creates a clean in-project venv, and installs **our code** into that venv so the tarball is fully self-contained for prod.
 
-```Dockerfile
+### 2.1 Why two base images (uv + python)?
+
+* **`ghcr.io/astral-sh/uv` stage (distroless)** → provides only the `uv`/`uvx` binaries. We *copy* them in, avoiding `curl`/`apt` in the builder. This keeps the surface minimal and repeatable.
+* **`python:3.12-slim-bookworm` builder** → gives us a small Debian-based Python with GNU `tar` and `gzip` to package the venv. We don’t pull compilers or OS build tools.
+
+<Notice type="info">
+  Copying the `uv` binaries (instead of installing `uv` with a package manager) **reduces image size**, **avoids network flakiness**, and keeps the build **hermetic**. The Python slim base is only used to create the venv and pack it.
+</Notice>
+
+### 2.2 Make the venv self-contained
+
+Besides third‑party deps, we **install `ecs_northius` into the venv** (non‑editable). That means the resulting `venv_<version>.tar.gz` already contains *your* package and can run jobs in prod with no extra steps.
+
+<Notice type="success">
+  This is key: the venv tarball alone is enough to execute code in ECS; the runtime image only needs to download + activate it.
+</Notice>
+
+### 2.3 Dockerfile (optimized for cache & reproducibility)
+
+```bash
 # 0. Pull images
 ARG BUILD_FOR=linux/amd64
+
+# 0.1. Stage with just the uv binaries at /uv and /uvx (distroless)
 FROM --platform=${BUILD_FOR} ghcr.io/astral-sh/uv:latest AS uvbin
-FROM --platform=${BUILD_FOR} python:3.13-slim-bookworm AS base
 
+# 0.2. Builder: slim Python + uv copied in
+FROM --platform=${BUILD_FOR} python:3.12-slim-bookworm AS base
+
+# 0.3. Set up config
 WORKDIR /app/
-ENV PYTHONIOENCODING=utf-8 LANG=C.UTF-8 UV_LINK_MODE=copy UV_NO_PROGRESS=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PYTHONIOENCODING=utf-8 \
+    LANG=C.UTF-8 \
+    UV_LINK_MODE=copy \
+    UV_NO_PROGRESS=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-COPY --from=uvbin /uv /usr/local/bin/uv
+# 1. Copy only the uv binaries (no curl, no apt)
+COPY --from=uvbin /uv  /usr/local/bin/uv
 COPY --from=uvbin /uvx /usr/local/bin/uvx
+
+# 1.1. Test uv: fail fast if something changes upstream
 RUN uv --version && uvx --version
 
+# 2. Lock first for better cache hits
 COPY pyproject.toml uv.lock ./
-RUN uv venv --python 3.13 --copies && uv sync --frozen --no-dev
 
+# 3. Create in-project venv and install deps (no dev if prod-only)
+#    Use --copies to avoid symlink surprises when extracting the tarball later.
+RUN uv venv --python 3.12 --copies && uv sync --frozen --no-dev
+
+# 4. Add source and install it INTO the venv (non-editable)
 COPY ecs_northius ./ecs_northius
 RUN uv pip install --python .venv/bin/python --no-deps .
 
+# 4.1. Test venv: sanity check
+RUN .venv/bin/python -c "import ecs_northius; print('ecs_northius OK')"
+
+# 5. Package the venv
 ARG PACKAGE_VERSION
 RUN mkdir -p /dist && tar -C .venv -czf /dist/venv_${PACKAGE_VERSION}.tar.gz .
+
+# 6. Export only the venv tar
 FROM scratch AS export
 COPY --from=base /dist/venv_*.tar.gz /dist/
 ```
@@ -128,18 +170,30 @@ COPY --from=base /dist/venv_*.tar.gz /dist/
 Build and export:
 
 ```bash
-docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_VERSION=0.1.0
+docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_VERSION=0.1.0 # whatever version
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   The resulting `venv_0.1.0.tar.gz` is portable — upload it to S3 and reuse it across ECS tasks.
+</Notice>
+
+### 2.4 Extra optimizations & tricks
+
+* **`.dockerignore` aggressively**: exclude `.git`, `tests/`, build artifacts, local caches. Smaller build context = faster.
+* **Cache-friendly layering**: copy `pyproject.toml` + `uv.lock` **before** project sources to maximize `uv sync` cache hits.
+* **Symlink safety**: `uv venv --copies` avoids symlink issues on extraction (pairs well with `tar.extractall(..., filter="fully_trusted")` at runtime).
+* **Prune bytecode** *(optional)*: `find .venv -name "__pycache__" -type d -exec rm -rf {} +` to shave a few MB.
+* **BuildKit caches** *(optional for repeated CI)*: with Docker BuildKit, you can use `--mount=type=cache,target=/root/.cache/uv` on the `uv sync` layer to speed rebuilds.
+
+<Notice type="warning">
+  Don’t install compilers or OS build tools in the builder unless you truly need to compile native deps. Prefer manylinux/prebuilt wheels to keep the venv portable and small.
 </Notice>
 
 ## 3. The Runtime (`Dockerfile.runtime`)
 
 Here the focus is speed — no build tools, no compilers, no uv.
 
-```Dockerfile
+```bash
 FROM python:3.13-slim-bookworm AS runtime
 
 WORKDIR /app
