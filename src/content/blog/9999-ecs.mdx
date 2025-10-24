@@ -393,25 +393,179 @@ At runtime the container:
   You can run multiple versions in parallel (for example, `-v latest` for dev and `-v 0.7.1.villoro` for prod) without rebuilding Docker images.
 </Notice>
 
-## 7. CI/CD Flow
+## 4. CI/CD Flow
 
-* `Dockerfile.venv` builds and uploads the venv tarball to S3.
-* `Dockerfile.runtime` builds and pushes the runtime image to ECR.
-* GitHub Actions keeps these steps separate for fast, reproducible deploys.
+We keep **testing**, **venv publishing**, and **runtime image pushes** as separate jobs.
+This speeds up iteration (you rarely need to rebuild the runtime docker image) and preserves reproducibility (each venv is versioned).
 
-<Notice type="info">
-  The runtime image is reused across multiple versions, only downloading the desired venv from S3. This dramatically reduces cold starts.
+### 4.1. CI: Tests with `uv` (quick and cache-friendly)
+
+```yaml
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'  # match Dockerfile.venv
+      - name: Install uv
+        run: |
+          curl -Ls https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+      - name: Sync deps from lock
+        run: uv venv && uv sync --frozen
+      - name: Install project
+        run: uv pip install .
+      - name: Run tests
+        run: uv run python -m pytest -q
+```
+
+### 4.2. CD: Build & Publish venv to S3
+
+Triggers when app code, dependency files, or deployment config changes. Produces a **versioned quartet**: `pyproject_<v>.toml`, `uv_<v>.lock`, `entrypoint_<v>.py`, `venv_<v>.tar.gz`. Optionally also tags `latest`.
+
+```yaml
+name: CD Venv
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - deploy/**
+      - ecs_northius/**
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/CD_venv.yaml
+
+jobs:
+  publish_venv:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # GitHub OIDC → AWS
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install python deps for uploader
+        run: pip install boto3 click loguru toml
+
+      # This just gets the version from the pyproject.toml
+      - name: Get current version
+        run: python .github/scripts/get_version.py --name=current
+
+      - name: Build venv tarball
+        run: |
+          docker build \
+            -f deploy/docker/Dockerfile.venv \
+            --output . . \
+            --build-arg PACKAGE_VERSION=$VERSION_CURRENT
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_DATA }}
+          aws-region: eu-west-1
+
+      - name: Upload artifacts to S3
+        run: python deploy/scripts/upload_all.py --version $VERSION_CURRENT --latest
+```
+
+### 4.3. CD: Build & Push the Runtime Image to ECR
+
+This job changes infrequently (scripts or the runtime Dockerfile). It tags with the version from `pyproject.toml` and with `latest`.
+
+```yaml
+name: CD Docker
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - deploy/scripts/**
+      - deploy/docker/Dockerfile.runtime
+      - .github/workflows/CD_docker.yaml
+
+jobs:
+  push_runtime:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read image version & name from pyproject.toml
+        id: cfg
+        uses: SebRollen/toml-action@v1.0.2
+        with:
+          file: 'pyproject.toml'
+          field: 'docker'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_DATA }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: true
+        env:
+          AWS_REGION: eu-west-1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.ecr.outputs.registry }}/${{ fromJson(steps.cfg.outputs.value).name }}
+          tags: |
+            ${{ fromJson(steps.cfg.outputs.value).version }}
+            latest
+
+      - name: Build & push runtime image
+        uses: docker/build-push-action@v5
+        with:
+          file: deploy/docker/Dockerfile.runtime
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+```
+
+### 4.4. Practical tips
+
+* **Gate CD on CI**: require the test job to pass before venv/image jobs run.
+* **Pin Python versions**: keep GitHub Action Python versions aligned with Dockerfiles.
+* **Cache `uv`**: already included; it makes PR validation fast.
+* **Use OIDC**: you’re using GitHub→AWS OIDC; no static secrets.
+* **S3/ECR VPC endpoints**: set them to avoid NAT costs in private subnets.
+* **Immutable versions + `latest`**: publish both; production can point at `latest` while you can roll forward/back with a version flag.
+
+<Notice type="success">
+  Deploy flow: merge to `main` → CI runs tests → CD builds `venv_<version>.tar.gz` and uploads versioned artifacts → runtime image is rebuilt only when its sources change → ECS tasks select the desired version at launch (`-v <version>`).
 </Notice>
 
-## 8. Troubleshooting
-
-| Problem                            | Cause                           | Fix                                 |
-| ---------------------------------- | ------------------------------- | ----------------------------------- |
-| `AbsoluteLinkError`                | Symlinked Python binary in venv | Build with `uv venv --copies`       |
-| `cannot open ./.venv/bin/activate` | CRLF line endings               | Enforce LF via `.gitattributes`     |
-| Slow startup                       | Re-downloading venv each run    | Consider caching or a shared volume |
-
-## 9. Key Takeaways
+## 5. Key Takeaways
 
 This pattern gives you:
 
