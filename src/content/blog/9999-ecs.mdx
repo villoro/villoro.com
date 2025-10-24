@@ -247,32 +247,39 @@ if __name__ == "__main__":
   This closes the loop: every artifact is versioned, uploaded, and retrievable by the runtime.
 </Notice>
 
-## 3. The Runtime (`Dockerfile.runtime`)
+## 3. The Runtime (image, setup & download)
 
-Here the focus is speed — no build tools, no compilers, no uv.
+At runtime, **speed and simplicity** take priority; no compilers, no `uv`, no dependency resolution.
+The container just downloads, activates, and executes.
+
+### 3.1 Runtime Image (`Dockerfile.runtime`)
 
 ```bash
-FROM python:3.13-slim-bookworm AS runtime
+ARG BUILD_FOR=linux/amd64
+FROM --platform=${BUILD_FOR} python:3.12-slim-bookworm AS runtime
 
 WORKDIR /app
-ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 RUN python -m pip install --no-cache-dir boto3 click loguru toml
 
-COPY scripts .
+COPY deploy/scripts .
 
 ENTRYPOINT ["/bin/bash", "./setup_and_run.sh"]
 ```
 
-**plot_speed**
+The image is ~80–100 MB and boots fast because all dependency resolution was done earlier during venv packaging.
+The size can increase with big libraries such as awswrangler.
 
 <Notice type="info">
-  The runtime image is small and starts fast because dependency resolution happened during the venv build.
+  The runtime image is lightweight — no compilers, no dependency resolution. It starts quickly and scales efficiently across short-lived ECS tasks.
 </Notice>
 
-## 4. Runtime Bootstrap Script (`setup_and_run.sh`)
+### 3.2 Runtime Bootstrap Script (`setup_and_run.sh`)
 
-What ECS runs by default:
+Executed automatically when the container starts:
 
 ```bash
 echo 1. Downloading venv and config
@@ -285,66 +292,92 @@ echo 3. Running ECS task. Using args="$@"
 python entrypoint.py "$@"
 ```
 
-Key points:
+**Highlights:**
 
-* `$@` lets you pass a version: `-v uv`.
-* No dependency resolution here; it only downloads and activates.
-* Use LF endings to avoid `/bin/sh` errors:
+* `$@` allows passing arguments like `-v uv` to select the version.
+* No dependency installation here — only download, extract, and activate.
+* Always use **LF** line endings to avoid `/bin/sh` errors:
 
   ```
   *.sh text eol=lf
   *.py text eol=lf
   ```
 
-For dynamic entrypoint and parameter management, check out <FancyLink linkText="Effortless EMR: A Guide to Seamlessly Running PySpark Coder" url="https://villoro.com/blog/effortless-emr-guide-running-pyspark/" dark="true"/> — the concepts complement this ECS setup perfectly.
+<Notice type="info">
+  The bootstrap keeps tasks reproducible and fast — it only fetches what’s needed for the specified version.
+</Notice>
 
-## 5. Download Script (`download_all.py`)
+### 3.3 Download Script (`download_all.py`)
 
-Fetches all artifacts from S3: venv, entrypoint, and config.
+This script fetches all necessary artifacts (venv, entrypoint, and config) from S3 and prepares the environment for execution.
 
 ```python
-import tarfile, boto3, click, utils as u
+import pathlib
+import tarfile
+from time import time
+
+import boto3
+import click
+import utils as u
 from loguru import logger
+
 
 def download_s3(origin, dest, bucket=u.BUCKET):
     logger.info(f"Downloading from {origin=} to {dest=}")
     boto3.client("s3").download_file(bucket, origin, dest)
 
+
 def venv_extract_tar(filename, local_venv=".venv"):
-    logger.info(f"Extracting {filename=} to {local_venv=}")
+    pathlib.Path(local_venv).mkdir(parents=True, exist_ok=True)
+
+    # Python 3.14: allow absolute symlinks from our trusted artifact
     with tarfile.open(filename, "r:gz") as tar:
         tar.extractall(local_venv, filter="fully_trusted")
 
-@click.command()
-@click.option("--version", "-v", required=True, help="Version to download")
+
+@click.command(
+    name="download",
+    context_settings=dict(
+        ignore_unknown_options=True,
+        allow_extra_args=True,
+    ),
+) # This is needed in order to pass other parameters to the entrypoint, more on that later
+@click.option("--version", "--ecs_version", "-v", required=True, help="Package version")
 def download_all(version):
-    logger.info(f"Downloading all files (version='{version}')")
+    t0 = time()
+    version = version.strip()
+    logger.info(f"Downloading all files ({version=})")
+
     download_s3(f"{u.S3_UV}/pyproject_{version}.toml", "pyproject.toml")
     download_s3(f"{u.S3_UV}/uv_{version}.lock", "uv.lock")
     download_s3(f"{u.S3_ENTRY}/entrypoint_{version}.py", "entrypoint.py")
     download_s3(f"{u.S3_VENV}/venv_{version}.tar.gz", "venv.tar.gz")
     venv_extract_tar("venv.tar.gz")
-    logger.success("All downloads done")
+
+    logger.success(f"All downloads done in {round(time() - t0, 2)} seconds")
+
 
 if __name__ == "__main__":
     download_all()
 ```
 
 <Notice type="warning">
-  Python 3.14+ tightens tar extraction security. Use `filter="fully_trusted"` to avoid `AbsoluteLinkError` from absolute symlinks.
+  Python 3.14+ tightens tar extraction security — use `filter="fully_trusted"` to avoid `AbsoluteLinkError` when unpacking symlinks.
 </Notice>
 
-### 1.4. How this connects to entrypoints & params
+### 3.4 How this connects to entrypoints & params
 
-This post focuses on **environment packaging + fast starts** on ECS. For dynamic entrypoints (import-by-string), robust CLI handling with `click`, and typed params via `pydantic`, see <FancyLink linkText="Effortless EMR: A Guide to Seamlessly Running PySpark Coder" url="https://villoro.com/blog/effortless-emr-guide-running-pyspark/" dark="true"/>. The same entrypoint approach drops into this ECS runtime pattern without change.
+This section focuses on **runtime packaging and activation**. For dynamic entrypoints (import-by-string), argument parsing via `click`, and typed params with `pydantic`, see <FancyLink linkText="Effortless EMR: A Guide to Seamlessly Running PySpark Coder" url="https://villoro.com/blog/effortless-emr-guide-running-pyspark/" dark="true"/>.
+The same entrypoint model integrates seamlessly here.
 
 <Notice type="info">
-  Because **pyproject**, **uv.lock**, **venv**, and **entrypoint** are all versioned together, each run is **autonomous** and reproducible. You can safely test new jobs in production by pointing the runtime to a new version, then promote by updating the version used (or a `latest` alias).
+  Because `pyproject`, `uv.lock`, `venv`, and `entrypoint` are versioned together, each run is **fully autonomous** and reproducible.
+  Developers can safely test new jobs in production by uploading a custom version and running it with `-v <version>`.
 </Notice>
 
-## 6. How It Runs in ECS
+### 3.5 How It Runs in ECS
 
-Pass the version when starting the task:
+Run tasks by passing a version at launch:
 
 ```bash
 docker run --rm ecs/runtime -v uv
@@ -352,12 +385,12 @@ docker run --rm ecs/runtime -v uv
 
 At runtime the container:
 
-1. Downloads `venv_<version>.tar.gz`, `entrypoint.py`, and lock files.
-2. Extracts and activates the venv.
-3. Runs the entrypoint with your arguments.
+1. Downloads `venv_<version>.tar.gz`, `entrypoint.py`, and lock files from S3.
+2. Extracts and activates the virtual environment.
+3. Executes `entrypoint.py` with your provided arguments.
 
 <Notice type="info">
-  You can run different versions in parallel (e.g., `-v uv` for dev, `-v 0.7.1.villoro` for prod) without rebuilding images.
+  You can run multiple versions in parallel (for example, `-v latest` for dev and `-v 0.7.1.villoro` for prod) without rebuilding Docker images.
 </Notice>
 
 ## 7. CI/CD Flow
