@@ -12,18 +12,12 @@ draft: false
 
 ## 0. Why Another ECS Setup?
 
-Running Python workloads on ECS is simple in theory — but in practice, dependency builds slow everything down. Every task rebuilds the same environment, wasting time and compute.
+Running Python on ECS is easy—until **cold starts** and **rebuild churn** show up. On Fargate every task pulls the image from scratch; when your image includes big dependencies, startup time balloons and short‑lived jobs pay that cost on every run.
 
-The solution? **Package once, run anywhere.**
-
-This post explains how to:
-
-1. Build a **versioned virtual environment** once with `uv`.
-2. Deploy a **minimal runtime container** that runs any version on ECS.
-3. Automate setup with a simple shell script and S3.
+**The idea:** keep the runtime image tiny and **separate build from run**. Package the Python environment once, pick a version at launch, and run.
 
 <Notice type="info">
-  By separating build and runtime, you get near-instant startup times, stable environments, and zero dependency drift between versions.
+  This keeps startup fast and behavior consistent across versions—no image rebuilds just to try a change, no dependency drift between runs.
 </Notice>
 
 ## 1. The Strategy
@@ -582,7 +576,6 @@ jobs:
 
 ### 4.5. Practical tips
 
-* **Gate CD on CI**: require the test job to pass before venv/image jobs run.
 * **Pin Python versions**: keep GitHub Action Python versions aligned with Dockerfiles.
 * **Cache `uv`**: already included; it makes PR validation fast.
 * **S3/ECR VPC endpoints**: set them to avoid NAT costs in private subnets.
