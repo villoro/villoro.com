@@ -37,7 +37,7 @@ Run **small images** and **fetch the environment at runtime**. This plays to Far
 * **Private subnets** without VPC endpoints can add NAT latency/cost.
 
 <Notice type="info">
-  Keep the image lean; move heavy Python deps out of the image. Treat S3 like a “layer store” for your virtualenv.
+  Keep the image lean; move heavy Python deps out of the image. Treat S3 like a `layer store` for your virtualenv.
 </Notice>
 
 ### 1.1. Two Approaches (and why one wins on Fargate)
@@ -53,22 +53,33 @@ Run **small images** and **fetch the environment at runtime**. This plays to Far
 
 ### 1.2. The Pattern I Use (and this post documents)
 
+**One image, many jobs/versions.** The Docker image is generic and reusable. The `version` you pass selects what to run.
+
 **Package once, run anywhere**:
 
 1. Build a **versioned** virtualenv tarball with `uv` (e.g., `venv_0.7.1.villoro.tar.gz`).
-2. Push it to **S3** alongside `pyproject.toml`, `uv.lock`, and a versioned `entrypoint.py`.
+2. Publish **versioned artifacts** to S3 **as a set**:
+
+   * `pyproject_<version>.toml`
+   * `uv_<version>.lock`
+   * `entrypoint_<version>.py`
+   * `venv_<version>.tar.gz`
 3. Ship a **minimal runtime** image that, on start:
 
    * downloads the selected version (`-v <version>`) from S3,
    * extracts to `./.venv/`,
    * activates it, and
-   * runs `entrypoint.py` with your args.
+   * runs the **versioned** `entrypoint.py` with your args.
 
-This keeps the Docker image stable (rarely changes) and lets you flip versions at run time.
+<Notice type="success">
+  Developers can iterate fast: compile a custom version, upload the four artifacts, and run it in prod with `-v <version>` with **no image rebuilds**. Roll forward/back by switching only the version.
+</Notice>
 
 ### 1.3. Files & Layout (at a glance)
 
-```
+Files & Layout (at a glance)
+
+```plaintext
 deploy/
 ├── docker/
 │   ├── Dockerfile.venv        # build the venv tarball with uv
@@ -77,17 +88,13 @@ deploy/
     ├── upload_all.py          # CI: push venv/locks/entrypoint to S3
     ├── download_all.py        # runtime: fetch artifacts by version
     └── setup_and_run.sh       # runtime: bootstrap → activate → run
-ecs_northius/
+ecs_northius/                  # Actual code, feel free to use whatever name you want
 tests/
 ```
 
-<Notice type="info">
-  Venv tarballs and lockfiles are **versioned** (e.g., `uv`, `0.7.1.villoro`). Run any version in prod with `-v <version>` — great for hotfixes and A/B verification.
+<Notice type="info" className="mt-6">
+  Venv tarballs and lockfiles are **versioned** (e.g., `uv`, `0.7.1`). Run any version in prod with `-v <version>` which is great for hotfixes and A/B verification.
 </Notice>
-
-### 1.4. How this connects to entrypoints & params
-
-This post focuses on **environment packaging + fast starts** on ECS. For dynamic entrypoints (import-by-string), robust CLI handling with `click`, and typed params via `pydantic`, see <FancyLink linkText="Effortless EMR: A Guide to Seamlessly Running PySpark Coder" url="https://villoro.com/blog/effortless-emr-guide-running-pyspark/" dark="true"/>. The same entrypoint approach drops into this ECS runtime pattern without change.
 
 ## 2. Building the venv (`Dockerfile.venv`)
 
@@ -213,6 +220,14 @@ if __name__ == "__main__":
 
 <Notice type="warning">
   Python 3.14+ tightens tar extraction security. Use `filter="fully_trusted"` to avoid `AbsoluteLinkError` from absolute symlinks.
+</Notice>
+
+### 1.4. How this connects to entrypoints & params
+
+This post focuses on **environment packaging + fast starts** on ECS. For dynamic entrypoints (import-by-string), robust CLI handling with `click`, and typed params via `pydantic`, see <FancyLink linkText="Effortless EMR: A Guide to Seamlessly Running PySpark Coder" url="https://villoro.com/blog/effortless-emr-guide-running-pyspark/" dark="true"/>. The same entrypoint approach drops into this ECS runtime pattern without change.
+
+<Notice type="info">
+  Because **pyproject**, **uv.lock**, **venv**, and **entrypoint** are all versioned together, each run is **autonomous** and reproducible. You can safely test new jobs in production by pointing the runtime to a new version, then promote by updating the version used (or a `latest` alias).
 </Notice>
 
 ## 6. How It Runs in ECS
