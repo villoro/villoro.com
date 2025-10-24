@@ -28,47 +28,66 @@ This post explains how to:
 
 ## 1. The Strategy
 
-We split the flow into two Dockerfiles and a couple of helper scripts.
+Run **small images** and **fetch the environment at runtime**. This plays to Fargate’s strengths (ephemeral tasks) and avoids paying the cold‑start penalty of large image pulls **every single run**.
 
-### 1.1. `Dockerfile.venv`
+### 1.0. What Fargate Optimizes For
 
-Builds a `.tar.gz` file containing the full Python environment:
+* **No layer cache between tasks** → each task **pulls the full image** again.
+* **Pull time scales with image size** → big images = slow starts.
+* **Private subnets** without VPC endpoints can add NAT latency/cost.
 
-* Dependencies resolved with `uv`.
-* Your package (`ecs_northius`) installed.
-* Output stored as `venv_<version>.tar.gz`.
+<Notice type="info">
+  Keep the image lean; move heavy Python deps out of the image. Treat S3 like a “layer store” for your virtualenv.
+</Notice>
 
-This artifact is uploaded to S3.
+### 1.1. Two Approaches (and why one wins on Fargate)
 
-### 1.2. `Dockerfile.runtime`
+| Approach                                     | What it means                                                | Pros                                                                                                        | Cons                                                                    |
+| -------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **A. Bake deps into the image**              | `pip install` during build; one fat image                    | Simple deploy; one immutable artifact                                                                       | Large image; slow pulls **every run**; rebuild image for any dep change |
+| **B. Slim image + download venv at runtime** | Keep image minimal; fetch `venv_*.tar.gz` from S3 on startup | Tiny image → fast pulls; reuse one runtime image for many versions; faster iteration (swap venv, not image) | Slightly more bootstrap logic; needs S3 access & versioning             |
 
-A super-light image:
+<Notice type="success">
+  For short‑lived/batch tasks, **B** consistently starts faster: pull a ~80–100 MB image, then download a compressed venv from S3. Net startup is typically **tens of seconds**, not minutes.
+</Notice>
 
-* Starts from `python:3.13-slim-bookworm`.
-* Only includes `boto3`, `click`, and `loguru`.
-* Downloads the venv and code from S3 at runtime.
-* Activates the venv and executes `entrypoint.py`.
+### 1.2. The Pattern I Use (and this post documents)
 
-### 1.3. Scripts and Repository Layout
+**Package once, run anywhere**:
 
-All logic for uploading, downloading, and running code lives in `deploy/scripts`.
+1. Build a **versioned** virtualenv tarball with `uv` (e.g., `venv_0.7.1.villoro.tar.gz`).
+2. Push it to **S3** alongside `pyproject.toml`, `uv.lock`, and a versioned `entrypoint.py`.
+3. Ship a **minimal runtime** image that, on start:
+
+   * downloads the selected version (`-v <version>`) from S3,
+   * extracts to `./.venv/`,
+   * activates it, and
+   * runs `entrypoint.py` with your args.
+
+This keeps the Docker image stable (rarely changes) and lets you flip versions at run time.
+
+### 1.3. Files & Layout (at a glance)
 
 ```
 deploy/
 ├── docker/
-│   ├── Dockerfile.venv
-│   └── Dockerfile.runtime
+│   ├── Dockerfile.venv        # build the venv tarball with uv
+│   └── Dockerfile.runtime     # tiny runtime image
 └── scripts/
-    ├── upload_all.py
-    ├── download_all.py
-    └── setup_and_run.sh
+    ├── upload_all.py          # CI: push venv/locks/entrypoint to S3
+    ├── download_all.py        # runtime: fetch artifacts by version
+    └── setup_and_run.sh       # runtime: bootstrap → activate → run
 ecs_northius/
 tests/
 ```
 
 <Notice type="info">
-  The venv tarball, `pyproject.toml`, and `uv.lock` are **versioned** (e.g., `uv`, `0.7.1.villoro`). You can run any version in production by passing `-v <version>` — ideal for testing/debugging without rebuilding images.
+  Venv tarballs and lockfiles are **versioned** (e.g., `uv`, `0.7.1.villoro`). Run any version in prod with `-v <version>` — great for hotfixes and A/B verification.
 </Notice>
+
+### 1.4. How this connects to entrypoints & params
+
+This post focuses on **environment packaging + fast starts** on ECS. For dynamic entrypoints (import-by-string), robust CLI handling with `click`, and typed params via `pydantic`, see <FancyLink linkText="Effortless EMR: A Guide to Seamlessly Running PySpark Coder" url="https://villoro.com/blog/effortless-emr-guide-running-pyspark/" dark="true"/>. The same entrypoint approach drops into this ECS runtime pattern without change.
 
 ## 2. Building the venv (`Dockerfile.venv`)
 
