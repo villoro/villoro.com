@@ -1,91 +1,242 @@
 ---
-slug: ecs
+slug: running-python-ecs-with-uv
 title: Running Python Code in ECS with uv
-meta_title: xx
-description: xxx
+meta_title: Building Fast and Reproducible ECS Python Deployments with uv
+description: "Learn how to separate build and runtime stages using uv to create lightweight, versioned ECS environments. Package dependencies once, run anywhere."
 date: 2025-10-24
 image: /images/blog/9999-ship-python-containers.jpg
 category: cloud_devops
-tags: [AWS, Tutorial, Docker]
+tags: [AWS, ECS, Docker, uv, DE]
 draft: false
 ---
 
-## 1. Introduction
+## 0. Why Another ECS Setup?
 
-Running Python jobs on ECS can quickly get heavy if each container rebuilds dependencies. Using **uv** and a two-stage Docker design, we can separate dependency packaging from runtime execution, resulting in faster, smaller, and more reproducible deployments.
+Running Python workloads on ECS is simple in theory — but in practice, dependency builds slow everything down. Every task rebuilds the same environment, wasting time and compute.
 
-## 2. Building the Virtual Environment — `Dockerfile.venv`
+The solution? **Package once, run anywhere.**
 
-**Goal:** Package a fully ready Python environment into a `.tar.gz` file.
+This post explains how to:
 
-**Highlights:**
+1. Build a **versioned virtual environment** once with `uv`.
+2. Deploy a **minimal runtime container** that runs any version on ECS.
+3. Automate setup with a simple shell script and S3.
 
-* Use `uv` instead of `pip` or `poetry`.
-* Create the environment with `uv venv --copies` and install with `uv sync --frozen --no-dev`.
-* Bundle the venv into `venv_<version>.tar.gz` for deployment.
+<Notice type="info">
+  By separating build and runtime, you get near-instant startup times, stable environments, and zero dependency drift between versions.
+</Notice>
 
-**Why:** The venv is portable, cached in S3, and reusable across ECS tasks — eliminating dependency rebuilds.
+## 1. The Strategy
 
-## 3. Runtime Image — `Dockerfile.runtime`
+We split the flow into two Dockerfiles and a couple of helper scripts.
 
-**Goal:** Run jobs fast without `uv` or build dependencies.
+### 1.1. `Dockerfile.venv`
 
-**Highlights:**
+Builds a `.tar.gz` file containing the full Python environment:
 
-* Uses `python:3.13-slim-bookworm` (small, clean, fast).
-* Installs only `boto3`, `click`, and `loguru` to fetch and run code.
-* Downloads the prebuilt venv from S3, extracts it, and runs the job.
+* Dependencies resolved with `uv`.
+* Your package (`ecs_northius`) installed.
+* Output stored as `venv_<version>.tar.gz`.
 
-**Why:** The runtime container is lightweight and generic — every ECS job version loads the correct venv dynamically.
+This artifact is uploaded to S3.
 
-## 4. Entrypoint Script — `setup_and_run.sh`
+### 1.2. `Dockerfile.runtime`
 
-**Goal:** Automate venv setup and execution.
+A super-light image:
 
-**Steps:**
+* Starts from `python:3.13-slim-bookworm`.
+* Only includes `boto3`, `click`, and `loguru`.
+* Downloads the venv and code from S3 at runtime.
+* Activates the venv and executes `entrypoint.py`.
 
-1. Download `pyproject.toml`, `uv.lock`, `entrypoint.py`, and the venv tarball.
-2. Extract the venv locally.
-3. Activate it.
-4. Run `entrypoint.py` with passed ECS arguments.
+### 1.3. Scripts and Repository Layout
 
-**Why:** This makes the container completely version-agnostic — the job logic and dependencies live outside the image.
+All logic for uploading, downloading, and running code lives in `deploy/scripts`.
 
-## 5. ECS Integration and Versioning
+```
+deploy/
+├── docker/
+│   ├── Dockerfile.venv
+│   └── Dockerfile.runtime
+└── scripts/
+    ├── upload_all.py
+    ├── download_all.py
+    └── setup_and_run.sh
+ecs_northius/
+tests/
+```
 
-Each ECS task specifies a version tag (e.g., `-v uv`, `-v 0.7.1.villoro`). The runtime fetches that version’s artifacts from S3, allowing:
+<Notice type="info">
+  The venv tarball, `pyproject.toml`, and `uv.lock` are **versioned** (e.g., `uv`, `0.7.1.villoro`). You can run any version in production by passing `-v <version>` — ideal for testing/debugging without rebuilding images.
+</Notice>
 
-* Blue/green testing.
-* Version pinning.
-* Iteration without image rebuilds.
+## 2. Building the venv (`Dockerfile.venv`)
 
-## 6. CI/CD Workflow
+We use `uv` because it’s fast, deterministic, and simple — a great fit for reproducible builds.
 
-**Automation pipeline:**
+```Dockerfile
+# 0. Pull images
+ARG BUILD_FOR=linux/amd64
+FROM --platform=${BUILD_FOR} ghcr.io/astral-sh/uv:latest AS uvbin
+FROM --platform=${BUILD_FOR} python:3.13-slim-bookworm AS base
 
-* `Dockerfile.venv`: builds and uploads venv tarball to S3.
-* `Dockerfile.runtime`: builds and pushes the runtime image to ECR.
-* GitHub Actions separates both stages with clear version tagging and caching.
+WORKDIR /app/
+ENV PYTHONIOENCODING=utf-8 LANG=C.UTF-8 UV_LINK_MODE=copy UV_NO_PROGRESS=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 
-## 7. Troubleshooting & Best Practices
+COPY --from=uvbin /uv /usr/local/bin/uv
+COPY --from=uvbin /uvx /usr/local/bin/uvx
+RUN uv --version && uvx --version
 
-* Use LF line endings (`.gitattributes`):
+COPY pyproject.toml uv.lock ./
+RUN uv venv --python 3.13 --copies && uv sync --frozen --no-dev
+
+COPY ecs_northius ./ecs_northius
+RUN uv pip install --python .venv/bin/python --no-deps .
+
+ARG PACKAGE_VERSION
+RUN mkdir -p /dist && tar -C .venv -czf /dist/venv_${PACKAGE_VERSION}.tar.gz .
+FROM scratch AS export
+COPY --from=base /dist/venv_*.tar.gz /dist/
+```
+
+Build and export:
+
+```bash
+docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_VERSION=0.1.0
+```
+
+<Notice type="info">
+  The resulting `venv_0.1.0.tar.gz` is portable — upload it to S3 and reuse it across ECS tasks.
+</Notice>
+
+## 3. The Runtime (`Dockerfile.runtime`)
+
+Here the focus is speed — no build tools, no compilers, no uv.
+
+```Dockerfile
+FROM python:3.13-slim-bookworm AS runtime
+
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN python -m pip install --no-cache-dir boto3 click loguru toml
+
+COPY scripts .
+
+ENTRYPOINT ["/bin/bash", "./setup_and_run.sh"]
+```
+
+<plot_speed>
+
+<Notice type="info">
+  The runtime image is small and starts fast because dependency resolution happened during the venv build.
+</Notice>
+
+## 4. The Entrypoint Script (`setup_and_run.sh`)
+
+What ECS runs by default:
+
+```bash
+echo 1. Downloading venv and config
+python download_all.py "$@"
+
+echo 2. Activating venv
+. ./.venv/bin/activate
+
+echo 3. Running ECS task. Using args="$@"
+python entrypoint.py "$@"
+```
+
+Key points:
+
+* `$@` lets you pass a version: `-v uv`.
+* No dependency resolution here; it only downloads and activates.
+* Use LF endings to avoid `/bin/sh` errors:
 
   ```
   *.sh text eol=lf
   *.py text eol=lf
   ```
-* Always build venvs with `uv venv --copies` to avoid absolute symlinks.
-* For Python 3.14+, extract tarballs with `filter="fully_trusted"`.
-* Store S3 paths and constants in a shared `utils.py`.
 
-## 8. Closing Thoughts
+## 5. Download Script (`download_all.py`)
 
-This approach gives you:
+Fetches all artifacts from S3: venv, entrypoint, and config.
 
-* Instant ECS startup (no dependency rebuilds).
-* Fully reproducible, versioned environments.
-* Small and secure runtime images.
+```python
+import tarfile, boto3, click, utils as u
+from loguru import logger
+
+def download_s3(origin, dest, bucket=u.BUCKET):
+    logger.info(f"Downloading from {origin=} to {dest=}")
+    boto3.client("s3").download_file(bucket, origin, dest)
+
+def venv_extract_tar(filename, local_venv=".venv"):
+    logger.info(f"Extracting {filename=} to {local_venv=}")
+    with tarfile.open(filename, "r:gz") as tar:
+        tar.extractall(local_venv, filter="fully_trusted")
+
+@click.command()
+@click.option("--version", "-v", required=True, help="Version to download")
+def download_all(version):
+    logger.info(f"Downloading all files (version='{version}')")
+    download_s3(f"{u.S3_UV}/pyproject_{version}.toml", "pyproject.toml")
+    download_s3(f"{u.S3_UV}/uv_{version}.lock", "uv.lock")
+    download_s3(f"{u.S3_ENTRY}/entrypoint_{version}.py", "entrypoint.py")
+    download_s3(f"{u.S3_VENV}/venv_{version}.tar.gz", "venv.tar.gz")
+    venv_extract_tar("venv.tar.gz")
+    logger.success("All downloads done")
+
+if __name__ == "__main__":
+    download_all()
+```
+
+<Notice type="warning">
+  Python 3.14+ tightens tar extraction security. Use `filter="fully_trusted"` to avoid `AbsoluteLinkError` from absolute symlinks.
+</Notice>
+
+## 6. How It Runs in ECS
+
+Pass the version when starting the task:
+
+```bash
+docker run --rm ecs/runtime -v uv
+```
+
+At runtime the container:
+
+1. Downloads `venv_<version>.tar.gz`, `entrypoint.py`, and lock files.
+2. Extracts and activates the venv.
+3. Runs the entrypoint with your arguments.
+
+<Notice type="info">
+  You can run different versions in parallel (e.g., `-v uv` for dev, `-v 0.7.1.villoro` for prod) without rebuilding images.
+</Notice>
+
+## 7. CI/CD Flow
+
+* `Dockerfile.venv` builds and uploads the venv tarball to S3.
+* `Dockerfile.runtime` builds and pushes the runtime image to ECR.
+* GitHub Actions keeps these steps separate for fast, reproducible deploys.
+
+## 8. Troubleshooting
+
+| Problem                            | Cause                           | Fix                                 |
+| ---------------------------------- | ------------------------------- | ----------------------------------- |
+| `AbsoluteLinkError`                | Symlinked Python binary in venv | Build with `uv venv --copies`       |
+| `cannot open ./.venv/bin/activate` | CRLF line endings               | Enforce LF via `.gitattributes`     |
+| Slow startup                       | Re-downloading venv each run    | Consider caching or a shared volume |
+
+## 9. Key Takeaways
+
+This pattern gives you:
+
+* Fast ECS startups (no runtime builds).
+* Versioned reproducibility via S3 artifacts.
+* Lightweight runtime images.
 * Clean separation between build and execution.
 
-By combining **uv**, **Docker**, and **S3**, you achieve a deployment model that’s simple, fast, and production-ready.
+With **uv**, **Docker**, and **S3**, your ECS deployments become as fast and predictable as your local runs.
+
+<Notice type="info">
+  The same venv tarballs work for Lambda, Batch, or local debugging for strong parity across environments.
+</Notice>
