@@ -126,13 +126,13 @@ COPY scripts .
 ENTRYPOINT ["/bin/bash", "./setup_and_run.sh"]
 ```
 
-<plot_speed>
+**plot_speed**
 
 <Notice type="info">
   The runtime image is small and starts fast because dependency resolution happened during the venv build.
 </Notice>
 
-## 4. The Entrypoint Script (`setup_and_run.sh`)
+## 4. Runtime Bootstrap Script (`setup_and_run.sh`)
 
 What ECS runs by default:
 
@@ -157,6 +157,8 @@ Key points:
   *.sh text eol=lf
   *.py text eol=lf
   ```
+
+For dynamic entrypoint and parameter management, check out <FancyLink linkText="Effortless EMR: A Guide to Seamlessly Running PySpark Coder" url="https://villoro.com/blog/effortless-emr-guide-running-pyspark/" dark="true"/> — the concepts complement this ECS setup perfectly.
 
 ## 5. Download Script (`download_all.py`)
 
@@ -217,6 +219,10 @@ At runtime the container:
 * `Dockerfile.venv` builds and uploads the venv tarball to S3.
 * `Dockerfile.runtime` builds and pushes the runtime image to ECR.
 * GitHub Actions keeps these steps separate for fast, reproducible deploys.
+
+<Notice type="info">
+  The runtime image is reused across multiple versions, only downloading the desired venv from S3. This dramatically reduces cold starts.
+</Notice>
 
 ## 8. Troubleshooting
 
