@@ -581,17 +581,18 @@ jobs:
 * **S3/ECR VPC endpoints**: set them to avoid NAT costs in private subnets.
 * **Immutable versions + `latest`**: publish both; production can point at `latest` while you can roll forward/back with a version flag.
 
-## 5. Key Takeaways
+## 5. Wrapping Up
 
-This pattern gives you:
+You now have a **fast, versioned, and reproducible** pattern for running Python on ECS:
 
-* Fast ECS startups (no runtime builds).
-* Versioned reproducibility via S3 artifacts.
-* Lightweight runtime images.
-* Clean separation between build and execution.
+* Build once → deploy anywhere.
+* Keep runtime images tiny and stable.
+* Test new versions in production safely.
+* Roll forward or back with a single `-v` flag.
 
-With **uv**, **Docker**, and **S3**, your ECS deployments become as fast and predictable as your local runs.
+This approach scales from small one-off jobs to full ETL pipelines, and it works just as well for Lambda or Batch.
 
-<Notice type="info">
-  The same venv tarballs work for Lambda, Batch, or local debugging for strong parity across environments.
+<Notice type="success">
+  With `uv`, `Docker`, and `S3`, ECS becomes a clean, predictable environment.
+  No cold-start surprises, no rebuild overhead, and total control over your Python versions.
 </Notice>
