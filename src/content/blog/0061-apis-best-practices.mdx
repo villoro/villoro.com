@@ -206,13 +206,21 @@ Never ignore HTTP errors. Use `raise_for_status()` for unknown responses.
 
 ```python
 response = self.session.get(url, params=params, timeout=self.timeout_s)
+status_code = response.status_code
 
-if response.status_code == 204:  # No content, stop gracefully
+if status_code == 204:  # No content, stop gracefully
     return []
 
-if response.status_code == 429:
+elif status_code == 429:
     # Too many requests → could retry with backoff
     handle_rate_limit()
+
+# Log any non successful error.
+elif status_code >= 400: # Switch to 'if' if you want to log all errors
+    body_preview = (response.text or "")[:500]
+    logger.error(
+        f"HTTP error {status_code} at {url=}: {response.reason=} {body_preview=}"
+    )
 
 response.raise_for_status()  # Raise for all other errors
 ```
