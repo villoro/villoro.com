@@ -42,7 +42,7 @@ Run **small images** and **fetch the environment at runtime**. This plays to Far
 | **B. Slim image + download venv at runtime** | Keep image minimal; fetch `venv_*.tar.gz` from S3 on startup | Tiny image → fast pulls; reuse one runtime image for many versions; faster iteration (swap venv, not image) | Slightly more bootstrap logic; needs S3 access & versioning             |
 
 <Notice type="success">
-  For short‑lived/batch tasks, **B** consistently starts faster: pull a ~80–100 MB image, then download a compressed venv from S3. Net startup is typically **tens of seconds**, not minutes.
+  For short‑lived/batch tasks, **B** consistently starts faster: pull a ~80–100 MB image, then download a compressed venv from S3. Net startup is typically **tens of seconds**, not minutes.
 </Notice>
 
 ### 1.2. The Pattern I Use (and this post documents)
@@ -108,6 +108,62 @@ In addition to third-party dependencies, we **install `ecs_northius` into the ve
 <Notice type="success">
   The venv tarball is a plug-and-play runtime: download it, activate it, run the entrypoint — no extra setup required.
 </Notice>
+
+There are **two valid ways** to make your code importable in the venv.
+Both work but the **pyproject-driven approach** is usually better because it also lets you include non-Python assets (YAML, templates, etc.).
+
+#### 2.2.1 Option A — Classic packages (add `__init__.py`)
+
+Add `__init__.py` to every package directory you want importable. Simple and explicit.
+
+```plaintext
+ecs_northius/__init__.py
+ecs_northius/common/__init__.py
+ecs_northius/common/aws/__init__.py
+```
+
+Use standard package discovery:
+
+```toml
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ecs_northius*"]
+```
+
+#### 2.2.2. Option B — Pyproject-driven (recommended)
+
+Skip `__init__.py` by using **namespace packages** (PEP 420) or keep them if you prefer — the key is that discovery and data inclusion are driven by `pyproject.toml`.
+
+Package discovery:
+
+```toml
+# If you want to allow namespace packages (no __init__.py):
+[tool.setuptools.packages.find_namespace]
+where = ["."]
+include = ["ecs_northius*"]
+
+# If you keep classic packages with __init__.py, use this instead:
+# [tool.setuptools.packages.find]
+# where = ["."]
+# include = ["ecs_northius*"]
+```
+
+Package data (YAML, templates, etc.):
+
+```toml
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+ecs_northius = [
+  "**/*.html",
+  "**/*.j2",
+  "**/*.yaml",
+  "**/*.yml",
+]
+```
+
+> With Option B you can manage both discovery **and** non-Python assets from one place.
 
 ### 2.3 Dockerfile.venv
 
