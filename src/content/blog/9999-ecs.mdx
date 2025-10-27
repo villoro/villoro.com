@@ -149,7 +149,10 @@ RUN uv venv --python 3.12 --copies && uv sync --frozen --no-dev
 COPY ecs_northius ./ecs_northius
 RUN uv pip install --python .venv/bin/python --no-deps .
 
-# 4.1. Test venv: sanity check
+# 4.1. Remove source dir so test imports from venv
+RUN [ -d ecs_northius ] && rm -rf ecs_northius || echo "ecs_northius not present"
+
+# 4.2. Test venv: sanity check
 RUN .venv/bin/python -c "import ecs_northius; print('ecs_northius OK')"
 
 # 5. Package the venv
