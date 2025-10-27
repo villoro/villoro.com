@@ -263,13 +263,22 @@ results = []
 try:
     for i in range(self.max_calls):
         results += query_api()
-except Exception as e:
-    logger.error(f"Unexpected {e=}")
+
+# If you need extra logging, uncomment:
+# except Exception as e:
+#     logger.error(f"Unexpected {e=}")
+#     raise  # Relaunches the exception
+
+finally:
     if results:
         logger.info(f"Exporting {len(results)} results after failure")
         export_results(results)
-    raise  # Relaunches the exception
 ```
+
+<Notice type="info" className="mt-6">
+    You can use `finally` with a `try` block to run code whether the `try` block fails or succeeds.
+    This is really useful for tasks like exporting partial results.
+</Notice>
 
 ## 4. Advanced Usage
 
