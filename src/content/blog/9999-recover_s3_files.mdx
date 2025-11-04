@@ -157,7 +157,10 @@ After confirming versioning was enabled, the goal was to **recover only the file
   Restoring a file means deleting its delete marker. We filtered strictly by the incident timestamps to ensure that only the files deleted by mistake were brought back.
 </Notice>
 
-## 5. Full code — scan & list deleted files into a DataFrame
+## 5. Investigate delete markers
+
+Before restoring anything, we first **enumerate all delete markers** for a given prefix and filter them to the exact incident window.
+This gives us a clear, auditable list of what would be restored.
 
 ```python
 import boto3
@@ -230,10 +233,13 @@ def scan_delete_markers(s3, bucket, prefix, start_ts, end_ts):
   The scan collects rows first, then vectorizes timestamp casting and eligibility — faster and simpler than per‑row logic.
 </Notice>
 
-## 6. Actually recovering files (removing delete markers)
+## 6. Actually recovering files
 
-* Dry‑run first to validate scope; then apply with batching (≤1000 per `DeleteObjects`).
-* Beware of Object Lock/legal holds; consider retry config for large jobs.
+Now that we have an audited list of delete markers, we restore by **deleting those markers**. Start with a dry‑run to validate scope, then apply in batches.
+
+<Notice type="warning">
+  If your bucket uses Object Lock or legal holds, S3 will refuse deletions. Also consider a retry‑configured client for large jobs.
+</Notice>
 
 ```python
 def remove_delete_markers(s3, bucket, df_in, dry_run=True, batch_size=1000):
