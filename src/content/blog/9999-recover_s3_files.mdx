@@ -45,13 +45,48 @@ Fortunately, all S3 deletions are logged, and our buckets had **versioning and d
 
 ## 2. S3 Versioning
 
-* **Why**: keeps prior object versions and protects against accidental deletes/overwrites.
-* **Behavior**: every PUT/DELETE creates a new version; DELETE creates a **delete marker** that hides older versions.
-* **Enable**:
+When working with critical datasets like Iceberg tables, **S3 Versioning is your safety net**. It allows you to recover any object or undo accidental deletions by maintaining historical versions of every file.
 
-  * Console: Bucket → Properties → Bucket versioning → Enable.
-  * CLI: `aws s3api put-bucket-versioning --bucket <name> --versioning-configuration Status=Enabled`.
-* **Recommended**: (optional) MFA Delete; replication to a backup bucket; lifecycle for old versions.
+### 2.1. Why it matters
+
+Versioning ensures that every modification or deletion is reversible:
+
+* Each `PUT` or `DELETE` creates a **new version** of the object instead of overwriting or permanently removing it.
+* A `DELETE` operation adds a **delete marker**, which hides older versions but doesn’t remove them.
+* You can restore an object by simply removing its latest delete marker.
+
+This behavior protects you from accidents like mass deletions, misconfigured paths, or overwrites caused by ETL jobs.
+
+<Notice type="info" className="mt-6">
+  When versioning is enabled, you can roll back changes at the object level — essential for recovering partitioned Iceberg tables where structure and data must stay consistent.
+</Notice>
+
+### 2.2. How to enable versioning
+
+You can enable versioning on any S3 bucket through the AWS Console or CLI:
+
+**Console:**
+Navigate to your bucket → `Properties` → `Bucket Versioning` → click `Enable`.
+
+**CLI:**
+
+```bash
+aws s3api put-bucket-versioning \
+  --bucket <your-bucket-name> \
+  --versioning-configuration Status=Enabled
+```
+
+For more details, see the <FancyLink linkText="Official AWS documentation on S3 Versioning" url="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html" company="aws"/>.
+
+### 2.3. Recommended practices
+
+* **Lifecycle policies:** Automatically clean up older versions after a defined retention period to manage costs.
+* **MFA Delete:** Add an extra confirmation layer for deletions (useful for production or critical buckets).
+* **Replication:** Mirror objects — including versions — to another region or account for disaster recovery.
+
+<Notice type="warning" className="mt-6">
+  Versioning only protects files **after** it’s enabled. Enable it early before something goes wrong.
+</Notice>
 
 ## 3. How delete markers work
 
