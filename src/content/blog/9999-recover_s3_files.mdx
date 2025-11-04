@@ -130,12 +130,32 @@ Removing `v4` restores `v2` (the most recent data version). Removing `v3` change
   If versioning is disabled or suspended, delete markers may behave differently. Ensure versioning was active when the deletion happened.
 </Notice>
 
-## 4. Our recovery strategy
+## 4. Our Recovery Strategy
 
-* Identify precise **time window** of the incident.
-* List **all** delete markers under the affected prefix into a pandas DataFrame.
-* Filter by time window; review in Excel/Parquet if desired.
-* Remove delete markers (dry‑run first), then apply.
+After confirming versioning was enabled, the goal was to **recover only the files deleted during the incident window** — not everything that had ever changed. Recovering too much could break Iceberg table consistency, so precision was essential.
+
+### 4.1. Steps we followed
+
+1. **Identify the time window** of the incident
+   * We used Prefect logs to pinpoint exactly when the erroneous delete ran.
+   * The start and end timestamps were later used to filter S3 delete markers.
+
+2. **List all delete markers** under the affected prefix
+   * Using `boto3` and pagination, we retrieved every delete marker in the target prefix.
+   * Each record includes `key`, `version_id`, `last_modified`, and `is_latest`.
+   * All results were stored in a pandas DataFrame for analysis.
+
+3. **Validate deleted files**
+   * Filter delete markers by timestamps.
+   * Check affected files.
+
+4. **Restore deleted files**
+   * Run a **dry-run** first to verify scope.
+   * Then, remove delete markers in controlled batches (≤1000 per call) to restore the previous versions.
+
+<Notice type="info" className="mt-6">
+  Restoring a file means deleting its delete marker. We filtered strictly by the incident timestamps to ensure that only the files deleted by mistake were brought back.
+</Notice>
 
 ## 5. Full code — scan & list deleted files into a DataFrame
 
