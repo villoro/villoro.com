@@ -16,12 +16,32 @@ APIs and data lakes are unforgiving: one wrong path and you can “delete” an 
 
 ## 1. What happened
 
-* Wrong table path in Athena triggered deletes across an Iceberg prefix.
-* Symptoms: tables “vanished”, queries failed; goal was restore without full reprocessing.
-
 <Notice type="warning">
   If your buckets aren’t versioned, stop and enable Versioning before anything else. Without it, you’ll need backups/replication or CloudTrail logs to reconstruct keys.
 </Notice>
+
+One of our cleanup scripts was designed to **delete Glue tables along with their associated S3 data paths**. Normally, each table is safely scoped to its own directory, e.g.:
+
+```
+raw-bucket/
+└── schema/
+    ├── customers/
+    ├── orders/
+    └── payments/
+```
+
+However, one table was mistakenly defined with its path set to the **schema root** instead of its dedicated folder:
+
+```
+raw-bucket/
+└── schema/   ❌  (should have been raw-bucket/schema/table_name/)
+```
+
+When the cleanup ran, it deleted the entire `schema/` prefix — effectively removing **all tables under that schema**, not just one. This included both data and metadata files for every Iceberg table in that schema.
+
+Because we use **Iceberg tables**, recovering the wrong files could break table consistency since mismatched metadata and data files would render the tables unreadable. Our goal was therefore to **recover exactly the files deleted during the incident**, nothing more.
+
+Fortunately, all S3 deletions are logged, and our buckets had **versioning and delete markers enabled**, letting us precisely identify the deletion window and safely restore the affected files.
 
 ## 2. S3 Versioning
 
