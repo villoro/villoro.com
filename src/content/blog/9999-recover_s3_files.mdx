@@ -10,32 +10,41 @@ tags: [AWS]
 draft: false
 ---
 
+## 0. Intro
+
+APIs and data lakes are unforgiving: one wrong path and you can “delete” an entire table. This post shows exactly how we recovered **Iceberg tables deleted by mistake** by leveraging **S3 Versioning** and **delete markers**, with a notebook‑friendly pandas workflow.
+
 ## 1. What happened
 
 * Wrong table path in Athena triggered deletes across an Iceberg prefix.
 * Symptoms: tables “vanished”, queries failed; goal was restore without full reprocessing.
 
+<Notice type="warning">
+  If your buckets aren’t versioned, stop and enable Versioning before anything else. Without it, you’ll need backups/replication or CloudTrail logs to reconstruct keys.
+</Notice>
+
 ## 2. S3 Versioning
 
-* Why: versioning keeps prior object versions and protects against accidental deletes/overwrites.
-* Behavior: every PUT/DELETE creates a new version; delete creates a **delete marker** that hides older versions.
-* Enable:
-	* Console: Bucket → Properties → Bucket versioning → Enable.
-	* CLI: `aws s3api put-bucket-versioning --bucket <name> --versioning-configuration Status=Enabled`.
-* Recommended: (optional) MFA Delete; replication to a backup bucket; lifecycle for old versions.
+* **Why**: keeps prior object versions and protects against accidental deletes/overwrites.
+* **Behavior**: every PUT/DELETE creates a new version; DELETE creates a **delete marker** that hides older versions.
+* **Enable**:
+
+  * Console: Bucket → Properties → Bucket versioning → Enable.
+  * CLI: `aws s3api put-bucket-versioning --bucket <name> --versioning-configuration Status=Enabled`.
+* **Recommended**: (optional) MFA Delete; replication to a backup bucket; lifecycle for old versions.
 
 ## 3. How delete markers work
 
 * A delete marker becomes the **latest** version and hides data.
 * Removing the **latest** delete marker restores the previous version (the data) as current.
-* Multiple markers: removing non-latest markers doesn’t change visibility, but is harmless if you want to clean them.
+* Multiple markers: removing non‑latest markers doesn’t change visibility, but is harmless if you want to clean them.
 
 ## 4. Our recovery strategy
 
-* Identify precise time window of the incident.
+* Identify precise **time window** of the incident.
 * List **all** delete markers under the affected prefix into a pandas DataFrame.
 * Filter by time window; review in Excel/Parquet if desired.
-* Remove delete markers (dry-run first), then apply.
+* Remove delete markers (dry‑run first), then apply.
 
 ## 5. Full code — scan & list deleted files into a DataFrame
 
@@ -106,9 +115,13 @@ def scan_delete_markers(s3, bucket, prefix, start_ts, end_ts):
     )
 ```
 
+<Notice type="info" className="mt-6">
+  The scan collects rows first, then vectorizes timestamp casting and eligibility — faster and simpler than per‑row logic.
+</Notice>
+
 ## 6. Actually recovering files (removing delete markers)
 
-* Dry-run first to validate scope; then apply with batching (≤1000 per `DeleteObjects`).
+* Dry‑run first to validate scope; then apply with batching (≤1000 per `DeleteObjects`).
 * Beware of Object Lock/legal holds; consider retry config for large jobs.
 
 ```python
@@ -174,5 +187,9 @@ def recover_s3_delete_markers(bucket, prefix, start_ts, end_ts, dry_run=True, ex
 
 ## 7. Validate & harden
 
-* **Validate:** sample-list versions to confirm latest is data (not a marker); retry failed batches; re-run a few Athena queries.
+* **Validate:** sample‑list versions to confirm latest is data (not a marker); retry failed batches; re‑run a few Athena queries.
 * **Harden:** always enable versioning; add confirmations on destructive paths; CloudTrail queries for deletes; optional replication + lifecycle for marker cleanup.
+
+<Notice type="info">
+  If you want, I can add a short CloudTrail + Athena query to list deleted keys in a window, useful when Versioning wasn’t enabled.
+</Notice>
