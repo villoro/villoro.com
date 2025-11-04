@@ -1,0 +1,315 @@
+---
+slug: recover-s3-files-delete-markers
+title: Recovering files from S3 using Delete Markers
+meta_title: Recover deleted S3 files safely with Versioning and Delete Markers
+description: Learn how to recover accidentally deleted S3 files using versioning and delete markers — including listing deleted objects, filtering by time window, and restoring them with boto3 and pandas.
+date: 2025-11-04
+image: /images/blog/9999-recycle-plant.jpg
+category: DE
+tags: [DE, AWS, S3, Python, Recovery, Best Practices, Versioning, Iceberg]
+draft: true
+---
+
+## 0. Intro
+
+APIs and data lakes are unforgiving: one wrong path and you can “delete” an entire table. This post shows exactly how we recovered **Iceberg tables deleted by mistake** by leveraging **S3 Versioning** and **delete markers**, with a notebook‑friendly pandas workflow.
+
+## 1. What happened
+
+<Notice type="warning">
+  If your buckets aren’t versioned, stop and enable Versioning before anything else. Without it, you’ll need backups/replication or CloudTrail logs to reconstruct keys.
+</Notice>
+
+One of our cleanup scripts was designed to **delete Glue tables along with their associated S3 data paths**. Normally, each table is safely scoped to its own directory, e.g.:
+
+```plaintext
+raw-bucket/
+└── schema/
+    ├── customers/
+    ├── orders/
+    └── payments/
+```
+
+However, one table was mistakenly defined with its path set to the **schema root** instead of its dedicated folder:
+
+```plaintext
+raw-bucket/
+└── schema/   ❌  (should have been raw-bucket/schema/table_name/)
+```
+
+When the cleanup ran, it deleted the entire `schema/` prefix — effectively removing **all tables under that schema**, not just one. This included both data and metadata files for every Iceberg table in that schema.
+
+Because we use **Iceberg tables**, recovering the wrong files could break table consistency since mismatched metadata and data files would render the tables unreadable. Our goal was therefore to **recover exactly the files deleted during the incident**, nothing more.
+
+Fortunately, all S3 deletions are logged, and our buckets had **versioning and delete markers enabled**, letting us precisely identify the deletion window and safely restore the affected files.
+
+## 2. S3 Versioning
+
+When working with critical datasets like Iceberg tables, **S3 Versioning is your safety net**. It allows you to recover any object or undo accidental deletions by maintaining historical versions of every file.
+
+### 2.1. Why it matters
+
+Versioning ensures that every modification or deletion is reversible:
+
+* Each `PUT` or `DELETE` creates a **new version** of the object instead of overwriting or permanently removing it.
+* A `DELETE` operation adds a **delete marker**, which hides older versions but doesn’t remove them.
+* You can restore an object by simply removing its latest delete marker.
+
+This behavior protects you from accidents like mass deletions, misconfigured paths, or overwrites caused by ETL jobs.
+
+<Notice type="info" className="mt-6">
+  When versioning is enabled, you can roll back changes at the object level — essential for recovering partitioned Iceberg tables where structure and data must stay consistent.
+</Notice>
+
+### 2.2. How to enable versioning
+
+You can enable versioning on any S3 bucket through the AWS Console or CLI:
+
+**Console:**
+Navigate to your bucket → `Properties` → `Bucket Versioning` → click `Enable`.
+
+**CLI:**
+
+```bash
+aws s3api put-bucket-versioning \
+  --bucket <your-bucket-name> \
+  --versioning-configuration Status=Enabled
+```
+
+For more details, see the <FancyLink linkText="S3 Versioning | AWS docs" url="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html" company="aws"/>.
+
+### 2.3. Recommended practices
+
+* **Lifecycle policies:** Automatically clean up older versions after a defined retention period to manage costs.
+* **MFA Delete:** Add an extra confirmation layer for deletions (useful for production or critical buckets).
+* **Replication:** Mirror objects — including versions — to another region or account for disaster recovery.
+
+<Notice type="warning" className="mt-6">
+  Versioning only protects files **after** it’s enabled. Enable it early before something goes wrong.
+</Notice>
+
+## 3. How Delete Markers Work
+
+When S3 versioning is enabled, deleting an object doesn’t actually remove its data. Instead, AWS adds a **delete marker** which is a special placeholder that marks the object as deleted while keeping all its previous versions safely stored.
+
+### Understanding delete markers
+
+Each object version can be visualized as a stack:
+
+```plaintext
+Key: data/table.parquet
+├── v3 ─ Delete Marker   ← hides everything below (latest)
+├── v2 ─ Data version
+└── v1 ─ Data version
+```
+
+The delete marker (`v3`) acts like a curtain: it makes the object appear deleted, but all underlying versions remain intact. Removing that marker simply reveals the previous version again.
+
+<Notice type="info" className="mt-6">
+  Deleting a delete marker does **not** delete data, it restores the most recent object version underneath.
+</Notice>
+
+### Multiple delete markers
+
+Sometimes multiple delete markers can exist for the same key (for example, due to replication or concurrent deletes). In such cases:
+
+* Removing the **latest** delete marker restores the object’s visibility.
+* Removing **older** delete markers has **no effect** on object visibility, but is safe if you want to tidy up version history.
+
+```
+Key: logs/2025-10-31.json
+├── v4 ─ Delete Marker   ← current hidden state
+├── v3 ─ Delete Marker
+├── v2 ─ Data version
+└── v1 ─ Data version
+```
+
+Removing `v4` restores `v2` (the most recent data version). Removing `v3` changes nothing. For more info, see the <FancyLink linkText="Delete markers | AWS docs" url="https://docs.aws.amazon.com/AmazonS3/latest/userguide/DeleteMarker.html" company="aws"/>.
+
+<Notice type="warning">
+  If versioning is disabled or suspended, delete markers may behave differently. Ensure versioning was active when the deletion happened.
+</Notice>
+
+## 4. Our Recovery Strategy
+
+After confirming versioning was enabled, the goal was to **recover only the files deleted during the incident window** — not everything that had ever changed. Recovering too much could break Iceberg table consistency, so precision was essential.
+
+### 4.1. Steps we followed
+
+1. **Identify the time window** of the incident
+   * We used Prefect logs to pinpoint exactly when the erroneous delete ran.
+   * The start and end timestamps were later used to filter S3 delete markers.
+
+2. **List all delete markers** under the affected prefix
+   * Using `boto3` and pagination, we retrieved every delete marker in the target prefix.
+   * Each record includes `key`, `version_id`, `last_modified`, and `is_latest`.
+   * All results were stored in a pandas DataFrame for analysis.
+
+3. **Validate deleted files**
+   * Filter delete markers by timestamps.
+   * Check affected files.
+
+4. **Restore deleted files**
+   * Run a **dry-run** first to verify scope.
+   * Then, remove delete markers in controlled batches (≤1000 per call) to restore the previous versions.
+
+<Notice type="info" className="mt-6">
+  Restoring a file means deleting its delete marker. We filtered strictly by the incident timestamps to ensure that only the files deleted by mistake were brought back.
+</Notice>
+
+## 5. Investigate delete markers
+
+Before restoring anything, we first **enumerate all delete markers** for a given prefix and filter them to the exact incident window.
+This gives us a clear, auditable list of what would be restored.
+
+```python
+import boto3
+import pandas as pd
+from loguru import logger
+from tqdm.notebook import tqdm
+
+COLS_SORTING = {"eligible": False, "last_modified": True, "key": True}
+
+
+def ensure_versioning_enabled(s3, bucket):
+    logger.info(f"Checking if versioning is enabled for {bucket=}")
+    status = s3.get_bucket_versioning(Bucket=bucket).get("Status", "NotEnabled")
+    if status not in ("Enabled", "Suspended"):
+        raise RuntimeError(
+            f"Versioning not enabled for {bucket=}. Unable to auto-restore via delete markers."
+        )
+    logger.info(f"Versioning is {status=} for {bucket=}")
+    return status
+
+
+def _iter_delete_markers(s3, bucket, prefix):
+    paginator = s3.get_paginator("list_object_versions")
+    pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+
+    for page in tqdm(pages, desc="Listing pages", unit="page"):
+        delete_markers = page.get("DeleteMarkers", []) or []
+        for dm in delete_markers:
+            yield dm
+
+
+def scan_delete_markers(s3, bucket, prefix, start_ts, end_ts):
+    logger.info(f"Scanning delete markers under {bucket=} {prefix=}")
+
+    rows = []
+    for dm in _iter_delete_markers(s3, bucket, prefix):
+        rows.append(
+            {
+                "key": dm["Key"],
+                "version_id": dm["VersionId"],
+                "is_latest": bool(dm.get("IsLatest")),
+                "last_modified": dm["LastModified"],
+            }
+        )
+
+    logger.info(f"Scan found {len(rows)} delete markers. Building dataframe")
+    df = pd.DataFrame(rows)
+    if df.empty:
+        logger.warning("There are no delete markers")
+        return df
+
+    df["last_modified"] = pd.to_datetime(df["last_modified"], utc=True)
+
+    start_ts = pd.to_datetime(start_ts, utc=True)
+    end_ts = pd.to_datetime(end_ts, utc=True)
+
+    logger.info(f"Filtering with {start_ts=} and {end_ts=}")
+    df["eligible"] = (df["last_modified"] >= start_ts) & (df["last_modified"] <= end_ts)
+
+    eligible_count = int(df["eligible"].sum())
+    unique_keys = df.loc[df["eligible"], "key"].nunique()
+    logger.info(f"{eligible_count=} ({unique_keys=}) for {bucket=} {prefix=}")
+
+    return df.sort_values(
+        list(COLS_SORTING.keys()), ascending=list(COLS_SORTING.values())
+    )
+```
+
+<Notice type="info" className="mt-6">
+  The scan collects rows first, then vectorizes timestamp casting and eligibility — faster and simpler than per‑row logic.
+</Notice>
+
+## 6. Actually recovering files
+
+Now that we have an audited list of delete markers, we restore by **deleting those markers**. Start with a dry‑run to validate scope, then apply in batches.
+
+<Notice type="warning">
+  If your bucket uses Object Lock or legal holds, S3 will refuse deletions. Also consider a retry‑configured client for large jobs.
+</Notice>
+
+```python
+def remove_delete_markers(s3, bucket, df_in, dry_run=True, batch_size=1000):
+    logger.info(f"Preparing delete-marker removal with {dry_run=} and {batch_size=}")
+    if df_in.empty:
+        logger.info("No delete markers were provided to the remover (dataframe is empty)")
+        return False
+
+    df = df_in.loc[df_in["eligible"], ["key", "version_id"]].copy()
+    planned = len(df)
+    logger.info(f"There are {planned} files to be restored")
+
+    if planned == 0 or dry_run:
+        logger.warning("Dry-run active: will not remove any delete markers")
+        return False
+
+    logger.info("Removing eligible delete markers in batches")
+    restored = 0
+    batch = []
+    for rec in tqdm(df.to_dict(orient="records"), desc="Removing markers", unit="dm"):
+        batch.append({"Key": rec["key"], "VersionId": rec["version_id"]})
+
+        if len(batch) == batch_size:
+            logger.info(f"Restoring {len(batch)} files")
+            s3.delete_objects(Bucket=bucket, Delete={"Objects": batch})
+            restored += len(batch)
+            batch = []
+
+    if batch:
+        logger.info(f"Restoring {len(batch)} files (done {restored}/{planned})")
+        s3.delete_objects(Bucket=bucket, Delete={"Objects": batch})
+        restored += len(batch)
+
+    logger.info(f"Job done {restored=} out of {planned=}")
+    return True
+```
+
+**Usage skeleton**
+
+```python
+def recover_s3_delete_markers(bucket, prefix, start_ts, end_ts, dry_run=True, export_excel=False):
+    logger.info("Starting delete-marker recovery flow"
+                f" ({bucket=} {prefix=} {start_ts=} {end_ts=} {dry_run=})")
+
+    assert prefix is not None, "prefix must be non-empty"
+    assert start_ts is not None, "start_ts must be non-empty"
+    assert end_ts is not None, "end_ts must be non-empty"
+
+    s3 = boto3.client("s3")
+    ensure_versioning_enabled(s3, bucket)
+    df = scan_delete_markers(s3, bucket, prefix, start_ts, end_ts)
+    remove_delete_markers(s3, bucket, df, dry_run=dry_run)
+
+    if export_excel:
+        logger.info("Exporting delete markers list to FILE_EXCEL")
+        df_x = df.copy()
+        df_x["last_modified"] = df_x["last_modified"].dt.tz_localize(None)
+        df_x.to_excel("files_to_recover.xlsx", index=False)
+
+    return df
+```
+
+## 7. Conclusion
+
+Recovering the Iceberg tables wasn’t about luck, it was about preparation. Versioning gave us a rewind button, and precise recovery logic kept metadata and data aligned.
+
+### 7.1. Key lessons
+
+* Always isolate table paths — no shared prefixes.
+* Keep S3 versioning **enabled** across all critical buckets.
+* Add guardrails and confirmations to destructive operations.
+
+These steps turned what could’ve been a week-long recovery into an afternoon fix. The same approach now lives in our internal toolkit as another safeguard between human error and data loss.
