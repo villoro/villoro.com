@@ -22,7 +22,7 @@ APIs and data lakes are unforgiving: one wrong path and you can “delete” an 
 
 One of our cleanup scripts was designed to **delete Glue tables along with their associated S3 data paths**. Normally, each table is safely scoped to its own directory, e.g.:
 
-```
+```plaintext
 raw-bucket/
 └── schema/
     ├── customers/
@@ -32,7 +32,7 @@ raw-bucket/
 
 However, one table was mistakenly defined with its path set to the **schema root** instead of its dedicated folder:
 
-```
+```plaintext
 raw-bucket/
 └── schema/   ❌  (should have been raw-bucket/schema/table_name/)
 ```
@@ -76,7 +76,7 @@ aws s3api put-bucket-versioning \
   --versioning-configuration Status=Enabled
 ```
 
-For more details, see the <FancyLink linkText="Official AWS documentation on S3 Versioning" url="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html" company="aws"/>.
+For more details, see the <FancyLink linkText="S3 Versioning | AWS docs" url="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html" company="aws"/>.
 
 ### 2.3. Recommended practices
 
@@ -88,11 +88,47 @@ For more details, see the <FancyLink linkText="Official AWS documentation on S3 
   Versioning only protects files **after** it’s enabled. Enable it early before something goes wrong.
 </Notice>
 
-## 3. How delete markers work
+## 3. How Delete Markers Work
 
-* A delete marker becomes the **latest** version and hides data.
-* Removing the **latest** delete marker restores the previous version (the data) as current.
-* Multiple markers: removing non‑latest markers doesn’t change visibility, but is harmless if you want to clean them.
+When S3 versioning is enabled, deleting an object doesn’t actually remove its data. Instead, AWS adds a **delete marker** which is a special placeholder that marks the object as deleted while keeping all its previous versions safely stored.
+
+### Understanding delete markers
+
+Each object version can be visualized as a stack:
+
+```plaintext
+Key: data/table.parquet
+├── v3 ─ Delete Marker   ← hides everything below (latest)
+├── v2 ─ Data version
+└── v1 ─ Data version
+```
+
+The delete marker (`v3`) acts like a curtain: it makes the object appear deleted, but all underlying versions remain intact. Removing that marker simply reveals the previous version again.
+
+<Notice type="info" className="mt-6">
+  Deleting a delete marker does **not** delete data, it restores the most recent object version underneath.
+</Notice>
+
+### Multiple delete markers
+
+Sometimes multiple delete markers can exist for the same key (for example, due to replication or concurrent deletes). In such cases:
+
+* Removing the **latest** delete marker restores the object’s visibility.
+* Removing **older** delete markers has **no effect** on object visibility, but is safe if you want to tidy up version history.
+
+```
+Key: logs/2025-10-31.json
+├── v4 ─ Delete Marker   ← current hidden state
+├── v3 ─ Delete Marker
+├── v2 ─ Data version
+└── v1 ─ Data version
+```
+
+Removing `v4` restores `v2` (the most recent data version). Removing `v3` changes nothing. For more info, see the <FancyLink linkText="Delete markers | AWS docs" url="https://docs.aws.amazon.com/AmazonS3/latest/userguide/DeleteMarker.html" company="aws"/>.
+
+<Notice type="warning">
+  If versioning is disabled or suspended, delete markers may behave differently. Ensure versioning was active when the deletion happened.
+</Notice>
 
 ## 4. Our recovery strategy
 
