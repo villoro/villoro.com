@@ -302,11 +302,14 @@ def recover_s3_delete_markers(bucket, prefix, start_ts, end_ts, dry_run=True, ex
     return df
 ```
 
-## 7. Validate & harden
+## 7. Conclusion
 
-* **Validate:** sample‑list versions to confirm latest is data (not a marker); retry failed batches; re‑run a few Athena queries.
-* **Harden:** always enable versioning; add confirmations on destructive paths; CloudTrail queries for deletes; optional replication + lifecycle for marker cleanup.
+Recovering the Iceberg tables wasn’t about luck, it was about preparation. Versioning gave us a rewind button, and precise recovery logic kept metadata and data aligned.
 
-<Notice type="info">
-  If you want, I can add a short CloudTrail + Athena query to list deleted keys in a window, useful when Versioning wasn’t enabled.
-</Notice>
+### 7.1. Key lessons
+
+* Always isolate table paths — no shared prefixes.
+* Keep S3 versioning **enabled** across all critical buckets.
+* Add guardrails and confirmations to destructive operations.
+
+These steps turned what could’ve been a week-long recovery into an afternoon fix. The same approach now lives in our internal toolkit as another safeguard between human error and data loss.
