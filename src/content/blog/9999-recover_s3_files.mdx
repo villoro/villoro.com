@@ -1,0 +1,178 @@
+---
+slug: recover-s3-files-delete-markers
+title: Recovering files from S3 using Delete Markers
+meta_title: xx
+description: xx
+date: 2025-11-04
+image: /images/blog/9999-recycle-plant.jpg
+category: DE
+tags: [AWS]
+draft: false
+---
+
+## 1. What happened
+
+* Wrong table path in Athena triggered deletes across an Iceberg prefix.
+* Symptoms: tables “vanished”, queries failed; goal was restore without full reprocessing.
+
+## 2. S3 Versioning
+
+* Why: versioning keeps prior object versions and protects against accidental deletes/overwrites.
+* Behavior: every PUT/DELETE creates a new version; delete creates a **delete marker** that hides older versions.
+* Enable:
+	* Console: Bucket → Properties → Bucket versioning → Enable.
+	* CLI: `aws s3api put-bucket-versioning --bucket <name> --versioning-configuration Status=Enabled`.
+* Recommended: (optional) MFA Delete; replication to a backup bucket; lifecycle for old versions.
+
+## 3. How delete markers work
+
+* A delete marker becomes the **latest** version and hides data.
+* Removing the **latest** delete marker restores the previous version (the data) as current.
+* Multiple markers: removing non-latest markers doesn’t change visibility, but is harmless if you want to clean them.
+
+## 4. Our recovery strategy
+
+* Identify precise time window of the incident.
+* List **all** delete markers under the affected prefix into a pandas DataFrame.
+* Filter by time window; review in Excel/Parquet if desired.
+* Remove delete markers (dry-run first), then apply.
+
+## 5. Full code — scan & list deleted files into a DataFrame
+
+```python
+import boto3
+import pandas as pd
+from loguru import logger
+from tqdm.notebook import tqdm
+
+COLS_SORTING = {"eligible": False, "last_modified": True, "key": True}
+
+
+def ensure_versioning_enabled(s3, bucket):
+    logger.info(f"Checking if versioning is enabled for {bucket=}")
+    status = s3.get_bucket_versioning(Bucket=bucket).get("Status", "NotEnabled")
+    if status not in ("Enabled", "Suspended"):
+        raise RuntimeError(
+            f"Versioning not enabled for {bucket=}. Unable to auto-restore via delete markers."
+        )
+    logger.info(f"Versioning is {status=} for {bucket=}")
+    return status
+
+
+def _iter_delete_markers(s3, bucket, prefix):
+    paginator = s3.get_paginator("list_object_versions")
+    pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+
+    for page in tqdm(pages, desc="Listing pages", unit="page"):
+        delete_markers = page.get("DeleteMarkers", []) or []
+        for dm in delete_markers:
+            yield dm
+
+
+def scan_delete_markers(s3, bucket, prefix, start_ts, end_ts):
+    logger.info(f"Scanning delete markers under {bucket=} {prefix=}")
+
+    rows = []
+    for dm in _iter_delete_markers(s3, bucket, prefix):
+        rows.append(
+            {
+                "key": dm["Key"],
+                "version_id": dm["VersionId"],
+                "is_latest": bool(dm.get("IsLatest")),
+                "last_modified": dm["LastModified"],
+            }
+        )
+
+    logger.info(f"Scan found {len(rows)} delete markers. Building dataframe")
+    df = pd.DataFrame(rows)
+    if df.empty:
+        logger.warning("There are no delete markers")
+        return df
+
+    df["last_modified"] = pd.to_datetime(df["last_modified"], utc=True)
+
+    start_ts = pd.to_datetime(start_ts, utc=True)
+    end_ts = pd.to_datetime(end_ts, utc=True)
+
+    logger.info(f"Filtering with {start_ts=} and {end_ts=}")
+    df["eligible"] = (df["last_modified"] >= start_ts) & (df["last_modified"] <= end_ts)
+
+    eligible_count = int(df["eligible"].sum())
+    unique_keys = df.loc[df["eligible"], "key"].nunique()
+    logger.info(f"{eligible_count=} ({unique_keys=}) for {bucket=} {prefix=}")
+
+    return df.sort_values(
+        list(COLS_SORTING.keys()), ascending=list(COLS_SORTING.values())
+    )
+```
+
+## 6. Actually recovering files (removing delete markers)
+
+* Dry-run first to validate scope; then apply with batching (≤1000 per `DeleteObjects`).
+* Beware of Object Lock/legal holds; consider retry config for large jobs.
+
+```python
+def remove_delete_markers(s3, bucket, df_in, dry_run=True, batch_size=1000):
+    logger.info(f"Preparing delete-marker removal with {dry_run=} and {batch_size=}")
+    if df_in.empty:
+        logger.info("No delete markers were provided to the remover (dataframe is empty)")
+        return False
+
+    df = df_in.loc[df_in["eligible"], ["key", "version_id"]].copy()
+    planned = len(df)
+    logger.info(f"There are {planned} files to be restored")
+
+    if planned == 0 or dry_run:
+        logger.warning("Dry-run active: will not remove any delete markers")
+        return False
+
+    logger.info("Removing eligible delete markers in batches")
+    restored = 0
+    batch = []
+    for rec in tqdm(df.to_dict(orient="records"), desc="Removing markers", unit="dm"):
+        batch.append({"Key": rec["key"], "VersionId": rec["version_id"]})
+
+        if len(batch) == batch_size:
+            logger.info(f"Restoring {len(batch)} files")
+            s3.delete_objects(Bucket=bucket, Delete={"Objects": batch})
+            restored += len(batch)
+            batch = []
+
+    if batch:
+        logger.info(f"Restoring {len(batch)} files (done {restored}/{planned})")
+        s3.delete_objects(Bucket=bucket, Delete={"Objects": batch})
+        restored += len(batch)
+
+    logger.info(f"Job done {restored=} out of {planned=}")
+    return True
+```
+
+**Usage skeleton**
+
+```python
+def recover_s3_delete_markers(bucket, prefix, start_ts, end_ts, dry_run=True, export_excel=False):
+    logger.info("Starting delete-marker recovery flow"
+                f" ({bucket=} {prefix=} {start_ts=} {end_ts=} {dry_run=})")
+
+    assert prefix is not None, "prefix must be non-empty"
+    assert start_ts is not None, "start_ts must be non-empty"
+    assert end_ts is not None, "end_ts must be non-empty"
+
+    s3 = boto3.client("s3")
+    ensure_versioning_enabled(s3, bucket)
+    df = scan_delete_markers(s3, bucket, prefix, start_ts, end_ts)
+    remove_delete_markers(s3, bucket, df, dry_run=dry_run)
+
+    if export_excel:
+        logger.info("Exporting delete markers list to FILE_EXCEL")
+        df_x = df.copy()
+        df_x["last_modified"] = df_x["last_modified"].dt.tz_localize(None)
+        df_x.to_excel("files_to_recover.xlsx", index=False)
+
+    return df
+```
+
+## 7. Validate & harden
+
+* **Validate:** sample-list versions to confirm latest is data (not a marker); retry failed batches; re-run a few Athena queries.
+* **Harden:** always enable versioning; add confirmations on destructive paths; CloudTrail queries for deletes; optional replication + lifecycle for marker cleanup.
