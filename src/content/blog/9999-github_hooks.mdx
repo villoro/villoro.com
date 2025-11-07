@@ -1,0 +1,102 @@
+---
+slug: github-hooks
+title: xxx
+meta_title: xxx
+description: xx
+date: 2025-11-07
+image: /images/blog/9999-glass-bridge.jpg
+category: DE
+tags: [DE]
+draft: false
+---
+
+## 🧩 Matrix Jobs — The Right Way
+
+Matrix jobs let you run the same logic across multiple inputs (e.g., multiple packages). The key lessons:
+
+### 1. Keep the Matrix Minimal
+
+Avoid redundant fields like both `name` and `path` when one can derive the other.
+
+Example:
+
+```yaml
+matrix:
+  name:
+    - ecs_northius
+    - nt_common
+```
+
+Then derive everything else dynamically:
+
+```yaml
+working-directory: src/${{ matrix.name }}
+```
+
+### 2. Use Runtime Interpolation, Not Matrix Variables
+
+Expressions like `${{ hashFiles() }}` don’t work inside the matrix definition. Compute them at runtime instead:
+
+```yaml
+key: uv-${{ runner.os }}-${{ hashFiles(format('src/{0}/uv.lock', matrix.name)) }}
+```
+
+### 3. Use Filters to Trigger Only What’s Needed
+
+Combine `dorny/paths-filter` with matrix jobs so each package runs only if its files (or shared dependencies) changed:
+
+```yaml
+filters: |
+  code:
+    - 'src/${{ matrix.name }}/**'
+    - 'src/nt_common/**'
+```
+
+Then conditionally run steps:
+
+```yaml
+if: steps.changes.outputs.code == 'true'
+```
+
+This prevents unnecessary builds or tests.
+
+## 🚦 Gate Jobs — One Check to Rule Them All
+
+Gate jobs aggregate matrix results so your branch protection rules only need one required check.
+
+### Example:
+
+```yaml
+pytest_gate:
+  name: pytest_result
+  needs: [pytests]
+  runs-on: ubuntu-latest
+  if: always()
+  steps:
+    - run: |
+        echo "Matrix result: ${{ needs.pytests.result }}"
+        if [ "${{ needs.pytests.result }}" != "success" ]; then
+          echo "Some matrix jobs failed. See details in Actions run."
+          exit 1
+        fi
+```
+
+Now your branch protection only needs to require `pytest_result`, not each individual job.
+
+## ⚙️ Why This Matters
+
+* **Scalability:** Easily extend to new packages without duplicating YAML.
+* **Efficiency:** Avoid reruns when unrelated files change.
+* **Clarity:** Clean job names (`pytest / ecs_northius`) make debugging easy.
+* **Reliability:** Gate jobs ensure PR checks are atomic—pass all or block merge.
+
+## 🏁 Summary
+
+We learned to:
+
+* Build flexible, minimal matrix definitions.
+* Use filters to run jobs conditionally.
+* Aggregate matrix results with a simple gate job.
+* Apply these patterns across CI (pytest), CD (venv deploys), and versioning.
+
+This approach keeps workflows short, readable, and production-ready, while scaling naturally as your repo grows.
