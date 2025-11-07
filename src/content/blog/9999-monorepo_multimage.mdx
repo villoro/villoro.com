@@ -1,0 +1,109 @@
+---
+slug: monorepo-multimage
+title: Modular Python Packaging in a Monorepo with uv, Docker, and GitHub Actions
+meta_title: xxx
+description: xx
+date: 2025-11-07
+image: /images/blog/9999-glass-bridge.jpg
+category: DE
+tags: [DE]
+draft: false
+---
+
+## 1. Introduction
+
+Modern Python projects often need to split logic across reusable internal packages. Managing these packages effectively in a monorepo requires thoughtful tooling. This post outlines how to structure, build, test, and deploy modular Python packages using `uv`, `Docker`, and GitHub Actions, with a focus on simplicity, performance, and maintainability.
+
+## 2. Project Structure: Monorepo with Per-Lib Workspaces
+
+There are two main strategies for organizing monorepos:
+
+* **Single workspace**: one global `pyproject.toml`, all packages share the same dependency set and versioning. Easier for consistent tooling, but tightly coupled.
+* **Per-lib workspaces** *(preferred here)*: each internal package (e.g., `nt_common`, `ecs_northius`) is independently versioned and locked. This allows for better modularity, selective releases, and independent dependency resolution.
+
+Example layout:
+
+```
+src/
+  nt_common/
+    pyproject.toml
+    uv.lock
+    nt_common/
+    tests/
+  ecs_northius/
+    pyproject.toml
+    uv.lock
+    ecs_northius/
+    tests/
+```
+
+## 3. Packaging Each Component
+
+* Each package is self-contained and uses `uv` to manage dependencies.
+* Shared packages like `nt_common` can be added locally:
+
+  ```bash
+  cd src/ecs_northius
+  uv add ../nt_common
+  ```
+* This installs `nt_common` as a built wheel with pinned dependencies.
+
+## 4. Writing Resilient Import Tests
+
+To ensure package integrity, we test that every module is importable. The test script:
+
+* Dynamically discovers all `.py` files under the package’s inner folder.
+* Excludes hidden files and test directories.
+* Imports each as a module using `importlib`.
+* Detects the package name by walking from the test file path.
+
+```python
+# Simplified dynamic import test
+def iter_modules():
+    # Detect root path (e.g., src/nt_common/nt_common)
+    ...
+    yield "nt_common.nt_common.my_module"
+
+@pytest.mark.parametrize("module_name", iter_modules())
+def test_import(module_name):
+    importlib.import_module(module_name)
+```
+
+## 5. Dockerizing the Build
+
+A single Dockerfile (`Dockerfile.venv`) builds a portable virtualenv:
+
+* Uses `uv` to install production dependencies
+* Accepts `--build-arg PACKAGE_NAME=ecs_northius`
+* Builds and installs that specific package
+* Outputs a compressed `.tar.gz` of the venv
+
+Benefits:
+
+* Lightweight base
+* Per-package venvs for isolated deployment
+* Reproducible builds via `uv.lock`
+
+## 6. GitHub Actions for Deployment
+
+Each package can define its own CD workflow. A typical `CD_venv.yaml`:
+
+* Extracts the current version
+* Builds the Docker image with the package name as an arg
+* Uploads the resulting tarball to S3
+
+```yaml
+run: docker build --build-arg PACKAGE_NAME=ecs_northius ...
+```
+
+This allows pushing multiple independent packages from a single repo.
+
+## 7. Lessons Learned & Pitfalls
+
+* Keep imports clean: remove source folders after venv install to prevent accidental sys.path leakage
+* Use `uv` for consistent lockfiles and fast dependency installs
+* Dynamic tests require careful path inference — test from the package root
+
+## 8. Final Thoughts
+
+This setup balances modularity and maintainability. With per-package workspaces, Dockerized venvs, and automated CD, it's easy to scale internal Python libraries across teams and projects.
