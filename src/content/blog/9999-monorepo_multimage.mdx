@@ -19,7 +19,7 @@ Modern Python projects often need to split logic across reusable internal packag
 There are two main strategies for organizing monorepos:
 
 * **Single workspace**: one global `pyproject.toml`, all packages share the same dependency set and versioning. Easier for consistent tooling, but tightly coupled.
-* **Per-lib workspaces** *(preferred here)*: each internal package (e.g., `nt_common`, `ecs_northius`) is independently versioned and locked. This allows for better modularity, selective releases, and independent dependency resolution.
+* **Per-lib workspaces** *(preferred here)*: each internal package (e.g., `nt_common`, `nt_rds`) is independently versioned and locked. This allows for better modularity, selective releases, and independent dependency resolution.
 
 Example layout:
 
@@ -30,10 +30,15 @@ src/
     uv.lock
     nt_common/
     tests/
-  ecs_northius/
+  nt_api/
     pyproject.toml
     uv.lock
-    ecs_northius/
+    nt_api/
+    tests/
+  nt_rds/
+    pyproject.toml
+    uv.lock
+    nt_rds/
     tests/
 ```
 
@@ -43,7 +48,7 @@ src/
 * Shared packages like `nt_common` can be added locally:
 
   ```bash
-  cd src/ecs_northius
+  cd src/nt_rds
   uv add ../nt_common
   ```
 * This installs `nt_common` as a built wheel with pinned dependencies.
@@ -74,7 +79,7 @@ def test_import(module_name):
 A single Dockerfile (`Dockerfile.venv`) builds a portable virtualenv:
 
 * Uses `uv` to install production dependencies
-* Accepts `--build-arg PACKAGE_NAME=ecs_northius`
+* Accepts `--build-arg PACKAGE_NAME=nt_rds`
 * Builds and installs that specific package
 * Outputs a compressed `.tar.gz` of the venv
 
@@ -93,7 +98,7 @@ Each package can define its own CD workflow. A typical `CD_venv.yaml`:
 * Uploads the resulting tarball to S3
 
 ```yaml
-run: docker build --build-arg PACKAGE_NAME=ecs_northius ...
+run: docker build --build-arg PACKAGE_NAME=nt_rds ...
 ```
 
 This allows pushing multiple independent packages from a single repo.
