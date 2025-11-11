@@ -16,11 +16,11 @@ Creating maintainable and efficient GitHub Actions pipelines becomes critical wh
 
 ## 1. Reusable Hooks Across Repositories
 
-When multiple repositories share CI logic, extract it into a reusable **composite action** that lives in a dedicated repo (e.g., `villoro/vhooks`). Consumers then call it with a single `uses:` line, keeping workflows DRY and consistent.
+When multiple repositories share CI logic, extract it into a reusable **composite action** that lives in a dedicated repo (e.g., `villoro/vhooks`). This pattern keeps your CI/CD logic consistent across projects while avoiding duplication.
 
 ### 1.1 Repository Layout
 
-A simple structure for multiple hooks:
+Start by organizing your hooks into separate folders, each representing a single reusable action.
 
 ```plaintext
 vhooks/
@@ -39,6 +39,8 @@ vhooks/
 </Notice>
 
 ### 1.2 Composite Action Definition
+
+The composite action serves as the glue between GitHub Actions and your Python script. It defines the inputs, runs any required setup, and calls your Python logic.
 
 <TerminalOutput color="stone">
   `tag_version/action.yml`
@@ -121,7 +123,7 @@ runs:
 
 ### 1.3 Python Implementation
 
-Below is a minimal version tagging script implemented with **Click**.
+The Python script extracts the version from your file and pushes a new tag if it doesn’t exist yet.
 
 <TerminalOutput color="stone">
   `tag_version/tag_version.py`
@@ -181,13 +183,9 @@ if __name__ == "__main__":
     main()
 ````
 
-<Notice type="success">
-  The hook reads the current version, checks if a tag with that name already exists, and creates it if not.
-</Notice>
-
 ### 1.4 Consuming the Hook from Any Repo
 
-Add a workflow that runs on `main` pushes and tags automatically:
+To use your new hook, create a simple workflow that triggers on `main` pushes and automatically tags new versions.
 
 ```yaml
 name: Tag Version
@@ -208,7 +206,7 @@ jobs:
           path: project/version
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   Always pin to a version tag like `@1.3.0` to avoid breaking changes from `main`.
 </Notice>
 
