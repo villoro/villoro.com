@@ -281,11 +281,18 @@ finally:
     if results:
         logger.info(f"Exporting {len(results)} results after failure")
         export_results(results)
+
+    # 'return', 'break' or 'continue' are not allowed here
+    #   if you add them, the exception will be lost and you won't notice failures
 ```
 
 <Notice type="info" className="mt-6">
     You can use `finally` with a `try` block to run code whether the `try` block fails or succeeds.
     This is really useful for tasks like exporting partial results.
+</Notice>
+
+<Notice type="error" className="mt-6">
+    Don’t exit from <code>finally</code>: no <code>return</code>, <code>break</code>, or <code>continue</code>. These suppress any exception from <code>try</code>. Also avoid raising new errors here, wrap exports so failures don’t mask the original. If you need to return a value, do it **after** the <code>try/finally</code>.
 </Notice>
 
 ## 4. Advanced Usage
