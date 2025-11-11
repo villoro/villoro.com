@@ -16,13 +16,13 @@ Creating maintainable and efficient GitHub Actions pipelines becomes critical wh
 
 ## 1. Reusable Hooks Across Repositories
 
-When multiple repos share CI logic, extract it into a reusable **composite action** that lives in a dedicated repo (e.g., `villoro/vhooks`). Consumers then call it with a single `uses:` line, keeping workflows DRY and consistent.
+When multiple repositories share CI logic, extract it into a reusable **composite action** that lives in a dedicated repo (e.g., `villoro/vhooks`). Consumers then call it with a single `uses:` line, keeping workflows DRY and consistent.
 
 ### 1.1 Repository Layout
 
 A simple structure for multiple hooks:
 
-```
+```plaintext
 vhooks/
 ├─ check_version/
 │  ├─ action.yml          # composite action definition
@@ -34,111 +34,121 @@ vhooks/
    └─ tag_version.py
 ```
 
-### 1.2 Composite Action Definition (`check_version/action.yml`)
+<Notice type="info">
+  Each folder under `vhooks` is a standalone hook. The `action.yml` defines its interface, while the Python file contains the logic.
+</Notice>
 
+### 1.2 Composite Action Definition
+
+<TerminalOutput color="stone">
+  `check_version/action.yml`
+</TerminalOutput>
 ```yaml
-name: "Check Package Version"
-description: "Fail PR if version is missing/unchanged; pass if incremented"
+name: Check Package Version
+description: Checks if the package version has been updated compared to a specified branch, only when selected paths change.
+author: Arnau Villoro
+
 inputs:
   repository:
-    description: "Repository to check"
+    description: Repository to check version in
     required: true
     default: ${{ github.repository }}
+
   ref:
-    description: "Ref (branch/SHA) to evaluate"
+    description: Branch/commit ref to evaluate
     required: true
     default: ${{ github.ref }}
+
   branch:
-    description: "Target branch to compare against"
+    description: Branch to compare the version with
     required: false
-    default: "main"
+    default: main
+
   file:
-    description: "Version file (.toml/.json/.yml)"
+    description: File to check version in (e.g., pyproject.toml, version.json)
     required: false
-    default: "pyproject.toml"
+    default: pyproject.toml
+
   path:
-    description: "Path inside the file to the version string"
+    description: Path inside the file to extract the version
     required: false
-    default: "project/version"
+    default: project/version
+
   filters:
-    description: "YAML for dorny/paths-filter; must include a 'code' key"
+    description: |
+      YAML for dorny/paths-filter. Must define a 'code' key.
+      Example:
+        code:
+          - 'src/ecs_northius/**'
     required: false
     default: |
       code:
         - '**'
+
 runs:
-  using: "composite"
+  using: composite
   steps:
-    - name: Checkout target repo
+    - name: Checkout repository
       uses: actions/checkout@v4
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.x"
-
-    - name: Install deps
+    - name: Fetch target branch
       shell: bash
-      run: |
-        pip install -U pip
-        if [ -f "${GITHUB_ACTION_PATH}/requirements.txt" ]; then pip install -r "${GITHUB_ACTION_PATH}/requirements.txt"; fi
+      run: git fetch origin ${{ inputs.branch }} --depth=1
 
-    - name: Detect changed paths
+    - name: Detect path changes
       id: changes
-      uses: dorny/paths-filter@v3
+      uses: dorny/paths-filter@v2
       with:
+        # Compare specified ref against target branch
+        base: origin/${{ inputs.branch }}
+        ref: ${{ inputs.ref }}
         filters: ${{ inputs.filters }}
 
-    - name: Run check only when code changed
+    - name: Install dependencies
       if: steps.changes.outputs.code == 'true'
       shell: bash
-      run: |
-        python "${GITHUB_ACTION_PATH}/check_version.py" \
-          --branch "${{ inputs.branch }}" \
-          --file "${{ inputs.file }}" \
-          --path "${{ inputs.path }}"
+      run: pip install toml loguru packaging click pyyaml
+
+    - name: Run version check
+      if: steps.changes.outputs.code == 'true'
+      shell: bash
+      run: python "$GITHUB_ACTION_PATH/check_version.py" --branch="${{ inputs.branch }}" --file="${{ inputs.file }}" --path="${{ inputs.path }}"
 ```
 
-Notes:
+### 1.3 Python Implementation
 
-* `GITHUB_ACTION_PATH` points to the folder where the composite action lives; use it to reference bundled scripts.
-* Keep inputs generic so the hook can be reused across monorepos and single-package repos.
+Below is the same version check logic, rewritten using **Click** for cleaner CLI handling.
 
-### 1.3 Python Implementation (`check_version/check_version.py`)
-
-Below is a minimal implementation that:
-
-1. loads the current version from the working tree,
-2. fetches the target branch’s version,
-3. compares them, and
-4. exits non‑zero if not incremented.
-
+<TerminalOutput color="stone">
+  `check_version/check_version.py`
+</TerminalOutput>
 ```python
-import argparse
-import json
 import subprocess
 from pathlib import Path
+import click
+import json
 
 try:
     import tomllib  # Python 3.11+
-except ModuleNotFoundError:  # pragma: no cover
+except ModuleNotFoundError:
     import tomli as tomllib
 
 
 def read_version(file_path, key_path):
     p = Path(file_path)
     if p.suffix == ".toml":
-        data = tomllib.loads(p.read_text(encoding="utf-8"))
+        data = tomllib.loads(p.read_text())
     elif p.suffix in {".yml", ".yaml"}:
         import yaml
-        data = yaml.safe_load(p.read_text(encoding="utf-8"))
+        data = yaml.safe_load(p.read_text())
     elif p.suffix == ".json":
-        data = json.loads(p.read_text(encoding="utf-8"))
+        data = json.loads(p.read_text())
     else:
-        raise SystemExit(f"Unsupported file type: {p.suffix}")
+        raise click.ClickException(f"Unsupported file type: {p.suffix}")
 
     node = data
     for part in key_path.split("/"):
@@ -147,17 +157,15 @@ def read_version(file_path, key_path):
 
 
 def git_show(ref, file_path):
-    # Read file content at a specific ref (branch/SHA)
     out = subprocess.check_output(["git", "show", f"{ref}:{file_path}"])
-    return out.decode("utf-8")
+    return out.decode()
 
 
 def read_version_at_ref(ref, file_path, key_path):
     from tempfile import TemporaryDirectory
-    text = git_show(ref, file_path)
     tmp = TemporaryDirectory()
     p = Path(tmp.name) / Path(file_path).name
-    p.write_text(text, encoding="utf-8")
+    p.write_text(git_show(ref, file_path))
     return read_version(p, key_path)
 
 
@@ -165,37 +173,33 @@ def version_tuple(s):
     return tuple(int(x) for x in s.split(".") if x.isdigit())
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--branch", default="main")
-    ap.add_argument("--file", default="pyproject.toml")
-    ap.add_argument("--path", default="project/version")
-    args = ap.parse_args()
-
-    current = read_version(args.file, args.path)
-    base = read_version_at_ref(args.branch, args.file, args.path)
+@click.command()
+@click.option("--branch", default="main")
+@click.option("--file", default="pyproject.toml")
+@click.option("--path", default="project/version")
+def main(branch, file, path):
+    current = read_version(file, path)
+    base = read_version_at_ref(branch, file, path)
 
     if version_tuple(current) <= version_tuple(base):
-        raise SystemExit(
+        raise click.ClickException(
             f"Version must be incremented. base={base} current={current}"
         )
 
-    print(f"OK: base={base} -> current={current}")
+    click.echo(f"✅ OK: base={base} → current={current}")
 
 
 if __name__ == "__main__":
     main()
 ```
 
-Tips:
-
-* Support `.toml`, `.json`, and `.yml` to fit common setups.
-* Parse the version via a flexible `path` (e.g., `project/version` for `pyproject.toml`).
-* Use `git show <ref>:<file>` to read the version at the comparison branch without a second checkout.
+<Notice type="success">
+  Using **Click** provides cleaner help messages, better error handling, and easy local testing (`python check_version.py --help`).
+</Notice>
 
 ### 1.4 Consuming the Hook from Any Repo
 
-Add a workflow that runs on PRs and references the versioned release of the hook (pin to a tag):
+Add a workflow that runs on PRs and references the released version of the hook:
 
 ```yaml
 name: Check Version
@@ -208,23 +212,26 @@ jobs:
   check_version:
     runs-on: ubuntu-latest
     steps:
-      - uses: villoro/vhooks/check_version@1.3.0  # pin to a release
+      - uses: villoro/vhooks/check_version@1.3.0
         with:
-          branch: "main"
-          file: "pyproject.toml"
-          path: "project/version"
+          branch: main
+          file: pyproject.toml
+          path: project/version
           filters: |
             code:
               - 'src/**'
               - 'pyproject.toml'
 ```
 
-### 1.5 Version Tagging Hook (Sibling Example)
+<Notice type="info">
+  Always pin to a version tag like `@1.3.0` to avoid breaking changes from `main`.
+</Notice>
 
-Expose a second composite action to tag commits when code changes in `main`:
+### 1.5 Version Tagging Hook (Optional Example)
+
+Expose a second action to tag commits when code changes in `main`:
 
 ```yaml
-# .github/workflows/tag_version.yml
 name: Tag Version
 on:
   push:
@@ -237,22 +244,26 @@ jobs:
     steps:
       - uses: villoro/vhooks/tag_version@1.3.0
         with:
-          file: "pyproject.toml"
-          path: "project/version"
-          filters: |
-            code:
-              - 'src/**'
-              - 'pyproject.toml'
-          tag-prefix: "v"
+          file: pyproject.toml
+          path: project/version
+          tag-prefix: v
 ```
+
+<Notice type="info">
+  You can combine `check_version` and `tag_version` for automatic version enforcement and tagging.
+</Notice>
 
 ### 1.6 Best Practices
 
-* Pin to immutable tags (e.g., `@1.3.0`) rather than `@main`.
-* Keep each hook self‑contained: scripts + deps live alongside `action.yml`.
-* Validate inputs and fail fast with clear messages.
-* Use `dorny/paths-filter` to avoid unnecessary runs.
-* Document inputs/outputs in each action’s README section.
+* Pin to immutable tags (e.g., `@1.3.0`).
+* Keep each hook self-contained with its dependencies.
+* Validate inputs and fail fast.
+* Use `dorny/paths-filter` to skip unchanged packages.
+* Document inputs/outputs clearly.
+
+<Notice type="success">
+  Reusable hooks turn CI logic into a modular library you can evolve across all your repos with minimal effort.
+</Notice>
 
 ## 2. 🧩 Matrix Jobs — The Right Way
 
