@@ -7,7 +7,7 @@ date: 2025-11-07
 image: /images/blog/9999-octopus-hooks.jpg
 category: Cloud/DevOps
 tags: [Cloud/DevOps, CI/CD, GitHub, Automation, Python, Best Practices, Monorepo]
-draft: false
+draft: true
 ---
 
 ## 0. Intro
@@ -181,7 +181,7 @@ def main(file, path):
 
 if __name__ == "__main__":
     main()
-````
+```
 
 ### 1.4 Consuming the Hook from Any Repo
 
@@ -304,7 +304,7 @@ Create a tiny job that always runs, inspects the matrix result, and exits accord
             echo "Some package tagging jobs failed. Check the matrix logs."
             exit 1
           fi
-````
+```
 
 <Notice type="info" className="mt-6">
   Protect only the `tag_result` check in your branch rules. This keeps PR status simple while still enforcing success across all packages.
