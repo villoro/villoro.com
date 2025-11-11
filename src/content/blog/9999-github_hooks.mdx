@@ -310,6 +310,11 @@ Create a tiny job that always runs, inspects the matrix result, and exits accord
   Protect only the `tag_result` check in your branch rules. This keeps PR status simple while still enforcing success across all packages.
 </Notice>
 
+<Notice type="warning" className="mt-6">
+  **Common Pitfall:** Expressions like `${{ hashFiles() }}` don’t evaluate inside the matrix definition.
+  Compute cache keys at runtime instead using values like `matrix.name` or `matrix.path` inside a step.
+</Notice>
+
 ## 4. Concurrency — Smarter, Not Harder
 
 When you push new commits to a PR, older runs become obsolete. Cancel them automatically to save resources.
