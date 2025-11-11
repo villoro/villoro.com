@@ -1,6 +1,6 @@
 ---
 slug: github-hooks
-title: xxx
+title: Scalable GitHub Actions for Modern Repos
 meta_title: xxx
 description: xx
 date: 2025-11-07
@@ -10,11 +10,41 @@ tags: [DE]
 draft: false
 ---
 
-## 🧩 Matrix Jobs — The Right Way
+## 0. Intro
+
+Creating maintainable and efficient GitHub Actions pipelines becomes critical when you manage multiple repositories or modular projects. This post walks through four key patterns to make your CI/CD setup scalable, reliable, and fast.
+
+## 1. Reusable Hooks Across Repositories
+
+When you have multiple repositories that share similar CI logic, it’s best to centralize that logic into a **reusable action**. This keeps your pipelines DRY and consistent.
+
+### Example: `vhooks`
+
+You can store all shared hooks in a dedicated repo, like [`villoro/vhooks`](https://github.com/villoro/vhooks), and use them in any other workflow:
+
+```yaml
+yaml
+jobs:
+  pre_commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: villoro/vhooks/.github/actions/pre-commit@main
+```
+
+This approach ensures that updating a hook in one place propagates improvements to all your repos automatically.
+
+**Benefits:**
+
+* DRY: define once, reuse everywhere.
+* Consistent behavior across projects.
+* Easy updates and versioning through tags or branches.
+
+## 2. 🧩 Matrix Jobs — The Right Way
 
 Matrix jobs let you run the same logic across multiple inputs (e.g., multiple packages). The key lessons:
 
-### 1. Keep the Matrix Minimal
+### 2.1. Keep the Matrix Minimal
 
 Avoid redundant fields like both `name` and `path` when one can derive the other.
 
@@ -33,7 +63,7 @@ Then derive everything else dynamically:
 working-directory: src/${{ matrix.name }}
 ```
 
-### 2. Use Runtime Interpolation, Not Matrix Variables
+### 2.2. Use Runtime Interpolation, Not Matrix Variables
 
 Expressions like `${{ hashFiles() }}` don’t work inside the matrix definition. Compute them at runtime instead:
 
@@ -41,7 +71,7 @@ Expressions like `${{ hashFiles() }}` don’t work inside the matrix definition.
 key: uv-${{ runner.os }}-${{ hashFiles(format('src/{0}/uv.lock', matrix.name)) }}
 ```
 
-### 3. Use Filters to Trigger Only What’s Needed
+### 2.3. Use Filters to Trigger Only What’s Needed
 
 Combine `dorny/paths-filter` with matrix jobs so each package runs only if its files (or shared dependencies) changed:
 
@@ -60,11 +90,11 @@ if: steps.changes.outputs.code == 'true'
 
 This prevents unnecessary builds or tests.
 
-## 🚦 Gate Jobs — One Check to Rule Them All
+## 3. Gate Jobs — One Check to Rule Them All
 
 Gate jobs aggregate matrix results so your branch protection rules only need one required check.
 
-### Example:
+### 3.1. Example:
 
 ```yaml
 pytest_gate:
@@ -83,20 +113,49 @@ pytest_gate:
 
 Now your branch protection only needs to require `pytest_result`, not each individual job.
 
-## ⚙️ Why This Matters
+## 4. Concurrency — Smarter, Not Harder
 
-* **Scalability:** Easily extend to new packages without duplicating YAML.
-* **Efficiency:** Avoid reruns when unrelated files change.
-* **Clarity:** Clean job names (`pytest / ecs_northius`) make debugging easy.
-* **Reliability:** Gate jobs ensure PR checks are atomic—pass all or block merge.
+When you push new commits to a PR, older runs become obsolete. Cancel them automatically to save resources.
 
-## 🏁 Summary
+### 4.1. Example:
 
-We learned to:
+```yaml
+name: CI_global
 
-* Build flexible, minimal matrix definitions.
-* Use filters to run jobs conditionally.
-* Aggregate matrix results with a simple gate job.
-* Apply these patterns across CI (pytest), CD (venv deploys), and versioning.
+on:
+  pull_request:
 
-This approach keeps workflows short, readable, and production-ready, while scaling naturally as your repo grows.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pre_commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - uses: pre-commit/action@v3.0.0
+```
+
+This ensures that only the latest workflow for each PR remains active.
+
+## 5. Putting It All Together
+
+These techniques form a cohesive CI/CD strategy:
+
+* Reusable hooks for shared logic.
+* Matrix jobs for scalable parallel execution.
+* Gate jobs for clean PR checks.
+* Concurrency to avoid redundant runs.
+
+Together, they make your workflows **modular, efficient, and production-ready**.
+
+## 6. Key Takeaways
+
+* **Reusable hooks:** maintainable and DRY.
+* **Matrix + filters:** scalable and efficient.
+* **Gate jobs:** reliable single-point validation.
+* **Concurrency:** resource-smart and fast.
+
+Your CI should scale with your codebase — not slow it down.
