@@ -210,78 +210,105 @@ jobs:
   Always pin to a version tag like `@1.3.0` to avoid breaking changes from `main`.
 </Notice>
 
-## 2. 🧩 Matrix Jobs — The Right Way
+## 2. Matrix Jobs
 
-Matrix jobs let you run the same logic across multiple inputs (e.g., multiple packages). The key lessons:
+Matrix jobs let you apply the same logic across multiple packages without duplicating YAML. Keep the matrix minimal (only what varies), derive everything else at runtime, and filter work so each package runs only when its files change.
 
-### 2.1. Keep the Matrix Minimal
+### 2.1 Minimal Matrix, Clear Names
 
-Avoid redundant fields like both `name` and `path` when one can derive the other.
+Only include the fields you truly need (here: `name` and `tag_prefix`). Everything else (paths, tags) is computed per package.
 
-Example:
-
+<TerminalOutput color="stone">
+  `.github/workflows/tag_version.yml`
+</TerminalOutput>
 ```yaml
-matrix:
-  name:
-    - ecs_northius
-    - nt_common
+name: Tag Version
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag_packages:
+    name: "tag / ${{ matrix.name }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: nt_common
+            tag_prefix: "common_"
+
+          - name: nt_api
+            tag_prefix: "api_"
+
+          - name: nt_ml
+            tag_prefix: "ml_"
+
+          - name: nt_rds
+            tag_prefix: "rds_"
+
+          - name: nt_sdk
+            tag_prefix: "sdk_"
+
+    steps:
+      - name: Tag ${{ matrix.name }} version
+        uses: villoro/vhooks/tag_version@1.3.1
+        with:
+          file: src/${{ matrix.name }}/pyproject.toml
+          path: project/version
+          tag-prefix: ${{ matrix.tag_prefix }}
+          filters: |
+            code:
+              - 'src/${{ matrix.name }}/**'
 ```
 
-Then derive everything else dynamically:
+<Notice type="info">
+  The hook receives a different `file` and `tag-prefix` per package. `dorny/paths-filter` inside the hook ensures we only tag when that package actually changed.
+</Notice>
 
+### 2.2 Practical Tips
+
+* Use `strategy.fail-fast: false` so one failure doesn’t cancel all packages.
+* Keep job names informative (e.g., `tag / nt_api`).
+* Pass filters down to the hook rather than duplicating filtering logic in the workflow.
+
+<Notice type="success">
+  Minimal matrices + in‑hook filtering = fast runs and clean YAML as your monorepo grows.
+</Notice>
+
+## 3. Gate Jobs
+
+Branch protection becomes noisy if you require every matrix job. Add a gate job that depends on the matrix and fails if any package failed and then protect only the gate.
+
+### 3.1 Aggregate Matrix Results
+
+Create a tiny job that always runs, inspects the matrix result, and exits accordingly.
+
+<TerminalOutput color="stone">
+  `.github/workflows/tag_version.yml` (continued)
+</TerminalOutput>
 ```yaml
-working-directory: src/${{ matrix.name }}
-```
+  tag_gate:
+    name: tag_result
+    needs: [tag_packages]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Summarize matrix outcome
+        run: |
+          echo "Matrix result: ${{ needs.tag_packages.result }}"
+          if [ "${{ needs.tag_packages.result }}" != "success" ]; then
+            echo "Some package tagging jobs failed. Check the matrix logs."
+            exit 1
+          fi
+````
 
-### 2.2. Use Runtime Interpolation, Not Matrix Variables
-
-Expressions like `${{ hashFiles() }}` don’t work inside the matrix definition. Compute them at runtime instead:
-
-```yaml
-key: uv-${{ runner.os }}-${{ hashFiles(format('src/{0}/uv.lock', matrix.name)) }}
-```
-
-### 2.3. Use Filters to Trigger Only What’s Needed
-
-Combine `dorny/paths-filter` with matrix jobs so each package runs only if its files (or shared dependencies) changed:
-
-```yaml
-filters: |
-  code:
-    - 'src/${{ matrix.name }}/**'
-    - 'src/nt_common/**'
-```
-
-Then conditionally run steps:
-
-```yaml
-if: steps.changes.outputs.code == 'true'
-```
-
-This prevents unnecessary builds or tests.
-
-## 3. Gate Jobs — One Check to Rule Them All
-
-Gate jobs aggregate matrix results so your branch protection rules only need one required check.
-
-### 3.1. Example:
-
-```yaml
-pytest_gate:
-  name: pytest_result
-  needs: [pytests]
-  runs-on: ubuntu-latest
-  if: always()
-  steps:
-    - run: |
-        echo "Matrix result: ${{ needs.pytests.result }}"
-        if [ "${{ needs.pytests.result }}" != "success" ]; then
-          echo "Some matrix jobs failed. See details in Actions run."
-          exit 1
-        fi
-```
-
-Now your branch protection only needs to require `pytest_result`, not each individual job.
+<Notice type="info" className="mt-6">
+  Protect only the `tag_result` check in your branch rules. This keeps PR status simple while still enforcing success across all packages.
+</Notice>
 
 ## 4. Concurrency — Smarter, Not Harder
 
