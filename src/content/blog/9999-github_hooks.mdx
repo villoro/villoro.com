@@ -34,38 +34,28 @@ vhooks/
    └─ tag_version.py
 ```
 
-<Notice type="info">
+<Notice type="info" className="mt-6">
   Each folder under `vhooks` is a standalone hook. The `action.yml` defines its interface, while the Python file contains the logic.
 </Notice>
 
 ### 1.2 Composite Action Definition
 
 <TerminalOutput color="stone">
-  `check_version/action.yml`
+  `tag_version/action.yml`
 </TerminalOutput>
 ```yaml
-name: Check Package Version
-description: Checks if the package version has been updated compared to a specified branch, only when selected paths change.
+name: Tag Version
+description: Tag with the version from a file only when selected paths change.
 author: Arnau Villoro
 
 inputs:
-  repository:
-    description: Repository to check version in
-    required: true
-    default: ${{ github.repository }}
-
-  ref:
-    description: Branch/commit ref to evaluate
-    required: true
-    default: ${{ github.ref }}
-
   branch:
-    description: Branch to compare the version with
+    description: Branch to check the version from
     required: false
     default: main
 
   file:
-    description: File to check version in (e.g., pyproject.toml, version.json)
+    description: File to extract the version from (supports .toml, .json, .yml)
     required: false
     default: pyproject.toml
 
@@ -79,7 +69,7 @@ inputs:
       YAML for dorny/paths-filter. Must define a 'code' key.
       Example:
         code:
-          - 'src/ecs_northius/**'
+          - 'src/**'
     required: false
     default: |
       code:
@@ -88,43 +78,53 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v4
       with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
         fetch-depth: 0
 
-    - name: Fetch target branch
-      shell: bash
-      run: git fetch origin ${{ inputs.branch }} --depth=1
-
-    - name: Detect path changes
+    - name: Detect changes
       id: changes
       uses: dorny/paths-filter@v2
       with:
-        # Compare specified ref against target branch
-        base: origin/${{ inputs.branch }}
-        ref: ${{ inputs.ref }}
         filters: ${{ inputs.filters }}
 
     - name: Install dependencies
       if: steps.changes.outputs.code == 'true'
       shell: bash
-      run: pip install toml loguru packaging click pyyaml
+      run: pip install toml loguru click pyyaml
 
-    - name: Run version check
+    - name: Extract version
       if: steps.changes.outputs.code == 'true'
       shell: bash
-      run: python "$GITHUB_ACTION_PATH/check_version.py" --branch="${{ inputs.branch }}" --file="${{ inputs.file }}" --path="${{ inputs.path }}"
+      run: python "$GITHUB_ACTION_PATH/tag_version.py" --file="${{ inputs.file }}" --path="${{ inputs.path }}"
+
+    - name: Check if tag exists
+      if: steps.changes.outputs.code == 'true'
+      id: check_tag
+      uses: mukunku/tag-exists-action@v1.4.0
+      with:
+        tag: ${{ env.VERSION }}
+
+    - name: Create tag
+      if: steps.changes.outputs.code == 'true' && steps.check_tag.outputs.exists != 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: `refs/tags/${{ env.VERSION }}`,
+            sha: context.sha
+          })
 ```
 
 ### 1.3 Python Implementation
 
-Below is the same version check logic, rewritten using **Click** for cleaner CLI handling.
+Below is a minimal version tagging script implemented with **Click**.
 
 <TerminalOutput color="stone">
-  `check_version/check_version.py`
+  `tag_version/tag_version.py`
 </TerminalOutput>
 ```python
 import subprocess
@@ -156,88 +156,48 @@ def read_version(file_path, key_path):
     return str(node).strip()
 
 
-def git_show(ref, file_path):
-    out = subprocess.check_output(["git", "show", f"{ref}:{file_path}"])
-    return out.decode()
-
-
-def read_version_at_ref(ref, file_path, key_path):
-    from tempfile import TemporaryDirectory
-    tmp = TemporaryDirectory()
-    p = Path(tmp.name) / Path(file_path).name
-    p.write_text(git_show(ref, file_path))
-    return read_version(p, key_path)
-
-
-def version_tuple(s):
-    return tuple(int(x) for x in s.split(".") if x.isdigit())
+def git(cmd):
+    return subprocess.check_output(cmd, text=True).strip()
 
 
 @click.command()
-@click.option("--branch", default="main")
 @click.option("--file", default="pyproject.toml")
 @click.option("--path", default="project/version")
-def main(branch, file, path):
-    current = read_version(file, path)
-    base = read_version_at_ref(branch, file, path)
+def main(file, path):
+    version = read_version(file, path)
+    tag = version
 
-    if version_tuple(current) <= version_tuple(base):
-        raise click.ClickException(
-            f"Version must be incremented. base={base} current={current}"
-        )
+    existing_tags = git(["git", "tag", "--list", tag])
+    if existing_tags:
+        click.echo(f"⚠️ Tag {tag} already exists — skipping.")
+        return
 
-    click.echo(f"✅ OK: base={base} → current={current}")
+    git(["git", "tag", tag])
+    git(["git", "push", "origin", tag])
+    click.echo(f"✅ Created and pushed tag: {tag}")
 
 
 if __name__ == "__main__":
     main()
-```
+````
 
 <Notice type="success">
-  Using **Click** provides cleaner help messages, better error handling, and easy local testing (`python check_version.py --help`).
+  The hook reads the current version, checks if a tag with that name already exists, and creates it if not.
 </Notice>
 
 ### 1.4 Consuming the Hook from Any Repo
 
-Add a workflow that runs on PRs and references the released version of the hook:
-
-```yaml
-name: Check Version
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  check_version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: villoro/vhooks/check_version@1.3.0
-        with:
-          branch: main
-          file: pyproject.toml
-          path: project/version
-          filters: |
-            code:
-              - 'src/**'
-              - 'pyproject.toml'
-```
-
-<Notice type="info">
-  Always pin to a version tag like `@1.3.0` to avoid breaking changes from `main`.
-</Notice>
-
-### 1.5 Version Tagging Hook (Optional Example)
-
-Expose a second action to tag commits when code changes in `main`:
+Add a workflow that runs on `main` pushes and tags automatically:
 
 ```yaml
 name: Tag Version
+
 on:
   push:
     branches: [main]
 permissions:
   contents: write
+
 jobs:
   tag_version:
     runs-on: ubuntu-latest
@@ -246,23 +206,10 @@ jobs:
         with:
           file: pyproject.toml
           path: project/version
-          tag-prefix: v
 ```
 
 <Notice type="info">
-  You can combine `check_version` and `tag_version` for automatic version enforcement and tagging.
-</Notice>
-
-### 1.6 Best Practices
-
-* Pin to immutable tags (e.g., `@1.3.0`).
-* Keep each hook self-contained with its dependencies.
-* Validate inputs and fail fast.
-* Use `dorny/paths-filter` to skip unchanged packages.
-* Document inputs/outputs clearly.
-
-<Notice type="success">
-  Reusable hooks turn CI logic into a modular library you can evolve across all your repos with minimal effort.
+  Always pin to a version tag like `@1.3.0` to avoid breaking changes from `main`.
 </Notice>
 
 ## 2. 🧩 Matrix Jobs — The Right Way
