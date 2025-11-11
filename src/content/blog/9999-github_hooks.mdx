@@ -1,12 +1,12 @@
 ---
 slug: github-hooks
 title: Scalable GitHub Actions for Modern Repos
-meta_title: xxx
-description: xx
+meta_title: Scalable GitHub Actions for Modern Repos
+description: Learn how to build scalable GitHub Actions pipelines using reusable hooks, matrix jobs, gate checks, and concurrency for cleaner, faster, and more maintainable CI/CD workflows.
 date: 2025-11-07
 image: /images/blog/9999-octopus-hooks.jpg
-category: DE
-tags: [DE]
+category: Cloud/DevOps
+tags: [Cloud/DevOps, CI/CD, GitHub, Automation, Python, Best Practices, Monorepo]
 draft: false
 ---
 
@@ -315,7 +315,7 @@ Create a tiny job that always runs, inspects the matrix result, and exits accord
   Compute cache keys at runtime instead using values like `matrix.name` or `matrix.path` inside a step.
 </Notice>
 
-## 4. Concurrency — Smarter, Not Harder
+## 4. Concurrency
 
 When you push new commits to a PR, older runs become obsolete. Cancel them automatically to save resources.
 
