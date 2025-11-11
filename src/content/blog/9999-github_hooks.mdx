@@ -319,14 +319,13 @@ Create a tiny job that always runs, inspects the matrix result, and exits accord
 
 When you push new commits to a PR, older runs become obsolete. Cancel them automatically to save resources.
 
-### 4.1. Example:
-
 ```yaml
 name: CI_global
 
 on:
   pull_request:
 
+# This is the important part
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -344,20 +343,11 @@ This ensures that only the latest workflow for each PR remains active.
 
 ## 5. Putting It All Together
 
-These techniques form a cohesive CI/CD strategy:
+Reusable hooks, matrix jobs, gate checks, and concurrency form a **scalable CI/CD pattern**:
 
-* Reusable hooks for shared logic.
-* Matrix jobs for scalable parallel execution.
-* Gate jobs for clean PR checks.
-* Concurrency to avoid redundant runs.
+* **Hooks** keep logic centralized and DRY.
+* **Matrix jobs** scale across packages efficiently.
+* **Gate jobs** ensure atomic, reliable results.
+* **Concurrency** cancels redundant runs to save resources.
 
 Together, they make your workflows **modular, efficient, and production-ready**.
-
-## 6. Key Takeaways
-
-* **Reusable hooks:** maintainable and DRY.
-* **Matrix + filters:** scalable and efficient.
-* **Gate jobs:** reliable single-point validation.
-* **Concurrency:** resource-smart and fast.
-
-Your CI should scale with your codebase — not slow it down.
