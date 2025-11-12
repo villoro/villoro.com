@@ -277,3 +277,13 @@ Ensure your `upload_all.py` or similar code respects the naming convention so ea
 ### 4.4 Failing the PR if Tests Fail
 
 We use an aggregate step (`pytest_gate`) that waits for all matrix jobs and fails if any fail. This guarantees all packages pass before merging.
+
+## 5. Closing Thoughts
+
+Starting with a single workspace and a simple `uv`-based setup (as shown in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true"/>) is the most efficient way to bootstrap a project. It keeps complexity low and lets you move fast.
+
+But as your project grows—adding new modules, APIs, scrapers, ML pipelines, or connectors—the overhead of maintaining everything in one workspace starts to show. Splitting into multiple workspaces allows better isolation of dependencies, targeted CI/CD, and smaller deployable units.
+
+This pattern provides the best of both worlds: code sharing when you need it, and independence when you don't.
+
+If you're hitting the limits of a single Python package, this structure is a great next step.
