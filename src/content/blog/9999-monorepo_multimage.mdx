@@ -39,7 +39,7 @@ In the initial phase of a project, having a single workspace is ideal:
 * One venv (via `uv venv`) to manage everything
 * Easy to run tests, build, or deploy
 
-This is the setup described in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true" />.
+This is the setup described in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true"/>.
 
 But as the codebase expands to include APIs, ML pipelines, or connectors, the single workspace model starts to break down—dependency conflicts emerge (e.g., `prefect` needing `package_x<3` while `pandas` needs `package_x>=4`), and even simple jobs end up dragging massive venvs due to heavyweight libraries.
 
@@ -212,36 +212,68 @@ def test_import_module(module_name):
 
 This will be placed in each package and tested at each PR.
 
-## 4. CD with Docker + uv: Parametrized and Repeatable
+## 4. CI/CD with Matrix Strategy
 
-### 4.1. Generic `Dockerfile.venv`
+To keep packages isolated but uniformly tested, we use GitHub Actions with a matrix job. This approach scales easily as new packages are added by just updating the matrix list.
 
-* Accepts `PACKAGE_NAME` and `PACKAGE_VERSION`
-* Builds the venv from source
-* Installs deps, copies code, installs it non-editable
-* Outputs `venv_<version>.tar.gz`
+### 4.1 Matrix Setup for Pytest
 
-### 4.2. Matrix-based GitHub Workflow
+We use a shared CI workflow that:
 
-* CD uses a matrix of `{ name, tag_prefix }`
-* Each job runs **only if its paths changed** (via `dorny/paths-filter`)
-* Tags versions independently with `tag_prefix`
+* Loops over each defined package (e.g., `nt_common`, `nt_api`, etc.)
+* Sets up the virtual environment via `uv sync`
+* Installs the project using `uv pip install .`
+* Runs `pytest` inside the venv
 
-## 5. CI per Package
+Example:
 
-* Each package has independent `pytest` logic using `uv`
-* Optionally include smoke tests for shared packages (e.g., `nt_common`)
-* Matrix can also apply here to avoid unnecessary jobs
+<TerminalOutput color="stone">
+  `.github/workflows/CI_pytest.yaml`
+</TerminalOutput>
+```yaml
+description: CI_pytest
+strategy:
+  matrix:
+    name:
+      - nt_common
+      - nt_api
+      - nt_rds
+      # Add new packages here
+```
 
-## 6. Optional: Gate Jobs + Branch Protection
+You can read more about this at <FancyLink linkText="Scalable GitHub Actions for Modern Repos" url="https://villoro.com/blog/github-hooks/" dark="true"/>.
 
-Aggregate results of matrix jobs into one gate check. Clean up noisy PR checks and enforce atomic results.
+### 4.2 Generic `Dockerfile.venv`
 
-## 7. Summary: Reusable, Fast, Independent
+To build reproducible, isolated environments for each package, we use a shared `Dockerfile.venv`:
 
-This structure allows you to:
+* Accepts `--build-arg PACKAGE_NAME=nt_api` and `PACKAGE_VERSION=0.3.1`
+* Builds the venv using `uv`, copies the code, and installs the package non-editably
+* Packages the virtual environment into a versioned `.tar.gz`
 
-* Reuse packages without duplication
-* Independently version and tag apps/libs
-* Use `uv` consistently for lockfile discipline
-* Run light, versioned deployments on ECS
+Example output:
+
+```plaintext
+nt_api__venv_0.3.1.tar.gz
+```
+
+Or optionally, structured by folder:
+
+```plaintext
+nt_api/venv_0.3.1.tar.gz
+```
+
+### 4.3 Uploading and Referencing Artifacts
+
+Because each package produces its own archive, downstream systems (e.g., deployment scripts or S3 uploads) must:
+
+* Handle versioned and namespaced paths
+* Support prefix-based lookup
+
+This makes it trivial to deploy or cache specific venvs for small jobs, without reusing bloated ML dependencies.
+
+Ensure your `upload_all.py` or similar code respects the naming convention so each file is easy to find and consume.
+
+### 4.4 Failing the PR if Tests Fail
+
+We use an aggregate step (`pytest_gate`) that waits for all matrix jobs and fails if any fail. This guarantees all packages pass before merging.
