@@ -54,10 +54,9 @@ When packages become logically independent (e.g. `nt_sdk`, `nt_rds`, `nt_ml`), a
 ```plaintext
 src/
 ├─ nt_common/       # shared code (utils, schemas, etc.)
-├─ nt_sdk/          # SDK for external use
-├─ nt_rds/          # RDS connector
-├─ nt_api/          # REST API
-└─ nt_ml/           # ML utilities
+├─ nt_rds/          # jobs that interact with databases
+├─ nt_api/          # API jobs
+└─ nt_ml/           # ML jobs
 ```
 
 <Notice type="success" className="mt-6">
@@ -66,27 +65,52 @@ src/
 
 In the next section, we’ll explain the benefits in more detail and how we organized the transition.
 
-## 2. Monorepo Design Patterns
+## 2. Monorepo with Multiple Workspaces
 
-Explain two strategies:
+When splitting a growing project into independent parts, the first challenge is organizing the codebase. 
 
-### 2.1. Single Workspace (monolithic `pyproject.toml`)
+I recommend the following structure:
 
-* Pros: simple dev experience, flat lockfile
-* Cons: tight coupling, slow lock/builds, CI noise
+```plaintext
+src/
+├─ nt_common/
+|  ├─ pyproject.toml
+|  ├─ uv.lock
+|  ├─ nt_common/
+|  └─ tests/
+├─ nt_api/
+|  ├─ pyproject.toml
+|  ├─ uv.lock
+|  ├─ nt_common/
+|  └─ tests/
+└─ nt_rds/
+   ├─ pyproject.toml
+   ├─ uv.lock
+   ├─ nt_common/
+   └─ tests/
+```
 
-### 2.2. Multi-Workspace Monorepo (per-package `pyproject.toml`)
+Each top-level folder inside `src/` represents a standalone package with its own dependencies, tests, and isolated environment.
 
-* Pros: isolated deps/locks, clean CI, parallel release/versioning
-* Cons: slightly more config (e.g., nested virtualenvs)
+<Notice type="info" className="mt-6">
+  While it’s possible to have a single workspace that includes all packages, using independent workspaces provides better isolation, easier testing, and faster deployment for modular systems.
+</Notice>
 
-## 3. Shared Code Across Packages
+### 2.1 Creating Shared Code with `nt_common`
 
-Describe how to:
+Sometimes, packages need to share common logic—models, helpers, utilities. That’s where `nt_common` comes in. It behaves like any other package but is added as a local dependency to others.
 
-* Create a shared package (e.g., `nt_common`) with its own lock and version
-* Use `uv add ../nt_common` from other packages like `ecs_northius`
-* Avoid hardcoding paths; rely on `pyproject.toml` dependencies
+Steps:
+
+1. Create `src/nt_common/pyproject.toml` and define your shared code in `src/nt_common/nt_common/`
+2. From any other workspace (e.g., `nt_api`):
+
+```bash
+cd src/nt_api
+uv add ../nt_common
+```
+
+This installs `nt_common` as a **built wheel**, with its pinned dependencies from its own `uv.lock`.
 
 ## 4. Import Tests to Validate Setup
 
