@@ -18,17 +18,53 @@ As the team grew and the project evolved to cover more diverse domains (scraping
 
 This post explains how we made that evolution: from a single-package workspace to a scalable, cleanly isolated monorepo with CI/CD tailored for each package.
 
-<Notice type="success">
-  The setup described in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true"/> (single workspace, one uv-managed package) is the **recommended starting point**. It’s simple, fast, and avoids unnecessary complexity.
+## 1. Monorepo Design Options
+
+When you start a Python monorepo, you typically have two options:
+
+1. A single **shared workspace** (like one `uv venv` covering everything).
+2. Multiple **independent workspaces** (one per package).
+
+Let’s look at each.
+
+### 1.1 Single Workspace: Easy at First
+
+<Notice type="info">
+  This is a great starting point. It keeps things simple while you're focused on building a single flow or service.
 </Notice>
 
-## 1. Single Package Limitations
+In the initial phase of a project, having a single workspace is ideal:
 
-Show how the original setup (e.g., `ecs_northius`) worked well initially, but why it doesn't scale for:
+* Just one `pyproject.toml` for all code
+* One venv (via `uv venv`) to manage everything
+* Easy to run tests, build, or deploy
 
-* Reuse across domains
-* Shared tooling/code
-* Independent versioning
+This is the setup described in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true" />.
+
+But as the codebase expands to include APIs, ML pipelines, or connectors, the single workspace model starts to break down—dependency conflicts emerge (e.g., `prefect` needing `package_x<3` while `pandas` needs `package_x>=4`), and even simple jobs end up dragging massive venvs due to heavyweight libraries.
+
+### 1.2 Multi-Workspace: Scales Better
+
+When packages become logically independent (e.g. `nt_sdk`, `nt_rds`, `nt_ml`), a multi-workspace monorepo makes more sense:
+
+* Each package has its own `pyproject.toml`
+* Each has its own `uv venv`
+* Each defines only what it needs (faster builds, smaller deploys)
+
+```plaintext
+src/
+├─ nt_common/       # shared code (utils, schemas, etc.)
+├─ nt_sdk/          # SDK for external use
+├─ nt_rds/          # RDS connector
+├─ nt_api/          # REST API
+└─ nt_ml/           # ML utilities
+```
+
+<Notice type="success" className="mt-6">
+  Multi-workspace setups improve modularity, CI/CD speed, and team ownership. They also make it easier to plug different packages into different deploy targets.
+</Notice>
+
+In the next section, we’ll explain the benefits in more detail and how we organized the transition.
 
 ## 2. Monorepo Design Patterns
 
