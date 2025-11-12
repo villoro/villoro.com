@@ -1,114 +1,87 @@
 ---
 slug: monorepo-multimage
-title: Modular Python Packaging in a Monorepo with uv, Docker, and GitHub Actions
+title: Scaling ECS Python Deployments with a Modular Monorepo
 meta_title: xxx
 description: xx
 date: 2025-11-07
 image: /images/blog/9999-factory-line-packages.jpg
 category: DE
 tags: [DE]
-draft: true
+draft: false
 ---
 
-## 1. Introduction
+## 0. Introduction: From One Package to Many
 
-Modern Python projects often need to split logic across reusable internal packages. Managing these packages effectively in a monorepo requires thoughtful tooling. This post outlines how to structure, build, test, and deploy modular Python packages using `uv`, `Docker`, and GitHub Actions, with a focus on simplicity, performance, and maintainability.
+Recap the motivation: cold starts, ECS performance, and the need for reproducibility. Link to the previous post and explain that this is the next stage—growing from a single package to a scalable multi-package monorepo.
 
-## 2. Project Structure: Monorepo with Per-Lib Workspaces
+## 1. Single Package Limitations
 
-There are two main strategies for organizing monorepos:
+Show how the original setup (e.g., `ecs_northius`) worked well initially, but why it doesn't scale for:
 
-* **Single workspace**: one global `pyproject.toml`, all packages share the same dependency set and versioning. Easier for consistent tooling, but tightly coupled.
-* **Per-lib workspaces** *(preferred here)*: each internal package (e.g., `nt_common`, `nt_rds`) is independently versioned and locked. This allows for better modularity, selective releases, and independent dependency resolution.
+* Reuse across domains
+* Shared tooling/code
+* Independent versioning
 
-Example layout:
+## 2. Monorepo Design Patterns
 
-```
-src/
-  nt_common/
-    pyproject.toml
-    uv.lock
-    nt_common/
-    tests/
-  nt_api/
-    pyproject.toml
-    uv.lock
-    nt_api/
-    tests/
-  nt_rds/
-    pyproject.toml
-    uv.lock
-    nt_rds/
-    tests/
-```
+Explain two strategies:
 
-## 3. Packaging Each Component
+### 2.1. Single Workspace (monolithic `pyproject.toml`)
 
-* Each package is self-contained and uses `uv` to manage dependencies.
-* Shared packages like `nt_common` can be added locally:
+* Pros: simple dev experience, flat lockfile
+* Cons: tight coupling, slow lock/builds, CI noise
 
-  ```bash
-  cd src/nt_rds
-  uv add ../nt_common
-  ```
-* This installs `nt_common` as a built wheel with pinned dependencies.
+### 2.2. Multi-Workspace Monorepo (per-package `pyproject.toml`)
 
-## 4. Writing Resilient Import Tests
+* Pros: isolated deps/locks, clean CI, parallel release/versioning
+* Cons: slightly more config (e.g., nested virtualenvs)
 
-To ensure package integrity, we test that every module is importable. The test script:
+## 3. Shared Code Across Packages
 
-* Dynamically discovers all `.py` files under the package’s inner folder.
-* Excludes hidden files and test directories.
-* Imports each as a module using `importlib`.
-* Detects the package name by walking from the test file path.
+Describe how to:
 
-```python
-# Simplified dynamic import test
-def iter_modules():
-    # Detect root path (e.g., src/nt_common/nt_common)
-    ...
-    yield "nt_common.nt_common.my_module"
+* Create a shared package (e.g., `nt_common`) with its own lock and version
+* Use `uv add ../nt_common` from other packages like `ecs_northius`
+* Avoid hardcoding paths; rely on `pyproject.toml` dependencies
 
-@pytest.mark.parametrize("module_name", iter_modules())
-def test_import(module_name):
-    importlib.import_module(module_name)
-```
+## 4. Import Tests to Validate Setup
 
-## 5. Dockerizing the Build
+Ensure imports work **before shipping a package**:
 
-A single Dockerfile (`Dockerfile.venv`) builds a portable virtualenv:
+* Use `importlib` to discover all modules in a package
+* Parametrize `pytest` to attempt importing each `.py` file
+* Skip `tests/` and hidden paths
 
-* Uses `uv` to install production dependencies
-* Accepts `--build-arg PACKAGE_NAME=nt_rds`
-* Builds and installs that specific package
-* Outputs a compressed `.tar.gz` of the venv
+## 5. CD with Docker + uv: Parametrized and Repeatable
 
-Benefits:
+### 5.1. Generic `Dockerfile.venv`
 
-* Lightweight base
-* Per-package venvs for isolated deployment
-* Reproducible builds via `uv.lock`
+* Accepts `PACKAGE_NAME` and `PACKAGE_VERSION`
+* Builds the venv from source
+* Installs deps, copies code, installs it non-editable
+* Outputs `venv_<version>.tar.gz`
 
-## 6. GitHub Actions for Deployment
+### 5.2. Matrix-based GitHub Workflow
 
-Each package can define its own CD workflow. A typical `CD_venv.yaml`:
+* CD uses a matrix of `{ name, tag_prefix }`
+* Each job runs **only if its paths changed** (via `dorny/paths-filter`)
+* Tags versions independently with `tag_prefix`
 
-* Extracts the current version
-* Builds the Docker image with the package name as an arg
-* Uploads the resulting tarball to S3
+## 6. CI per Package
 
-```yaml
-run: docker build --build-arg PACKAGE_NAME=nt_rds ...
-```
+* Each package has independent `pytest` logic using `uv`
+* Optionally include smoke tests for shared packages (e.g., `nt_common`)
+* Matrix can also apply here to avoid unnecessary jobs
 
-This allows pushing multiple independent packages from a single repo.
+## 7. Optional: Gate Jobs + Branch Protection
 
-## 7. Lessons Learned & Pitfalls
+Aggregate results of matrix jobs into one gate check. Clean up noisy PR checks and enforce atomic results.
 
-* Keep imports clean: remove source folders after venv install to prevent accidental sys.path leakage
-* Use `uv` for consistent lockfiles and fast dependency installs
-* Dynamic tests require careful path inference — test from the package root
+## 8. Summary: Reusable, Fast, Independent
 
-## 8. Final Thoughts
+This structure allows you to:
 
-This setup balances modularity and maintainability. With per-package workspaces, Dockerized venvs, and automated CD, it's easy to scale internal Python libraries across teams and projects.
+* Reuse packages without duplication
+* Independently version and tag apps/libs
+* Use `uv` consistently for lockfile discipline
+* Run light, versioned deployments on ECS
