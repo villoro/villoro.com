@@ -67,32 +67,32 @@ In the next section, we’ll explain the benefits in more detail and how we orga
 
 ## 2. Monorepo with Multiple Workspaces
 
-When splitting a growing project into independent parts, the first challenge is organizing the codebase. 
+When splitting a growing project into independent parts, the first challenge is organizing the codebase.
 
 I recommend the following structure:
 
 ```plaintext
 src/
-├─ nt_common/
-|  ├─ pyproject.toml
-|  ├─ uv.lock
-|  ├─ nt_common/
-|  └─ tests/
-├─ nt_api/
-|  ├─ pyproject.toml
-|  ├─ uv.lock
-|  ├─ nt_common/
-|  └─ tests/
-└─ nt_rds/
-   ├─ pyproject.toml
-   ├─ uv.lock
-   ├─ nt_common/
-   └─ tests/
+├── nt_common/
+|   ├── nt_common/
+|   ├── tests/
+|   ├── pyproject.toml
+|   └── uv.lock
+├── nt_api/
+|   ├── nt_api/
+|   ├── tests/
+|   ├── pyproject.toml
+|   └── uv.lock
+└── nt_rds/
+    ├── nt_rds/
+    ├── tests/
+    ├── pyproject.toml
+    └── uv.lock
 ```
 
 Each top-level folder inside `src/` represents a standalone package with its own dependencies, tests, and isolated environment.
 
-<Notice type="info" className="mt-6">
+<Notice type="info">
   While it’s possible to have a single workspace that includes all packages, using independent workspaces provides better isolation, easier testing, and faster deployment for modular systems.
 </Notice>
 
@@ -111,6 +111,55 @@ uv add ../nt_common
 ```
 
 This installs `nt_common` as a **built wheel**, with its pinned dependencies from its own `uv.lock`.
+
+<Notice type="info">
+  If you update `nt_common`, run `uv sync` in the dependent package (e.g., `nt_api`) to apply the latest version.
+</Notice>
+
+### 2.2 Minimal `pyproject.toml` example
+
+Here's a clean example for `nt_api`:
+
+<TerminalOutput color="stone">
+  `src/nt_api/pyproject.toml`
+</TerminalOutput>
+```toml
+[project]
+name = "nt-api"
+version = "0.1.0"
+description = "Code for interacting with APIs"
+readme = "README.md"
+requires-python = ">=3.10, <3.13"
+dependencies = [
+    "nt-common",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nt_api*"]
+
+[tool.uv.sources]
+nt-common = { path = "../nt_common" }
+
+[tool.setuptools.package-data]
+nt_api = [
+    "**/*.html",
+    "**/*.j2",
+    "**/*.yaml",
+    "**/*.yml"
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.0",
+]
+```
+
+Key points:
+
+* `include` explicitly declares which folder should be packaged
+* `package-data` makes sure config files are bundled
+* `pytest` under `dev` allows for easy testing without affecting prod dependencies
 
 ## 4. Import Tests to Validate Setup
 
