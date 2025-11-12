@@ -10,9 +10,17 @@ tags: [DE]
 draft: false
 ---
 
-## 0. Introduction: From One Package to Many
+## 0. Intro
 
-Recap the motivation: cold starts, ECS performance, and the need for reproducibility. Link to the previous post and explain that this is the next stage—growing from a single package to a scalable multi-package monorepo.
+Every project starts small. In our case, it was a straightforward ELT setup focused on extracting data from APIs and storing it cleanly. At the time, we didn’t need a complex monorepo—just a single workspace with a small set of interdependent packages.
+
+As the team grew and the project evolved to cover more diverse domains (scraping, ML jobs, RDS interactions etc.) we needed a way to modularize, test, and deploy independently. That’s when we shifted to a multi-workspace monorepo.
+
+This post explains how we made that evolution: from a single-package workspace to a scalable, cleanly isolated monorepo with CI/CD tailored for each package.
+
+<Notice type="success">
+  The setup described in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true"/> (single workspace, one uv-managed package) is the **recommended starting point**. It’s simple, fast, and avoids unnecessary complexity.
+</Notice>
 
 ## 1. Single Package Limitations
 
