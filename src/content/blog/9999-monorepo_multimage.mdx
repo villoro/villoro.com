@@ -1,114 +1,285 @@
 ---
 slug: monorepo-multimage
-title: Modular Python Packaging in a Monorepo with uv, Docker, and GitHub Actions
-meta_title: xxx
-description: xx
+title: Scaling ECS Python Deployments with a Modular Monorepo
+meta_title: Modular Python Monorepo for Scalable ECS Deployments
+description: Learn how to evolve a Python project from a single workspace to a scalable, multi-package monorepo with isolated builds, targeted CI, and lightweight ECS deployments using uv.
 date: 2025-11-07
 image: /images/blog/9999-factory-line-packages.jpg
-category: DE
-tags: [DE]
+category: cloud_devops
+tags: [AWS, ECS, Docker, uv, DE, Fargate, Monorepo]
 draft: true
 ---
 
-## 1. Introduction
+## 0. Intro
 
-Modern Python projects often need to split logic across reusable internal packages. Managing these packages effectively in a monorepo requires thoughtful tooling. This post outlines how to structure, build, test, and deploy modular Python packages using `uv`, `Docker`, and GitHub Actions, with a focus on simplicity, performance, and maintainability.
+Every project starts small. In our case, it was a straightforward ELT setup focused on extracting data from APIs and storing it cleanly. At the time, we didn’t need a complex monorepo—just a single workspace with a small set of interdependent packages.
 
-## 2. Project Structure: Monorepo with Per-Lib Workspaces
+As the team grew and the project evolved to cover more diverse domains (scraping, ML jobs, RDS interactions etc.) we needed a way to modularize, test, and deploy independently. That’s when we shifted to a multi-workspace monorepo.
 
-There are two main strategies for organizing monorepos:
+This post explains how we made that evolution: from a single-package workspace to a scalable, cleanly isolated monorepo with CI/CD tailored for each package.
 
-* **Single workspace**: one global `pyproject.toml`, all packages share the same dependency set and versioning. Easier for consistent tooling, but tightly coupled.
-* **Per-lib workspaces** *(preferred here)*: each internal package (e.g., `nt_common`, `nt_rds`) is independently versioned and locked. This allows for better modularity, selective releases, and independent dependency resolution.
+## 1. Monorepo Design Options
 
-Example layout:
+When you start a Python monorepo, you typically have two options:
 
-```
+1. A single **shared workspace** (like one `uv venv` covering everything).
+2. Multiple **independent workspaces** (one per package).
+
+Let’s look at each.
+
+### 1.1 Single Workspace: Easy at First
+
+<Notice type="info">
+  This is a great starting point. It keeps things simple while you're focused on building a single flow or service.
+</Notice>
+
+In the initial phase of a project, having a single workspace is ideal:
+
+* Just one `pyproject.toml` for all code
+* One venv (via `uv venv`) to manage everything
+* Easy to run tests, build, or deploy
+
+This is the setup described in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true"/>.
+
+But as the codebase expands to include APIs, ML pipelines, or connectors, the single workspace model starts to break down—dependency conflicts emerge (e.g., `prefect` needing `package_x<3` while `pandas` needs `package_x>=4`), and even simple jobs end up dragging massive venvs due to heavyweight libraries.
+
+### 1.2 Multi-Workspace: Scales Better
+
+When packages become logically independent (e.g. `nt_sdk`, `nt_rds`, `nt_ml`), a multi-workspace monorepo makes more sense:
+
+* Each package has its own `pyproject.toml`
+* Each has its own `uv venv`
+* Each defines only what it needs (faster builds, smaller deploys)
+
+```plaintext
 src/
-  nt_common/
-    pyproject.toml
-    uv.lock
-    nt_common/
-    tests/
-  nt_api/
-    pyproject.toml
-    uv.lock
-    nt_api/
-    tests/
-  nt_rds/
-    pyproject.toml
-    uv.lock
-    nt_rds/
-    tests/
+├─ nt_common/       # shared code (utils, schemas, etc.)
+├─ nt_rds/          # jobs that interact with databases
+├─ nt_api/          # API jobs
+└─ nt_ml/           # ML jobs
 ```
 
-## 3. Packaging Each Component
+<Notice type="success" className="mt-6">
+  Multi-workspace setups improve modularity, CI/CD speed, and team ownership. They also make it easier to plug different packages into different deploy targets.
+</Notice>
 
-* Each package is self-contained and uses `uv` to manage dependencies.
-* Shared packages like `nt_common` can be added locally:
+In the next section, we’ll explain the benefits in more detail and how we organized the transition.
 
-  ```bash
-  cd src/nt_rds
-  uv add ../nt_common
-  ```
-* This installs `nt_common` as a built wheel with pinned dependencies.
+## 2. Monorepo with Multiple Workspaces
 
-## 4. Writing Resilient Import Tests
+When splitting a growing project into independent parts, the first challenge is organizing the codebase.
 
-To ensure package integrity, we test that every module is importable. The test script:
+I recommend the following structure:
 
-* Dynamically discovers all `.py` files under the package’s inner folder.
-* Excludes hidden files and test directories.
-* Imports each as a module using `importlib`.
-* Detects the package name by walking from the test file path.
+```plaintext
+src/
+├── nt_common/
+|   ├── nt_common/
+|   ├── tests/
+|   ├── pyproject.toml
+|   └── uv.lock
+├── nt_api/
+|   ├── nt_api/
+|   ├── tests/
+|   ├── pyproject.toml
+|   └── uv.lock
+└── nt_rds/
+    ├── nt_rds/
+    ├── tests/
+    ├── pyproject.toml
+    └── uv.lock
+```
 
+Each top-level folder inside `src/` represents a standalone package with its own dependencies, tests, and isolated environment.
+
+<Notice type="info">
+  While it’s possible to have a single workspace that includes all packages, using independent workspaces provides better isolation, easier testing, and faster deployment for modular systems.
+</Notice>
+
+### 2.1 Creating Shared Code with `nt_common`
+
+Sometimes, packages need to share common logic—models, helpers, utilities. That’s where `nt_common` comes in. It behaves like any other package but is added as a local dependency to others.
+
+Steps:
+
+1. Create `src/nt_common/pyproject.toml` and define your shared code in `src/nt_common/nt_common/`
+2. From any other workspace (e.g., `nt_api`):
+
+```bash
+cd src/nt_api
+uv add ../nt_common
+```
+
+This installs `nt_common` as a **built wheel**, with its pinned dependencies from its own `uv.lock`.
+
+<Notice type="info">
+  If you update `nt_common`, run `uv sync` in the dependent package (e.g., `nt_api`) to apply the latest version.
+</Notice>
+
+### 2.2 Minimal `pyproject.toml` example
+
+Here's a clean example for `nt_api`:
+
+<TerminalOutput color="stone">
+  `src/nt_api/pyproject.toml`
+</TerminalOutput>
+```toml
+[project]
+name = "nt-api"
+version = "0.1.0"
+description = "Code for interacting with APIs"
+readme = "README.md"
+requires-python = ">=3.10, <3.13"
+dependencies = [
+    "nt-common",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nt_api*"]
+
+[tool.uv.sources]
+nt-common = { path = "../nt_common" }
+
+[tool.setuptools.package-data]
+nt_api = [
+    "**/*.html",
+    "**/*.j2",
+    "**/*.yaml",
+    "**/*.yml"
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.0",
+]
+```
+
+Key points:
+
+* `include` explicitly declares which folder should be packaged
+* `package-data` makes sure config files are bundled
+* `pytest` under `dev` allows for easy testing without affecting prod dependencies
+
+## 3. Import Testing in CI
+
+To guarantee correctness before packaging or deploying any Python package, we include a minimal test that confirms all modules can be imported. This prevents common issues such as missing dependencies, misconfigured paths, or broken module declarations.
+
+This test runs as part of every pull request and is required to pass before merge. It's fast and effective at catching mistakes early.
+
+### 3.1. How It Works
+
+We use `pytest` and `importlib` to:
+
+* Recursively discover all `.py` files in the package
+* Skip hidden directories and irrelevant content
+* Try importing each module individually
+
+This ensures the codebase reflects the dependencies declared in `pyproject.toml`, and any structural issues are caught early.
+
+### 3.2. Minimal Test Code
+
+<TerminalOutput color="stone">
+  `src/nt_xxx/tests/test_imports.py`
+</TerminalOutput>
 ```python
-# Simplified dynamic import test
-def iter_modules():
-    # Detect root path (e.g., src/nt_common/nt_common)
-    ...
-    yield "nt_common.nt_common.my_module"
+import importlib
+from pathlib import Path
+import pytest
 
-@pytest.mark.parametrize("module_name", iter_modules())
-def test_import(module_name):
+PACKAGE_DIR = Path(__file__).resolve().parent.parent
+PACKAGE_NAME = PACKAGE_DIR.name
+CODE_DIR = PACKAGE_DIR / PACKAGE_NAME
+
+def is_hidden_path(py_file: Path) -> bool:
+    parts = py_file.relative_to(CODE_DIR).parts[:-1]  # exclude filename
+    return any(part.startswith(".") for part in parts)
+
+def iter_modules():
+    for py_file in CODE_DIR.rglob("*.py"):
+        if is_hidden_path(py_file):
+            continue
+        module_path = py_file.with_suffix("").relative_to(PACKAGE_DIR)
+        yield ".".join(module_path.parts)
+
+MODULES = list(iter_modules())
+
+@pytest.mark.parametrize("module_name", MODULES)
+def test_import_module(module_name):
+    importlib.invalidate_caches()
     importlib.import_module(module_name)
 ```
 
-## 5. Dockerizing the Build
+This will be placed in each package and tested at each PR.
 
-A single Dockerfile (`Dockerfile.venv`) builds a portable virtualenv:
+## 4. CI/CD with Matrix Strategy
 
-* Uses `uv` to install production dependencies
-* Accepts `--build-arg PACKAGE_NAME=nt_rds`
-* Builds and installs that specific package
-* Outputs a compressed `.tar.gz` of the venv
+To keep packages isolated but uniformly tested, we use GitHub Actions with a matrix job. This approach scales easily as new packages are added by just updating the matrix list.
 
-Benefits:
+### 4.1 Matrix Setup for Pytest
 
-* Lightweight base
-* Per-package venvs for isolated deployment
-* Reproducible builds via `uv.lock`
+We use a shared CI workflow that:
 
-## 6. GitHub Actions for Deployment
+* Loops over each defined package (e.g., `nt_common`, `nt_api`, etc.)
+* Sets up the virtual environment via `uv sync`
+* Installs the project using `uv pip install .`
+* Runs `pytest` inside the venv
 
-Each package can define its own CD workflow. A typical `CD_venv.yaml`:
+Example:
 
-* Extracts the current version
-* Builds the Docker image with the package name as an arg
-* Uploads the resulting tarball to S3
-
+<TerminalOutput color="stone">
+  `.github/workflows/CI_pytest.yaml`
+</TerminalOutput>
 ```yaml
-run: docker build --build-arg PACKAGE_NAME=nt_rds ...
+description: CI_pytest
+strategy:
+  matrix:
+    name:
+      - nt_common
+      - nt_api
+      - nt_rds
+      # Add new packages here
 ```
 
-This allows pushing multiple independent packages from a single repo.
+You can read more about this at <FancyLink linkText="Scalable GitHub Actions for Modern Repos" url="https://villoro.com/blog/github-hooks/" dark="true"/>.
 
-## 7. Lessons Learned & Pitfalls
+### 4.2 Generic `Dockerfile.venv`
 
-* Keep imports clean: remove source folders after venv install to prevent accidental sys.path leakage
-* Use `uv` for consistent lockfiles and fast dependency installs
-* Dynamic tests require careful path inference — test from the package root
+To build reproducible, isolated environments for each package, we use a shared `Dockerfile.venv`:
 
-## 8. Final Thoughts
+* Accepts `--build-arg PACKAGE_NAME=nt_api` and `PACKAGE_VERSION=0.3.1`
+* Builds the venv using `uv`, copies the code, and installs the package non-editably
+* Packages the virtual environment into a versioned `.tar.gz`
 
-This setup balances modularity and maintainability. With per-package workspaces, Dockerized venvs, and automated CD, it's easy to scale internal Python libraries across teams and projects.
+Example output:
+
+```plaintext
+nt_api__venv_0.3.1.tar.gz
+```
+
+Or optionally, structured by folder:
+
+```plaintext
+nt_api/venv_0.3.1.tar.gz
+```
+
+### 4.3 Uploading and Referencing Artifacts
+
+Because each package produces its own archive, downstream systems (e.g., deployment scripts or S3 uploads) must:
+
+* Handle versioned and namespaced paths
+* Support prefix-based lookup
+
+This makes it trivial to deploy or cache specific venvs for small jobs, without reusing bloated ML dependencies.
+
+Ensure your `upload_all.py` or similar code respects the naming convention so each file is easy to find and consume.
+
+## 5. Closing Thoughts
+
+Starting with a single workspace and a simple `uv`-based setup (as shown in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true"/>) is the most efficient way to bootstrap a project. It keeps complexity low and lets you move fast.
+
+But as your project grows—adding new modules, APIs, scrapers, ML pipelines, or connectors—the overhead of maintaining everything in one workspace starts to show. Splitting into multiple workspaces allows better isolation of dependencies, targeted CI/CD, and smaller deployable units.
+
+This pattern provides the best of both worlds: code sharing when you need it, and independence when you don't.
+
+If you're hitting the limits of a single Python package, this structure is a great next step.
