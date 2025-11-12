@@ -161,40 +161,83 @@ Key points:
 * `package-data` makes sure config files are bundled
 * `pytest` under `dev` allows for easy testing without affecting prod dependencies
 
-## 4. Import Tests to Validate Setup
+## 3. Import Testing in CI
 
-Ensure imports work **before shipping a package**:
+To guarantee correctness before packaging or deploying any Python package, we include a minimal test that confirms all modules can be imported. This prevents common issues such as missing dependencies, misconfigured paths, or broken module declarations.
 
-* Use `importlib` to discover all modules in a package
-* Parametrize `pytest` to attempt importing each `.py` file
-* Skip `tests/` and hidden paths
+This test runs as part of every pull request and is required to pass before merge. It's fast and effective at catching mistakes early.
 
-## 5. CD with Docker + uv: Parametrized and Repeatable
+### 3.1. How It Works
 
-### 5.1. Generic `Dockerfile.venv`
+We use `pytest` and `importlib` to:
+
+* Recursively discover all `.py` files in the package
+* Skip hidden directories and irrelevant content
+* Try importing each module individually
+
+This ensures the codebase reflects the dependencies declared in `pyproject.toml`, and any structural issues are caught early.
+
+### 3.2. Minimal Test Code
+
+<TerminalOutput color="stone">
+  `src/nt_xxx/tests/test_imports.py`
+</TerminalOutput>
+```python
+import importlib
+from pathlib import Path
+import pytest
+
+PACKAGE_DIR = Path(__file__).resolve().parent.parent
+PACKAGE_NAME = PACKAGE_DIR.name
+CODE_DIR = PACKAGE_DIR / PACKAGE_NAME
+
+def is_hidden_path(py_file: Path) -> bool:
+    parts = py_file.relative_to(CODE_DIR).parts[:-1]  # exclude filename
+    return any(part.startswith(".") for part in parts)
+
+def iter_modules():
+    for py_file in CODE_DIR.rglob("*.py"):
+        if is_hidden_path(py_file):
+            continue
+        module_path = py_file.with_suffix("").relative_to(PACKAGE_DIR)
+        yield ".".join(module_path.parts)
+
+MODULES = list(iter_modules())
+
+@pytest.mark.parametrize("module_name", MODULES)
+def test_import_module(module_name):
+    importlib.invalidate_caches()
+    importlib.import_module(module_name)
+```
+
+This will be placed in each package and tested at each PR.
+
+## 4. CD with Docker + uv: Parametrized and Repeatable
+
+### 4.1. Generic `Dockerfile.venv`
 
 * Accepts `PACKAGE_NAME` and `PACKAGE_VERSION`
 * Builds the venv from source
 * Installs deps, copies code, installs it non-editable
 * Outputs `venv_<version>.tar.gz`
 
-### 5.2. Matrix-based GitHub Workflow
+### 4.2. Matrix-based GitHub Workflow
 
 * CD uses a matrix of `{ name, tag_prefix }`
 * Each job runs **only if its paths changed** (via `dorny/paths-filter`)
 * Tags versions independently with `tag_prefix`
 
-## 6. CI per Package
+## 5. CI per Package
 
 * Each package has independent `pytest` logic using `uv`
 * Optionally include smoke tests for shared packages (e.g., `nt_common`)
 * Matrix can also apply here to avoid unnecessary jobs
 
-## 7. Optional: Gate Jobs + Branch Protection
+## 6. Optional: Gate Jobs + Branch Protection
 
 Aggregate results of matrix jobs into one gate check. Clean up noisy PR checks and enforce atomic results.
 
-## 8. Summary: Reusable, Fast, Independent
+## 7. Summary: Reusable, Fast, Independent
 
 This structure allows you to:
 
