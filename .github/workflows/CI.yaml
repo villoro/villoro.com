@@ -11,9 +11,8 @@ jobs:
   pre_commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      - uses: pre-commit/action@v3.0.0
+      - uses: actions/checkout@v4
+      - uses: j178/prek-action@v1
 
 
   labeler:
@@ -32,7 +31,6 @@ jobs:
         with:
           file: package.json
           path: version
-
 
 
   aspect_ratio_check:
