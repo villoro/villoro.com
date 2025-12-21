@@ -151,7 +151,7 @@ const SearchResult = ({
                     )}
                     <div className="search-result-item-body">
                       <a
-                        href={`/${item.slug}`}
+                        href={`/blog/${item.slug}`}
                         className="search-result-item-title search-result-item-link"
                       >
                         {matchUnderline(item.frontmatter.title, searchString)}
