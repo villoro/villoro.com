@@ -5,6 +5,9 @@
   "author": "Arnau Villoro <arnau@villoro.com>",
   "license": "MIT",
   "packageManager": "yarn@1.22.19",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "yarn generate-json && astro dev",
     "build": "yarn generate-json && astro build",
