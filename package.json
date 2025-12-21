@@ -1,10 +1,13 @@
 {
   "name": "villoro",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "description": "My personal website",
   "author": "Arnau Villoro <arnau@villoro.com>",
   "license": "MIT",
   "packageManager": "yarn@1.22.19",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "yarn generate-json && astro dev",
     "build": "yarn generate-json && astro build",
@@ -13,13 +16,16 @@
     "generate-json": "node scripts/jsonGenerator.js",
     "remove-darkmode": "node scripts/removeDarkmode.js && yarn format"
   },
+  "resolutions": {
+    "@astrojs/markdown-remark": "6.3.10"
+  },
   "dependencies": {
-    "@astrojs/mdx": "^2.1.1",
-    "@astrojs/react": "^3.0.9",
-    "@astrojs/rss": "^4.0.4",
-    "@astrojs/sitemap": "^3.0.5",
-    "@astrojs/tailwind": "^5.1.0",
-    "astro": "^4.5.2",
+    "@astrojs/mdx": "^4.3.13",
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/rss": "^4.0.14",
+    "@astrojs/sitemap": "^3.6.0",
+    "@astrojs/tailwind": "^6.0.2",
+    "astro": "^5.16.6",
     "astro-auto-import": "^0.4.2",
     "astro-font": "^0.0.77",
     "date-fns": "^3.3.1",
