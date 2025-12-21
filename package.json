@@ -13,9 +13,6 @@
     "generate-json": "node scripts/jsonGenerator.js",
     "remove-darkmode": "node scripts/removeDarkmode.js && yarn format"
   },
-  "resolutions": {
-    "shiki": "^1.0.0"
-  },
   "dependencies": {
     "@astrojs/mdx": "4.3.13",
     "@astrojs/react": "4.4.2",
