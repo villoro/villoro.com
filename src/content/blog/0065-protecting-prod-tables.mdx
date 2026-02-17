@@ -3,11 +3,11 @@ slug: protecting-prod-tables-dbt
 title: Protecting Production Tables in dbt
 meta_title: Protecting Production Tables in dbt - Strategies for Data Quality and Security
 description: "Learn three proven strategies to safeguard production tables in dbt: protecting against bad data, preventing unexpected changes, and securing sensitive data with seeds."
-date: 2025-09-04
-image: /images/blog/9999-greek-protecting-soldiers.jpg
+date: 2026-02-17
+image: /images/blog/0065-greek-protecting-soldiers.jpg
 category: DE
 tags: [dbt, SQL, Data Engineering]
-draft: true
+draft: false
 ---
 
 ## 1. Ways of Protecting Production Tables
@@ -28,7 +28,7 @@ The idea is simple:
 * Then, create a **final model** that depends on the internal one.
 * The final model is only updated if the tests pass.
 
-![Protecting against bad data](../../images/posts/2025/9999-protecting-bad-data.jpg)
+![Protecting against bad data](../../images/posts/2026/0065-protecting-bad-data.jpg)
 
 This approach prioritizes **quality over freshness**. It’s most useful when errors in the downstream system could have serious consequences.
 
@@ -45,7 +45,7 @@ Sometimes the main risk isn’t bad data, but unintentional modifications. A sma
 
 The solution is to **compare changes between the developer’s version and the production one** before merging.
 
-![Protecting against unexpected changes](../../images/posts/2025/9999-protect-unexpected-changes.jpg)
+![Protecting against unexpected changes](../../images/posts/2026/0065-protect-unexpected-changes.jpg)
 
 We use a custom `data_diff` macro for this. It highlights row-level differences across key columns, so the developer can review them during the pull request process.
 
@@ -188,7 +188,7 @@ The challenge is that dbt needs to compile and run models even for developers wi
 
 The solution: use **seeds with fake data** that mimic the real tables’ schema. Then dynamically switch between the real source (in production runs) and the seed (in dev/test runs).
 
-![Protecting sensitive data](../../images/posts/2025/9999-protect-sensitive-data.jpg)
+![Protecting sensitive data](../../images/posts/2026/0065-protect-sensitive-data.jpg)
 
 Example logic:
 
