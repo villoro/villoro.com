@@ -26,7 +26,7 @@ To run the website locally, use the following commands:
 2. Start the development server:
 
     ```bash
-    npm start
+    npm run dev
     ```
 
 3. Build the static site for production:
