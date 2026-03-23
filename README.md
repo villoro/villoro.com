@@ -12,6 +12,7 @@ The webpage is built using [Astro](https://astro.build/), utilizing the [Astropl
 Some screenshots:
 
 ![home](images/mockup_1.jpg)
+
 ![about](images/mockup_2.jpg)
 
 ## Run/View the Web
