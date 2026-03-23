@@ -12,6 +12,7 @@ The webpage is built using [Astro](https://astro.build/), utilizing the [Astropl
 Some screenshots:
 
 ![home](images/mockup_1.jpg)
+
 ![about](images/mockup_2.jpg)
 
 ## Run/View the Web
@@ -26,7 +27,7 @@ To run the website locally, use the following commands:
 2. Start the development server:
 
     ```bash
-    npm start
+    npm run dev
     ```
 
 3. Build the static site for production:
