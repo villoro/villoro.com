@@ -76,6 +76,10 @@ It is updating the parts of the notebook that depend on values that changed.
 The key part is that variables should have a single definition.
 You should not keep redefining the same variable in different cells.
 
+<Notice type="error">
+  In marimo, redefining the same variable in multiple cells is not possible since it raises and exception.
+</Notice>
+
 So this kind of pattern:
 
 ```python
@@ -347,6 +351,10 @@ I like this example because it combines most of the things I mentioned before:
 * UI elements
 * reactive cells
 * a notebook that can also behave like a small app
+
+<Notice type="success">
+  This is the kind of notebook that would feel awkward as a plain script and fragile in Jupyter, but feels very natural in marimo.
+</Notice>
 
 And I think this is exactly the kind of workflow where marimo makes a lot of sense.
 
