@@ -115,7 +115,50 @@ It forces a cleaner structure, and that makes the notebook easier to understand 
 
 ## 3. Why being a plain Python file matters
 
-TODO
+This is another big reason I like it.
+
+A marimo notebook is just a Python file.
+That means you can open it, read it, diff it, and review it like any other Python file in the project.
+
+That is a much better fit for git than a traditional notebook file.
+
+It also makes the notebook feel less "special".
+It can live inside a normal project, import your code, and evolve like the rest of the codebase.
+
+Here is a very small example:
+
+```python
+import marimo
+
+app = marimo.App()
+
+@app.cell
+def __():
+    x = 1
+    return (x,)
+
+@app.cell
+def __(x):
+    y = x + 1
+    return (y,)
+
+@app.cell
+def __(y):
+    print(y)
+    return
+
+if __name__ == "__main__":
+    app.run()
+```
+
+The nice part is that there is no special format involved here, just regular Python code.
+
+<Notice type="info">
+  This is also why marimo notebooks are much easier to version and review.
+</Notice>
+
+And I think that matters a lot.
+If a notebook is useful enough to keep, then it is useful enough to deserve clean diffs and normal code review.
 
 ## 4. SQL integration and plotting
 
