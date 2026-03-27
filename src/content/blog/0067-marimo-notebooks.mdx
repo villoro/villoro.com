@@ -166,7 +166,63 @@ TODO
 
 ## 5. UI elements
 
-TODO
+This is another part I like a lot.
+
+Marimo has quite a few useful UI elements:
+
+* `alert`
+* `spinner`
+* `multiselect`
+* `text`
+* `hstack`
+* `vstack`
+* `slider`
+* `dropdown`
+* `checkbox`
+* `button`
+* `table`
+* `tabs`
+
+I also like that marimo has a clear distinction between the **edit** view and the **app** view.
+When editing, you work on the notebook like normal.
+When switching to the app view, the notebook feels much closer to a small internal tool.
+
+![Example marimo notebook UI](../../images/posts/2026/0067-marimo-ui.png)
+
+Here is a very small example:
+
+```python
+import marimo as mo
+
+tables = mo.ui.multiselect(
+    options=["users", "sessions", "events"],
+    label="Tables",
+)
+pattern = mo.ui.text(label="Filter")
+
+controls = mo.vstack([
+    mo.md("## Cleanup controls"),
+    mo.hstack([tables, pattern]),
+    mo.md(
+        mo.callout(
+            "This notebook can delete old Glue table versions.",
+            kind="warn",
+        )
+    ),
+])
+
+with mo.status.spinner(title="Loading tables"):
+    available_tables = get_tables()
+
+controls
+```
+
+I think `hstack` and `vstack` are especially handy because they let you organize the notebook a bit better.
+Without them, the widgets can end up feeling scattered.
+
+<Notice type="info">
+  This is enough to turn a notebook into a small internal tool without leaving Python.
+</Notice>
 
 ## 6. The Glue cleanup notebook
 
