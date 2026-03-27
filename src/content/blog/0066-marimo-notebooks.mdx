@@ -35,6 +35,10 @@ That is why I think **marimo** is so interesting.
 It keeps the interactive part of notebooks, but it feels much closer to normal Python development.
 The notebook becomes easier to understand, easier to keep in git, and easier to revisit later.
 
+Part of that comes from the fact that a marimo notebook is really just a small Python app.
+It is not a special document format with some Python inside it.
+It is Python code that happens to render as a notebook.
+
 So I do not really see marimo as "Jupyter but nicer".
 I see it more as a notebook tool for the cases where the notebook is slowly becoming part of the project itself.
 
@@ -45,7 +49,68 @@ I see it more as a notebook tool for the cases where the notebook is slowly beco
 
 ## 2. Execution order, reloading, and variable redefinition
 
-TODO
+This is the part I liked the most.
+
+With Jupyter, it is very easy to get into a weird state without noticing.
+You run some cells, change something above, rerun only part of the notebook, and now the kernel is no longer a clean reflection of the code you have on screen.
+
+That is not always a problem, but it is a very common source of confusion.
+
+In marimo, cells return values.
+That is what allows marimo to understand the dependencies between cells and build a DAG from them.
+
+So if one cell returns a variable and another cell uses it, marimo knows there is a dependency there.
+If the first cell changes, the second one can be updated automatically.
+
+That is why reloading feels much cleaner.
+It is not just rerunning cells randomly.
+It is updating the parts of the notebook that depend on values that changed.
+
+The key part is that variables should have a single definition.
+You should not keep redefining the same variable in different cells.
+
+So this kind of pattern:
+
+```python
+df = load_data()
+```
+
+and later:
+
+```python
+df = transform_data(df)
+```
+
+is better written as:
+
+```python
+raw_df = load_data()
+transformed_df = transform_data(raw_df)
+```
+
+But the important part is that these would normally live in **different cells**.
+
+One cell returns:
+
+```python
+raw_df = load_data()
+```
+
+And another cell returns:
+
+```python
+transformed_df = transform_data(raw_df)
+```
+
+This way marimo knows that the second cell depends on the first one.
+So if the first cell changes, the second one updates automatically.
+
+At first I thought this would feel a bit annoying, but I actually think it is one of the best things about marimo.
+It forces a cleaner structure, and that makes the notebook easier to understand later.
+
+<Notice type="info">
+  In practice, this means the notebook behaves more like a dependency graph and less like a mutable scratchpad.
+</Notice>
 
 ## 3. Why being a plain Python file matters
 
