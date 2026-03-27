@@ -252,9 +252,88 @@ So for data exploration, the combination is very nice:
   I think this is one of the strongest parts of marimo for data work: SQL and plots are not bolted on, they fit naturally into the same reactive workflow.
 </Notice>
 
-## 6. The Glue cleanup notebook
+## 6. A real example: recovering deleted S3 files
 
-TODO
+One example I like a lot is a marimo notebook I built for recovering deleted S3 files.
+I already explained the underlying recovery logic in <FancyLink linkText="Recover deleted S3 files with delete markers" url="https://villoro.com/blog/recover-s3-files-delete-markers/" dark="true"/>, so here I only want to focus on why marimo is a good fit for the interface.
+
+The notebook has a very simple flow:
+
+1. select bucket, prefix, and time window
+2. explore the delete markers first
+3. inspect the preview
+4. run the recovery, ideally in dry-run mode first
+
+That flow maps very naturally to marimo.
+
+![Marimo notebook to recover S3 files](../../images/posts/2026/0067-marimo-recover-s3-files.png)
+
+Here is a simplified subset of the notebook, just to show the structure:
+
+```python
+import marimo
+
+app = marimo.App(width="medium")
+
+
+@app.cell
+def _():
+    import marimo as mo
+    from scripts.recover_s3_files import recover_s3_delete_markers
+    from scripts.recover_s3_files import scan_delete_markers
+    return mo, recover_s3_delete_markers, scan_delete_markers
+
+
+@app.cell
+def _(mo):
+    bucket = mo.ui.text(label="Bucket")
+    prefix = mo.ui.text(label="Prefix")
+    start_ts = mo.ui.text(label="Start timestamp")
+    end_ts = mo.ui.text(label="End timestamp")
+    explore_button = mo.ui.run_button(label="Explore deleted files")
+
+    mo.vstack(
+        [
+            mo.md("# Recover S3 files"),
+            mo.hstack([bucket, prefix]),
+            mo.hstack([start_ts, end_ts]),
+            explore_button,
+        ]
+    )
+    return bucket, end_ts, explore_button, prefix, start_ts
+
+
+@app.cell
+def _(bucket, end_ts, explore_button, mo, prefix, scan_delete_markers, start_ts):
+    mo.stop(not explore_button.value, mo.md("Click explore to load the preview."))
+
+    with mo.status.spinner(title="Scanning delete markers"):
+        df_preview = scan_delete_markers(
+            bucket.value, prefix.value, start_ts.value, end_ts.value
+        )
+
+    return (df_preview,)
+
+
+@app.cell
+def _(df_preview, mo):
+    mo.vstack(
+        [
+            mo.md("# Exploration"),
+            df_preview,
+        ]
+    )
+    return
+```
+
+I like this example because it combines most of the things I mentioned before:
+
+* regular Python code
+* UI elements
+* reactive cells
+* a notebook that can also behave like a small app
+
+And I think this is exactly the kind of workflow where marimo makes a lot of sense.
 
 ## 7. Closing thoughts
 
