@@ -10,6 +10,9 @@ tags: [Python, Tools, Notebooks, AWS, DE]
 draft: false
 ---
 
+import marimoUi from "../../images/posts/2026/0067-marimo-ui.png";
+import marimoRecoverS3 from "../../images/posts/2026/0067-marimo-recover-s3-files.png";
+
 ## 0. Intro
 
 I have used Jupyter notebooks for years, and recently I started trying <FancyLink linkText="marimo" url="https://marimo.io/"/>.
@@ -196,7 +199,11 @@ I also like that marimo has a clear distinction between the **edit** view and th
 When editing, you work on the notebook like normal.
 When switching to the app view, the notebook feels much closer to a small internal tool:
 
-![Example marimo notebook UI](../../images/posts/2026/0067-marimo-ui.png)
+<img
+  src={marimoUi.src}
+  alt="Example marimo notebook UI"
+  class="rounded border border-black shadow-lg"
+/>
 
 Here is a very small example:
 
@@ -281,7 +288,11 @@ The notebook has a very simple flow:
 
 That flow maps very naturally to marimo.
 
-![Marimo notebook to recover S3 files](../../images/posts/2026/0067-marimo-recover-s3-files.png)
+<img
+  src={marimoRecoverS3.src}
+  alt="Marimo notebook to recover S3 files"
+  class="rounded border border-black shadow-lg"
+/>
 
 Here is a simplified subset of the notebook, just to show the structure:
 
