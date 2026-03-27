@@ -12,11 +12,36 @@ draft: false
 
 ## 0. Intro
 
-TODO
+I have used Jupyter notebooks for years, and recently I started trying <FancyLink linkText="marimo" url="https://marimo.io/"/>.
+
+In this post I want to explain why I think it is a very interesting alternative for Python projects, and then show one small example at the end.
 
 ## 1. Marimo as a Jupyter alternative
 
-TODO
+I still think Jupyter notebooks are very useful.
+For quick exploration, ad-hoc analysis, or testing an idea, they are hard to beat.
+
+The problem starts when the notebook stops being temporary.
+
+That is usually the moment where Jupyter begins to show its weak points:
+
+* execution order gets messy
+* the in-memory state becomes harder to reason about
+* git diffs are annoying
+* moving notebook code into a proper project takes extra work
+
+That is why I think **marimo** is so interesting.
+
+It keeps the interactive part of notebooks, but it feels much closer to normal Python development.
+The notebook becomes easier to understand, easier to keep in git, and easier to revisit later.
+
+So I do not really see marimo as "Jupyter but nicer".
+I see it more as a notebook tool for the cases where the notebook is slowly becoming part of the project itself.
+
+<Notice type="info">
+  If the notebook is just a temporary scratchpad, Jupyter is probably enough.
+  If it is something you want to reuse, review, or maintain, marimo starts to make much more sense.
+</Notice>
 
 ## 2. Execution order, reloading, and variable redefinition
 
