@@ -36,16 +36,16 @@ It keeps the interactive part of notebooks, but it feels much closer to normal P
 The notebook becomes easier to understand, easier to keep in git, and easier to revisit later.
 
 Part of that comes from the fact that a marimo notebook is really just a small Python app.
+
+<Notice type="success">
+  A marimo notebook is just a Python app.
+</Notice>
+
 It is not a special document format with some Python inside it.
 It is Python code that happens to render as a notebook.
 
 So I do not really see marimo as "Jupyter but nicer".
 I see it more as a notebook tool for the cases where the notebook is slowly becoming part of the project itself.
-
-<Notice type="info">
-  If the notebook is just a temporary scratchpad, Jupyter is probably enough.
-  If it is something you want to reuse, review, or maintain, marimo starts to make much more sense.
-</Notice>
 
 ## 2. Execution order, reloading, and variable redefinition
 
@@ -109,7 +109,8 @@ At first I thought this would feel a bit annoying, but I actually think it is on
 It forces a cleaner structure, and that makes the notebook easier to understand later.
 
 <Notice type="info">
-  In practice, this means the notebook behaves more like a dependency graph and less like a mutable scratchpad.
+  The nice part is not only that the notebook updates automatically.
+  It is that the update follows the dependencies between cells, so the notebook behaves more like a DAG than like a mutable scratchpad.
 </Notice>
 
 ## 3. Why being a plain Python file matters
