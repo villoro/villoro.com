@@ -32,6 +32,13 @@ That is usually the moment where Jupyter begins to show its weak points:
 
 That is why I think **marimo** is so interesting.
 
+| topic | Jupyter | marimo |
+|---|---|---|
+| notebook format | notebook file | Python file |
+| execution model | manual cell order | dependency-based |
+| git diffs | usually noisy | much cleaner |
+| UI/app mode | limited | built in |
+
 It keeps the interactive part of notebooks, but it feels much closer to normal Python development.
 The notebook becomes easier to understand, easier to keep in git, and easier to revisit later.
 
@@ -124,6 +131,10 @@ That is a much better fit for git than a traditional notebook file.
 
 It also makes the notebook feel less "special".
 It can live inside a normal project, import your code, and evolve like the rest of the codebase.
+
+<Notice type="success">
+  If the notebook is worth keeping, it is worth having clean diffs and normal code review.
+</Notice>
 
 Here is a very small example:
 
@@ -269,6 +280,10 @@ That flow maps very naturally to marimo.
 ![Marimo notebook to recover S3 files](../../images/posts/2026/0067-marimo-recover-s3-files.png)
 
 Here is a simplified subset of the notebook, just to show the structure:
+
+<Notice type="info">
+  This is only a small subset of the real notebook, just enough to show how the interface is structured.
+</Notice>
 
 ```python
 import marimo
