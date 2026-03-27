@@ -10,6 +10,9 @@ tags: [Tools]
 draft: false
 ---
 
+import cmderDefault from "../../images/posts/2020/0030-cmder_defualt.png";
+import cmderMain from "../../images/posts/2020/0030-cmder.png";
+
 ## 0. Overview
 
 **Cmder** is a software package created out of pure frustration over the absence of nice console emulators on Windows.
@@ -34,7 +37,11 @@ Then open the `.exe` file (`C:\cmder_mini\Cmder.exe`) to start using it.
 Open the **cmder** settings with `WIN` + `ALT` + `P`.
 Then go to `Integration` / `Default term` and mark `Force conEmu as default terminal for console applications`.
 
-![Cmder default](../../images/posts/2020/0030-cmder_defualt.png)
+<img
+  src={cmderDefault.src}
+  alt="Cmder default"
+  class="post-screenshot"
+/>
 
 After that any operation that opens the terminal or the powershell will open `cmder`.
 
@@ -48,7 +55,11 @@ Another really great feature is that you can open multiple consoles as tabs (lik
 It is also way better visually than the default windows terminal.
 And it has git integrations so that you will see by default the branch you are working on.
 
-![Cmder](../../images/posts/2020/0030-cmder.png)
+<img
+  src={cmderMain.src}
+  alt="Cmder"
+  class="post-screenshot"
+/>
 
 One other cool feature are alias.
 For example you can write `alias jn=jupyter notebook` and the write `jn` to start jupyter notebooks.

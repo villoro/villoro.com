@@ -11,6 +11,7 @@ draft: false
 ---
 
 <script type="module" src="/js/posts/0040-plots-prefect.js"></script>
+import prefectDeploymentsParams from "../../images/posts/2024/0040-prefect-deployments-parameters.png";
 
 ## 0. Why Prefect?
 
@@ -298,7 +299,11 @@ This will allow you to perform `backfills` or any other manual run using Prefect
 
 As an example, see how you can use `dropdowns`, `date pickers`, default values and other nice features that simplify triggering manual runs:
 
-![Create Prefect Work Pool](../../images/posts/2024/0040-prefect-deployments-parameters.png)
+<img
+  src={prefectDeploymentsParams.src}
+  alt="Create Prefect Work Pool"
+  class="post-screenshot"
+/>
 
 This is automatically created as long as you properly define the parameters in your flow.
 This is the code for the example above:

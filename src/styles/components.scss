@@ -165,6 +165,10 @@
   code:not(pre)::before, code:not(pre)::after {
     content: none;
   }
+
+  img.post-screenshot {
+    @apply rounded border border-black shadow-lg;
+  }
 }
 
 .terminal-output {
