@@ -160,11 +160,7 @@ The nice part is that there is no special format involved here, just regular Pyt
 And I think that matters a lot.
 If a notebook is useful enough to keep, then it is useful enough to deserve clean diffs and normal code review.
 
-## 4. SQL integration and plotting
-
-TODO
-
-## 5. UI elements
+## 4. UI elements
 
 Marimo has quite a few useful UI elements:
 
@@ -220,6 +216,40 @@ Without them, the widgets can end up feeling scattered.
 
 <Notice type="info">
   This is enough to turn a notebook into a small internal tool without leaving Python.
+</Notice>
+
+## 5. SQL integration and plotting
+
+This is another area where marimo is stronger than I expected.
+
+On the SQL side, marimo has native SQL cells.
+These queries can run against dataframes, databases, warehouses, and lakehouses, and the result comes back as a Python dataframe.
+
+I think that is a very nice model.
+You can query data with SQL, then continue working with the result in normal Python code without having to jump between different tools.
+
+SQL cells use DuckDB by default as the in-memory engine, but marimo can also work with systems like PostgreSQL, MySQL, and SQLite through their Python connectors.
+
+This is especially useful because the SQL cells are still part of the same reactive notebook.
+If the query changes, or if some upstream Python value changes, the dependent cells can update as well.
+
+On the plotting side, marimo also looks quite good.
+It works well with interactive plotting, especially with libraries like Altair and Plotly, and I think that is the right angle.
+
+Almost any notebook can render a chart.
+The interesting part here is that the plot can fit naturally into the reactive flow of the notebook.
+
+If you want to get a feel for it, the <FancyLink linkText="marimo gallery" url="https://marimo.io/gallery" dark="true"/> has some very nice examples.
+
+So for data exploration, the combination is very nice:
+
+* query with SQL
+* inspect the result as a dataframe
+* plot it
+* update the inputs and let the notebook refresh
+
+<Notice type="info">
+  I think this is one of the strongest parts of marimo for data work: SQL and plots are not bolted on, they fit naturally into the same reactive workflow.
 </Notice>
 
 ## 6. The Glue cleanup notebook
