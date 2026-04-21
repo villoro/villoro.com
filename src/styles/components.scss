@@ -44,9 +44,24 @@
     @apply my-0
   }
 
+  &.note {
+    @apply bg-indigo-100 text-indigo-900 border-indigo-900;
+    @apply dark:bg-indigo-900 dark:text-indigo-100 dark:border-indigo-100;
+  }
+
+  &.abstract {
+    @apply bg-teal-100 text-teal-900 border-teal-900;
+    @apply dark:bg-teal-900 dark:text-teal-100 dark:border-teal-100;
+  }
+
   &.info {
     @apply bg-blue-100 text-blue-900 border-blue-900;
     @apply dark:bg-blue-900 dark:text-blue-100 dark:border-blue-100;
+  }
+
+  &.tip {
+    @apply bg-cyan-100 text-cyan-900 border-cyan-900;
+    @apply dark:bg-cyan-900 dark:text-cyan-100 dark:border-cyan-100;
   }
 
   &.success {
@@ -54,14 +69,39 @@
     @apply dark:bg-green-900 dark:text-green-100 dark:border-green-100;
   }
 
+  &.question {
+    @apply bg-amber-100 text-amber-900 border-amber-900;
+    @apply dark:bg-amber-900 dark:text-amber-100 dark:border-amber-100;
+  }
+
   &.warning {
     @apply bg-yellow-100 text-yellow-900 border-yellow-900;
     @apply dark:bg-yellow-800 dark:text-yellow-100 dark:border-yellow-100;
   }
 
+  &.failure {
+    @apply bg-orange-100 text-orange-900 border-orange-900;
+    @apply dark:bg-orange-900 dark:text-orange-100 dark:border-orange-100;
+  }
+
   &.error, &.danger {
     @apply bg-red-100 text-red-900 border-red-900;
     @apply dark:bg-red-900 dark:text-red-100 dark:border-red-100;
+  }
+
+  &.bug {
+    @apply bg-rose-100 text-rose-900 border-rose-900;
+    @apply dark:bg-rose-900 dark:text-rose-100 dark:border-rose-100;
+  }
+
+  &.example {
+    @apply bg-purple-100 text-purple-900 border-purple-900;
+    @apply dark:bg-purple-900 dark:text-purple-100 dark:border-purple-100;
+  }
+
+  &.quote {
+    @apply bg-gray-100 text-gray-900 border-gray-900;
+    @apply dark:bg-gray-800 dark:text-gray-100 dark:border-gray-100;
   }
 }
 
