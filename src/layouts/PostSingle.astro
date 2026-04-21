@@ -26,7 +26,7 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
 
 <div class="relative">
-  <div class="grid grid-cols-1 lg:grid-cols-12">
+  <div class="grid grid-cols-1 lg:grid-cols-12 lg:gap-x-6">
     <!-- TOC for large screens -->
     <div id="toc-container" class="px-6 hidden lg:block lg:col-span-3 lg:bg-theme-light lg:dark:bg-darkmode-theme-light lg:sticky lg:overflow-y-auto">
       <TOC headings={headings} />
@@ -40,13 +40,13 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
           <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
 
           {image && (
-            <div class="mb-10">
+            <div class="mb-10 aspect-video overflow-hidden rounded">
               <ImageMod
                 src={image}
                 height={500}
                 width={1200}
                 alt={title}
-                class="w-full rounded"
+                class="w-full h-full object-cover"
                 format="webp"
                 loading="eager"
               />
