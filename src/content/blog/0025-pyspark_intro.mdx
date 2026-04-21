@@ -18,7 +18,7 @@ It relies on <FancyLink linkText="MapReduce" url="https://www.ibm.com/analytics/
 This allows spark to work with **PetaBytes** of data using a cluster with hundreds or thousands of workers.
 
 Apache Spark is a project 100% open source.
-At this momement **databricks** is the major actor behind its develepment.
+At this momement **databricks** is the major actor behind its development.
 
 Apache Spark consists of 4 major products:
 
@@ -125,7 +125,7 @@ sdf[sdf["Age"].between(20, 30)]
 # Rows where Pclass is one of the values of the list [1, 2]
 sdf[sdf["Pclass"].isin([1, 2])]
 
-# Rows that inclde 'Miss.' in the Name
+# Rows that include 'Miss.' in the Name
 sdf[sdf["Name"].like("%Miss.%")]
 
 # Rows with Name starting or ending with a string
@@ -175,7 +175,7 @@ sdf = sdf.withColumn("Age", sdf["Age"].cast(T.IntegerType()))
   You need to specify a type from `pyspark.sql.types`.
 </Notice>
 
-### 4.3. Modify certain vales
+### 4.3. Modify certain values
 
 To modify the data itself use `sdf.withColumn`.
 You can either create a new column at the same time or update the existing one.

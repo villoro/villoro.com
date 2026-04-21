@@ -30,7 +30,7 @@ We would use open data from <FancyLink linkText="Catalunya" url="https://en.wiki
   This dataset is quite big, it might take some hours to download.
 </Notice>
 
-It consits of 3 csvs:
+It consists of 3 csvs:
 
 <div class="flex justify-center">
   <Button label="Data (~22GB)" link="https://analisi.transparenciacatalunya.cat/Medi-Ambient/Dades-meteorol-giques-de-la-XEMA/nzvn-apee" style="solid" />
@@ -71,7 +71,7 @@ sdf = spark.read.csv("Dades_meteorol_giques_de_la_XEMA.csv", header=True)
 
 Remember that **spark is lazy**.
 It won't do anything until you call an operation that requires to do calculations.
-Some of those could be `sdf.show`, `sdf.toPandas` or writting a file.
+Some of those could be `sdf.show`, `sdf.toPandas` or writing a file.
 
 Let's try to count the number of stations:
 
@@ -80,7 +80,7 @@ sdf.select("CODI_ESTACIO").distinct().count()
 ```
 
 This took around **6 minutes**. As you are probably thinking this is slow.
-The problem is that we are reading from a `csv` which is a really ineficient file format.
+The problem is that we are reading from a `csv` which is a really inefficient file format.
 
 Let's transform it to `parquet` which is way better.
 
@@ -199,7 +199,7 @@ So it is safe to transform to **pandas** to continue the exploration.
 However let's work with **spark** to practice a little bit more.
 
 First let's extract the date from the datetime.
-To do so we need to craete a `udf` and then apply it:
+To do so we need to create a `udf` and then apply it:
 
 ```python
 @udf(StringType())

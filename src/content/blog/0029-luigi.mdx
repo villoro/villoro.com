@@ -18,7 +18,7 @@ Luigi is a **Python** package that helps you build complex pipelines of batch jo
 It handles dependency resolution, workflow management, visualization, handling failures, command line integration, and much more.
 
 It is easy to set up and integrates well with python code.
-This, for example, make it possible to call tasks directly from python and/or to set task dependencies dinamically.
+This, for example, make it possible to call tasks directly from python and/or to set task dependencies dynamically.
 
 You can install it directly with **pip**:
 
@@ -34,7 +34,7 @@ pip install luigi
 The basic usage is to overwrite the `run` function (with what to do) and the `output` (with the file that will output).
 
 <Notice type="warning">
-  All **Luigi** tasks need to end with writting a file. This is how luigi tracks which tasks are completed.
+  All **Luigi** tasks need to end with writing a file. This is how luigi tracks which tasks are completed.
 </Notice>
 
 For example a basic task would look like:
@@ -347,7 +347,7 @@ if __name__ == "__main__":
 So it is only needed to say the name of the script/package as parameter called `module` of the `StandardTask` instance.
 This script/package needs a function called `main` since is what would be run by default.
 
-It is even possible to adapt the `StandardTask` to do something different by overwritting the `run_std` function.
+It is even possible to adapt the `StandardTask` to do something different by overwriting the `run_std` function.
 For example:
 
 ```python
@@ -359,10 +359,10 @@ class ReportTask(StandardTask):
 
 ## 4. Automatically run luigi
 
-If you want a process always runing and to be restarted on failure you should use **supervisor**.
+If you want a process always running and to be restarted on failure you should use **supervisor**.
 You should you use it for `luigid`.
 
-For runing the tasks itselfs **Luigi** does not have a scheduler but you can use **cron** instead.
+For running the tasks themselves **Luigi** does not have a scheduler but you can use **cron** instead.
 
 ### 4.1. Install supervisor
 
@@ -372,7 +372,7 @@ First install it with:
 sudo apt install supervisor -y
 ```
 
-Then create some auxiliar folders that you will need:
+Then create some auxiliary folders that you will need:
 
 ```sh
 #!/bin/bash 
@@ -404,7 +404,7 @@ user=ubuntu
 ```
 
 It is important to use the full path for the command that **supervisor** will run.
-Be careful to set `user` to one that has visbility of the `luigid` file.
+Be careful to set `user` to one that has visibility of the `luigid` file.
 
 <Notice type="info">
   Remember you can call `whereis luigid` to get the full path
@@ -500,9 +500,9 @@ In order to run this you should give it executable permissions with:
 chmod +x /home/ubuntu/run_luigi.sh
 ```
 
-### 4.4. Runing luigi tasks with cron
+### 4.4. Running luigi tasks with cron
 
-Te best way to run **Luigi** automatically is using cron.
+The best way to run **Luigi** automatically is using cron.
 
 After doing all the previous steps you can set **cron** to run the script with:
 

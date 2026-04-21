@@ -6,7 +6,7 @@ description: Numba translates Python functions to optimized machine code at runt
 date: 2019-05-21
 image: "/images/blog/0019-numba.jpg"
 category: python
-tags: [Python, Benchmark, Performance, Numba]
+tags: [Python, Benchmark, Performance]
 draft: false
 ---
 
@@ -86,7 +86,7 @@ When using **pypy** you can write regular python code. The main disadvantage of 
 
 You don't need to replace the Python interpreter, run a separate compilation step, or even have a C/C++ compiler installed. Just apply one of the Numba decorators to your Python function, and Numba does the rest.
 
-So you can use python code without modifications and you won't have compatibility problems with other packages when using numba. This is the reason I preffer **numba** over **cython** and **pypy** and it is also one of the faster of the three.
+So you can use python code without modifications and you won't have compatibility problems with other packages when using numba. This is the reason I prefer **numba** over **cython** and **pypy** and it is also one of the faster of the three.
 
 ## 2. Using numba
 
@@ -123,7 +123,7 @@ So you should try to use `njit` decorator if possible specialy for numerical cal
 
 Using the `vectorize` decorator, you write your function as operating over input scalars, rather than arrays. **Numba** will generate the surrounding loop (or kernel) allowing efficient iteration over the actual inputs.
 
-So for example given a `np.array` we can calculat the square with the follwing function.
+So for example given a `np.array` we can calculate the square with the following function.
 
 ```python
 from numba import vectorize
@@ -230,7 +230,7 @@ In all cases using the raw loop `iter_and_sum` or the default python `sum` gives
 
 ### 3.2. Test fix time
 
-At one of the projects I was working at my company I found an intersting problem.
+At one of the projects I was working at my company I found an interesting problem.
 I had a huge dataframe (650 milion rows) and among other columns there was one for the `date` and one for `time`.
 
 The `date` column followed the format `YYYY-MM-DD` like 2019-05-15. The problem was with the `time` column.
@@ -448,7 +448,7 @@ def divmod_vectorize(df):
 | 10^7 |  37.4349 |             50.3042 |            30.2810 |              32.3781 |       97.4159 |      2.9162 |           2.8040 |
 | 10^8 | 721.8816 |            508.8800 |           310.1489 |             326.4423 |      973.3178 |     31.4919 |          31.6025 |
 
-Both `divmod_njit` and `divmod_vectorize` performs really well compared to the other options. Is intersting that my first approach (`zfill`) is the best for small dataframes but it starts to underperform at 10^5.
+Both `divmod_njit` and `divmod_vectorize` performs really well compared to the other options. It is interesting that my first approach (`zfill`) is the best for small dataframes but it starts to underperform at 10^5.
 
 <canvas id="chart_fix_time" style="width:100%;height:600px;"></canvas>
 

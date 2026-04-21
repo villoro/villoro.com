@@ -42,7 +42,7 @@ You will need to enable the usage of the Google Analytics API with:
 ### 1.3. Allow the user to see Google Analytics data
 
 From the previous step you created and account with an email similar to `your_project@your_web.iam.gserviceaccount.com`
-(you obviously need to change `your_web` and `your_project`). Then give it read permisions with:
+(you obviously need to change `your_web` and `your_project`). Then give it read permissions with:
 
 1. Go to <FancyLink linkText="Google Analytics web" url="https://analytics.google.com/"/>.
 2. Select the **Admin** section from the left bar
@@ -51,7 +51,7 @@ From the previous step you created and account with an email similar to `your_pr
 5. Give it read access.
 
 <Notice type="warning">
-  It can take some time until the new user has reading permisions.
+  It can take some time until the new user has reading permissions.
 </Notice>
 
 ### 1.4. Profile ID
@@ -62,10 +62,10 @@ Get the ID that you will need to use with the API. There are three levels and th
 
 ## 2. Test the conection
 
-You can run the `test_conexion.py` code to check that everything is working.
+You can run the `test_connection.py` code to check that everything is working.
 
 <TerminalOutput color="stone">
-  test_conexion.py
+  test_connection.py
 </TerminalOutput>
 ```python
 from datetime import date, timedelta
@@ -75,8 +75,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 # Those are the two constants you need to change
-FILE_GA_KEY = "" path tho the key file
-PROFILE = "" profile ID
+FILE_GA_KEY = ""  # path to the key file
+PROFILE = ""  # profile ID
 
 
 def get_ga_service():
@@ -91,7 +91,7 @@ def get_ga_service():
 
 
 def test():
-    """ Tests the conexion """
+    """ Tests the connection """
 
     service = get_ga_service()
 
@@ -116,7 +116,7 @@ def test():
 ```
 
 <Notice type="warning">
-  Remeber to edit both `FILE_GA_KEY` and `PROFILE` constants using the values from the previous steps.
+  Remember to edit both `FILE_GA_KEY` and `PROFILE` constants using the values from the previous steps.
 </Notice>
 
 ## 3. Building the ETL
@@ -132,7 +132,7 @@ of them and you can also try your queries.
 
 ### 3.2. Extract and transform the data
 
-In this step I will descrive functions in the `etl.py` file.
+In this step I will describe functions in the `etl.py` file.
 
 The first thing to do is to create the Google Analytics service with:
 
@@ -262,7 +262,7 @@ This is what you should run every day. By default it will take the data from the
 This redundancy will mean that even if the ETL fails some day it can automatically retrieve the missing data the next day.
 In order to lose that it must fail 7 consecutive days.
 
-And the last function is for retriving all old data. This is meant to only be used the first time.
+And the last function is for retrieving all old data. This is meant to only be used the first time.
 
 <TerminalOutput color="stone">
   etl.py
@@ -295,7 +295,7 @@ Right now it will download all data from 2017 until today.
 
 ### 3.3. Load the data
 
-In this example amb going to show how to insert the data into **MySQL**.
+In this example I'm going to show how to insert the data into **MySQL**.
 All this code is from `sql.py` file.
 
 #### 3.3.1. Handling duplicated data

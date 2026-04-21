@@ -222,7 +222,7 @@ FROM {{ this.schema }}."{{ this.table }}$files";
 According to the official documentation (<FancyLink linkText="Spark: Querying with SQL | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-queries/#querying-with-sql" company="iceberg"/>), you can query the `files` metadata with:
 
 ```sql
-spark.sql(f"SELCT * FROM iceberg.{schema}.{table}.files")
+spark.sql(f"SELECT * FROM iceberg.{schema}.{table}.files")
 ```
 
 <Notice type="warning">
