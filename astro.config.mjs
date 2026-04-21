@@ -1,7 +1,7 @@
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
-import tailwind from "@astrojs/tailwind";
+import tailwindcss from "@tailwindcss/vite";
 import AutoImport from "astro-auto-import";
 import { defineConfig } from "astro/config";
 import remarkCallouts from "./src/plugins/remark-callouts.mjs";
@@ -18,14 +18,12 @@ export default defineConfig({
   // Remove this entire "image" block: Sharp is the default in Astro 5
   // image: { service: squooshImageService() },
 
+  vite: {
+    plugins: [tailwindcss()],
+  },
   integrations: [
     react(),
     sitemap(),
-    tailwind({
-      config: {
-        applyBaseStyles: false,
-      },
-    }),
     AutoImport({
       imports: [
         "@/shortcodes/Accordion",
@@ -51,6 +49,5 @@ export default defineConfig({
       theme: "monokai",
       wrap: true,
     },
-    extendDefaultPlugins: true,
   },
 });

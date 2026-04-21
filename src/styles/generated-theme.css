@@ -1,0 +1,44 @@
+/* Auto-generated from 'src/config/theme.json' — do not edit manually */
+@theme {
+  /* Colors - light mode */
+  --color-text: #444444;
+  --color-light: #717171;
+  --color-dark: #404040;
+  --color-primary: #3a76ff;
+  --color-body: #fff;
+  --color-border: #eaeaea;
+  --color-theme-light: #f6f6f6;
+  --color-theme-dark: #ebebeb;
+
+  /* Colors - dark mode */
+  --color-darkmode-text: #b4afb6;
+  --color-darkmode-light: #b4afb6;
+  --color-darkmode-dark: #fff;
+  --color-darkmode-primary: #ffc33a;
+  --color-darkmode-body: #1c1c1c;
+  --color-darkmode-border: #3e3e3e;
+  --color-darkmode-theme-light: #2B2B2B;
+  --color-darkmode-theme-dark: #222222;
+
+  /* Font sizes (base=16px, scale=1.250) */
+  --text-h1: 3.0517578125rem;
+  --text-h1-sm: 2.44140625rem;
+  --text-h2: 2.44140625rem;
+  --text-h2-sm: 1.953125rem;
+  --text-h3: 1.953125rem;
+  --text-h3-sm: 1.5625rem;
+  --text-h4: 1.5625rem;
+  --text-h5: 1.25rem;
+  --text-h6: 1rem;
+
+  /* Font families — values overridden at runtime by astro-font */
+  --font-primary: "Heebo", sans-serif;
+  --font-secondary: "Signika", sans-serif;
+
+  /* Breakpoints */
+  --breakpoint-sm: 540px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
