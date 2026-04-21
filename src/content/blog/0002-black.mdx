@@ -13,9 +13,8 @@ tags: [Python, Tools, Best Practices]
 draft: false
 ---
 
-<Notice type="danger">
-  **Disclaimer:** A lot has changed since I wrote this. Even though `black` still works, I suggest using `ruff` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
-</Notice>
+> [!danger]
+> **DISCLAIMER:** A lot has changed since I wrote this. Even though `black` still works, I suggest using `ruff` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
 
 ## 0. Intro
 
@@ -27,6 +26,7 @@ draft: false
 
 From their github:
 
+> [!quote]
 > Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting. You will save time and mental energy for more important matters.
 
 The best way to explain it will be using an example.
@@ -179,9 +179,8 @@ But the best part will be if you set sublack to auto format the current file whe
 4. Select `Settings`
 5. Change `black_on_save` to `true`
 
-<Notice type="warning">
-    If you are unable to modify the file, copy its contents and save it in a new file in the same location (you can see the location at the top of sublime).
-    In my case the path is `C:\Users\Villoro\AppData\Roaming\Sublime Text 3\Packages\sublack\sublack.sublime-settings`
-</Notice>
+> [!warning]
+> If you are unable to modify the file, copy its contents and save it in a new file in the same location (you can see the location at the top of sublime).
+> In my case the path is `C:\Users\Villoro\AppData\Roaming\Sublime Text 3\Packages\sublack\sublack.sublime-settings`
 
 I usually use sublime but there are black extensions for other programs as well.
