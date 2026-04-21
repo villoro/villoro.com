@@ -31,15 +31,13 @@ The problem I had is that under high load in summer, temperatures were too high:
 
 <canvas id="stats_without_limits" style="width:100%;height:300px;"></canvas>
 
-<Notice type="danger">
-  The CPU was around 97 ºC, which is higher than the max 95 ºC.
-  Whenever it reached 100 ºC, the computer automatically turned off to prevent damage.
-</Notice>
+> [!danger]
+> The CPU was around 97 ºC, which is higher than the max 95 ºC.
+> Whenever it reached 100 ºC, the computer automatically turned off to prevent damage.
 
-<Notice type="info">
-  The CPU load looks low because I was gaming at the time (GPU intensive).
-  GPU load is not tracked nor included in the CPU load, which is why it looks like the computer was close to idle.
-</Notice>
+> [!note]
+> The CPU load looks low because I was gaming at the time (GPU intensive).
+> GPU load is not tracked nor included in the CPU load, which is why it looks like the computer was close to idle.
 
 ## 2. Regular ways to prevent overheating
 
@@ -55,9 +53,8 @@ However, some PCs (such as mine) do not have this option.
 
 Another method is undervolting the CPU with a tool like <FancyLink linkText="MSI Afterburner" url="https://www.msi.com/Landing/afterburner/graphics-cards"/>. It doesn't work for all computers and can be dangerous.
 
-<Notice type="warning">
-  Undervolting can permanently damage your computer, proceed with caution.
-</Notice>
+> [!warning]
+> Undervolting can permanently damage your computer, proceed with caution.
 
 ### 2.3. Dedicated software
 
@@ -77,9 +74,8 @@ Then, check the current setup with:
 ```sh
 ryzenadj.exe -i
 ```
-<Notice type="warning">
-  Must be run as an Administrator.
-</Notice>
+> [!warning]
+> Must be run as an Administrator.
 
 You will see information like this:
 
@@ -101,9 +97,8 @@ You will see information like this:
 | CCLK Boost SETPOINT |   nan |                                                       | power-saving /    |
 | CCLK BUSY VALUE     |   nan |                                                       | max-performance   |
 
-<Notice type="info">
-  I pivoted the table so that it's easier to read.
-</Notice>
+> [!note]
+> I pivoted the table so that it's easier to read.
 
 ### 3.2. What to change with RyzenAdj
 
@@ -150,9 +145,8 @@ Here are my results:
 
 <canvas id="stats_with_limits" style="width:100%;height:300px;"></canvas>
 
-<Notice type="success">
-  You can see that the TDP remains at 40 W and that the temperature never reaches the danger zone (above 95 ºC).
-</Notice>
+> [!tip]
+> You can see that the TDP remains at 40 W and that the temperature never reaches the danger zone (above 95 ºC).
 
 ## 5. Limit TDP at start up
 

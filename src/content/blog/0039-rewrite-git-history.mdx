@@ -23,10 +23,9 @@ By rewriting Git history, you can eliminate unnecessary commits, squash related 
 
 ## 2. Step-by-Step Guide to Rewriting Git History
 
-<Notice type="danger">
-  Make sure to read all post before rewriting the history.
-  This way you might be able to use the code at the end to automate the process.
-</Notice>
+> [!danger]
+> Make sure to read all post before rewriting the history.
+> This way you might be able to use the code at the end to automate the process.
 
 Also you might want to read <FancyLink linkText="Git Rewriting History" url="https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History"/>
 
@@ -34,9 +33,8 @@ Also you might want to read <FancyLink linkText="Git Rewriting History" url="htt
 
 To begin, create a new branch named `main` (or any preferred branch name) to perform the cleanup process without affecting the existing `master` branch.
 
-<Notice type="warning">
-  If you already had a `main` branch, rename it to `old_main` or something similar. Adapt the code in this post so that any reference to `master` is replaced by `old_main`
-</Notice>
+> [!warning]
+> If you already had a `main` branch, rename it to `old_main` or something similar. Adapt the code in this post so that any reference to `master` is replaced by `old_main`
 
 ### 2.2. Cherry Pick the Oldest Commit on `master`
 
@@ -46,9 +44,8 @@ Cherry pick the oldest commit from the `master` branch onto the new `main` branc
 git cherry-pick <commit_hash>
 ```
 
-<Notice type="info">
-  You might prefer using a git program such as <FancyLink linkText="Sublime Merge" url="https://www.sublimemerge.com/"/> instead.
-</Notice>
+> [!tip]
+> You might prefer using a git program such as <FancyLink linkText="Sublime Merge" url="https://www.sublimemerge.com/"/> instead.
 
 ### 2.3. Edit the new `commit` date with
 
@@ -77,10 +74,9 @@ git push origin <tag_name> -f
 
 ## 3. Python Script for Automating the Process
 
-<Notice type="danger">
-  Before running the automated process I **strongly** suggest you first try it in a demo repository.
-  Any problem or issue with the code will mean **losing important data that can't be recovered**.
-</Notice>
+> [!danger]
+> Before running the automated process I **strongly** suggest you first try it in a demo repository.
+> Any problem or issue with the code will mean **losing important data that can't be recovered**.
 
 You can use `gitpython` and some `python` code to automate the process.
 To do so you will first need to install `gitpython` with:

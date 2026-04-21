@@ -12,10 +12,9 @@ draft: false
 
 ## 0. Intro
 
-<Notice type="danger">
-  **Disclaimer:** A lot has changed since I wrote this. I no longer recommend following my steps.
-  Instead, I suggest using something like <FancyLink linkText="Loguru" url="https://github.com/Delgan/loguru" dark="true"/>. I'm keeping this here for reference.
-</Notice>
+> [!danger]
+> **Disclaimer:** A lot has changed since I wrote this. I no longer recommend following my steps.
+> Instead, I suggest using something like <FancyLink linkText="Loguru" url="https://github.com/Delgan/loguru" dark="true"/>. I'm keeping this here for reference.
 
 In almost every program that we write we will need to show some output. The first thing that developers use is the `print` function but this lacks some really important features such as providing the time when the message was produced and the ability to save the output to a file. This is why it is better to use `logging`.
 
@@ -34,9 +33,8 @@ What I believe it lacks:
 * Ability to show full information of errors
 * Easy way to have different formats for console handlers and file handlers.
 
-<Notice type="info">
-  So I decided to create my own logging library
-</Notice>
+> [!note]
+> So I decided to create my own logging library
 
 ## 2. v-log
 
@@ -80,9 +78,8 @@ This is what you will see with the above example:
 
 ![Fernet encryption](../../images/posts/2019/0018-v_log.png)
 
-<Notice type="info">
-  Output in the console will have colors. `debug` is green, info the default color, `warning` is orange and both `error` and `critical` are red.
-</Notice>
+> [!info]
+> Output in the console will have colors. `debug` is green, info the default color, `warning` is orange and both `error` and `critical` are red.
 
 ### 2.2. How it works
 

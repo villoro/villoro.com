@@ -20,9 +20,8 @@ By analyzing our storage usage and implementing targeted strategies, we successf
 
 <canvas id="plot-s3-costs" style="width:100%;height:300px;"></canvas>
 
-<Notice type="success" className="mt-6">
-  This guide outlines how to export an S3 Inventory and implement Lifecycle Policies to track and optimize your storage expenses effectively.
-</Notice>
+> [!tip]
+> This guide outlines how to export an S3 Inventory and implement Lifecycle Policies to track and optimize your storage expenses effectively.
 
 ## 1. Categorizing S3 Costs
 
@@ -34,9 +33,8 @@ The first step is to examine your AWS costs by service using the **Cost Explorer
   ![AWS Monthly Costs by Service](../../images/posts/2025/0054-aws-costs-by-service.png)
 </div>
 
-<Notice type="warning" className="mt-6">
-  Focus on reducing costs for the AWS service with the largest expense. Target S3 only if it’s the primary cost driver.
-</Notice>
+> [!warning]
+> Focus on reducing costs for the AWS service with the largest expense. Target S3 only if it’s the primary cost driver.
 
 Once you’ve identified S3 as your focus, analyze your S3 expenses by usage type:
 
@@ -46,9 +44,8 @@ Once you’ve identified S3 as your focus, analyze your S3 expenses by usage typ
 
 In our case, most costs stemmed from storage. However, in some organizations, high request costs may dominate, often due to numerous small files in a data lake.
 
-<Notice type="info">
-  If you’re incurring high S3 request costs, check out <FancyLink linkText="Solving the Problem with Small Files in the Data Lake" url="https://villoro.com/blog/solving-problem-small-files-data-lake/" dark="true" /> for strategies to address this issue.
-</Notice>
+> [!tip]
+> If you’re incurring high S3 request costs, check out <FancyLink linkText="Solving the Problem with Small Files in the Data Lake" url="https://villoro.com/blog/solving-problem-small-files-data-lake/" dark="true" /> for strategies to address this issue.
 
 ### 1.2 Create an S3 Inventory Configuration
 
@@ -83,9 +80,8 @@ In our case, most costs stemmed from storage. However, in some organizations, hi
 
 The destination path will include additional folders automatically. For example, if your destination path is `s3://villoro/s3_inventory` for a bucket named `villoro` and inventory name `villoro_inventory`, the final path will be `s3://villoro/s3_inventory/villoro/villoro_inventory/`.
 
-<Notice type="info">
-  The first report will be available within 48 hours, and subsequent reports will be generated based on the frequency you selected.
-</Notice>
+> [!note]
+> The first report will be available within 48 hours, and subsequent reports will be generated based on the frequency you selected.
 
 ### 1.3 Accessing the S3 Inventory
 
@@ -534,9 +530,8 @@ S3 Lifecycle Policies automate object management to reduce costs. For instance, 
    * Review your configuration.
    * Save it by clicking **Create Rule**.
 
-<Notice type="info">
-  Non-current version expiration is especially useful for buckets with versioning enabled to minimize storage costs.
-</Notice>
+> [!tip]
+> Non-current version expiration is especially useful for buckets with versioning enabled to minimize storage costs.
 
 ---
 

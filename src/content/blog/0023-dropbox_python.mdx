@@ -66,9 +66,8 @@ with io.BytesIO(txt.encode()) as stream:
     # Here you do whatever you need
 ```
 
-<Notice type="warning">
-  It is important to run `stream.seek(0)` to go to the beginning of the stream.
-</Notice>
+> [!warning]
+> It is important to run `stream.seek(0)` to go to the beginning of the stream.
 
 ## 3. Writting files to dropbox
 
@@ -99,9 +98,8 @@ with io.BytesIO(txt.encode()) as stream:
 
 To allow overwriting you need to pass `mode=dropbox.files.WriteMode.overwrite` to the function `DBX.files_upload`.
 
-<Notice type="warning">
-  **Important:** filenames should start with `/`. It won't work without it.
-</Notice>
+> [!warning]
+> **Important:** filenames should start with `/`. It won't work without it.
 
 ### 3.2. Write a json
 
@@ -193,9 +191,8 @@ with io.BytesIO(res.content) as stream:
     txt = stream.read().decode()
 ```
 
-<Notice type="warning">
-  Remember to decode the stream to transform it from bytes to string
-</Notice>
+> [!warning]
+> Remember to decode the stream to transform it from bytes to string
 
 ### 4.2. Read a json
 
@@ -215,9 +212,8 @@ with io.BytesIO(res.content) as stream:
     data = yaml.safe_load(stream)
 ```
 
-<Notice type="warning">
-  You should always use `yaml.safe_load` instead of `yaml.load`
-</Notice>
+> [!warning]
+> You should always use `yaml.safe_load` instead of `yaml.load`
 
 ### 4.4. Read an Excel with Pandas
 
@@ -228,9 +224,8 @@ with io.BytesIO(res.content) as stream:
     df = pd.read_excel(stream, index_col=0)
 ```
 
-<Notice type="info">
-  If you do not want a new dummy index use `index_col=0`.
-</Notice>
+> [!tip]
+> If you do not want a new dummy index use `index_col=0`.
 
 ### 4.5. Read a csv with Pandas
 

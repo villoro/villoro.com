@@ -45,9 +45,8 @@ First of all the average reading/writing times for each format.
 
 <canvas id="chart_s0_i100_time" style="width:100%;height:300px;"></canvas>
 
-<Notice type="info">
-  It seems that `xlsx` is a slow option
-</Notice>
+> [!info]
+> It seems that `xlsx` is a slow option
 
 
 ### 2.2. Size medium and iterations 10 with all extensions
@@ -56,9 +55,8 @@ First of all the average reading/writing times for each format.
 
 With the medium dataframe the results are very similar.
 
-<Notice type="warning">
-`xlsx` is a slow solution. I would only recommend it for small dataframes.
-</Notice>
+> [!warning]
+> `xlsx` is a slow solution. I would only recommend it for small dataframes.
 
 <canvas id="chart_s1_i10_size" style="width:100%;height:300px;"></canvas>
 
@@ -101,9 +99,8 @@ It is not clear which formats and compressions work best. Let's plot reading/wri
 <canvas id="chart_s1_i5_scatter_read" style="width:100%;height:300px;"></canvas>
 <canvas id="chart_s1_i5_scatter_write" style="width:100%;height:300px;"></canvas>
 
-<Notice type="warning">
-  **csv** underperforms compared to the other formats
-</Notice>
+> [!warning]
+> **csv** underperforms compared to the other formats
 
 ## 4. Test 3: Using the big table
 
@@ -131,18 +128,16 @@ For this test I will only use the best formats from the previous test. Those are
 |             | xz          |       3.46 |       97.62 |      0.97 |
 
 
-<Notice type="error">
-  **feather** did not work since it has a restriction of 2 GB per column and it was exceeded.
-</Notice>
+> [!failure]
+> **feather** did not work since it has a restriction of 2 GB per column and it was exceeded.
 
 <canvas id="chart_s2_i1_scatter_read" style="width:100%;height:300px;"></canvas>
 <canvas id="chart_s2_i1_scatter_write" style="width:100%;height:300px;"></canvas>
 
 With a file of this size it is clear that **parquet** is the best option. For compression it depends if your priority is file size or Input/Output time. For fast writing/reading use **parquet** without compression, for minimum file size `blosc` and `zlib` is a solution that is between the other two.
 
-<Notice type="success">
-  `parquet` is the best for big tables.
-</Notice>
+> [!success]
+> `parquet` is the best for big tables.
 
 ## 5. Conclusions
 

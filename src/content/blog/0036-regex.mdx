@@ -124,9 +124,8 @@ To sum up:
 * `<.+>`: greedy
 * `<.+?>`: non greedy
 
-<Notice type="info">
-  It can also be used with other quantifiers that are not the `+`.
-</Notice>
+> [!info]
+> It can also be used with other quantifiers that are not the `+`.
 
 
 ## 2. Regex with python
@@ -147,9 +146,8 @@ out = re.match(r"hello", "hello world")
 # out is a class if we only want to know if there is a match we can use `bool(out)`
 ```
 
-<Notice type="info" className="mt-6">
-  When declaring regexs in python it is a good practise to declare them as **raw** strings with `r"regex"`
-</Notice>
+> [!tip]
+> When declaring regexs in python it is a good practise to declare them as **raw** strings with `r"regex"`
 
 ### 2.2. `match` vs `search`
 
@@ -346,9 +344,8 @@ df["query"].str.findall(r"\w{5,8}")
   [`SELECT`, `count`, `orders`, `GROUP`]
 </TerminalOutput> 
 
-<Notice type="info">
-  Note that the output is one list per row.
-</Notice>
+> [!note]
+> Note that the output is one list per row.
 
 ### 3.6. `series.str.split` / `series.str.rsplit`
 

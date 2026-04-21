@@ -16,9 +16,8 @@ APIs and data lakes are unforgiving: one wrong path and you can “delete” an 
 
 ## 1. What happened
 
-<Notice type="warning">
-  If your buckets aren’t versioned, stop and enable Versioning before anything else. Without it, you’ll need backups/replication or CloudTrail logs to reconstruct keys.
-</Notice>
+> [!warning]
+> If your buckets aren’t versioned, stop and enable Versioning before anything else. Without it, you’ll need backups/replication or CloudTrail logs to reconstruct keys.
 
 One of our cleanup scripts was designed to **delete Glue tables along with their associated S3 data paths**. Normally, each table is safely scoped to its own directory, e.g.:
 
@@ -57,9 +56,8 @@ Versioning ensures that every modification or deletion is reversible:
 
 This behavior protects you from accidents like mass deletions, misconfigured paths, or overwrites caused by ETL jobs.
 
-<Notice type="info" className="mt-6">
-  When versioning is enabled, you can roll back changes at the object level — essential for recovering partitioned Iceberg tables where structure and data must stay consistent.
-</Notice>
+> [!note]
+> When versioning is enabled, you can roll back changes at the object level — essential for recovering partitioned Iceberg tables where structure and data must stay consistent.
 
 ### 2.2. How to enable versioning
 
@@ -84,9 +82,8 @@ For more details, see the <FancyLink linkText="S3 Versioning | AWS docs" url="ht
 * **MFA Delete:** Add an extra confirmation layer for deletions (useful for production or critical buckets).
 * **Replication:** Mirror objects — including versions — to another region or account for disaster recovery.
 
-<Notice type="warning" className="mt-6">
-  Versioning only protects files **after** it’s enabled. Enable it early before something goes wrong.
-</Notice>
+> [!warning]
+> Versioning only protects files **after** it’s enabled. Enable it early before something goes wrong.
 
 ## 3. How Delete Markers Work
 
@@ -105,9 +102,8 @@ Key: data/table.parquet
 
 The delete marker (`v3`) acts like a curtain: it makes the object appear deleted, but all underlying versions remain intact. Removing that marker simply reveals the previous version again.
 
-<Notice type="info" className="mt-6">
-  Deleting a delete marker does **not** delete data, it restores the most recent object version underneath.
-</Notice>
+> [!note]
+> Deleting a delete marker does **not** delete data, it restores the most recent object version underneath.
 
 ### Multiple delete markers
 
@@ -126,9 +122,8 @@ Key: logs/2025-10-31.json
 
 Removing `v4` restores `v2` (the most recent data version). Removing `v3` changes nothing. For more info, see the <FancyLink linkText="Delete markers | AWS docs" url="https://docs.aws.amazon.com/AmazonS3/latest/userguide/DeleteMarker.html" company="aws"/>.
 
-<Notice type="warning">
-  If versioning is disabled or suspended, delete markers may behave differently. Ensure versioning was active when the deletion happened.
-</Notice>
+> [!warning]
+> If versioning is disabled or suspended, delete markers may behave differently. Ensure versioning was active when the deletion happened.
 
 ## 4. Our Recovery Strategy
 
@@ -153,9 +148,8 @@ After confirming versioning was enabled, the goal was to **recover only the file
    * Run a **dry-run** first to verify scope.
    * Then, remove delete markers in controlled batches (≤1000 per call) to restore the previous versions.
 
-<Notice type="info" className="mt-6">
-  Restoring a file means deleting its delete marker. We filtered strictly by the incident timestamps to ensure that only the files deleted by mistake were brought back.
-</Notice>
+> [!note]
+> Restoring a file means deleting its delete marker. We filtered strictly by the incident timestamps to ensure that only the files deleted by mistake were brought back.
 
 ## 5. Investigate delete markers
 
@@ -229,17 +223,15 @@ def scan_delete_markers(s3, bucket, prefix, start_ts, end_ts):
     )
 ```
 
-<Notice type="info" className="mt-6">
-  The scan collects rows first, then vectorizes timestamp casting and eligibility — faster and simpler than per‑row logic.
-</Notice>
+> [!note]
+> The scan collects rows first, then vectorizes timestamp casting and eligibility — faster and simpler than per‑row logic.
 
 ## 6. Actually recovering files
 
 Now that we have an audited list of delete markers, we restore by **deleting those markers**. Start with a dry‑run to validate scope, then apply in batches.
 
-<Notice type="warning">
-  If your bucket uses Object Lock or legal holds, S3 will refuse deletions. Also consider a retry‑configured client for large jobs.
-</Notice>
+> [!warning]
+> If your bucket uses Object Lock or legal holds, S3 will refuse deletions. Also consider a retry‑configured client for large jobs.
 
 ```python
 def remove_delete_markers(s3, bucket, df_in, dry_run=True, batch_size=1000):

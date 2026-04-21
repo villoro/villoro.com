@@ -53,13 +53,11 @@ class QlikClient:
         self.max_calls = max_calls
 ```
 
-<Notice type="success" className="mt-6">
-  **Session reuse** speeds up multiple API calls and reduces connection overhead.
-</Notice>
+> [!tip]
+> **Session reuse** speeds up multiple API calls and reduces connection overhead.
 
-<Notice type="info" className="mt-6">
-  **Debug mode** lets you skip `raise_for_status` so you can inspect error payloads without exceptions interrupting. Use carefully, and never in production.
-</Notice>
+> [!note]
+> **Debug mode** lets you skip `raise_for_status` so you can inspect error payloads without exceptions interrupting. Use carefully, and never in production.
 
 Next, we’ll add a safe request helper that wraps `requests` with timeouts, optional retries, and debug-aware error handling.
 
@@ -104,13 +102,11 @@ Why an internal `_get`:
 * **Pagination-ready** – supports either `endpoint` or `next_url` without duplicating code.
 * **Easier evolution** – add logging, metrics, retries, or auth refresh later in a single place.
 
-<Notice type="success" className="mt-6">
-  Centralizing GETs means when you later add retries (e.g., with `backoff`) or structured logging, you do it once and every call benefits.
-</Notice>
+> [!tip]
+> Centralizing GETs means when you later add retries (e.g., with `backoff`) or structured logging, you do it once and every call benefits.
 
-<Notice type="info" className="mt-6">
-  If you see 400s with boolean query params, try casting them to strings (see the commented line). Some gateways expect `true`/`false` as strings.
-</Notice>
+> [!note]
+> If you see 400s with boolean query params, try casting them to strings (see the commented line). Some gateways expect `true`/`false` as strings.
 
 ## 3. Pagination
 
@@ -153,13 +149,11 @@ print(f"Fetched {len(apps)} apps")
 
 Many Qlik endpoints default to returning only 100 items per page so in order to get all data you need to use pagination.
 
-<Notice type="success" className="mt-6">
-  By centralizing pagination in `query_all`, every endpoint (items, users, etc.) gets consistent paging without copy/paste.
-</Notice>
+> [!tip]
+> By centralizing pagination in `query_all`, every endpoint (items, users, etc.) gets consistent paging without copy/paste.
 
-<Notice type="warning" className="mt-6">
-  Tune `self.max_calls` to protect your jobs from runaway loops (e.g., if the API keeps returning a next link). Add logging around `i` if you need visibility.
-</Notice>
+> [!warning]
+> Tune `self.max_calls` to protect your jobs from runaway loops (e.g., if the API keeps returning a next link). Add logging around `i` if you need visibility.
 
 ## 4. Custom public methods
 
@@ -191,13 +185,11 @@ Why a public method here?
 * **Room for quirks** – if the endpoint ever needs extra headers/params, you add them here without touching call-sites.
 * **Better DX** – callers don’t need to remember paths; they call `query_app_metadata(app_id)`.
 
-<Notice type="success" className="mt-6">
-  Keep `_get` generic. Put endpoint-specific checks (like UUID validation) into small, public methods. This avoids conditionals leaking into all callers.
-</Notice>
+> [!tip]
+> Keep `_get` generic. Put endpoint-specific checks (like UUID validation) into small, public methods. This avoids conditionals leaking into all callers.
 
-<Notice type="info" className="mt-6">
-  You can reuse `_check_uuid` for other endpoints (e.g., reloads, automations) by passing named arguments: `self._check_uuid(reload_id=reload_id)`.
-</Notice>
+> [!note]
+> You can reuse `_check_uuid` for other endpoints (e.g., reloads, automations) by passing named arguments: `self._check_uuid(reload_id=reload_id)`.
 
 ## 5. Triggering reloads with `_post`
 
@@ -242,9 +234,8 @@ print("Reload response:", resp)
 
 Keep `_post` generic just like `_get`. Endpoint-specific quirks (e.g., required JSON shape) belong in small public methods such as `reload_app`.
 
-<Notice type="info" className="mt-6">
-  Qlik often answers with `202 Accepted` for fire-and-forget operations. Returning `{}` from `_post` in that case avoids JSON decode errors and keeps call-sites simple.
-</Notice>
+> [!note]
+> Qlik often answers with `202 Accepted` for fire-and-forget operations. Returning `{}` from `_post` in that case avoids JSON decode errors and keeps call-sites simple.
 
 ## 6. Polling reload status
 
@@ -343,13 +334,11 @@ apps = self._safe_get(endpoint="items", params={"resourceType": "app"})
 resp = self._safe_post(endpoint="reloads", json={"appId": app_id})
 ```
 
-<Notice type="info" className="mt-6">
-  Keep `_get`/`_post` minimal; layer retries in thin wrappers (`_safe_get`/`_safe_post`). This preserves a single place to change backoff policy later.
-</Notice>
+> [!note]
+> Keep `_get`/`_post` minimal; layer retries in thin wrappers (`_safe_get`/`_safe_post`). This preserves a single place to change backoff policy later.
 
-<Notice type="warning" className="mt-6">
-  Backoff isn’t a silver bullet: protect with `max_tries`, log final errors, and avoid retrying on 4xx you know won’t succeed (validate early).
-</Notice>
+> [!warning]
+> Backoff isn’t a silver bullet: protect with `max_tries`, log final errors, and avoid retrying on 4xx you know won’t succeed (validate early).
 
 ## Wrapping up
 

@@ -29,9 +29,8 @@ Let’s look at each.
 
 ### 1.1 Single Workspace: Easy at First
 
-<Notice type="info">
-  This is a great starting point. It keeps things simple while you're focused on building a single flow or service.
-</Notice>
+> [!note]
+> This is a great starting point. It keeps things simple while you're focused on building a single flow or service.
 
 In the initial phase of a project, having a single workspace is ideal:
 
@@ -59,9 +58,8 @@ src/
 └─ nt_ml/           # ML jobs
 ```
 
-<Notice type="success" className="mt-6">
-  Multi-workspace setups improve modularity, CI/CD speed, and team ownership. They also make it easier to plug different packages into different deploy targets.
-</Notice>
+> [!tip]
+> Multi-workspace setups improve modularity, CI/CD speed, and team ownership. They also make it easier to plug different packages into different deploy targets.
 
 In the next section, we’ll explain the benefits in more detail and how we organized the transition.
 
@@ -92,9 +90,8 @@ src/
 
 Each top-level folder inside `src/` represents a standalone package with its own dependencies, tests, and isolated environment.
 
-<Notice type="info">
-  While it’s possible to have a single workspace that includes all packages, using independent workspaces provides better isolation, easier testing, and faster deployment for modular systems.
-</Notice>
+> [!note]
+> While it’s possible to have a single workspace that includes all packages, using independent workspaces provides better isolation, easier testing, and faster deployment for modular systems.
 
 ### 2.1 Creating Shared Code with `nt_common`
 
@@ -112,9 +109,8 @@ uv add ../nt_common
 
 This installs `nt_common` as a **built wheel**, with its pinned dependencies from its own `uv.lock`.
 
-<Notice type="info">
-  If you update `nt_common`, run `uv sync` in the dependent package (e.g., `nt_api`) to apply the latest version.
-</Notice>
+> [!note]
+> If you update `nt_common`, run `uv sync` in the dependent package (e.g., `nt_api`) to apply the latest version.
 
 ### 2.2 Minimal `pyproject.toml` example
 

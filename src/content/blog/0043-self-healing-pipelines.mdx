@@ -45,10 +45,9 @@ source.last_modified_at > max(destination.last_modified_at)
 
 In the scenario described earlier, where the last correct extraction was performed on `2024-05-03`, the next run of the pipeline would process data from that date up until `2024-05-06`.
 
-<Notice type="warning">
-  **Important:** When processing a large number of days, it may be necessary to allocate additional resources.
-  Moreover, automatic scaling of resources might be required for seamless operation.
-</Notice>
+> [!warning]
+> **Important:** When processing a large number of days, it may be necessary to allocate additional resources.
+> Moreover, automatic scaling of resources might be required for seamless operation.
 
 ### 2.1. Partitioning
 
@@ -95,10 +94,9 @@ Here's an overview of the deduplication process:
 If there is no `id` column, you will need to create one.
 This is done by creating a `composite key` as described in <FancyLink linkText="dbt | Composite key" url="https://docs.getdbt.com/reference/resource-configs/unique_key#use-a-combination-of-two-columns-as-a-unique-key"/>.
 
-<Notice type="warning">
-  The easiest way to do so in `dbt` is by using the `dbt_utils.generate_surrogate_key` macro.
-  More info at <FancyLink linkText="dbt | SQL surrogate keys" url="https://docs.getdbt.com/blog/sql-surrogate-keys"/>.
-</Notice>
+> [!tip]
+> The easiest way to do so in `dbt` is by using the `dbt_utils.generate_surrogate_key` macro.
+> More info at <FancyLink linkText="dbt | SQL surrogate keys" url="https://docs.getdbt.com/blog/sql-surrogate-keys"/>.
 
 That can easily be replicated in `python` or other programming languages.
 
@@ -183,11 +181,10 @@ def infer_max_datetime(
 
     return min_dt_str
 ```
-<Notice type="info">
-  Notice that here we are querying a column `filter_col` (which usually will be `last_updated_at`).
-  Given that the pipeline can fail and/or that we can do backfills, that max value might not be in the latest partition.
-  This is why I recommend querying `N` days of data (7 by default) and getting the max from there.
-</Notice>
+> [!note]
+> Notice that here we are querying a column `filter_col` (which usually will be `last_updated_at`).
+> Given that the pipeline can fail and/or that we can do backfills, that max value might not be in the latest partition.
+> This is why I recommend querying `N` days of data (7 by default) and getting the max from there.
 
 #### 3.1.2. Extract new data and store it
 
@@ -221,10 +218,9 @@ def main():
 if __name__ == '__main__':
     main()
 ```
-<Notice type="info">
-  `get_data`  is not defined since it's out of scope.
-  It's just a function that queries some external system.
-</Notice>
+> [!note]
+> `get_data`  is not defined since it's out of scope.
+> It's just a function that queries some external system.
 
 ### 3.2. dbt (SQL)
 
@@ -332,11 +328,10 @@ SELECT *
 FROM deduplicated
 ```
 
-<Notice type="warning" className="mt-6">
-  It's important that you set the proper `materialization`.
-  In general, it should be `materialization=incremental` (see: <FancyLink linkText="dbt | Incremental models" url="https://docs.getdbt.com/docs/build/incremental-models"/>).
-  And you might also need to set up the incremental strategy. For example, with <FancyLink linkText="dbt Athena" url="https://github.com/dbt-athena/dbt-athena"/> I set the `incremental_strategy: merge` and the `table_type: iceberg`.
-</Notice>
+> [!warning]
+> It's important that you set the proper `materialization`.
+> In general, it should be `materialization=incremental` (see: <FancyLink linkText="dbt | Incremental models" url="https://docs.getdbt.com/docs/build/incremental-models"/>).
+> And you might also need to set up the incremental strategy. For example, with <FancyLink linkText="dbt Athena" url="https://github.com/dbt-athena/dbt-athena"/> I set the `incremental_strategy: merge` and the `table_type: iceberg`.
 
 ## 4. Handling schema changes
 
@@ -347,13 +342,11 @@ You cannot handle all of them but you can easily adapt to:
 * New columns
 * Types changed
 
-<Notice type="info">
-  I only suggest you do that on `bronze` where you want to have as fewer errors as possible.
-</Notice>
+> [!note]
+> I only suggest you do that on `bronze` where you want to have as fewer errors as possible.
 
-<Notice type="warning" className="mt-6">
-  Notice that if you implement some automatic handling of schema changes you might have inconsistent data that you will need to handle. Do it at your own risk.
-</Notice>
+> [!warning]
+> Notice that if you implement some automatic handling of schema changes you might have inconsistent data that you will need to handle. Do it at your own risk.
 
 ### 4.1. New or missing columns
 

@@ -48,9 +48,8 @@ project_dir = ./dbt_src/
 profiles_dir = ./.github/
 ```
 
-<Notice type="info">
-  Feel free to change the settings such as the excluded rules.
-</Notice>
+> [!note]
+> Feel free to change the settings such as the excluded rules.
 
 Notice that we are using DuckDB as the dialect and that we need to set a couple of directories:
 
@@ -80,9 +79,8 @@ If needed, you can exclude some paths using the `.sqlfluffignore` file as mentio
 With pre-commit, you can run the linter before each commit.
 More info about it in <FancyLink linkText="pre-commit" url="https://villoro.com/blog/pre-commit/" dark="true"/>.
 
-<Notice type="warning">
-  The linting job takes between a few seconds to a few minutes. You must decide if you are willing to spend that time prior to each commit to ensure properly linted SQL code. If not, do not set `pre-commit`.
-</Notice>
+> [!warning]
+> The linting job takes between a few seconds to a few minutes. You must decide if you are willing to spend that time prior to each commit to ensure properly linted SQL code. If not, do not set `pre-commit`.
 
 To set up `sqlfluff`, you only need to add these lines to the `.pre-commit-config.yaml` file:
 
@@ -115,10 +113,9 @@ Here we are using 2 jobs:
 1. `sqlfluff-lint`: this gives better information about the failures.
 2. `sqlfluff-fix`: this tries to fix the errors. It doesn't always succeed.
 
-<Notice type="warning">
-  If you want to make it faster, you can keep only one of the 2 jobs.
-  I prefer having both the fixing capabilities and better failure information.
-</Notice>
+> [!tip]
+> If you want to make it faster, you can keep only one of the 2 jobs.
+> I prefer having both the fixing capabilities and better failure information.
 
 ## 2. Smoke testing with DuckDB
 
@@ -245,9 +242,8 @@ INSERT INTO bronze__metadata.emr_history VALUES (
     '2024-01-31T13:00:39.571930' -- p_extracted_at
 );
 ```
-<Notice type="info">
-  In this example, you can see how to create most types such as `STRUCT`, `MAP`, and `ARRAYS`.
-</Notice>
+> [!note]
+> In this example, you can see how to create most types such as `STRUCT`, `MAP`, and `ARRAYS`.
 
 ### 3.3. Generate testing data script
 
@@ -440,9 +436,8 @@ dbt_northius:
 
     # Other profiles go here, such as PRE and PRO
 ```
-<Notice type="warning">
-  The naming for `awsdatacatalog.duckdb` is for compatibility with Athena, more on that in the next section.
-</Notice>
+> [!note]
+> The naming for `awsdatacatalog.duckdb` is for compatibility with Athena, more on that in the next section.
 
 ### 4.3. Duckdb filename
 
@@ -474,9 +469,8 @@ sources:
 So queries using `source(xx)` will have the prefix `awsdatacatalog` and queries using `ref(xx)` will not have it.
 With duckdb, that implies that `source(xx)` will be read from the `awsdatacatalog.duckdb` file and `ref(xx)` will be run in memory.
 
-<Notice type="success">
-  Running duckdb in memory is **~8x faster** based on my current project with around 1000 models.
-</Notice>
+> [!tip]
+> Running duckdb in memory is **~8x faster** based on my current project with around 1000 models.
 
 ## 5. Continuous Integration (CI)
 
@@ -527,9 +521,8 @@ jobs:
         poetry run python run.py --exclude tag:no_test
 ```
 
-<Notice type="info" className="mt-6">
-  Remember to set this test as a mandatory prerequisite for merging PRs into the `main` branch.
-</Notice>
+> [!tip]
+> Remember to set this test as a mandatory prerequisite for merging PRs into the `main` branch.
 
 ## 6. Integrating with other SQL engines
 

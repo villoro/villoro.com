@@ -30,6 +30,7 @@ It will take some time until all data and transformation logic is migrated from 
 
 And the key question here is:
 
+> [!quote]
 > How can we consume redshift data efficiently?
 
 In this post we will focus on how to consume data efficiently as **pandas** dataframes.
@@ -82,10 +83,9 @@ dfs = [pd.read_parquet(file) for file in files]
 df = pd.concat(dfs)
 ```
 
-<Notice type="info">
-  The list of files can be created with different options.
-  We suggest using `os.listdir` if all files are in the same folder and `os.walk` if there are subfolder with files.
-</Notice>
+> [!tip]
+> The list of files can be created with different options.
+> We suggest using `os.listdir` if all files are in the same folder and `os.walk` if there are subfolder with files.
 
 If we need to filter based on a column with this option we would do it after creating the pandas dataframe.
 
@@ -107,9 +107,8 @@ dfs = [pq.read_table(file).to_pandas() for file in files]
 df = pd.concat(dfs)
 ```
 
-<Notice type="info">
-  The performance should be similar since **pandas** usually use `pyarrow` under the hood.
-</Notice>
+> [!info]
+> The performance should be similar since **pandas** usually use `pyarrow` under the hood.
 
 If we need to filter based on a column with this option we would do it after creating the pandas dataframe.
 
@@ -258,9 +257,8 @@ In this case we want to do another test where we apply 2 filters at the same tim
 * filter by the partition column (`p_creation_month`)
 * filter by the state (`state`)
 
-<Notice type="info">
-  We are using the same column we used for splitting the `dataset_2` as the second filter
-</Notice>
+> [!info]
+> We are using the same column we used for splitting the `dataset_2` as the second filter
 
 <canvas id="row_group" style="width:100%;height:400px;"></canvas>
 

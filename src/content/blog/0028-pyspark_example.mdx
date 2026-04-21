@@ -26,9 +26,8 @@ Be sure to read <FancyLink linkText="Pyspark Intro" url="https://villoro.com/blo
 For this example we need to download a table that is really big.
 We would use open data from <FancyLink linkText="Catalunya" url="https://en.wikipedia.org/wiki/Catalonia" dark="true"/>.
 
-<Notice type="warning">
-  This dataset is quite big, it might take some hours to download.
-</Notice>
+> [!warning]
+> This dataset is quite big, it might take some hours to download.
 
 It consists of 3 csvs:
 
@@ -53,10 +52,9 @@ pd.read_csv(c.URI_CSV, index_col=0, nrows=1_000_000)
 And in one second you can have data 1 million rows into memory.
 But if you try to read the whole file you will probably run out of memory.
 
-<Notice type="error">
-  Pandas developers suggest that you have between **5 to 10 times as RAM as the file size**.
-Since the file is 22GB you should have more than **110 GB of RAM**.
-</Notice>
+> [!warning]
+> Pandas developers suggest that you have between **5 to 10 times as RAM as the file size**.
+> Since the file is 22GB you should have more than **110 GB of RAM**.
 
 But fear not, you can work with pyspark which way less memory.
 I was able to everything in my computer with only 16 GB of RAM.
@@ -89,9 +87,8 @@ Let's transform it to `parquet` which is way better.
 sdf.write.format("parquet").mode("overwrite").save("weather_data.parquet")
 ```
 
-<Notice type="warning" className="mt-6">
-  Remember to load the dataframe from the `parquet` file to see the performance improvement.
-</Notice>
+> [!tip]
+> Remember to load the dataframe from the `parquet` file to see the performance improvement.
 
 ## 4. Read data
 
@@ -105,9 +102,8 @@ It is a good idea to store dataframe in parquet by partitions.
 Usually they are partitioned by `date`.
 But what is important is that you partition by a column that you will usually filter or aggregate.
 
-<Notice type="warning">
-  You should never choose a partition column that has a lot of unique values since it will mean a lot of files.
-</Notice>
+> [!warning]
+> You should never choose a partition column that has a lot of unique values since it will mean a lot of files.
 
 #### 4.1.1. Using station column
 

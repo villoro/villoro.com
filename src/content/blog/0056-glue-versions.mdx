@@ -24,9 +24,8 @@ Until then, I was totally unaware that:
 1. There is a hard limit of **1 000 000 schema versions across the entire Glue catalog**.
 2. Exceeding this limit doesn't just block updates — it **breaks Athena queries** in ways that aren't obvious.
 
-<Notice type="error">
-  Glue has a **hard limit** of **1 000 000 schema versions** across the **entire Glue catalog**.
-</Notice>
+> [!danger]
+> Glue has a **hard limit** of **1 000 000 schema versions** across the **entire Glue catalog**.
 
 ## 1. Glue versions
 
@@ -40,9 +39,8 @@ We'll show the number of versions grouped by writer:
 
 ![Glue versions by writer](../../images/posts/2025/0056-glue-versions-by-writer.jpg)
 
-<Notice type="info">
-  Most of the version bloat came from **AWS Wrangler** and **Spark** in our case. These tools often update or overwrite tables in ways that trigger new Glue versions automatically — and frequently.
-</Notice>
+> [!note]
+> Most of the version bloat came from **AWS Wrangler** and **Spark** in our case. These tools often update or overwrite tables in ways that trigger new Glue versions automatically — and frequently.
 
 In our case:
 - We had **4,429 tables** before cleanup.
@@ -63,9 +61,8 @@ dbt does support version cleanup using the `expire_glue_table_versions` macro, a
 
 This is especially useful when working with **incremental Iceberg models** or when using **Hive tables with high availability (HA)** — the two cases where Glue version bloat can accumulate rapidly. By default, `versions_to_keep` is set to 4, but this can be customized.
 
-<Notice type="warning">
-  Even with dbt, Glue version bloat can sneak in — especially with **views**, **incremental Iceberg** models or **hive tables with high availability**.
-</Notice>
+> [!warning]
+> Even with dbt, Glue version bloat can sneak in — especially with **views**, **incremental Iceberg** models or **hive tables with high availability**.
 
 In our case, it's not needed because we use `materialized = table`, so our tables are fully recreated on each run, avoiding accumulation.
 
@@ -84,27 +81,24 @@ This brought the catalog size down **massively**:
 
 ![Number of versions by table](../../images/posts/2025/0056-glue-table-versions-improvement.jpg)
 
-<Notice type="info" className="mt-6">
-  I counted the versions in the `before` scenario **after deleting a lot of glue versions**.
-  This is because first I unblocked the production pipeline, then I took some time to analyze it properly.
-</Notice>
+> [!note]
+> I counted the versions in the `before` scenario **after deleting a lot of glue versions**.
+> This is because first I unblocked the production pipeline, then I took some time to analyze it properly.
 
 We can also visualize it with a distribution plot:
 
 <canvas id="plot-table-versions" style="width:100%;height:300px;"></canvas>
 
-<Notice type="info" className="mt-6">
-  The canvas above is a **smoothed** version of the raw version count data for readability.
-</Notice>
+> [!note]
+> The canvas above is a **smoothed** version of the raw version count data for readability.
 
 | metric         | before | now   |
 |----------------|--------|-------|
 | total tables   | 4429   | 4760  |
 | total versions | 657129 | 54745 |
 
-<Notice type="success" className="mt-6">
-  This is a **92% reduction** in Glue versions.
-</Notice>
+> [!tip]
+> This is a **92% reduction** in Glue versions.
 
 You might wonder why we still have an average of ~100 versions per table. That’s because:
 
@@ -240,10 +234,9 @@ Our main pipelines became faster:
 * Daily: **2× faster** (from 2h to 1h)
 * Hourly: **4× faster** (from 64min to 16min)
 
-<Notice type="success" className="mt-6">
-  Even if you use dbt and aren’t generating many Glue versions, it's worth checking.
-  After reducing the catalog size, we saw up to **4× faster** execution in Athena.
-</Notice>
+> [!tip]
+> Even if you use dbt and aren’t generating many Glue versions, it’s worth checking.
+> After reducing the catalog size, we saw up to **4× faster** execution in Athena.
 
 ## 4. Takeaways
 

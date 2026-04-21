@@ -32,9 +32,8 @@ In our setup, we combine `dbt`, `Docker`, and `AWS ECS (Fargate)` to streamline 
 * **Docker** containerizes the necessary Python code for dbt, ensuring consistency and reproducibility.
 * **AWS ECS (Fargate)** executes Docker containers, providing a lightweight and serverless solution for running dbt.
 
-<Notice type="success">
-  Teams using AWS EKS can replicate this setup with minimal effort, leveraging existing Kubernetes clusters.
-</Notice>
+> [!tip]
+> Teams using AWS EKS can replicate this setup with minimal effort, leveraging existing Kubernetes clusters.
 
 There are also some components that can be easily swapped by similar tools. They are:
 
@@ -156,13 +155,11 @@ RUN poetry run venv-pack -o dist/venv_${PACKAGE_VERSION}.tar.gz
 FROM scratch AS export
 COPY --from=base /usr/app/dbt/dist/*.tar.gz /dist/
 ```
-<Notice type="warning">
-  We **do need** to copy `pyproject.toml`, `poetry.lock`, and `README.md` for it to work.
-</Notice>
+> [!warning]
+> We **do need** to copy `pyproject.toml`, `poetry.lock`, and `README.md` for it to work.
 
-<Notice type="info" className="mt-6">
-  The `dbt_src` is the folder that contains the actual `dbt` code. That includes `dbt_project.yml`, `models`, `tests`, `macros` folders, etc.
-</Notice>
+> [!note]
+> The `dbt_src` is the folder that contains the actual `dbt` code. That includes `dbt_project.yml`, `models`, `tests`, `macros` folders, etc.
 
 ### 3.3. Docker.ecs
 
@@ -248,9 +245,8 @@ jobs:
     - name: Upload files to S3 PRO
       run: python .github/scripts/upload_all.py --env pro
 ```
-<Notice type="warning">
-  You need to set the `role ARN` (replace `xxx` in the code) needed for uploading the files to S3.
-</Notice>
+> [!warning]
+> You need to set the `role ARN` (replace `xxx` in the code) needed for uploading the files to S3.
 
 ### 4.2. `upload_all.py` script
 
@@ -313,10 +309,9 @@ if __name__ == "__main__":
     upload_all()
 ```
 
-<Notice type="danger" className="mt-6">
-  I use the `pyproject.toml` file to store a lot of configuration such as `S3` paths.
-  I haven't included a snippet since most data is private, but it should be easy to infer.
-</Notice>
+> [!note]
+> I use the `pyproject.toml` file to store a lot of configuration such as `S3` paths.
+> I haven't included a snippet since most data is private, but it should be easy to infer.
 
 ## 5. Scripts
 
@@ -533,9 +528,8 @@ echo 5. Running all dbt commands. Using args="$@"
 poetry run python run.py "$@"
 ```
 
-<Notice type="info" className="mt-6">
-  The `"$@"` is used to pass all arguments from the Docker container to the `run.py` script.
-</Notice>
+> [!note]
+> The `"$@"` is used to pass all arguments from the Docker container to the `run.py` script.
 
 ## 6. Running dbt
 
@@ -558,9 +552,8 @@ dbtRunner().invoke(args)
 
 ## 7. Integrating with Prefect
 
-<Notice type="info">
-  Remember that you need to connect to Prefect. For more information, visit <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>
-</Notice>
+> [!note]
+> Remember that you need to connect to Prefect. For more information, visit <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>
 
 ### 7.1. Tasks
 
@@ -626,9 +619,8 @@ def log_callback(event_raw):
     return None
 ```
 
-<Notice type="info">
-  In my case, I wanted to have `CommandCompleted` as `info` instead of `debug`, but feel free to ignore that `if` statement.
-</Notice>
+> [!note]
+> In my case, I wanted to have `CommandCompleted` as `info` instead of `debug`, but feel free to ignore that `if` statement.
 
 In my opinion, some events are redundant or not useful at all.
 Therefore, I restrict the callback to a subset of all the events available.
@@ -682,9 +674,8 @@ def run_dbt_command(args):
     export_execution_and_run_results()
 ```
 
-<Notice type="warning" className="mt-6">
-  Do not forget to add the `log_callback` to the `dbtRunner`.
-</Notice>
+> [!warning]
+> Do not forget to add the `log_callback` to the `dbtRunner`.
 
 ## 8. Exporting data
 
@@ -745,9 +736,8 @@ def merge_docs():
         stream.write(content)
 ```
 
-<Notice type="success" className="mt-6">
-  Once exported, you simply need to upload the `docs` file into `S3`.
-</Notice>
+> [!tip]
+> Once exported, you simply need to upload the `docs` file into `S3`.
 
 ### 8.2. dbt run results
 
@@ -993,7 +983,6 @@ if __name__ == "__main__":
     main()
 ```
 
-<Notice type="warning" className="mt-6">
-  The `exit(0)` and `exit(1)` are necessary to let `ECS` know the outcome of the task.
-  Without this, it would appear as if the task never fails.
-</Notice>
+> [!warning]
+> The `exit(0)` and `exit(1)` are necessary to let `ECS` know the outcome of the task.
+> Without this, it would appear as if the task never fails.

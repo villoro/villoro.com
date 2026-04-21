@@ -54,9 +54,8 @@ def transcribe_audio(client, file)
 file = get_file("s3//your_bucket/your/file/path.mp3")
 transcription = transcribe_audio(client, file)
 ```
-<Notice type="warning">
-  You will need to adapt the `file_path` and make sure to have the `OPENAI_API_KEY`. Alternatively you can retrieve the secret from somewhere else.
-</Notice>
+> [!warning]
+> You will need to adapt the `file_path` and make sure to have the `OPENAI_API_KEY`. Alternatively you can retrieve the secret from somewhere else.
 
 This code assumes that the file is stored in `S3` but it can easily be adapted for local files or for other cloud providers.
 
@@ -138,10 +137,9 @@ class Transcription(BaseModel):
     transcribed_at: datetime = Field(default_factory=datetime.now)
 ```
 
-<Notice type="warning">
-  The `Field(default_factory=datetime.now)` ensures that each instance has the proper timestamp.
-  If we used `datetime.now()` as the default, we will always get the timestamp when the class was created, not the instance.
-</Notice>
+> [!warning]
+> The `Field(default_factory=datetime.now)` ensures that each instance has the proper timestamp.
+> If we used `datetime.now()` as the default, we will always get the timestamp when the class was created, not the instance.
 
 With that, we can add this to the `process_file` function:
 
@@ -163,10 +161,9 @@ To extract information, you can make a standard call to `ChatGPT`.
 The key here is to leverage the newly introduced structured outputs, which were announced recently (<FancyLink linkText="Introducing Structured Outputs in the API" url="https://openai.com/index/introducing-structured-outputs-in-the-api/"/>).
 For more details, refer to the <FancyLink linkText="API Reference | response_format" url="https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format"/> and <FancyLink linkText="Structured Outputs" url="https://platform.openai.com/docs/guides/structured-outputs/introduction"/> documentation.
 
-<Notice type="warning">
-  Note that there is an option to directly provide a Pydantic class in the API call, which will automatically handle the casting.
-  However, since this feature is still in beta, I prefer not to use it at this time.
-</Notice>
+> [!warning]
+> Note that there is an option to directly provide a Pydantic class in the API call, which will automatically handle the casting.
+> However, since this feature is still in beta, I prefer not to use it at this time.
 
 ### 5.1. Defining the Prompt with a Pydantic Model
 
@@ -210,9 +207,8 @@ Your response must be in English and return a JSON that is parsable with the fol
 ```"""
 ```
 
-<Notice type="info">
-  While there are many ways to refine and optimize the prompt, those techniques are beyond the scope of this post.
-</Notice>
+> [!note]
+> While there are many ways to refine and optimize the prompt, those techniques are beyond the scope of this post.
 
 ### 5.2. Calling OpenAI
 
@@ -284,9 +280,8 @@ def extract_info(transcription, pydantic_model=CallAnalysis)
 
 extract_info("your transcription goes here")
 ```
-<Notice type="warning">
-  Remember to pass the `transcription` from the previous step.
-</Notice>
+> [!warning]
+> Remember to pass the `transcription` from the previous step.
 
 ## 6. Processing the outputs
 
@@ -299,9 +294,8 @@ for file in files:
     result = await process_file(client, s3, file)
     results.append(result)
 ```
-<Notice type="info">
-  This example demonstrates the process for handling transcriptions. The extraction of insights can be achieved in a very similar manner.
-</Notice>
+> [!note]
+> This example demonstrates the process for handling transcriptions. The extraction of insights can be achieved in a very similar manner.
 
 `results` will be a `list` of `Transcription` or `ChatOutput` pydantic models.
 We can easily transform that to a `pandas` dataframe with:
@@ -310,9 +304,8 @@ We can easily transform that to a `pandas` dataframe with:
 df = pd.DataFrame([x.dict() for x in results])
 df["p_extracted_at"] = datetime.now()
 ```
-<Notice type="warning">
-  As usual, we add the `p_extracted_at` column as the partition column. You can read more about this in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>
-</Notice>
+> [!note]
+> As usual, we add the `p_extracted_at` column as the partition column. You can read more about this in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>
 
 ### 6.1. Exporting the dataframe
 

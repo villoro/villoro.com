@@ -4,6 +4,7 @@ import sitemap from "@astrojs/sitemap";
 import tailwind from "@astrojs/tailwind";
 import AutoImport from "astro-auto-import";
 import { defineConfig } from "astro/config";
+import remarkCallouts from "./src/plugins/remark-callouts.mjs";
 import remarkCollapse from "remark-collapse";
 import remarkToc from "remark-toc";
 import sectionize from "@hbsnow/rehype-sectionize";
@@ -41,6 +42,7 @@ export default defineConfig({
   ],
   markdown: {
     remarkPlugins: [
+      remarkCallouts,
       remarkToc,
       [remarkCollapse, { test: "Table of contents" }],
     ],

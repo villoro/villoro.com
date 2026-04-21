@@ -42,13 +42,11 @@ You can set up MEGASync either via the terminal or by using Portainer. Choose th
 
 The Docker image we are using for this setup is <FancyLink linkText="ich777/docker-megasync" url="https://github.com/ich777/docker-megasync" dark="true"/>, which provides a lightweight and reliable containerized version of MEGASync. Ensure you review the repository for the latest updates and additional configuration options.
 
-<Notice type="warning">
-  **Default Path Issues:** The default configuration path for MEGASync includes spaces (`/megasync/.local/share/data/Mega Limited/MEGAsync`), which can cause parsing and permission problems. To avoid this, we set the `DATA_DIR` environment variable to `/megasync/config`.
-</Notice>
+> [!warning]
+> **Default Path Issues:** The default configuration path for MEGASync includes spaces (`/megasync/.local/share/data/Mega Limited/MEGAsync`), which can cause parsing and permission problems. To avoid this, we set the `DATA_DIR` environment variable to `/megasync/config`.
 
-<Notice type="warning" classname="mt-6">
-  **Ports:** It is recommended to use a custom port for security reasons. This guide uses 8081 as an example, but I suggest choosing a unique port for your setup.
-</Notice>
+> [!warning]
+> **Ports:** It is recommended to use a custom port for security reasons. This guide uses 8081 as an example, but I suggest choosing a unique port for your setup.
 
 You can use the following command to see which ports are free to use:
 
@@ -73,9 +71,8 @@ docker run -d \
   ich777/megasync
 ```
 
-<Notice type="warning">
-  Replace `<admin_username>` and `<username>` with your actual values.
-</Notice>
+> [!warning]
+> Replace `<admin_username>` and `<username>` with your actual values.
 
 ### 2.2. Option 2: Using Portainer
 
@@ -116,9 +113,8 @@ Once the container is running, access the MEGASync interface by opening your bro
 http://<NAS_IP>:8081
 ```
 
-<Notice type="warning">
-  Replace `<NAS_IP>` with your NAS’s IP address and use the port you chose.
-</Notice>
+> [!warning]
+> Replace `<NAS_IP>` with your NAS’s IP address and use the port you chose.
 
 You will see a user interface similar to what you would see on a desktop computer with MEGA installed:
 
@@ -126,9 +122,8 @@ You will see a user interface similar to what you would see on a desktop compute
 
 Log in to your MEGA account and set up synchronization.
 
-<Notice type="warning">
-  **Local Folder Setup**: Always choose `/sync-data` (or a subdirectory) for the **local folder** during synchronization setup to ensure proper syncing with the host.
-</Notice>
+> [!warning]
+> **Local Folder Setup**: Always choose `/sync-data` (or a subdirectory) for the **local folder** during synchronization setup to ensure proper syncing with the host.
 
 Once configured, you can access the settings anytime via the `Mega` icon on the "task bar":
 
@@ -160,9 +155,8 @@ By doing so, each user will have their own isolated MEGAsync instance.
 
 If you encounter permission errors, verify the volume paths are set correctly and accessible to the Docker container.
 
-<Notice type="info">
-  You can also test whether the issue is related to permissions by temporarily setting the data path to `777`.
-</Notice>
+> [!tip]
+> You can also test whether the issue is related to permissions by temporarily setting the data path to `777`.
 
 ### 6.2. Logs Indicate Missing Commands
 

@@ -48,9 +48,8 @@ This lambda is created in **python 3.6** and relies on aws **boto3** library. Th
 #### 2.1.1. aws.py
 First of all it will start an AWS session and it is important to start it in the correct region. There is no need to use any credentials since AWS has already put the ACCESS_KEY and SECRET_KEY as environment vars and are used in _boto3_ background.
 
-<Notice type="warning">
-  **Important:** use the appropriate region.
-</Notice>
+> [!warning]
+> **Important:** use the appropriate region.
 
 Then there are 2 functions:
 * act_instance_ec2
@@ -192,9 +191,8 @@ The policy config is:
 
 ![AWS lambda screenshot](../../images/posts/2019/0015-aws_lambda_screenshot.png)
 
-<Notice type="info">
-  API Gateway is used as a trigger. Click at the left of the image, where it says add trigger.
-</Notice>
+> [!note]
+> API Gateway is used as a trigger. Click at the left of the image, where it says add trigger.
 
 1. Go to AWS Lambda service
 2. Open **instances_api** function

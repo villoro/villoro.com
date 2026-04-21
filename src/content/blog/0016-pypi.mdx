@@ -10,9 +10,8 @@ tags: [Python, Tools, PyPI]
 draft: false
 ---
 
-<Notice type="danger">
-  **Disclaimer:** A lot has changed since I wrote this. Even though this still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
-</Notice>
+> [!danger]
+> **DISCLAIMER:** A lot has changed since I wrote this. Even though this still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
 
 ## 1. Create a python package
 
@@ -24,9 +23,8 @@ Before creating your project, I suggest you check if the name you want to use ex
 pip search package_name
 ```
 
-<Notice type="info" className="mt-6">
-  You can also look for it at <FancyLink linkText="Pypi" url="https://pypi.org/"/>.
-</Notice>
+> [!info]
+> You can also look for it at <FancyLink linkText="Pypi" url="https://pypi.org/"/>.
 
 ### 1.1. Structure your project
 
@@ -55,9 +53,8 @@ All files inside `/package_name/package_name` should have imports that work from
 from .file1 import my_function
 ```
 
-<Notice type="warning">
-  Do not forget the **'.'** before the name
-</Notice>
+> [!warning]
+> Do not forget the **'.'** before the name
 
 The `__init__.py` file will contain whatever you want to call from the 'outside'.
 
@@ -102,9 +99,8 @@ setup(
 ##### 1.1.2.1. long_description param
 `long_description` is extracted from the `README.md`
 
-<Notice type="info">
-  You can use other formats for the README like `ost`
-</Notice>
+> [!info]
+> You can use other formats for the README like `ost`
 
 ##### 1.1.2.2. install_requires param
 `install_requires` is a list of requirements. In the example I get it from `requirements.txt`.
@@ -115,9 +111,8 @@ You could also write the requirements by hand with:
 install_requires=["pandas>0.22", "flask"]
 ```
 
-<Notice type="info" className="mt-6">
-  You should avoid requirements with a fixed number version use `<` or `>` instead.
-</Notice>
+> [!info]
+> You should avoid requirements with a fixed number version use `<` or `>` instead.
 
 ##### 1.1.2.3. package_data param
 
@@ -166,9 +161,8 @@ You can run the next command which will upload all packages created in the `dist
 python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 ```
 
-<Notice type="info">
-  The first time you run this command you will be asked to log in. Use the credentials from the previous step.
-</Notice>
+> [!info]
+> The first time you run this command you will be asked to log in. Use the credentials from the previous step.
 
 After uploading the package you can download it to test if it is working as expected:
 
@@ -193,6 +187,5 @@ And to install it you can simply run:
 pip install package
 ```
 
-<Notice type="success" className="mt-6">
-  Well done, you now have your first python package uploaded to **pypi**.
-</Notice>
+> [!success]
+> Well done, you now have your first python package uploaded to **pypi**.

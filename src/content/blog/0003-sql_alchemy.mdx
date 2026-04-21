@@ -94,14 +94,12 @@ Ideally to insert data to SQL is as easy as calling the dataframe function `to_s
 df.to_sql(name="my_table", con=engine, if_exists="append", index=False)
 ```
 
-<Notice type="warning">
-  Be careful with using `if_exists="replace"` because it will delete the SQL table and create it another time. This caused me some problems when I was inserting Japanese text in a table because the encoding was lost in the process.
-</Notice>
+> [!warning]
+> Be careful with using `if_exists="replace"` because it will delete the SQL table and create it another time. This caused me some problems when I was inserting Japanese text in a table because the encoding was lost in the process.
 
 
-<Notice type="info">
-  I usually use `index=False` because the index will be a dummy one. If it is not the case first call `df.reset_index()`.
-</Notice>
+> [!info]
+> I usually use `index=False` because the index will be a dummy one. If it is not the case first call `df.reset_index()`.
 
 ### 5.1. Inserting data to PostgreSQL
 The function `df.to_sql` works well with `MySQL` but I had serious performance problems when working with `PostgreSQL`. Luckily there is a workaround:
@@ -124,6 +122,5 @@ with connection.cursor() as cursor:
 
 It is not as simple as before but I got a **10x** improvement.
 
-<Notice type="warning">
-  Be careful to use the same separator in `df.to_csv` and `cursor.copy_from`
-</Notice>
+> [!warning]
+> Be careful to use the same separator in `df.to_csv` and `cursor.copy_from`

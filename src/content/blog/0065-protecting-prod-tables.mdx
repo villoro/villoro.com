@@ -34,9 +34,8 @@ This approach prioritizes **quality over freshness**. It’s most useful when er
 
 For example, if a table is used to trigger customer emails, it’s safer to delay updates than to send the wrong notifications.
 
-<Notice type="warning">
-  This pattern is not for every model. Use it sparingly — only when data quality is more important than timeliness.
-</Notice>
+> [!warning]
+> This pattern is not for every model. Use it sparingly — only when data quality is more important than timeliness.
 
 
 ## 3. Protecting Against Unexpected Changes
@@ -176,9 +175,8 @@ SELECT * FROM data_diff
 
 ```
 
-<Notice type="info" className="mt-6">
-  This adds a small PR overhead, but it prevents costly mistakes in production syncs and batch jobs.
-</Notice>
+> [!note]
+> This adds a small PR overhead, but it prevents costly mistakes in production syncs and batch jobs.
 
 ## 4. Protecting Sensitive Data
 
@@ -271,9 +269,8 @@ It’s important that the **seed schema matches the real source schema**. One wa
   ```
 </Accordion>
 
-<Notice type="success">
-  With this pattern, developers can test pipelines safely while production runs always use real data.
-</Notice>
+> [!tip]
+> With this pattern, developers can test pipelines safely while production runs always use real data.
 
 ## 5. Summary and Best Practices
 

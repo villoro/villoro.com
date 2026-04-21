@@ -40,15 +40,13 @@ The objective here is to **extract meaningful features from query text**. By par
 
 The next sections detail the tools, parser, and pipeline that make this process scalable and maintainable.
 
-<Notice type="warning">
-  This approach focuses solely on **static analysis** — it inspects query text, not execution results. Runtime metrics like execution time, data scanned, or bytes processed should be retrieved directly from your query engine’s system tables or APIs to complement this analysis.
-</Notice>
+> [!warning]
+> This approach focuses solely on **static analysis** — it inspects query text, not execution results. Runtime metrics like execution time, data scanned, or bytes processed should be retrieved directly from your query engine’s system tables or APIs to complement this analysis.
 
 ## 3. Extracting Query History (optional)
 
-<Notice type="info">
-  This section is optional and **Athena-specific**. The post focuses on static parsing, but if you need sample input data, here’s a minimal way to fetch Athena query history. Other engines have different APIs/system tables; adjust the listing & detail calls accordingly.
-</Notice>
+> [!info]
+> This section is optional and **Athena-specific**. The post focuses on static parsing, but if you need sample input data, here’s a minimal way to fetch Athena query history. Other engines have different APIs/system tables; adjust the listing & detail calls accordingly.
 
 **Other engines at a glance**
 
@@ -110,9 +108,8 @@ for page in get_query_execution_ids(max_iterations=500):
 executions = get_query_executions(ids)
 ```
 
-<Notice type="warning" className="mt-6">
-  Keep `max_iterations` conservative to control costs and latency. Add retries/backoff and time filtering (`started_at`) in production.
-</Notice>
+> [!warning]
+> Keep `max_iterations` conservative to control costs and latency. Add retries/backoff and time filtering (`started_at`) in production.
 
 ## 4. Sqlglot
 
@@ -130,9 +127,8 @@ It’s used in popular tools like **dbt**, **DuckDB**, and **DataHub**, which sp
 
 In this project, `sqlglot` serves as the backbone for the **SqlAnalyzer** class — converting raw query text into a structured AST that can be iterated over to count joins, detect anti-patterns, and extract lineage information.
 
-<Notice type="warning">
-  While `sqlglot` can handle a large variety of dialects, some engine-specific extensions or macros (e.g., Athena comments or dbt Jinja syntax) may require pre-processing before parsing. Always sanitize queries before feeding them into the parser.
-</Notice>
+> [!warning]
+> While `sqlglot` can handle a large variety of dialects, some engine-specific extensions or macros (e.g., Athena comments or dbt Jinja syntax) may require pre-processing before parsing. Always sanitize queries before feeding them into the parser.
 
 ### 4.1 Minimal example: parsing and inspecting a query
 
@@ -471,9 +467,8 @@ class SqlAnalyzer:
         return total, kinds
 ```
 
-<Notice type="warning">
-  These methods provide **static** insights. Correlate with runtime metrics (execution time, bytes scanned, rows output) from your engine to prioritize remediation.
-</Notice>
+> [!warning]
+> These methods provide **static** insights. Correlate with runtime metrics (execution time, bytes scanned, rows output) from your engine to prioritize remediation.
 
 ## 6. Pipeline for Extracting Data
 
@@ -571,9 +566,8 @@ class SqlAnalyzer:
 
 This task queries recent Athena statements, runs the analyzer for each, and writes the results to an Iceberg-backed Bronze table.
 
-<Notice type="info">
-  We simplify the logic here — how the queries are fetched from Athena is **out of scope**.
-</Notice>
+> [!info]
+> We simplify the logic here — how the queries are fetched from Athena is **out of scope**.
 
 ```python
 import pandas as pd
@@ -610,9 +604,8 @@ def extract_batch():
     # athena.write_iceberg(df_out, DATABASE, TABLE, as_strings=True)
 ```
 
-<Notice type="warning" className="mt-6">
-  The parser is expected to fail on some queries (e.g., malformed SQL or proprietary syntax). These failures are captured with `AnalysisResult(is_success=False)` while preserving `query_id`, ensuring traceability without halting the batch.
-</Notice>
+> [!warning]
+> The parser is expected to fail on some queries (e.g., malformed SQL or proprietary syntax). These failures are captured with `AnalysisResult(is_success=False)` while preserving `query_id`, ensuring traceability without halting the batch.
 
 Each batch produces a DataFrame of analysis results, where each row represents one query and all computed metrics from `SqlAnalyzer.analyze()`.
 
