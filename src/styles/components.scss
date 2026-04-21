@@ -69,13 +69,7 @@
     @apply dark:bg-amber-800 dark:text-amber-100 dark:border-amber-500;
   }
 
-  &.failure {
-    @apply bg-orange-100 text-orange-900 border-orange-400;
-    @apply dark:bg-orange-800 dark:text-orange-100 dark:border-orange-500;
-  }
-
-  &.error,
-  &.danger {
+  &.failure, &.error, &.danger {
     @apply bg-red-100 text-red-900 border-red-400;
     @apply dark:bg-red-800 dark:text-red-100 dark:border-red-500;
   }
