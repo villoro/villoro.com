@@ -349,9 +349,8 @@ async def main(app_ids):
 > [!tip]
 > Launching N reloads and polling them with `asyncio.gather` keeps your job responsive while respecting backpressure via the client's semaphore.
 
-<Notice type="warning" className="mt-6">
-  Always cap total wait (`max_time_s`) and use a **bounded loop** (no `while True`). If you need jittered polling or cancellation, this method is the single place to enhance.
-</Notice>
+> [!warning]
+> Always cap total wait (`max_time_s`) and use a **bounded loop** (no `while True`). If you need jittered polling or cancellation, this method is the single place to enhance.
 
 ## 6. Error handling & retries
 
@@ -395,13 +394,11 @@ Why this shape
 * **Single policy** – the decorator sits on `_request`, so every `_get`/`_post` call inherits it.
 * **Jittered backoff** – `full_jitter` spreads retries across time to avoid thundering herds.
 
-<Notice type="warning" className="mt-6">
-  Don’t retry 400/401/403/404/409. Validate early (UUIDs, payload shape), and surface clear errors to callers.
-</Notice>
+> [!warning]
+> Don’t retry 400/401/403/404/409. Validate early (UUIDs, payload shape), and surface clear errors to callers.
 
-<Notice type="info" className="mt-6">
-  If you need different policies (e.g., more aggressive on metadata reads than reload posts), add thin wrappers like `_request_read` / `_request_write` with different decorators, but keep the core logic in one place.
-</Notice>
+> [!tip]
+> If you need different policies (e.g., more aggressive on metadata reads than reload posts), add thin wrappers like `_request_read` / `_request_write` with different decorators, but keep the core logic in one place.
 
 ## 7. Optional: Notifications
 
@@ -452,9 +449,8 @@ Why callbacks, not logging hooks
 * **Testability** – pass a fake `on_error` in unit tests to assert payloads without hitting external services.
 * **Flexibility** – swap Slack for anything else without touching the client.
 
-<Notice type="success">
-  Keep the callback optional and fire it only on terminal failures (FAILED/ERROR/ABORTED/TIMEOUT). Success paths should remain silent.
-</Notice>
+> [!tip]
+> Keep the callback optional and fire it only on terminal failures (FAILED/ERROR/ABORTED/TIMEOUT). Success paths should remain silent.
 
 ## 8. Trade-offs and takeaways
 

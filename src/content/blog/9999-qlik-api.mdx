@@ -337,9 +337,8 @@ resp = self._safe_post(endpoint="reloads", json={"appId": app_id})
 > [!note]
 > Keep `_get`/`_post` minimal; layer retries in thin wrappers (`_safe_get`/`_safe_post`). This preserves a single place to change backoff policy later.
 
-<Notice type="warning" className="mt-6">
-  Backoff isn’t a silver bullet: protect with `max_tries`, log final errors, and avoid retrying on 4xx you know won’t succeed (validate early).
-</Notice>
+> [!warning]
+> Backoff isn’t a silver bullet: protect with `max_tries`, log final errors, and avoid retrying on 4xx you know won’t succeed (validate early).
 
 ## Wrapping up
 
