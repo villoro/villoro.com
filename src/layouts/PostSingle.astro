@@ -40,13 +40,13 @@ const metadata = categoryMetadata[category] || { name: humanize(category) };
           <BlogDetails date={date} category={category} tags={tags} className="btn-primary" />
 
           {image && (
-            <div class="mb-10 aspect-video overflow-hidden rounded">
+            <div class="mb-10">
               <ImageMod
                 src={image}
                 height={500}
                 width={1200}
                 alt={title}
-                class="w-full h-full object-cover"
+                class="w-full rounded"
                 format="webp"
                 loading="eager"
               />
