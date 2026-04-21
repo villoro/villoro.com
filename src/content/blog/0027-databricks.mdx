@@ -22,9 +22,8 @@ There are two options:
 * **Community Edition:** this is free but you only can use a single small cluster.
 * **Databricks Plaform:** use this option if you plan to create your own clusters. It has 14 days of free trial and you will need to pay for the machines you use for the clusters
 
-<Notice type="info">
-  I suggest you start trying it with the **Community Edition**
-</Notice>
+> [!tip]
+> I suggest you start trying it with the **Community Edition**
 
 ## 1. Clusters
 
@@ -44,9 +43,8 @@ With this version you can configure more things.
 The default mode is `standard` and will work well for 1 user.
 For multiuser use `high concurrency`.
 
-<Notice type="warning">
-  If you want to use scala you must use `standard` cluster mode
-</Notice>
+> [!warning]
+> If you want to use scala you must use `standard` cluster mode
 
 ##### 1.1.1.2. Databricks runtime version
 
@@ -109,9 +107,8 @@ You can see an example of the libraries installed on a cluster:
 
 ![Databricks Cluster libraries](../../images/posts/2019/0027-databricks_clusters_libraries.png)
 
-<Notice type="warning">
-  It is not possible to install python `wheels`, use `eggs` instead.
-</Notice>
+> [!warning]
+> It is not possible to install python `wheels`, use `eggs` instead.
 
 And lastly you should avoid installing libraries using `dbutils`.
 This also won't work if you are using a `conda` databricks runtime.
@@ -168,9 +165,8 @@ You can later rename the notebook or attach it to another cluster if needed.
 You can work with multiple languages in the same notebook even though there is a default one.
 To do so you only need to use some magic commands like `%python` to work with python.
 
-<Notice type="info">
-  No need to use anything to work with the default language
-</Notice>
+> [!note]
+> No need to use anything to work with the default language
 
 The languages you can use are:
 
@@ -219,9 +215,8 @@ For example you can create and dropdown that sets the value of one python variab
 This allow you to install packages.
 I would advise to manage libraries with the `Libraries` section of the cluster configuration.
 
-<Notice type="warning">
-  If you are using a **conda** environment `dbutils.library` won't work.
-</Notice>
+> [!warning]
+> If you are using a **conda** environment `dbutils.library` won't work.
 
 ### 2.4. display and displayHTML
 
@@ -254,6 +249,5 @@ To read that in different languages you should:
 You can schedule jobs with the section `Jobs`.
 It works like the Linux **cron**.
 
-<Notice type="warning">
-  It should **only** be used for small tasks since **it is not an orchestrator** like **Airflow** or **Azure Data Factory (ADF)**.
-</Notice>
+> [!warning]
+> It should **only** be used for small tasks since **it is not an orchestrator** like **Airflow** or **Azure Data Factory (ADF)**.

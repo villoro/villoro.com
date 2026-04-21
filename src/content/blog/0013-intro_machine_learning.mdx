@@ -76,9 +76,8 @@ The first thing we need to do is to handle the categorical features since machin
 
 We will create new dummy columns for all categorical features. For example there are four seasons so we will create **season_1**, **season_2**, **season_3** and **season_4** columns with `1` if the point is in that season and `0` otherwise.
 
-<Notice type="warning">
-  We cannot use only one column and `1`, `2`, `3` or `4` as the options since the seasons are not **linearly related**. That is to say that `summer + spring = winter` does not make sense. To avoid these relations we create the four new columns.
-</Notice>
+> [!warning]
+> We cannot use only one column and `1`, `2`, `3` or `4` as the options since the seasons are not **linearly related**. That is to say that `summer + spring = winter` does not make sense. To avoid these relations we create the four new columns.
 
 Another important thing to do is to **normalize** the data. This step is mandatory for some algorithms and it never has a bad effect. To normalize the data we will calculate the mean and the standard deviation (std) of each column and then we will subtract the mean from all values of the column and divide by the std. This will ensure that all columns have `mean = 0` and `std = 1`.
 
@@ -96,9 +95,8 @@ First we fit the algorithm using the **training** data and we check the result u
 
 ![Prediction vs target with validation data](../../images/posts/2019/0013-predictions-vs-target-with-validation-data.jpg)
 
-<Notice type="success">
-  Since the results are good there is no need to tune the parameters, the default ones work well.
-</Notice>
+> [!success]
+> Since the results are good there is no need to tune the parameters, the default ones work well.
 
 ### 2.5. Check that the algorithm is working
 

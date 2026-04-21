@@ -21,10 +21,9 @@ I'm here to show you a **simpler way to get PySpark up and running on EMR**.
 No more tangled messes—just clear, straightforward steps and easy traceability.
 Whether you're new to PySpark or just tired of the headache, I've got your back. Let's make PySpark on EMR hassle-free together!
 
-<Notice type="warning">
-  This post breaks down multiple concepts step by step.
-  If you prefer to see the final result, head to the last section where you can find everything consolidated.
-</Notice>
+> [!warning]
+> This post breaks down multiple concepts step by step.
+> If you prefer to see the final result, head to the last section where you can find everything consolidated.
 
 ## 1. Running a script in EMR
 
@@ -55,9 +54,8 @@ First, you need to create or start your EMR cluster, which is beyond the scope o
 
 Next, you submit a job using the specified file (`s3://your-bucket/main.py`) as the entrypoint.
 
-<Notice type="info">
-  This method works well for single-file jobs, but for more complex jobs with dependencies, it's not very practical.
-</Notice>
+> [!note]
+> This method works well for single-file jobs, but for more complex jobs with dependencies, it's not very practical.
 
 A common solution is to create a Python package so you can import code from other files. Let's explore how to do this next.
 
@@ -135,15 +133,13 @@ RUN mkdir /output && \
 FROM scratch AS export
 COPY --from=base /output/*.tar.gz /
 ```
-<Notice type="warning">
-  For this to work you will need to have `venv-pack` as a `poetry` dependency so that you can export the virtual environment.
-  You can add it with `poetry add venv-pack`
-</Notice>
+> [!warning]
+> For this to work you will need to have `venv-pack` as a `poetry` dependency so that you can export the virtual environment.
+> You can add it with `poetry add venv-pack`
 
-<Notice type="info" className="mt-6">
-  Here I'm using `amazonlinux:2023` as the base image since I'm using `EMR 7` and it uses that version.
-  For older versions replace it with `amazonlinux:2`.
-</Notice>
+> [!note]
+> Here I'm using `amazonlinux:2023` as the base image since I'm using `EMR 7` and it uses that version.
+> For older versions replace it with `amazonlinux:2`.
 
 To create the `tar.gz` simply run:
 
@@ -160,9 +156,8 @@ Then you can set up an `EMR` cluster to use that environment with:
 --conf spark.emr-serverless.executorEnv.PYSPARK_PYTHON=./environment/bin/python
 --conf spark.archives=s3:/your-bucket/venv/my_package-latest.tar.gz#environment
 ```
-<Notice type="warning">
-  Make sure to adapt the path (`s3:/your-bucket/venv/my_package-latest.tar.gz` in the example) to the file you created.
-</Notice>
+> [!warning]
+> Make sure to adapt the path (`s3:/your-bucket/venv/my_package-latest.tar.gz` in the example) to the file you created.
 
 ### 3.2. Create a 'Package' for Adding Code
 
@@ -247,9 +242,8 @@ You might want to read <FancyLink linkText="Managing package versions with Poetr
 
 You've seen how to add external packages and how to install your own code as a package. However, you still need an entrypoint for running EMR jobs.
 
-<Notice type="error">
-  Given that any Python file you have in your code could be an entrypoint, you would be forced to **upload all files** to S3.
-</Notice>
+> [!danger]
+> Given that any Python file you have in your code could be an entrypoint, you would be forced to **upload all files** to S3.
 
 Luckily, there is a better way to handle this. The idea is to have a generic `entrypoint.py` that runs code from other packages.
 
@@ -295,9 +289,8 @@ import importlib
 module = importlib.import_module("my_package.salesforce")
 module.main()
 ```
-<Notice type="success">
-  This does exactly the same as before.
-</Notice>
+> [!note]
+> This does exactly the same as before.
 
 ## 5. Handling Parameters
 
@@ -366,9 +359,8 @@ def main(name, num):
     print(f"Hello {name} with {num=}")
 ```
 
-<Notice type="warning" className="mt-6">
-  Notice that all parameters are as `strings`.
-</Notice>
+> [!warning]
+> Notice that all parameters are as `strings`.
 
 ### 5.2. Define Script Parameters with `pydantic`
 
@@ -608,7 +600,6 @@ def main(params):
     print(f"Starting {params.n_jobs} jobs with start_time={params.start_time}")
 ```
 
-<Notice type="warning" className="mt-6">
-  Notice that using parameters is as simple as declaring a `pydantic` class.
-  And then for retrieving the values simply call `params.param_name`.
-</Notice>
+> [!note]
+> Notice that using parameters is as simple as declaring a `pydantic` class.
+> And then for retrieving the values simply call `params.param_name`.

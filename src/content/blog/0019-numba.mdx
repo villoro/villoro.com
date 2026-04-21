@@ -211,9 +211,8 @@ For the tests we will try different array lengths.
 |       10^8 |     9.335412 | 0.021232 | 0.020506 | 0.042701 |  7.549756 |
 |       10^9 |    96.134125 | 0.238718 | 0.225308 | 0.433185 | 76.537118 |
 
-<Notice type="warning">
-  First time result has been excluded to avoid computing the time of compilation before calculating the mean.
-</Notice>
+> [!note]
+> First time result has been excluded to avoid computing the time of compilation before calculating the mean.
 
 It is important to mention that the results would be different using python lists instead of `numpy` arrays.
 
@@ -224,9 +223,8 @@ For small arrays `numpy.sum` is the best option but **for large arrays both `jit
 In general is a really good idea to use numpy functions since they use `cython` under the hood.
 In all cases using the raw loop `iter_and_sum` or the default python `sum` gives poor results.
 
-<Notice type="success">
-  **numba** can be **400x** better than a python loop
-</Notice>
+> [!success]
+> **numba** can be **400x** better than a python loop
 
 ### 3.2. Test fix time
 
@@ -452,9 +450,8 @@ Both `divmod_njit` and `divmod_vectorize` performs really well compared to the o
 
 <canvas id="chart_fix_time" style="width:100%;height:600px;"></canvas>
 
-<Notice type="success">
-  Working with numbers in numba is really fast.
-</Notice>
+> [!success]
+> Working with numbers in numba is really fast.
 
 #### 3.2.3. Speed with different machines
 

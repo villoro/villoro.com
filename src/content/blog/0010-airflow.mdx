@@ -229,9 +229,8 @@ If you still have examples running you can reset the database:
 ```sh
 airflow resetdb -y
 ```
-<Notice type="danger">
-  This will **delete all data** be careful.
-</Notice>
+> [!danger]
+> This will **delete all data** be careful.
 
 If you can't delete the previous example try deleting `~/airflow/dags/tutorial.py` first.
 
@@ -240,9 +239,8 @@ After cleaning all examples you should stop all `airflow` processes with:
 ```sh
 pkill -f airflow
 ```
-<Notice type="warning">
-  This will delete the current **DAG** information
-</Notice>
+> [!warning]
+> This will delete the current **DAG** information
 
 ### 4.2. Running supervisor
 
@@ -283,9 +281,8 @@ autorestart=true
 user=ubuntu
 ```
 
-<Notice type="info">
-  We are running **airflow** with `ubuntu` user since by default it gets installed to `~/airflow`. You can change the default path and use another user.
-</Notice>
+> [!note]
+> We are running **airflow** with `ubuntu` user since by default it gets installed to `~/airflow`. You can change the default path and use another user.
 
 Then start supervisor:
 
@@ -303,9 +300,8 @@ And that's it. You can now start using airflow.
 
 You can add **DAG**s in the folder `~/airflow/dags` and they should be automatically loaded. 
 
-<Notice type="info">
-  It is advised to run airflow with at least a `t2.medium` **AWS instance**. You can run it with a smaller one (I use a `t2.micro` since it is in the free tier) but you can easily get your instance at 100% CPU usage while running tasks.
-</Notice>
+> [!tip]
+> It is advised to run airflow with at least a `t2.medium` **AWS instance**. You can run it with a smaller one (I use a `t2.micro` since it is in the free tier) but you can easily get your instance at 100% CPU usage while running tasks.
 
 ### 5.1. Using git
 You can even change that path to a folder that is tracked with git to keep control of the **DAG**s by editing the `airflow.cfg`:
@@ -329,6 +325,5 @@ Add this line at the end:
 0 5 * * * cd /home/ubuntu/airflow_tasks && git fetch && git checkout master && git pull origin master
 ```
 
-<Notice type="info">
-  I use `/home/ubuntu/airflow_tasks` for the repo path and the folder `src` for **DAG**s path. But you can use whatever you want.
-</Notice>
+> [!note]
+> I use `/home/ubuntu/airflow_tasks` for the repo path and the folder `src` for **DAG**s path. But you can use whatever you want.

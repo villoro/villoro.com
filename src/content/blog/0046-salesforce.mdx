@@ -41,9 +41,8 @@ sf = Salesforce(
     consumer_secret="your_consumer_secret",
 )
 ```
-<Notice type="warning">
-  Please ensure that you replace all the placeholder strings with the appropriate values.
-</Notice>
+> [!warning]
+> Please ensure that you replace all the placeholder strings with the appropriate values.
 
 ### 1.1. Querying and `__getattr__`
 
@@ -63,9 +62,8 @@ sf.Account.get('003e0000003GuNXAA0')
 sf.__getattr__("Account").get('003e0000003GuNXAA0')
 ```
 
-<Notice type="success" className="mt-6">
-  You'll find that this approach can be applied throughout this post.
-</Notice>
+> [!tip]
+> You'll find that this approach can be applied throughout this post.
 
 ## 2. Querying options
 
@@ -81,17 +79,15 @@ Here's a detailed overview of each:
 | Includes deleted            | ❌ | ✔️    | ✔️       | ✔️             | ✔️            | ❌          |
 | Can query compound data (*) | -   | ✔️   | ✔️       | ✔️             | ❌            | ❌          |
 
-<Notice type="warning">
-  (\*) More info about compound data in section 4.
-</Notice>
+> [!note]
+> (\*) More info about compound data in section 4.
 
 You can also view the query time of each method using the same query.
 
 <canvas id="sf_querying_times" style="width:100%;height:300px;"></canvas>
 
-<Notice type="success" className="mt-6">
-  I would recommend using either `query_all_iter`.
-</Notice>
+> [!tip]
+> I would recommend using either `query_all_iter`.
 
 ### 2.1. Entity get
 
@@ -101,9 +97,8 @@ You can use the `get` method to retrieve a single entity:
 sf.Account.get('003e0000003GuNXAA0')
 ```
 
-<Notice type="warning">
-  While useful for retrieving a single value, it's not suitable for exporting a large number of rows.
-</Notice>
+> [!warning]
+> While useful for retrieving a single value, it's not suitable for exporting a large number of rows.
 
 ### 2.2. query
 
@@ -121,9 +116,8 @@ sf.query_more("01gD0000002HU6KIAW-2000")
 
 You can find more information about this in the <FancyLink linkText="Queries | Simple Salesforce" url="https://simple-salesforce.readthedocs.io/en/latest/user_guide/queries.html"/> documentation.
 
-<Notice type="warning">
-  I don't suggest using this option since there are easier methods available that don't require dealing with the `sf.query_more` option.
-</Notice>
+> [!warning]
+> I don't suggest using this option since there are easier methods available that don't require dealing with the `sf.query_more` option.
 
 ### 2.3. query_all
 
@@ -133,9 +127,8 @@ This method is similar to `query`, but it returns all results as a Python object
 sf.query_all("SELECT Id, Name FROM Account")
 ```
 
-<Notice type="warning">
-  The problem with this approach is that you can easily encounter `Out of Memory (OOM)` errors when attempting to load a large amount of data into memory.
-</Notice>
+> [!warning]
+> The problem with this approach is that you can easily encounter `Out of Memory (OOM)` errors when attempting to load a large amount of data into memory.
 
 ### 2.4. query_all_iter
 
@@ -155,9 +148,8 @@ for row in data:
 Under the hood, it fetches records in bulk using the `sf.query` and `sf.query_more` functions.
 You may notice that the first row takes longer to retrieve than the rest when querying a large amount of data.
 
-<Notice type="success">
-  This is the method I recommend using.
-</Notice>
+> [!tip]
+> This is the method I recommend using.
 
 ### 2.5. Bulk
 
@@ -190,13 +182,12 @@ data = sf.bulk.Account.query_all(query, lazy_operation=True)
 for chunk in data:
     process(chunk)
 ```
-<Notice type="info">
-  Note that `chunk` contains all rows.
-</Notice>
-<Notice type="warning">
-  This function is consistently **2 to 3 times faster** than `query_all_iter`.
-  However, since it cannot extract compound fields, it would make extraction more complex, as you would need to recreate all that logic in the data lake.
-</Notice>
+> [!note]
+> Note that `chunk` contains all rows.
+
+> [!warning]
+> This function is consistently **2 to 3 times faster** than `query_all_iter`.
+> However, since it cannot extract compound fields, it would make extraction more complex, as you would need to recreate all that logic in the data lake.
 
 ### 2.6. Bulk2
 
@@ -217,9 +208,8 @@ for i, data in enumerate(results):
 With this method, the iterator returns batches of the requested size (`max_records`).
 However, one important caveat is that the result is a Python string similar to a CSV.
 
-<Notice type="warning">
-  This means extra work for parsing the result, such as handling problems with separators, encoding issues, extra I/O operations, etc.
-</Notice>
+> [!warning]
+> This means extra work for parsing the result, such as handling problems with separators, encoding issues, extra I/O operations, etc.
 
 During testing, I observed around a 20% performance improvement compared to `bulk`.
 However, given that it's not a significant improvement, I believe it's not worth the effort.
@@ -371,18 +361,16 @@ Here are examples of reference fields:
 Compound fields are populated at query time based on a formula.
 For example, in the `User` table, we might have `firstName` and `lastName` as primitive fields, with `fullName` defined as `FirstName & ’ ’ & LastName`. More information about compound fields can be found in <FancyLink linkText="Compound fields" url="https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/compound_fields.htm"/>.
 
-<Notice type="warning">
-  Compound fields can use information from `referenced` entities!
-</Notice>
+> [!warning]
+> Compound fields can use information from `referenced` entities!
 
 Consider an example where the `Order` table has fields such as `CreatedById`, `LastModifiedById`, and `User__c`.
 We could have a calculated field called `fullName` with the formula `User__r.FirstName & ' ' & User__r.LastName`.
 
 When extracting data, compound fields are risky because:
 
-<Notice type="error">
-  Changes in the referenced table do not modify the `LastModifiedDate` from the main table.
-</Notice>
+> [!danger]
+> Changes in the referenced table do not modify the `LastModifiedDate` from the main table.
 
 In the example above, modifying `User.FirstName` would result in a different `fullName`, but the `Order` table's `LastModifiedDate` would remain unchanged.
 This can lead to incorrect data extraction.
@@ -416,10 +404,9 @@ class Column(BaseModel):
 
 ## 5. Querying with External Changes
 
-<Notice type="warning">
-  After writing this post I discovered that I can simply use `SystemModstamp` for getting all changes done to an entity.
-  Here is the original content for reference, but **I strongly suggest you query with `SystemModstamp`** instead.
-</Notice>
+> [!warning]
+> After writing this post I discovered that I can simply use `SystemModstamp` for getting all changes done to an entity.
+> Here is the original content for reference, but **I strongly suggest you query with `SystemModstamp`** instead.
 
 ### 5.1. The problem
 
@@ -474,19 +461,17 @@ FROM Delegation
 WHERE (LastModifiedDate >= {min_date} AND LastModifiedDate < {max_date})
     OR (User__r.LastModifiedDate >= {min_date})
 ```
-<Notice type="warning">
-  You should replace `{min_date}` and `{max_date}` with datetimes with the format `%Y-%m-%dT%H:%M:%SZ` (do not include any `"` or `'`).
-</Notice>
+> [!warning]
+> You should replace `{min_date}` and `{max_date}` with datetimes with the format `%Y-%m-%dT%H:%M:%SZ` (do not include any `"` or `'`).
 
 #### 5.2.1. Deciding Date Ranges
 
 In regular runs, I query data from the last extraction (`max(LastUpdateDate)` from the table where the export will be stored) up until the current datetime (`datetime.now()`).
 More information about this approach can be found in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
 
-<Notice type="warning">
-  Between the query creation and the execution, some time may pass.
-  To ensure we don't lose records, we need to set `max_date` as a filter and discard records that are modified afterwards. 
-</Notice>
+> [!warning]
+> Between the query creation and the execution, some time may pass.
+> To ensure we don't lose records, we need to set `max_date` as a filter and discard records that are modified afterwards.
 
 For example:
 
@@ -557,9 +542,8 @@ The `orders` table is very large, but there are no massive changes to entries th
 However, we have very few `products`, so any change in one of them will lead to many `orders` being downloaded.
 That can greatly slow down the extractions since a lot of data will be extracted.
 
-<Notice type="warning">
-  Be careful with the amount of data you need to extract when doing compound queries.
-</Notice>
+> [!warning]
+> Be careful with the amount of data you need to extract when doing compound queries.
 
 It could be even worse. For instance, we have an automated process that updates all products at night.
 That means we need to download all `orders` daily.
@@ -923,9 +907,8 @@ def main(params):
 
     spark.stop()
 ```
-<Notice type="warning">
-  There are some functions that are not defined (such as `get_tables`, `infer_min_datetime` and `export_records`) since they are out of the scope of this post.
-</Notice>
+> [!note]
+> There are some functions that are not defined (such as `get_tables`, `infer_min_datetime` and `export_records`) since they are out of the scope of this post.
 
 ## 7. Conclusion
 

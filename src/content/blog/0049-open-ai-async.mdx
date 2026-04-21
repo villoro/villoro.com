@@ -99,12 +99,11 @@ def count_tokens(messages, model=MODEL_TOKENIZER_DEFAULT):
     return total_tokens
 
 ```
-<Notice type="warning">
-  This function estimates token usage effectively, but note that actual usage may vary slightly.
-</Notice>
-<Notice type="info">
-  The `GPTTokens` class will be used to track actual token usage during API calls, which will be detailed in the following sections.
-</Notice>
+> [!warning]
+> This function estimates token usage effectively, but note that actual usage may vary slightly.
+
+> [!note]
+> The `GPTTokens` class will be used to track actual token usage during API calls, which will be detailed in the following sections.
 
 ## 3. Rate Limiter
 
@@ -269,12 +268,11 @@ class RateLimiter:
         logger.debug(f"Updating limits from headers:\n{self}")
 ```
 
-<Notice type="info">
-  There is some overlap between the `update_limits` and `update_from_headers` methods.
-  While `update_limits` resets limits based on a fixed time window, `update_from_headers` allows dynamic adjustments based on real-time data from API responses.
-  This overlap is intentional, as using `update_from_headers` ensures more accurate limit management and optimizes the number of valid requests per minute.
-  By relying on actual API feedback, we can better handle fluctuating limits and reduce the risk of hitting rate caps unexpectedly.
-</Notice>
+> [!note]
+> There is some overlap between the `update_limits` and `update_from_headers` methods.
+> While `update_limits` resets limits based on a fixed time window, `update_from_headers` allows dynamic adjustments based on real-time data from API responses.
+> This overlap is intentional, as using `update_from_headers` ensures more accurate limit management and optimizes the number of valid requests per minute.
+> By relying on actual API feedback, we can better handle fluctuating limits and reduce the risk of hitting rate caps unexpectedly.
 
 ## 4. Using the Rate Limiter with Async calls
 

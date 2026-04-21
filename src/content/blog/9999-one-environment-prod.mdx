@@ -30,9 +30,8 @@ Multiple environments exist to:
 * **Enable collaboration** – teams can work in parallel without stepping on prod.
 * **Support CI/CD** – changes move gradually from dev → test → prod, with checks at each step.
 
-<Notice type="info">
-  More environments mean more guardrails before code reaches production.
-</Notice>
+> [!note]
+> More environments mean more guardrails before code reaches production.
 
 ## 2. The dbt perspective
 
@@ -51,9 +50,8 @@ This allows everyone to work against the same production data and warehouse whil
 
 Profiles make it easy to switch between these targets. By default, a developer might run dbt with a personal target, which builds into `villoro_salesforce`. When deploying, the pipeline switches to the `prod` target, which builds into `prod_salesforce`. You can read more about it at <FancyLink linkText="dbt | Understanding custom schemas" url="https://docs.getdbt.com/docs/build/custom-schemas#understanding-custom-schemas"/>.
 
-<Notice type="warning">
-  The **protected prefix** (like `prod_`) is reserved for automated runs only. Developers shouldn't have permissions to write there.
-</Notice>
+> [!warning]
+> The **protected prefix** (like `prod_`) is reserved for automated runs only. Developers shouldn't have permissions to write there.
 
 Both environments use the same underlying warehouse and data, so development runs closely mimic production. The only difference is the schema prefix — `prod_` for production, `<user>_` for development. This convention ensures realistic testing, strict protection of production outputs, and seamless promotion from personal work to production.
 
@@ -71,9 +69,8 @@ The same idea can be applied outside of dbt. In Python projects, you can also ru
 
 Code often does more than write tables: send emails, call APIs, trigger dashboards. These actions can be dangerous in a prod-only setup.
 
-<Notice type="info">
-  Use feature toggles to **simulate side effects**. In dev runs, log actions instead of executing them.
-</Notice>
+> [!note]
+> Use feature toggles to **simulate side effects**. In dev runs, log actions instead of executing them.
 
 Example:
 
@@ -112,9 +109,8 @@ Many teams use this approach:
 * **Hard to stage big changes** – limited space for dry runs.
 * **Onboarding stress** – new devs must be careful from day one.
 
-<Notice type="error">
-  The main risk of prod-only is a **higher blast radius** — one mistake can affect critical data or workloads.
-</Notice>
+> [!danger]
+> The main risk of prod-only is a **higher blast radius** — one mistake can affect critical data or workloads.
 
 ### 4.3 Mitigation strategies
 
@@ -123,9 +119,8 @@ Many teams use this approach:
 * **Feature toggles** – in dev, replace side effects (e.g. email sending) with safe logs.
 * **CI in temp schemas** – build and test in throwaway schemas before merging.
 
-<Notice type="success">
-  Combining schema isolation, strict permissions, and feature toggles gives most of the safety of multi-env setups, without the overhead.
-</Notice>
+> [!tip]
+> Combining schema isolation, strict permissions, and feature toggles gives most of the safety of multi-env setups, without the overhead.
 
 ## 5. Closing thoughts
 

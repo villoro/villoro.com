@@ -34,9 +34,8 @@ vhooks/
    └─ tag_version.py
 ```
 
-<Notice type="info" className="mt-6">
-  Each folder under `vhooks` is a standalone hook. The `action.yml` defines its interface, while the Python file contains the logic.
-</Notice>
+> [!note]
+> Each folder under `vhooks` is a standalone hook. The `action.yml` defines its interface, while the Python file contains the logic.
 
 ### 1.2 Composite Action Definition
 
@@ -206,9 +205,8 @@ jobs:
           path: project/version
 ```
 
-<Notice type="info" className="mt-6">
-  Always pin to a version tag like `@1.3.0` to avoid breaking changes from `main`.
-</Notice>
+> [!tip]
+> Always pin to a version tag like `@1.3.0` to avoid breaking changes from `main`.
 
 ## 2. Matrix Jobs
 
@@ -265,9 +263,8 @@ jobs:
               - 'src/${{ matrix.name }}/**'
 ```
 
-<Notice type="info">
-  The hook receives a different `file` and `tag-prefix` per package. `dorny/paths-filter` inside the hook ensures we only tag when that package actually changed.
-</Notice>
+> [!note]
+> The hook receives a different `file` and `tag-prefix` per package. `dorny/paths-filter` inside the hook ensures we only tag when that package actually changed.
 
 ### 2.2 Practical Tips
 
@@ -275,9 +272,8 @@ jobs:
 * Keep job names informative (e.g., `tag / nt_api`).
 * Pass filters down to the hook rather than duplicating filtering logic in the workflow.
 
-<Notice type="success">
-  Minimal matrices + in‑hook filtering = fast runs and clean YAML as your monorepo grows.
-</Notice>
+> [!tip]
+> Minimal matrices + in‑hook filtering = fast runs and clean YAML as your monorepo grows.
 
 ## 3. Gate Jobs
 
@@ -306,14 +302,12 @@ Create a tiny job that always runs, inspects the matrix result, and exits accord
           fi
 ```
 
-<Notice type="info" className="mt-6">
-  Protect only the `tag_result` check in your branch rules. This keeps PR status simple while still enforcing success across all packages.
-</Notice>
+> [!note]
+> Protect only the `tag_result` check in your branch rules. This keeps PR status simple while still enforcing success across all packages.
 
-<Notice type="warning" className="mt-6">
-  **Common Pitfall:** Expressions like `${{ hashFiles() }}` don’t evaluate inside the matrix definition.
-  Compute cache keys at runtime instead using values like `matrix.name` or `matrix.path` inside a step.
-</Notice>
+> [!warning]
+> **Common Pitfall:** Expressions like `${{ hashFiles() }}` don’t evaluate inside the matrix definition.
+> Compute cache keys at runtime instead using values like `matrix.name` or `matrix.path` inside a step.
 
 ## 4. Concurrency
 

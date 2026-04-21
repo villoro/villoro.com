@@ -55,9 +55,8 @@ asyncio.run(main())
 # ~1s total
 ```
 
-<Notice type="info" className="mt-6">
-  **Idea:** `await` yields control while the task is waiting (I/O, sleep), so other tasks can run.
-</Notice>
+> [!note]
+> **Idea:** `await` yields control while the task is waiting (I/O, sleep), so other tasks can run.
 
 ### 1.2 Async context managers
 
@@ -175,9 +174,8 @@ class QlikAsyncClient:
 * `_ensure_session` lazily creates an `aiohttp.ClientSession` with a global timeout and default headers.
 * `asyncio.Semaphore` limits in‑flight requests, preventing you from overwhelming Qlik (or your network) when we add concurrency later.
 
-<Notice type="success" className="mt-6">
-  The semaphore is your safety valve. Start conservative (e.g., 5–10). You can raise it after measuring Qlik tenant limits and your runner’s bandwidth.
-</Notice>
+> [!tip]
+> The semaphore is your safety valve. Start conservative (e.g., 5–10). You can raise it after measuring Qlik tenant limits and your runner’s bandwidth.
 
 ## 3. Async GET helper
 
@@ -224,13 +222,11 @@ class QlikAsyncClient:
 * `async with self._semaphore` caps concurrency globally (cheap backpressure).
 * Still one place to normalize URLs, apply headers, and validate `limit`.
 
-<Notice type="success">
-  Keep `_get` generic and strict: normalize URL, enforce bounds, handle empty bodies. Put endpoint‑specific quirks in small public methods.
-</Notice>
+> [!tip]
+> Keep `_get` generic and strict: normalize URL, enforce bounds, handle empty bodies. Put endpoint‑specific quirks in small public methods.
 
-<Notice type="info" className="mt-6">
-  If you hit 400s when sending boolean query params, cast them to strings (`"true"/"false"`). Gateways differ.
-</Notice>
+> [!note]
+> If you hit 400s when sending boolean query params, cast them to strings (`"true"/"false"`). Gateways differ.
 
 ## 4. Pagination, async style
 
@@ -270,13 +266,11 @@ Why this shape:
 * **Cursor-first** – we trust `links.next.href`, not hand-made offsets.
 * **Side-effect free** – we `setdefault` on a copy of `params`.
 
-<Notice type="info">
-  Most Qlik endpoints paginate with <code>links.next.href</code>. Follow it until it’s <code>None</code>; do not build offsets yourself.
-</Notice>
+> [!note]
+> Most Qlik endpoints paginate with `links.next.href`. Follow it until it’s `None`; do not build offsets yourself.
 
-<Notice type="warning" className="mt-6">
-  If you routinely hit <code>max_calls</code>, log the last page payload and review server-side filters or page size.
-</Notice>
+> [!warning]
+> If you routinely hit `max_calls`, log the last page payload and review server-side filters or page size.
 
 ## 5. Triggering & polling reloads concurrently
 
@@ -352,9 +346,8 @@ async def main(app_ids):
 # asyncio.run(main(["id1", "id2", "id3"]))
 ```
 
-<Notice type="success" className="mt-6">
-  Launching N reloads and polling them with `asyncio.gather` keeps your job responsive while respecting backpressure via the client's semaphore.
-</Notice>
+> [!tip]
+> Launching N reloads and polling them with `asyncio.gather` keeps your job responsive while respecting backpressure via the client's semaphore.
 
 <Notice type="warning" className="mt-6">
   Always cap total wait (`max_time_s`) and use a **bounded loop** (no `while True`). If you need jittered polling or cancellation, this method is the single place to enhance.

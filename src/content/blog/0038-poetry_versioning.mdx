@@ -13,9 +13,8 @@ tags: [Python, Tools, Poetry, Versioning]
 draft: false
 ---
 
-<Notice type="danger">
-  **Disclaimer:** A lot has changed since I wrote this. Even though `Poetry` still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
-</Notice>
+> [!danger]
+> **DISCLAIMER:** A lot has changed since I wrote this. Even though `Poetry` still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
 
 ## 0. The problem
 
@@ -32,9 +31,8 @@ With <FancyLink linkText="Poetry-bumpversion" url="https://pypi.org/project/poet
 
 It assumes you follow <FancyLink linkText="Semver" url="https://semver.org/" company="default" dark="true"/> for the versioning of the project.
 
-<Notice type="warning">
-  If you are not following <FancyLink linkText="Semver" url="https://semver.org/" company="default" dark="true"/>, you probably should since it's the standard.
-</Notice>
+> [!tip]
+> If you are not following <FancyLink linkText="Semver" url="https://semver.org/" company="default" dark="true"/>, you probably should since it's the standard.
 
 In short with `semver` the version consists of three numbers (`M.m.p`) where:
 
@@ -89,9 +87,8 @@ replace = "version: '{new_version}'"
 The idea is to create a GitHub action that automatically validates that the version is updated.
 This way you can decide if you want to increase the `major`, `minor`, or `patch` digit.
 
-<Notice type="info">
-  In this example, if the version is not manually updated, the CI will fail.
-</Notice>
+> [!info]
+> In this example, if the version is not manually updated, the CI will fail.
 
 The first thing you need is a simple script that reads the package version from `pyproject.toml`:
 
@@ -140,9 +137,8 @@ def set_output(name, value):
 
 ```
 
-<Notice type="info" className="mt-6">
-  For more details about using `environment variables` in `Github actions` see `section 4`
-</Notice>
+> [!note]
+> For more details about using `environment variables` in `Github actions` see `section 4`
 
 Then you will need a script that checks if the version needs to be updated.
 It will compare the version from `main` to the one in the current PR.
@@ -243,10 +239,9 @@ jobs:
           message: "Poetry minor version update"
 ```
 
-<Notice type="info" className="mt-6">
-  Notice that if there are multiple commits on the same PR the older runs will be canceled.
-  More info in <FancyLink linkText="Using concurrency and the default behavior" url="https://docs.github.com/en/enterprise-cloud@latest/actions/using-jobs/using-concurrency#example-using-concurrency-and-the-default-behavior" dark="true"/>
-</Notice>
+> [!note]
+> Notice that if there are multiple commits on the same PR the older runs will be canceled.
+> More info in <FancyLink linkText="Using concurrency and the default behavior" url="https://docs.github.com/en/enterprise-cloud@latest/actions/using-jobs/using-concurrency#example-using-concurrency-and-the-default-behavior" dark="true"/>
 
 The way this works is by:
 

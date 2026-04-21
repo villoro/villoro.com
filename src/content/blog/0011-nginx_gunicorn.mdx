@@ -42,9 +42,8 @@ The idea of this post is to set up `nginx` and `gunicorn`. To test them you can 
 ### 1.4. Supervisor
 <FancyLink linkText="Supervisor" url="http://supervisord.org/" company="default" dark="true"/> is a system that allows users to monitor and control processes. This will make sure to restart the gunicorn process if anything goes wrong. Without it you should do it yourself.
 
-<Notice type="info">
-  You can read more about <FancyLink linkText="Why a web server and wsgi" url="https://serverfault.com/questions/331256/why-do-i-need-nginx-and-something-like-gunicorn"/>.
-</Notice>
+> [!info]
+> You can read more about <FancyLink linkText="Why a web server and wsgi" url="https://serverfault.com/questions/331256/why-do-i-need-nginx-and-something-like-gunicorn"/>.
 
 
 ## 2. Installation
@@ -90,9 +89,8 @@ python3 index.py
 
 You can now view it by going at `XX.XXX.XXX.XXX:PORT` (Use your EC2 IP and the port).
 
-<Notice type="info">
-  Default flask port is **5000**. To try it you need to open the port.
-</Notice>
+> [!tip]
+> Default flask port is **5000**. To try it you need to open the port.
 
 #### 2.1.1. Open EC2 ports (optional)
 If you are using an **AWS EC2** it is possible that you don't have the port 80 opened. You can do it with:
@@ -135,9 +133,8 @@ autostart = true
 autorestart = true
 ```
 
-<Notice type="info">
-  `index` refers to the python file. `app` is the name of the flask app that is inside this file.
-</Notice>
+> [!note]
+> `index` refers to the python file. `app` is the name of the flask app that is inside this file.
 
 Then start supervisor:
 
@@ -163,9 +160,8 @@ You can now view if nginx is serving content by going at XX.XXX.XXX.XXX (Use you
 
 ![Welcome nginx](../../images/posts/2019/0011-welcome_nginx.png)
 
-<Notice type="warning">
-  You will need the port **80** opened
-</Notice>
+> [!warning]
+> You will need the port **80** opened
 
 #### 2.4.2 Configure nginx
 
@@ -191,9 +187,8 @@ server {
 }
 ```
 
-<Notice type="warning">
-  `8000` should match the port defined at supervisor and `80` the port that you opened to test nginx.
-</Notice>
+> [!warning]
+> `8000` should match the port defined at supervisor and `80` the port that you opened to test nginx.
 
 Now you need a symlink in `sites-enabled` that points to the file you created before:
 
@@ -211,9 +206,8 @@ sudo service nginx restart
 
 You can now go to `XX.XXX.XXX.XXX` and you should see the flask app `Hello World` message.
 
-<Notice type="warning">
-  If everything is working remember to close the ports that you opened only for testing.
-</Notice>
+> [!tip]
+> If everything is working remember to close the ports that you opened only for testing.
 
 ## 3. Next steps
 

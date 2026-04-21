@@ -20,10 +20,9 @@ This post outlines a more structured, proactive approach. By treating failure ha
 
 Before we can talk about handling failures effectively, it's important to first describe the structure of our pipeline.
 
-<Notice type="info">
-  Our pipeline resembles a modern ELT process but with an important addition: we include a final step that pushes transformed data back into external systems — a practice often called Reverse ETL.
-  To capture this full lifecycle, we describe our approach as **ETU**: Extract, Transform, Upload.
-</Notice>
+> [!note]
+> Our pipeline resembles a modern ELT process but with an important addition: we include a final step that pushes transformed data back into external systems — a practice often called Reverse ETL.
+> To capture this full lifecycle, we describe our approach as **ETU**: Extract, Transform, Upload.
 
 ### 1.1. ⬇️ Extract & Load (E)
 
@@ -62,9 +61,8 @@ Two main options arise:
 
 While skipping failed upstream tasks with option 1 might seem like a resource optimization, it introduces significant risks. dbt transformations are usually cheap to run — especially with incremental models — and skipping them can create inconsistencies.
 
-<Notice type="warning">
-  Avoid relying on `--exclude` unless you're fully confident about the implications.
-</Notice>
+> [!warning]
+> Avoid relying on `--exclude` unless you're fully confident about the implications.
 
 For example, I have a job that transcribes audios (see <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/>).
 This job can partially succeed — transcribing some files but failing others due to server timeouts. To avoid redundant processing, I use a LEFT ANTI JOIN with the dbt-generated transcriptions table.
@@ -94,9 +92,8 @@ Before triggering the Upload (U) step, it’s important to inspect dbt results a
 
 Both strategies aim to prevent syncing stale or partial datasets while allowing the rest of the pipeline to proceed without a full rollback.
 
-<Notice type="info">
-  This selective approach protects downstream systems from receiving broken or incomplete data and reduces the risk of cascading failures.
-</Notice>
+> [!note]
+> This selective approach protects downstream systems from receiving broken or incomplete data and reduces the risk of cascading failures.
 
 #### 2.2.2. Handling Failures
 
@@ -318,9 +315,8 @@ Failures in upload jobs need no special treatment since there are no jobs that d
 
 Sometimes you don’t want the failure of a single task to stop an entire pipeline. For example, you may be downloading multiple tables from a CRM inside an ECS or EMR job. Each table is processed in series using a synchronous flow. If one fails, you'd still want the rest to run — and only after finishing, handle and report any failures. In parallel, multiple of these jobs (e.g., for different sources) may be triggered as independent async flows.
 
-<Notice type="info">
-  By default, Prefect raises exceptions when tasks fail, halting the flow. Setting `return_state=True` allows the flow to return a state object instead. This enables you to inspect and handle failures without interrupting the rest of the pipeline.
-</Notice>
+> [!note]
+> By default, Prefect raises exceptions when tasks fail, halting the flow. Setting `return_state=True` allows the flow to return a state object instead. This enables you to inspect and handle failures without interrupting the rest of the pipeline.
 
 In this section, we’ll first show how to implement this behavior using synchronous flows — a simpler and more intuitive starting point — and then how to handle it in asynchronous flows running in parallel.
 

@@ -57,9 +57,8 @@ For example, the <FancyLink linkText="Delta Lake Small File Compaction with OPTI
 
 Similarly, the <FancyLink linkText="DuckDB | Parquet File Sizes" url="https://duckdb.org/docs/guides/performance/file_formats.html#parquet-file-sizes"/> guide suggests that an optimal file size for Parquet files typically ranges **between 100 MB and 10 GB**. This broad range takes into account different use cases and workload requirements, allowing for flexibility while still emphasizing the importance of avoiding too small files.
 
-<Notice type="success">
-  Around **1 GB per file** is the usual target for optimal file size in data lakes.
-</Notice>
+> [!tip]
+> Around **1 GB per file** is the usual target for optimal file size in data lakes.
 
 ## 3. How to avoid it?
 
@@ -71,16 +70,14 @@ Ensuring that the files are of optimal size improves both performance and cost-e
 In Spark, you can control the number of files written by using the `sdf.repartition(n_files)` function, which allows you to specify the number of partitions (and hence the number of output files).
 Additionally, you can configure Spark to manage the size of files by setting the minimum and maximum number of rows per file through the configuration options `spark.sql.files.maxRecordsPerFile` and `spark.sql.files.minRecordsPerFile`.
 
-<Notice type="warning">
-  Using `repartition` can cause significant shuffling of data, which might lead to performance issues.
-  The number of partitions also affects Spark's parallelization; too few partitions can lead to underutilized resources, while too many can cause excessive overhead.
-</Notice>
+> [!warning]
+> Using `repartition` can cause significant shuffling of data, which might lead to performance issues.
+> The number of partitions also affects Spark's parallelization; too few partitions can lead to underutilized resources, while too many can cause excessive overhead.
 
 ### 3.2. Athena with dbt
 
-<Notice type="warning">
-  In AWS Athena, **there is no direct way to control the number of files** written during query execution.
-</Notice>
+> [!warning]
+> In AWS Athena, **there is no direct way to control the number of files** written during query execution.
 
 However, you can use dbt to manage this.
 By implementing a dbt post-hook, you can compact the files after they are written using the `OPTIMIZE` command, which merges smaller files into larger ones.
@@ -201,9 +198,8 @@ With Iceberg, you can query the `files` metadata, which gives you detailed infor
 | 0       | s3:/.../table/data/00001-4.parquet | \{1999-01-01, 02\} | 1            | 597                |
 | 0       | s3:/.../table/data/00002-5.parquet | \{1999-01-01, 03\} | 1            | 597                |
 
-<Notice type="info">
-  Showing only some relevant columns
-</Notice>
+> [!note]
+> Showing only some relevant columns
 
 From there, you can extract the desired information with a query like this:
 
@@ -225,9 +221,8 @@ According to the official documentation (<FancyLink linkText="Spark: Querying wi
 spark.sql(f"SELECT * FROM iceberg.{schema}.{table}.files")
 ```
 
-<Notice type="warning">
-  You must set up the `iceberg` catalog for this to work. Read <FancyLink linkText="Spark Configuration | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-configuration/" company="iceberg"/> for more info.
-</Notice>
+> [!warning]
+> You must set up the `iceberg` catalog for this to work. Read <FancyLink linkText="Spark Configuration | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-configuration/" company="iceberg"/> for more info.
 
 With that in mind, you can create the `export_table_stats` function to be called every time you write a table:
 
@@ -282,9 +277,8 @@ def export_table_stats(spark, tablename):
         # If it's not the wanted exception, raise it
         raise exc
 ```
-<Notice type="success">
-  Then you only need to call `export_table_stats(spark, tablename)` after every write.
-</Notice>
+> [!tip]
+> Then you only need to call `export_table_stats(spark, tablename)` after every write.
 
 While Iceberg can handle concurrent write operations, issues can sometimes occur when exporting stats.
 Therefore, retries with <FancyLink linkText="Backoff" url="https://github.com/litl/backoff" dark="true"/> are recommended.
@@ -554,9 +548,8 @@ This produces a table like this:
 |--------------------|----------------------|---------------------|---------------------|------------------|---------:|------------:|
 | default.deltatable | file:/Users/tuor/... | 2020-06-05 12:20:20 | 2020-06-05 12:20:20 |               [] |       10 |       12345 |
 
-<Notice type="info">
-  Showing only some relevant columns
-</Notice>
+> [!note]
+> Showing only some relevant columns
 
 You can read more about this in the docs <FancyLink linkText="Review Delta Lake table details with describe detail" url="https://docs.databricks.com/en/delta/table-details.html#review-delta-lake-table-details-with-describe-detail"/>.
 
@@ -571,9 +564,8 @@ What can you do to fix the data?
 
 For non-partitioned tables, it is quite straightforward. You can simply run `OPTIMIZE` to compact the table.
 
-<Notice type="warning">
-  The `OPTIMIZE` command can take a lot of time and might require a lot of processing power, depending on the table size. Proceed with caution.
-</Notice>
+> [!warning]
+> The `OPTIMIZE` command can take a lot of time and might require a lot of processing power, depending on the table size. Proceed with caution.
 
 ### 6.2. Partitioned tables
 
@@ -595,9 +587,8 @@ To do this, follow these steps:
 3. Optimize the new table.
 4. Validate the new table.
 
-<Notice type="info">
-  Optimizing the temporary table ensures all changes are made before removing the original table, minimizing downtime.
-</Notice>
+> [!note]
+> Optimizing the temporary table ensures all changes are made before removing the original table, minimizing downtime.
 
 You can create the new table with a `CREATE TABLE AS` statement:
 
@@ -613,10 +604,9 @@ CREATE TABLE {db}.{new}
   --Optionally add a WHERE clause to create it with a subset of data
 ```
 
-<Notice type="warning">
-  You might encounter issues when creating a table with all the data in one query.
-  In such cases, create the table with only some partitions and then use `INSERTS` to move all the data.
-</Notice>
+> [!warning]
+> You might encounter issues when creating a table with all the data in one query.
+> In such cases, create the table with only some partitions and then use `INSERTS` to move all the data.
 
 Once everything is good with the new table, you can recreate the original table:
 
@@ -632,9 +622,8 @@ You can read more about it at <FancyLink linkText="Iceberg evolutions" url="http
 
 However, there is a caveat:
 
-<Notice type="error">
-  Changing the partitioning of an Iceberg table **does not repartition old data**.
-</Notice>
+> [!danger]
+> Changing the partitioning of an Iceberg table **does not repartition old data**.
 
 To compact old partitions, you still need to move the data to a temporary table and then bring it back.
 You can follow a similar approach to what was described for Delta tables.

@@ -16,9 +16,8 @@ When you work with a team to develop some program/package/solution is it a **mus
 It is even a really good idea if you are working alone. One of the most common solutions is `git`.
 It is not limited to control code you can also use it to control documentation or any kind of files that can have different versions.
 
-<Notice type="warning">
-  Please use **git** you will be much more happy in the long term!
-</Notice>
+> [!tip]
+> Please use **git** you will be much more happy in the long term!
 
 If you are using git from the command line you should check <FancyLink linkText="Git guide" url="http://rogerdudler.github.io/git-guide/" company="default" dark="true"/> out.
 
@@ -34,10 +33,9 @@ There are some famous 'git flows' in the industry such as:
 I strongly recommend using `gitflow` since is the more complete solution and will give you more flexibility.
 In this post I am going to explain how it works.
 
-<Notice type="error">
-  **Disclaimer:** After some years, I'd suggest you go with <FancyLink linkText="Github flow" url="https://guides.github.com/introduction/flow/"/> whenever possible since it greatly simplifies the workflow.
-  And only switch to <FancyLink linkText="Gitflow" url="https://danielkummer.github.io/git-flow-cheatsheet/" company="default" dark="true"/> if you actually needed to have **2 long lived branches** (`develop` + `main`)
-</Notice>
+> [!danger]
+> **Disclaimer:** After some years, I'd suggest you go with <FancyLink linkText="Github flow" url="https://guides.github.com/introduction/flow/"/> whenever possible since it greatly simplifies the workflow.
+> And only switch to <FancyLink linkText="Gitflow" url="https://danielkummer.github.io/git-flow-cheatsheet/" company="default" dark="true"/> if you actually needed to have **2 long lived branches** (`develop` + `main`)
 
 
 ## 2. Gitflow
@@ -58,9 +56,8 @@ Once they are finished they get merged to the `develop` branch.
 
 ![Gitflow feature](../../images/posts/2019/0020-gitflow_feature.png)
 
-<Notice type="info">
-  **Feature** branches can have any name preceded by `feature/`
-</Notice>
+> [!info]
+> **Feature** branches can have any name preceded by `feature/`
 
 ### 2.2. Releases
 
@@ -72,9 +69,8 @@ When they are closed they must merge the new changes to the `master` branch and 
 
 After closing the release it will add a tag to the `master` branch with the version like X.X.X.
 
-<Notice type="info">
-  To add the correct tag **release** branches should have the name of the new version you are creating preceded by `release/` like `release/x.x.x`
-</Notice>
+> [!info]
+> To add the correct tag **release** branches should have the name of the new version you are creating preceded by `release/` like `release/x.x.x`
 
 ### 2.3. Hotfixes
 
@@ -94,9 +90,8 @@ I suggest that all **pull requests** are made instead of **finishing a feature**
 That means that when you finish a `feature` you should create a pull request to merge that `feature` into the `develop` branch.
 After everybody (or a portion of the team) has checked the code it can be merged.
 
-<Notice type="warning">
-  It is important to merge **features** into the **develop** branch, not the **master** one.
-</Notice>
+> [!warning]
+> It is important to merge **features** into the **develop** branch, not the **master** one.
 
 If you want you can also create pull requests to close a `release` or a `hotfix` but you need to make sure to do some things:
 

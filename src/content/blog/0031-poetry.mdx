@@ -13,9 +13,8 @@ tags: [Python, Tools]
 draft: false
 ---
 
-<Notice type="danger">
-  **Disclaimer:** A lot has changed since I wrote this. Even though `Poetry` still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
-</Notice>
+> [!danger]
+> **DISCLAIMER:** A lot has changed since I wrote this. Even though `Poetry` still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
 
 ## 0. Overview
 
@@ -50,9 +49,8 @@ This method will have some major problems:
 3. If requirements are added with `pip freeze` it will be difficult to differentiate between real dependencies and dependencies of the installed packages
 4. There will be no differentiation between **development dependencies** and **production dependencies**
 
-<Notice type="info">
-  It is true that you can create a `requirements_dev.txt` file to handle development dependencies but you will need to manually maintain it.
-</Notice>
+> [!note]
+> It is true that you can create a `requirements_dev.txt` file to handle development dependencies but you will need to manually maintain it.
 
 ### 1.2. Virtualenv / Conda
 
@@ -88,9 +86,8 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 ```
 
-<Notice type="info" className="mt-6">
-  By using the `pyproject.toml` file you will not need the `setup.py` file.
-</Notice>
+> [!tip]
+> By using the `pyproject.toml` file you will not need the `setup.py` file.
 
 Finally the `poetry.lock` is a snapshot with the exact versions install. It can be updated from the `pyproject.toml`.
 
@@ -162,9 +159,8 @@ You can check all the possible ways in the <FancyLink linkText="Poetry docs" url
 
 Once there is a `pyproject.toml` file you can install/update all the specified dependencies.
 
-<Notice type="info">
-  Those are also the commands you should run if the project was created and you are **fetching it from git**.
-</Notice>
+> [!tip]
+> Those are also the commands you should run if the project was created and you are **fetching it from git**.
 
 ```sh
 poetry install
@@ -174,9 +170,8 @@ poetry update
 poetry install --no-dev
 ```
 
-<Notice type="info" className="mt-6">
-  Both commands will create a the `poetry.lock` file with a snapshot of the installed packages (or update it if already present).
-</Notice>
+> [!info]
+> Both commands will create a the `poetry.lock` file with a snapshot of the installed packages (or update it if already present).
 
 ### 4.3. See dependencies
 

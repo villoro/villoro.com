@@ -33,9 +33,8 @@ When selecting drives, I prioritized models rated for 24/7 operation, essential 
 To keep my NAS as silent as possible, I added the <FancyLink linkText="WD Red SN700 1TB NVMe SSD" url="https://amzn.to/42rH5Vj" company="amazon" />.
 It's a NAS-grade SSD rated at 2000 TBW — a high endurance rating that should ensure a long lifespan.
 
-<Notice type="info">
-  My goal was to install TOS on the SSD, allowing the HDDs to go into sleep mode when not in use — reducing both wear and noise.
-</Notice>
+> [!note]
+> My goal was to install TOS on the SSD, allowing the HDDs to go into sleep mode when not in use — reducing both wear and noise.
 
 ### 1.4. The UPS
 
@@ -59,9 +58,8 @@ To install TOS on the SSD:
 
 This process will partition each selected SSD to install the OS. While the installation completes, it’s a good time to review your network setup for optimal connectivity.
 
-<Notice type="info">
-  I decided to install TOS only on the main SSD and then use the secondary SSD (not a NAS SSD) as cache.
-</Notice>
+> [!note]
+> I decided to install TOS only on the main SSD and then use the secondary SSD (not a NAS SSD) as cache.
 
 ## 3. Network Configuration
 
@@ -73,9 +71,8 @@ To resolve double NAT, you have two main options:
 
 Since I couldn’t enable bridge mode on my ISP router, I opted for the DMZ setup. Below are the steps that worked for me.
 
-<Notice type="warning">
-  Note: These steps may vary depending on your router models and network configuration. Refer to your router’s manual for model-specific instructions.
-</Notice>
+> [!warning]
+> Note: These steps may vary depending on your router models and network configuration. Refer to your router’s manual for model-specific instructions.
 
 ### 3.1. Reserve an IP for your secondary router
 
@@ -97,16 +94,14 @@ Once the IP is reserved, follow these steps to set up the DMZ:
 
 Once TOS installation is complete, you can create your superuser account. Afterward, you’re ready to configure storage on the NAS.
 
-<Notice type="warning">
-  You can use letters, numbers, and special characters in your passwords, with a maximum length of 64 characters.
-</Notice>
+> [!note]
+> You can use letters, numbers, and special characters in your passwords, with a maximum length of 64 characters.
 
 ### 4.1. Creating a storage pool
 
-<Notice type="warning">
-  You might want to first create the storage pool for the SSDs and install the apps.
-  Once done, then create the storage pool for the HDs. This will help reducing noise.
-</Notice>
+> [!tip]
+> You might want to first create the storage pool for the SSDs and install the apps.
+> Once done, then create the storage pool for the HDs. This will help reducing noise.
 
 The first step is to choose a RAID configuration. Here are some general recommendations:
 * **TRAID**: Suitable if you have disks of different sizes, as it minimizes wasted space. It’s also beneficial if you plan to add more disks in the future since TRAID doesn’t require volume recreation.
@@ -114,9 +109,8 @@ The first step is to choose a RAID configuration. Here are some general recommen
 
 For storage formats, you can choose between `EXT4` and `BTRFS`. While both have advantages, I opted for `EXT4`, as it is often regarded as more stable. For a more detailed comparison, refer to <FancyLink linkText="BTRFS vs EXT4 | Terramaster forum" url="https://forum.terra-master.com/en/viewtopic.php?t=1851#:~:text=Re%3A%20BTRFS%20vs%20EXT4,-Post%20by%20TMzethar&text=The%20ext4%20format%20will%20retain,stable%20in%20terms%20of%20stability" company="terramaster"/>.
 
-<Notice type="info">
-  HDDs will be noisy during storage pool creation (RAID synchronization). Noise will decrease once synchronization completes and during regular usage.
-</Notice>
+> [!note]
+> HDDs will be noisy during storage pool creation (RAID synchronization). Noise will decrease once synchronization completes and during regular usage.
 
 ### 4.2. Hyper Cache
 
@@ -136,17 +130,15 @@ The NAS model I chose has two 2.5 Gbps Ethernet ports, which typically support f
 
 Note that your transfer speeds may be limited by the RAID configuration and the specific hard drives in use. For example, with the Seagate IronWolf Pro HDDs I installed, speeds top out at around 250 MB/s due to HDD limitations.
 
-<Notice type="info">
-  For optimal performance, I recommend transferring data over Ethernet rather than using an external USB drive.
-</Notice>
+> [!tip]
+> For optimal performance, I recommend transferring data over Ethernet rather than using an external USB drive.
 
 ## 5. Connecting locally (SSH)
 
 When setting up applications, it can be very useful to access the NAS via a terminal (`ssh`), allowing direct command-line interaction.
 
-<Notice type="danger">
-  Only enable SSH if you are comfortable using it and aware of the security implications.
-</Notice>
+> [!danger]
+> Only enable SSH if you are comfortable using it and aware of the security implications.
 
 To enable SSH on your NAS:
 
@@ -166,9 +158,8 @@ Replace:
 * `[ip]` with your NAS IP address.
 * `[port]` with the SSH port you specified.
 
-<Notice type="warning">
-  To minimize security risks, disable `SSH` once setup is complete and you no longer need terminal access.
-</Notice>
+> [!warning]
+> To minimize security risks, disable `SSH` once setup is complete and you no longer need terminal access.
 
 ## 6. Installing Apps
 
@@ -189,22 +180,19 @@ Plex setup is simple:
 
 For easier access, I recommend creating the Plex libraries within the `Public` folder.
 
-<Notice type="warning">
-  You might have problems claiming the server if you are accessing the NAS over tailscale.
-  To set it up, **use the NAS IP** instead.
-</Notice>
+> [!warning]
+> You might have problems claiming the server if you are accessing the NAS over tailscale.
+> To set it up, **use the NAS IP** instead.
 
 ### 6.2. qBittorrent
 
 Upon installing qBittorrent, an `admin` user is created with the password `adminadmin`.
 
-<Notice type="info">
-  If you used the community app, a random password may be generated. Check the logs for this information.
-</Notice>
+> [!note]
+> If you used the community app, a random password may be generated. Check the logs for this information.
 
-<Notice type="warning">
-  For security, change the default password immediately: go to `Tools/Options/Web UI/Authentication`.
-</Notice>
+> [!warning]
+> For security, change the default password immediately: go to `Tools/Options/Web UI/Authentication`.
 
 Suggested Download Configuration:
 

@@ -35,9 +35,8 @@ def message_to_person(message, name):
     return "{} {}".format(send_message(), name)
 ```
 
-<Notice type="info" className="mt-6">
-  We can pass **any** object as a parameter to a function. We can even pass a **function** as a parameter.
-</Notice>
+> [!tip]
+> We can pass **any** object as a parameter to a function. We can even pass a **function** as a parameter.
 
 ## 2. Decorators basics
 
@@ -90,9 +89,8 @@ wait_3_seconds_and_print()
   Done in 3.00 seconds
 </TerminalOutput>
 
-<Notice type="info" className="mt-6">
-  The `*args` parameter used at `timed` and `func` is a trick to preserve whatever parameter is passed to the original function.
-</Notice>
+> [!tip]
+> The `*args` parameter used at `timed` and `func` is a trick to preserve whatever parameter is passed to the original function.
 
 Now we have the `timeit` decorator, the `wait_3_seconds` and the `wait_3_seconds_and_print` functions. Those both will wait 3 seconds but the second one will print the execution time.
 
@@ -196,9 +194,8 @@ hello_argh()
   After function
 </TerminalOutput>
 
-<Notice type="info" className="mt-6">
-  This decorator allows the user to decide what to print before the main function.
-</Notice>
+> [!note]
+> This decorator allows the user to decide what to print before the main function.
 
 ## 5. Some cool examples
 
@@ -230,9 +227,8 @@ def supertimeit(output_func=print):
     return timeit_decorator
 ```
 
-<Notice type="info">
-  By adding `@functools.wraps(func)` the documentation of the original function will be preserved
-</Notice>
+> [!tip]
+> By adding `@functools.wraps(func)` the documentation of the original function will be preserved
 
 The default usage will be the same as the `timeit` decorator used before:
 
@@ -289,9 +285,8 @@ def infallible(output_func=print):
     return infallible_decorator
 ```
 
-<Notice type="info" className="mt-6">
-  `func.__name__` is a way to get the function name as a string
-</Notice>
+> [!tip]
+> `func.__name__` is a way to get the function name as a string
 
 To see how it works let's create a function that crashes:
 
@@ -307,9 +302,8 @@ wrong_math(1)
   Error in 'wrong_math': division by zero
 </TerminalOutput>
 
-<Notice type="success"  className="mt-6">
-  Now we see a message when it crashes
-</Notice>
+> [!success]
+> Now we see a message when it crashes
 
 ### 5.3. Using them both
 

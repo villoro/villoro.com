@@ -33,9 +33,8 @@ pip install luigi
 **Luigi** work with tasks that are defined with classes that extend the `luigi.Task` class.
 The basic usage is to overwrite the `run` function (with what to do) and the `output` (with the file that will output).
 
-<Notice type="warning">
-  All **Luigi** tasks need to end with writing a file. This is how luigi tracks which tasks are completed.
-</Notice>
+> [!warning]
+> All **Luigi** tasks need to end with writing a file. This is how luigi tracks which tasks are completed.
 
 For example a basic task would look like:
 
@@ -150,9 +149,8 @@ class DoAllTask(luigi.WrapperTask):
         return RegisterTask(self.mdate), ReportTask(self.mdate)
 ```
 
-<Notice type="info">
-  Since `DoAllTask` does not need to do anything it extends `luigi.WrapperTask`.
-</Notice>
+> [!info]
+> Since `DoAllTask` does not need to do anything it extends `luigi.WrapperTask`.
 
 To run the example you first need to start the luigi server with:
 
@@ -187,9 +185,8 @@ If you select a task (for example `DoAllTask`) you can see the dependency tree.
 
 ![Luigi Pipeline SVG](../../images/posts/2020/0029-luigi_pipeline_svg.jpg)
 
-<Notice type="info">
-  Remember to unmark the `Hide Done` button to see all task.
-</Notice>
+> [!tip]
+> Remember to unmark the `Hide Done` button to see all task.
 
 It is also possible view the dependency graph created with `D3`.
 
@@ -406,9 +403,8 @@ user=ubuntu
 It is important to use the full path for the command that **supervisor** will run.
 Be careful to set `user` to one that has visibility of the `luigid` file.
 
-<Notice type="info">
-  Remember you can call `whereis luigid` to get the full path
-</Notice>
+> [!tip]
+> Remember you can call `whereis luigid` to get the full path
 
 Then start supervisor:
 
@@ -481,9 +477,8 @@ python src/master.py
 deactivate
 ```
 
-<Notice type="warning">
-  Do not forget the `#!/bin/bash` part. If you do, the `source` command won't work. 
-</Notice>
+> [!warning]
+> Do not forget the `#!/bin/bash` part. If you do, the `source` command won't work.
 
 This script does some things:
 

@@ -47,9 +47,8 @@ The notebook becomes easier to understand, easier to keep in git, and easier to 
 
 Part of that comes from the fact that a marimo notebook is really just a small Python app.
 
-<Notice type="success">
-  A marimo notebook is just a Python app.
-</Notice>
+> [!tip]
+> A marimo notebook is just a Python app.
 
 It is not a special document format with some Python inside it.
 It is Python code that happens to render as a notebook.
@@ -79,9 +78,8 @@ It is updating the parts of the notebook that depend on values that changed.
 The key part is that variables should have a single definition.
 You should not keep redefining the same variable in different cells.
 
-<Notice type="error">
-  In marimo, redefining the same variable in multiple cells is not possible since it raises and exception.
-</Notice>
+> [!danger]
+> In marimo, redefining the same variable in multiple cells is not possible since it raises and exception.
 
 So this kind of pattern:
 
@@ -122,10 +120,9 @@ So if the first cell changes, the second one updates automatically.
 At first I thought this would feel a bit annoying, but I actually think it is one of the best things about marimo.
 It forces a cleaner structure, and that makes the notebook easier to understand later.
 
-<Notice type="info">
-  The nice part is not only that the notebook updates automatically.
-  It is that the update follows the dependencies between cells, so the notebook behaves more like a DAG than like a mutable scratchpad.
-</Notice>
+> [!note]
+> The nice part is not only that the notebook updates automatically.
+> It is that the update follows the dependencies between cells, so the notebook behaves more like a DAG than like a mutable scratchpad.
 
 ## 3. Why being a plain Python file matters
 
@@ -139,9 +136,8 @@ That is a much better fit for git than a traditional notebook file.
 It also makes the notebook feel less "special".
 It can live inside a normal project, import your code, and evolve like the rest of the codebase.
 
-<Notice type="success">
-  If the notebook is worth keeping, it is worth having clean diffs and normal code review.
-</Notice>
+> [!tip]
+> If the notebook is worth keeping, it is worth having clean diffs and normal code review.
 
 Here is a very small example:
 
@@ -171,9 +167,8 @@ if __name__ == "__main__":
 
 The nice part is that there is no special format involved here, just regular Python code.
 
-<Notice type="info">
-  This is also why marimo notebooks are much easier to version and review.
-</Notice>
+> [!note]
+> This is also why marimo notebooks are much easier to version and review.
 
 And I think that matters a lot.
 If a notebook is useful enough to keep, then it is useful enough to deserve clean diffs and normal code review.
@@ -236,9 +231,8 @@ controls
 I think `hstack` and `vstack` are especially handy because they let you organize the notebook a bit better.
 Without them, the widgets can end up feeling scattered.
 
-<Notice type="info">
-  This is enough to turn a notebook into a small internal tool without leaving Python.
-</Notice>
+> [!note]
+> This is enough to turn a notebook into a small internal tool without leaving Python.
 
 ## 5. SQL integration and plotting
 
@@ -270,9 +264,8 @@ So for data exploration, the combination is very nice:
 * plot it
 * update the inputs and let the notebook refresh
 
-<Notice type="info">
-  I think this is one of the strongest parts of marimo for data work: SQL and plots are not bolted on, they fit naturally into the same reactive workflow.
-</Notice>
+> [!note]
+> I think this is one of the strongest parts of marimo for data work: SQL and plots are not bolted on, they fit naturally into the same reactive workflow.
 
 ## 6. A real example: recovering deleted S3 files
 
@@ -296,9 +289,8 @@ That flow maps very naturally to marimo.
 
 Here is a simplified subset of the notebook, just to show the structure:
 
-<Notice type="info">
-  This is only a small subset of the real notebook, just enough to show how the interface is structured.
-</Notice>
+> [!note]
+> This is only a small subset of the real notebook, just enough to show how the interface is structured.
 
 ```python
 import marimo
@@ -363,9 +355,8 @@ I like this example because it combines most of the things I mentioned before:
 * reactive cells
 * a notebook that can also behave like a small app
 
-<Notice type="success">
-  This is the kind of notebook that would feel awkward as a plain script and fragile in Jupyter, but feels very natural in marimo.
-</Notice>
+> [!tip]
+> This is the kind of notebook that would feel awkward as a plain script and fragile in Jupyter, but feels very natural in marimo.
 
 And I think this is exactly the kind of workflow where marimo makes a lot of sense.
 

@@ -57,9 +57,8 @@ You can also add dependencies dynamically to a script:
 uv add --script example.py 'requests<3' 'rich'
 ```
 
-<Notice type="info" className="mt-6">
-  More info at <FancyLink linkText="Declaring script dependencies | Astral uv" url="https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies"/>
-</Notice>
+> [!note]
+> More info at <FancyLink linkText="Declaring script dependencies | Astral uv" url="https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies"/>
 
 This makes `uv` an excellent choice for quick experiments or one-off scripts that need isolated dependencies.
 
@@ -87,9 +86,8 @@ You can also specify a Python version:
 uv venv --python=3.11 .venv
 ```
 
-<Notice type="warning" className="mt-6">
-  If a `.python-version` file exists, `uv` will automatically use the specified version.
-</Notice>
+> [!note]
+> If a `.python-version` file exists, `uv` will automatically use the specified version.
 
 ### 1.5. Installing Dependencies
 
@@ -262,10 +260,9 @@ For automation, add this to GitHub Actions:
   ```
 </Accordion>
 
-<Notice type="info">
-  I strongly suggest you set up <FancyLink linkText="Trusted publishers in pypi" url="https://docs.pypi.org/trusted-publishers/adding-a-publisher/"/> to avoid adding tokens.
-  It's the prefered way of uploading packages to pypi.
-</Notice>
+> [!tip]
+> I strongly suggest you set up <FancyLink linkText="Trusted publishers in pypi" url="https://docs.pypi.org/trusted-publishers/adding-a-publisher/"/> to avoid adding tokens.
+> It's the prefered way of uploading packages to pypi.
 
 ## 4. Benchmarks: How Fast Are `uv` and `ruff`?
 

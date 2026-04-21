@@ -59,9 +59,8 @@ The `base.html` file should have the basic structure, for example:
 </html>
 ```
 
-<Notice type="info" className="mt-6">
-  The template I created in github has a `navbar` and `footer` but the basics are the same.
-</Notice>
+> [!note]
+> The template I created in github has a `navbar` and `footer` but the basics are the same.
 
 Then we can create the `about.html` page template using:
 
@@ -81,9 +80,8 @@ Then we can create the `about.html` page template using:
 {% endblock %}
 ```
 
-<Notice type="info">
-  `{{ title }}` and `{{ description }}` are parameters that we will pass to the flask template.
-</Notice>
+> [!info]
+> `{{ title }}` and `{{ description }}` are parameters that we will pass to the flask template.
 
 
 ## 3. Flask app and freezer
@@ -106,9 +104,8 @@ if __name__ == "__main__":
     APP.run(debug=True)
 ```
 
-<Notice type="info">
-  As you can see we are passing `title` and `description` as parameters as commented before.
-</Notice>
+> [!note]
+> As you can see we are passing `title` and `description` as parameters as commented before.
 
 
 Now you can run `python src/index.py` to view the app at `localhost:5000`.
