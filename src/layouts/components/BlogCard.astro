@@ -9,7 +9,7 @@ const { title, image, date, category } = data.data;
 ---
 
 <div class="bg-body dark:bg-darkmode-body">
-  <a href={`/${blog_folder}/${data.slug}`}>
+  <a href={`/${blog_folder}/${data.data.slug || data.id}`}>
     {image && (
       <>
         <ImageMod

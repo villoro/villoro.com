@@ -36,7 +36,7 @@ const similarItems = (
   let scoredItems: { item: any; score: number }[] = [];
 
   allItems.forEach((item: any) => {
-    if (item.slug === currentItem.slug) return;
+    if ((item.data?.slug || item.id) === (currentItem.data?.slug || currentItem.id)) return;
 
     const itemCategories = item.data.category ? [item.data.category] : [];
     const itemTags = item.data.tags ? item.data.tags : [];
