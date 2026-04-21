@@ -176,7 +176,7 @@ I also export all the needed scripts to download all dbt code.
 ```docker
 FROM dbt/base
 
-# Instll prefect
+# Install prefect
 ARG PREFECT_VERSION=2.14.20 # Should match poetry.lock
 RUN python -m pip install prefect==${PREFECT_VERSION}
 

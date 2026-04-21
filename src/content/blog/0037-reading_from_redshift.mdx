@@ -10,7 +10,7 @@ description: |
 date: 2021-06-08
 image: "/images/blog/0037-reading-from-redshift-with-pyarrow.jpg"
 category: DE
-tags: [Python, DE, SQL, AWS, Redshift]
+tags: [Python, DE, SQL, AWS]
 draft: false
 ---
 
@@ -267,13 +267,13 @@ In this case we want to do another test where we apply 2 filters at the same tim
 In this case we see how the new `pyarrow.dataset` introduced in **pyarrow 3.0.0** performs way better.
 
 What is happening is that pyarrow is able to push down the filter and take advantage of how parquet files are actually written.
-That means that **pyarrow** is only retriving some `row_groups` and therefore less data needs to be read.
+That means that **pyarrow** is only retrieving some `row_groups` and therefore less data needs to be read.
 
 You can find more info about how parquet files are written in <FancyLink linkText="How Parquet Files are Written" url="http://cloudsqale.com/2020/05/29/how-parquet-files-are-written-row-groups-pages-required-memory-and-flush-operations/" company="default" dark="true"/>.
 
 ## 6. Conclusions
 
-To sum it up doing unloads is a more efficent way of consuming large quantities of data from redshift.
+To sum it up doing unloads is a more efficient way of consuming large quantities of data from redshift.
 
 There are are different ways of `unloading`.
 If the table we are consuming is not changing past data we suggest only `unloading` the last day/month (or other time windows) to reduce the performance cost.

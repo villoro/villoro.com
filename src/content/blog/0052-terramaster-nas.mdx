@@ -77,13 +77,13 @@ Since I couldn’t enable bridge mode on my ISP router, I opted for the DMZ setu
   Note: These steps may vary depending on your router models and network configuration. Refer to your router’s manual for model-specific instructions.
 </Notice>
 
-### 3.1. Reserve an IP for you secondary router
+### 3.1. Reserve an IP for your secondary router
 
 To set up a DMZ, the first step is to assign a static IP to your secondary router:
 
 1. Locate the **MAC address** of your secondary router.
 2. Access your **ISP router’s configuration** page.
-2. In the DHCP settings, **create a DHCP binding** for the secondary router, preferably using its current IP for simplicity.
+3. In the DHCP settings, **create a DHCP binding** for the secondary router, preferably using its current IP for simplicity.
 
 ### 3.2. DMZ
 
@@ -256,12 +256,12 @@ tailscale set --auto-update
 
 ### 6.4. Docker and portainer
 
-This is quite straighforward. The only important thing is that default Portainer credentials are:
+This is quite straightforward. The only important thing is that default Portainer credentials are:
 
 * **user**: `admin`
 * **password**: `admin`
 
-Remeber to change them at the first login.
+Remember to change them at the first login.
 
 ## 7. UPS Configuration
 

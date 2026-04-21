@@ -51,7 +51,7 @@ For multiuser use `high concurrency`.
 ##### 1.1.1.2. Databricks runtime version
 
 Databricks runtimes are the set of core components that run on Databricks clusters.
-This will decide the `python`, `R` and `spark` version as well as some pre instaled libraries.
+This will decide the `python`, `R` and `spark` version as well as some pre-installed libraries.
 
 You can read more about the versions of each databricks runtime in <FancyLink linkText="Databricks releases notes" url="https://docs.databricks.com/release-notes/runtime/supported.html#release-notes"/>.
 
@@ -61,7 +61,7 @@ You can read more about the versions of each databricks runtime in <FancyLink li
 
 ##### 1.1.1.4. Autopilot
 
-The first paramter is `Enable Autoscaling`.
+The first parameter is `Enable Autoscaling`.
 This will allow to create more workers for the cluster if needed and of course it will mean that the cost might increase as you need more machines.
 
 There is the `terminate after` param that sets the minutes of inactivity before shutting down the cluster.
@@ -174,7 +174,7 @@ To do so you only need to use some magic commands like `%python` to work with py
 
 The languages you can use are:
 
-| language       | preffix |
+| language       | prefix |
 |----------------|---------|
 | python         | %python |
 | markdown       | %md     |
@@ -236,9 +236,9 @@ It is the equivalent of an `iframe` in HTML.
 
 Databricks come with a folder where you can store data.
 It is under the path `/dbfs/FileStore`.
-Hower I suggest that you mount your own external unit and store the data there.
+However I suggest that you mount your own external unit and store the data there.
 
-One important aspect for reading and writting data is the paths.
+One important aspect for reading and writing data is the paths.
 Imagine that you have a table stored in `/dbfs/mnt/blob/data.delta`.
 To read that in different languages you should:
 
@@ -252,7 +252,7 @@ To read that in different languages you should:
 ## 4. Scheduling jobs
 
 You can schedule jobs with the section `Jobs`.
-It works like the Linux **chron**.
+It works like the Linux **cron**.
 
 <Notice type="warning">
   It should **only** be used for small tasks since **it is not an orchestrator** like **Airflow** or **Azure Data Factory (ADF)**.

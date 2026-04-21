@@ -9,7 +9,7 @@ description: |
 date: 2021-04-05
 image: "/images/blog/0036-regex.jpg"
 category: python
-tags: [Python, Regex]
+tags: [Python]
 draft: false
 ---
 
@@ -32,7 +32,7 @@ Brackets (`[` and `]`) are used for specifying which characters are allowed. It 
 * `[^a-c]`: anything but `a`, `b` or `c`
 * `[0-9a-fA-F]`: any number or any letter between `a` and `f` or between `A` and `F`. This represents hexadecimal
 
-### 1.1. Position
+### 1.2. Position
 
 It is possible to specify matches based on the position with:
 
@@ -41,7 +41,7 @@ It is possible to specify matches based on the position with:
 
 For example `^ab` will only match the first `ab` in `ab abc ab` (<FancyLink linkText="Demo" url="https://regex101.com/r/TJzoA7/2"/>)
 
-### 1.2. Classes
+### 1.3. Classes
 
 There are certain keywords that will match different types of characters.
 For example `\d` will match any digit (any of those `0123456789`).
@@ -55,7 +55,7 @@ The main classes available are:
 | `\w`  | Alphanumeric and/or `_`                 | <FancyLink linkText="w_example" url="https://regex101.com/r/IkIMMm/1"/> | `\W`    |
 | `\s`  | Whitespaces and equivalents (like tabs) | <FancyLink linkText="s_example" url="https://regex101.com/r/oSziKA/1"/> | `\S`    |
 
-### 1.3. Quantifiers
+### 1.4. Quantifiers
 
 It is possible to specify how many times a letter or group (defined in the next section) should appear.
 
@@ -69,10 +69,10 @@ As an example we want the letter `a` + the letter `b` which should appear differ
 | `ab{2}`  | `a` + `b` exactly 2 times                       | <FancyLink linkText="example_ab{2}" url="https://regex101.com/r/TYBz4I/1"/>   |
 | `ab{2,5}`| `a` + `b` between 2 and 5 times (inclusive)     | <FancyLink linkText="example_ab{2,5}" url="https://regex101.com/r/b4oI9X/1"/> |
 
-### 1.4. Groups
+### 1.5. Groups
 
 It is possible to define **groups** in regex.
-They are use to capture part of the text and are declared with parenthesis `()`.
+They are used to capture part of the text and are declared with parenthesis `()`.
 We can use any regex inside the group. For example if we want to math `hello`:
 
 * `(hello)`: capturing group (<FancyLink linkText="Demo" url="https://regex101.com/r/8W86e1/2"/>) 
@@ -80,7 +80,7 @@ We can use any regex inside the group. For example if we want to math `hello`:
 * `(?P<name>hello)`: same but giving the group a name (`name` in this case)
 * `(hello|bye):` **or** operator in groups.
 
-### 1.5. Boundaries
+### 1.6. Boundaries
 
 It is possible to declare a boundary with `\b` (with the inverse `\B`).
 A boundary means that is surrounded with a non word type character.
@@ -96,7 +96,7 @@ It is easier to understand it with some examples:
 | `possible\B`   | Impossible to do                                                   | I'm possible :)                                                   | <span style="background-color:aquamarine;">possible</span>r | <FancyLink linkText="boundaries_4" url="https://regex101.com/r/jL4Lkv/1"/> |
 | `\Bpossible`   | Im<span style="background-color:aquamarine;">possible</span> to do | I'm possible :)                                                   | possibler                                                   | <FancyLink linkText="boundaries_5" url="https://regex101.com/r/bnTUnx/1"/> |
 
-### 1.6. Flags
+### 1.7. Flags
 
 It is possible to change the behaviour of the regex with some flags:
 
@@ -104,7 +104,7 @@ It is possible to change the behaviour of the regex with some flags:
 * `(?m)`: **multi line**. When this is active the anchor `^` will be start of line instead of start of text (<FancyLink linkText="Demo" url="https://regex101.com/r/Ol3N99/1"/>)
 * `(?s)`: **single line**.
 
-### 1.7. Greedy vs lazy
+### 1.8. Greedy vs lazy
 
 Imagine that we have the following text:
 
@@ -153,7 +153,7 @@ out = re.match(r"hello", "hello world")
 
 ### 2.2. `match` vs `search`
 
-We have use `re.match` since it's faster. However this only looks at the begining of the string.
+We have use `re.match` since it's faster. However this only looks at the beginning of the string.
 To do a more in deep search we can use `re.search`.
 
 Let's compare them by doing checking different regexs against the following text:

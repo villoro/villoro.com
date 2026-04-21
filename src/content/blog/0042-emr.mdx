@@ -82,7 +82,7 @@ With that, you should be able to use that package.
 
 ### 2.2. Python packages
 
-The simplest way of adding a Python package is by <FancyLink linkText="Setting up a bootstrap action" url="https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-bootstrap.html" company="aws"/> (as recomended in <FancyLink linkText="QA: EMR install python libraries" url="https://repost.aws/knowledge-center/emr-install-python-libraries" company="aws"/>)
+The simplest way of adding a Python package is by <FancyLink linkText="Setting up a bootstrap action" url="https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-bootstrap.html" company="aws"/> (as recommended in <FancyLink linkText="QA: EMR install python libraries" url="https://repost.aws/knowledge-center/emr-install-python-libraries" company="aws"/>)
 
 The main problem with that is that you'll be downloading the package at runtime. You could download the package (an `egg` or a `wheel`) to S3 and install it from there, but it adds complexity.
 

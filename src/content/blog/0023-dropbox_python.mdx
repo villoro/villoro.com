@@ -1,7 +1,7 @@
 ---
 slug: dropbox-python
-title: Reading and writting files with python using Dropbox
-meta_title: Reading and writting files with python using Dropbox
+title: Reading and writing files with python using Dropbox
+meta_title: Reading and writing files with python using Dropbox
 description: Learn how to read, write and delete all kind of files using the dropbox library for python.
 date: 2019-09-14
 image: "/images/blog/0023-dropbox-warehouse.jpg"
@@ -31,7 +31,7 @@ To do so go to <FancyLink linkText="Dropbox developers" url="https://www.dropbox
 
 ![Dropbox Create APP](../../images/posts/2019/0023-dropbox_create_app.png)
 
-Register a new app that will use **Dropbox API** and will acces only the **app folder**.
+Register a new app that will use **Dropbox API** and will access only the **app folder**.
 Once you have create the app go to the app settings page and create a token.
 
 ![Dropbox Get Token](../../images/posts/2019/0023-dropbox_get_token.png)
@@ -67,7 +67,7 @@ with io.BytesIO(txt.encode()) as stream:
 ```
 
 <Notice type="warning">
-  It is important to run `stream.seek(0)` to go to the begining of the stream.
+  It is important to run `stream.seek(0)` to go to the beginning of the stream.
 </Notice>
 
 ## 3. Writting files to dropbox
@@ -122,7 +122,7 @@ with io.StringIO() as stream:
 
 ### 3.3. Write a yaml
 
-It is very similar to writting a `json`:
+It is very similar to writing a `json`:
 
 ```python
 import yaml

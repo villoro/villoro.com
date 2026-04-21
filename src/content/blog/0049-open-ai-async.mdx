@@ -6,7 +6,7 @@ description: Learn how to implement multiple concurrent async calls to the OpenA
 date: 2024-09-25
 image: /images/blog/0049-Async-calls-with-rate-limiter.jpg
 category: AI
-tags: [Async, API, Best Practices, DE, OpenAI, Python, Rate Limiting]
+tags: [API, Best Practices, DE, OpenAI, Python]
 draft: false
 ---
 
@@ -590,7 +590,7 @@ def split_valid_and_invalid_records(records, pydantic_model):
 
 ## 5. Doing batches
 
-The idea is to initiallize the `RateLimiter` with the limits for each endpoint and to then do all concurrent calls asyncronously with `asyncio.gather`.
+The idea is to initialize the `RateLimiter` with the limits for each endpoint and to then do all concurrent calls asynchronously with `asyncio.gather`.
 Finally since the outputs are always a pydantic class we can easily transform the results to a pandas dataframe so that we can export it as a table.
 
 ### 5.1. Transcriptions in batches
@@ -608,7 +608,7 @@ async def async_call_open_ai_transcription(files, gpt_model=DEFAULT_MODEL):
     rt.set_rate_limiter(MAX_REQUESTS_PER_MIN)
 
     msg_jobs = f"(n_jobs={u.RATE_LIMITER_SEMAPHORE._value})"
-    logger.info(f"Processing {len(files)} calls to OpenAI asyncronously {msg_jobs}")
+    logger.info(f"Processing {len(files)} calls to OpenAI asynchronously {msg_jobs}")
     tasks = [call_openai_transcription(x, gpt_model=gpt_model) for x in files]
     results = await asyncio.gather(*tasks, return_exceptions=True)
     logger.info(
@@ -637,7 +637,7 @@ async def async_call_open_ai_chat(
     rt.set_rate_limiter(MAX_REQUESTS_PER_MIN, MAX_TOKENS_PER_MIN)
 
     msg_jobs = f"(n_jobs={u.RATE_LIMITER_SEMAPHORE._value})"
-    logger.info(f"Processing {df.shape[0]} calls to OpenAI asyncronously {msg_jobs}")
+    logger.info(f"Processing {df.shape[0]} calls to OpenAI asynchronously {msg_jobs}")
     tasks = [
         call_openai_chat(
             prompt, pydantic_model=pydantic_model, gpt_model=gpt_model, **row

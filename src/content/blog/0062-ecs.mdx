@@ -466,7 +466,7 @@ We keep **testing**, **venv publishing**, and **runtime image pushes** as separa
 ### 4.1. CI: Tests with `uv`
 
 <TerminalOutput color="stone">
-  `.gihtub/workflows/CI.yaml`
+  `.github/workflows/CI.yaml`
 </TerminalOutput>
 ```yaml
 name: CI
@@ -506,7 +506,7 @@ jobs:
 Triggers when app code, dependency files, or deployment config changes. Produces a **versioned quartet**: `pyproject_<v>.toml`, `uv_<v>.lock`, `entrypoint_<v>.py`, `venv_<v>.tar.gz`.
 
 <TerminalOutput color="stone">
-  `.gihtub/workflows/CD_venv.yaml`
+  `.github/workflows/CD_venv.yaml`
 </TerminalOutput>
 ```yaml
 name: CD Venv
@@ -562,7 +562,7 @@ jobs:
 This job changes infrequently (scripts or the runtime Dockerfile). It tags with the version from `pyproject.toml` and with `latest`.
 
 <TerminalOutput color="stone">
-  `.gihtub/workflows/CD_docker.yaml`
+  `.github/workflows/CD_docker.yaml`
 </TerminalOutput>
 ```yaml
 name: CD Docker
