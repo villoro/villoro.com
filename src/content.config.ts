@@ -1,14 +1,15 @@
 import { defineCollection, z } from "astro:content";
+import { glob } from "astro/loaders";
 
-// Post collection schema
 const blogCollection = defineCollection({
-  type: "content",
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
   schema: z.object({
     title: z.string(),
     meta_title: z.string().optional(),
     description: z.string().optional(),
     date: z.date().optional(),
     image: z.string().optional(),
+    slug: z.string().optional(),
     author: z.string().default("Admin"),
     category: z.string().default("Others"),
     tags: z.array(z.string()).default(["Others"]),
@@ -16,32 +17,8 @@ const blogCollection = defineCollection({
   }),
 });
 
-// Author collection schema
-const authorsCollection = defineCollection({
-  type: "content",
-  schema: z.object({
-    title: z.string(),
-    meta_title: z.string().optional(),
-    email: z.string().optional(),
-    image: z.string().optional(),
-    description: z.string().optional(),
-    social: z
-      .array(
-        z
-          .object({
-            name: z.string().optional(),
-            icon: z.string().optional(),
-            link: z.string().optional(),
-          })
-          .optional(),
-      )
-      .optional(),
-    draft: z.boolean().optional(),
-  }),
-});
-
 const aboutCollection = defineCollection({
-  type: "content",
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/about" }),
   schema: z.object({
     title: z.string(),
     meta_title: z.string().optional(),
@@ -60,7 +37,7 @@ const aboutCollection = defineCollection({
 });
 
 const homepageCollection = defineCollection({
-  type: "content",
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/homepage" }),
   schema: z.object({
     banner: z.object({
       image: z.string().optional(),
@@ -98,23 +75,8 @@ const homepageCollection = defineCollection({
   }),
 });
 
-// Pages collection schema
-const pagesCollection = defineCollection({
-  type: "content",
-  schema: z.object({
-    title: z.string(),
-    meta_title: z.string().optional(),
-    description: z.string().optional(),
-    image: z.string().optional(),
-    draft: z.boolean().optional(),
-  }),
-});
-
-// Export collections
 export const collections = {
   blog: blogCollection,
-  authors: authorsCollection,
-  pages: pagesCollection,
   about: aboutCollection,
   homepage: homepageCollection,
 };

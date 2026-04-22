@@ -9,18 +9,20 @@ const { title, image, date, category } = data.data;
 ---
 
 <div class="bg-body dark:bg-darkmode-body">
-  <a href={`/${blog_folder}/${data.slug}`}>
+  <a href={`/${blog_folder}/${data.data.slug || data.id}`}>
     {image && (
       <>
-        <ImageMod
-          src={image}
-          class={"mb-6 w-full rounded"}
-          width={480}
-          height={360}
-          alt={title}
-          format="webp"
-          loading={loading}
-        />
+        <div class="mb-6 aspect-video overflow-hidden rounded">
+          <ImageMod
+            src={image}
+            class={"w-full h-full object-cover"}
+            width={480}
+            height={270}
+            alt={title}
+            format="webp"
+            loading={loading}
+          />
+        </div>
       </>
     )}
     <h4 class="mb-3 hover:text-primary dark:hover:text-darkmode-primary">{title}</h4>

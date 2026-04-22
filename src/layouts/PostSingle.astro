@@ -7,6 +7,7 @@ import TOC from "@/components/TOC.astro";
 import GiscusComments from "@/components/GiscusComments.astro";
 import RelatedPosts from "@/components/RelatedPosts.astro";
 import PostActions from "@/components/PostActions.astro";
+import { render } from "astro:content";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import similarItems from "@/lib/utils/similarItems";
 import { markdownify } from "@/lib/utils/textConverter";
@@ -18,20 +19,20 @@ const { post } = Astro.props;
 
 const posts = await getSinglePage(blog_folder);
 const similarPosts = similarItems(post, posts, similar_items_length);
-const { Content, headings } = await post.render();
+const { Content, headings } = await render(post);
 const { title, description, image, date, tags, category, slug } = post.data;
 
 const metadata = categoryMetadata[category] || { name: humanize(category) };
 ---
 
 <div class="relative">
-  <div class="grid grid-cols-1 lg:grid-cols-12">
+  <div class="grid grid-cols-1 lg:grid-cols-12 lg:gap-x-6">
     <!-- TOC for large screens -->
     <div id="toc-container" class="px-6 hidden lg:block lg:col-span-3 lg:bg-theme-light lg:dark:bg-darkmode-theme-light lg:sticky lg:overflow-y-auto">
       <TOC headings={headings} />
     </div>
 
-    <section class="section container py-7 lg:col-span-9">
+    <section class="section container py-7 lg:col-span-9 lg:pl-10">
       <div class="2xl:col-10">
         <article class="article-content">
           <h1 set:html={markdownify(title)} class="h2 mb-4" />

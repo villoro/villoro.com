@@ -1,12 +1,12 @@
 {
   "name": "villoro",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "My personal website",
   "author": "Arnau Villoro <arnau@villoro.com>",
   "license": "MIT",
   "packageManager": "npm@10.2.4",
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "npm run generate-json && astro dev",
@@ -16,16 +16,13 @@
     "generate-json": "node scripts/jsonGenerator.js",
     "remove-darkmode": "node scripts/removeDarkmode.js && npm run format"
   },
-  "resolutions": {
-    "@astrojs/markdown-remark": "6.3.10"
-  },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.13",
-    "@astrojs/react": "^4.4.2",
-    "@astrojs/sitemap": "^3.6.0",
-    "@astrojs/tailwind": "^6.0.2",
-    "astro": "^5.16.6",
-    "astro-auto-import": "^0.4.2",
+    "@astrojs/mdx": "^5.0.3",
+    "@astrojs/react": "^5.0.3",
+    "@astrojs/sitemap": "^3.7.2",
+    "@tailwindcss/vite": "^4.2.4",
+    "astro": "^6.1.8",
+    "astro-auto-import": "^0.5.1",
     "astro-font": "^0.0.77",
     "date-fns": "^3.3.1",
     "github-slugger": "^2.0.0",
@@ -42,17 +39,14 @@
     "@hbsnow/rehype-sectionize": "^1.0.7",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
-    "@types/node": "20.11.16",
-    "@types/react": "18.2.53",
-    "@types/react-dom": "18.2.18",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.33",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "prettier": "^3.2.5",
     "prettier-plugin-astro": "^0.13.0",
     "prettier-plugin-tailwindcss": "^0.5.11",
-    "sass": "^1.70.0",
-    "tailwind-bootstrap-grid": "^5.1.0",
-    "tailwindcss": "^3.4.1",
-    "typescript": "5.3.3"
+    "tailwind-bootstrap-grid": "^7.0.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3"
   }
 }

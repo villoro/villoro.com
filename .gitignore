@@ -63,3 +63,5 @@ pnpm-debug.log*
 
 # ignore .astro directory
 .astro
+
+.claude

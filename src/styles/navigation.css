@@ -1,4 +1,4 @@
-// navbar toggler
+/* navbar toggler */
 input#nav-toggle:checked + label #show-button {
   @apply hidden;
 }
@@ -15,7 +15,7 @@ input#nav-toggle:checked ~ #nav-menu {
   @apply bg-body py-6 dark:bg-darkmode-body;
 }
 
-// navbar items
+/* navbar items */
 .navbar {
   @apply relative flex flex-wrap items-center justify-between;
 }
@@ -30,10 +30,6 @@ input#nav-toggle:checked ~ #nav-menu {
 .navbar-nav {
   @apply text-center lg:text-left;
 }
-
-// .nav-item {
-//   @apply mx-3;
-// }
 
 .nav-link {
   @apply text-dark hover:text-primary dark:text-darkmode-dark dark:hover:text-darkmode-primary block p-3 font-semibold transition lg:px-2 lg:py-3;
@@ -55,7 +51,7 @@ input#nav-toggle:checked ~ #nav-menu {
   @apply block py-1 font-semibold text-dark transition hover:text-primary dark:text-darkmode-text dark:hover:text-darkmode-primary;
 }
 
-//theme-switcher
+/* theme-switcher */
 .theme-switcher {
   @apply inline-flex;
 
