@@ -1,6 +1,6 @@
 ---
 import config from "@/config/config.json";
-const { page_name } = config.settings;
+const { page_name, pagination_window_size } = config.settings;
 
 type Pagination = {
   section?: string;
@@ -9,7 +9,7 @@ type Pagination = {
 };
 const { section, currentPage = 1, totalPages = 1 }: Pagination = Astro.props;
 
-const WINDOW_SIZE = 3; // pages shown on each side of current
+const WINDOW_SIZE = pagination_window_size;
 
 const indexPageLink = currentPage === 2;
 const hasPrevPage = currentPage > 1;
