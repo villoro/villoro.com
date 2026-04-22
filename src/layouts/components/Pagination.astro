@@ -26,8 +26,15 @@ type PageEntry = number | "ellipsis-start" | "ellipsis-end";
 function buildPageList(): PageEntry[] {
   if (totalPages <= 1) return [];
 
-  const windowStart = Math.max(2, currentPage - WINDOW_SIZE);
-  const windowEnd = Math.min(totalPages - 1, currentPage + WINDOW_SIZE);
+  let windowStart = Math.max(2, currentPage - WINDOW_SIZE);
+  let windowEnd = Math.min(totalPages - 1, currentPage + WINDOW_SIZE);
+
+  // If truncated at start, expand toward end to keep window full
+  if (currentPage - WINDOW_SIZE < 2)
+    windowEnd = Math.min(totalPages - 1, windowEnd + (2 - (currentPage - WINDOW_SIZE)));
+  // If truncated at end, expand toward start to keep window full
+  if (currentPage + WINDOW_SIZE > totalPages - 1)
+    windowStart = Math.max(2, windowStart - ((currentPage + WINDOW_SIZE) - (totalPages - 1)));
 
   const pages: PageEntry[] = [1];
 
