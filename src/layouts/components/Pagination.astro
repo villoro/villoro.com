@@ -1,6 +1,6 @@
 ---
 import config from "@/config/config.json";
-const { page_name } = config.settings;
+const { page_name, pagination_window_size } = config.settings;
 
 type Pagination = {
   section?: string;
@@ -9,14 +9,45 @@ type Pagination = {
 };
 const { section, currentPage = 1, totalPages = 1 }: Pagination = Astro.props;
 
+const WINDOW_SIZE = pagination_window_size;
+
 const indexPageLink = currentPage === 2;
 const hasPrevPage = currentPage > 1;
 const hasNextPage = totalPages > currentPage;
 
-let pageList: number[] = [];
-for (let i = 1; i <= totalPages; i++) {
-  pageList.push(i);
+function pageUrl(page: number) {
+  if (page === 1) return section ? `/${section}` : "/";
+  return `${section ? "/" + section : ""}/${page_name}/${page}`;
 }
+
+// Build the list of page entries to render: numbers or "ellipsis" markers
+type PageEntry = number | "ellipsis-start" | "ellipsis-end";
+
+function buildPageList(): PageEntry[] {
+  if (totalPages <= 1) return [];
+
+  let windowStart = Math.max(2, currentPage - WINDOW_SIZE);
+  let windowEnd = Math.min(totalPages - 1, currentPage + WINDOW_SIZE);
+
+  // If truncated at start, expand toward end to keep window full
+  if (currentPage - WINDOW_SIZE < 2)
+    windowEnd = Math.min(totalPages - 1, windowEnd + (2 - (currentPage - WINDOW_SIZE)));
+  // If truncated at end, expand toward start to keep window full
+  if (currentPage + WINDOW_SIZE > totalPages - 1)
+    windowStart = Math.max(2, windowStart - ((currentPage + WINDOW_SIZE) - (totalPages - 1)));
+
+  const pages: PageEntry[] = [1];
+
+  if (windowStart > 2) pages.push("ellipsis-start");
+  for (let i = windowStart; i <= windowEnd; i++) pages.push(i);
+  if (windowEnd < totalPages - 1) pages.push("ellipsis-end");
+
+  if (totalPages > 1) pages.push(totalPages);
+
+  return pages;
+}
+
+const pageList = buildPageList();
 ---
 
 {totalPages > 1 && (
@@ -24,11 +55,7 @@ for (let i = 1; i <= totalPages; i++) {
     {/* previous */}
     {hasPrevPage ? (
       <a
-        href={
-          indexPageLink
-            ? `${section ? "/" + section : "/"}`
-            : `${section ? "/" + section : ""}/${page_name}/${currentPage - 1}`
-        }
+        href={indexPageLink ? pageUrl(1) : pageUrl(currentPage - 1)}
         class="rounded px-2 py-1.5 text-dark hover:bg-theme-light dark:text-darkmode-dark dark:hover:bg-darkmode-theme-light"
       >
         <span class="sr-only">Previous</span>
@@ -54,25 +81,22 @@ for (let i = 1; i <= totalPages; i++) {
     )}
 
     {/* page index */}
-    {pageList.map((pagination, i) =>
-      pagination === currentPage ? (
+    {pageList.map((entry) =>
+      entry === "ellipsis-start" || entry === "ellipsis-end" ? (
+        <span class="px-2 py-2 text-dark dark:text-darkmode-dark select-none">…</span>
+      ) : entry === currentPage ? (
         <span
           aria-current="page"
           class="rounded bg-primary px-4 py-2 text-white dark:bg-darkmode-primary dark:text-dark"
         >
-          {pagination}
+          {entry}
         </span>
       ) : (
         <a
-          href={
-            i === 0
-              ? `${section ? "/" + section : "/"}`
-              : `${section ? "/" + section : ""}/${page_name}/${pagination}`
-          }
-          aria-current="page"
+          href={pageUrl(entry)}
           class="rounded px-4 py-2 text-dark hover:bg-theme-light dark:text-darkmode-dark dark:hover:bg-darkmode-theme-light"
         >
-          {pagination}
+          {entry}
         </a>
       )
     )}
@@ -80,7 +104,7 @@ for (let i = 1; i <= totalPages; i++) {
     {/* next page */}
     {hasNextPage ? (
       <a
-        href={`${section ? "/" + section : ""}/${page_name}/${currentPage + 1}`}
+        href={pageUrl(currentPage + 1)}
         class="rounded px-2 py-1.5 text-dark hover:bg-theme-light dark:text-darkmode-dark dark:hover:bg-darkmode-theme-light"
       >
         <span class="sr-only">Next</span>
