@@ -9,7 +9,7 @@ type Pagination = {
 };
 const { section, currentPage = 1, totalPages = 1 }: Pagination = Astro.props;
 
-const WINDOW_SIZE = 2; // pages shown on each side of current
+const WINDOW_SIZE = 3; // pages shown on each side of current
 
 const indexPageLink = currentPage === 2;
 const hasPrevPage = currentPage > 1;
