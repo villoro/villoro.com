@@ -65,3 +65,4 @@ pnpm-debug.log*
 .astro
 
 .claude
+claude_design/**
