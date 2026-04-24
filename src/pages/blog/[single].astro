@@ -409,11 +409,12 @@ const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
   /* ── Links (non-callout) ─────────────────────────────── */
   .ps-body .article-content a {
     color: var(--color-blue-500);
-    text-decoration: none;
-    border-bottom: 1px solid rgba(58, 118, 255, 0.3);
-    transition: border-color 0.15s;
+    text-decoration: underline;
+    text-decoration-color: rgba(58, 118, 255, 0.3);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s;
   }
-  .ps-body .article-content a:hover { border-bottom-color: var(--color-blue-500); }
+  .ps-body .article-content a:hover { text-decoration-color: var(--color-blue-500); }
 
   /* ── Images (block-level only; excludes icons inside links/callouts) ── */
   .ps-body .article-content > p > img,
@@ -465,7 +466,7 @@ const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
 
   /* ── FancyLink pill (a[role=button]) ───────────────────── */
   .ps-body .article-content a[role="button"] {
-    border-bottom: none;
+    text-decoration: none;
     line-height: 1.4;
     padding: 2px 8px !important;
     vertical-align: baseline;
