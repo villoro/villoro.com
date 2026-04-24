@@ -126,7 +126,9 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
 
         <p class="bl-empty" id="bl-empty" hidden>No posts in this category yet.</p>
 
-        <Pagination section={blog_folder} currentPage={1} totalPages={totalPages} />
+        <div class="bl-pagination">
+          <Pagination section={blog_folder} currentPage={1} totalPages={totalPages} />
+        </div>
 
       </div>
     </section>
@@ -306,14 +308,12 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
 
   .bl-cats__flex {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
     padding-top: 16px;
     padding-bottom: 16px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-wrap: wrap;
   }
-  .bl-cats__flex::-webkit-scrollbar { display: none; }
 
   .bl-cats__label {
     font-family: var(--font-ui);
@@ -328,7 +328,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   .bl-cats__chips {
     display: flex;
     gap: 8px;
-    flex-shrink: 0;
+    flex-wrap: wrap;
   }
 
   .bl-chip {
@@ -400,6 +400,10 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
     color: var(--color-grey-500);
     font-family: var(--font-ui);
     font-size: 16px;
+  }
+
+  .bl-pagination {
+    margin-top: 48px;
   }
 
   /* ── Responsive ───────────────────────────────────────────────────── */
