@@ -10,6 +10,7 @@ import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getTaxonomy } from "@/lib/taxonomyParser.astro";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
 import { categoryMetadata } from "@/lib/categoryMetadata";
+import { slugify } from "@/lib/utils/textConverter";
 import readingTime from "@/lib/utils/readingTime";
 
 const { blog_folder, pagination } = config.settings;
@@ -42,8 +43,8 @@ const totalPages   = Math.ceil(sortedPosts.length / pagination);
 const start        = (currentPage - 1) * pagination;
 const currentPosts = sortedPosts.slice(start, start + pagination);
 
-const meta         = category ? categoryMetadata[category] : null;
-const categoryName = meta?.name ?? category;
+const metaEntry    = Object.entries(categoryMetadata).find(([key]) => slugify(key) === category);
+const categoryName = metaEntry?.[1].name ?? category;
 
 const categoryCounts: Record<string, number> = {};
 for (const post of sorted) {
@@ -115,7 +116,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
           {categories.map((cat) => (
             cat.key === "all"
               ? <a href="/blog" class="bl-chip">{cat.name}<span class="bl-chip__count">{cat.count}</span></a>
-              : <a href={`/categories/${cat.key}`} class={`bl-chip${cat.key === category ? " is-active" : ""}`}>{cat.name}<span class="bl-chip__count">{cat.count}</span></a>
+              : <a href={`/categories/${slugify(cat.key)}`} class={`bl-chip${slugify(cat.key) === category ? " is-active" : ""}`}>{cat.name}<span class="bl-chip__count">{cat.count}</span></a>
           ))}
         </div>
       </div>

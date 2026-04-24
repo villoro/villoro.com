@@ -8,6 +8,7 @@ import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import readingTime from "@/lib/utils/readingTime";
 import { categoryMetadata } from "@/lib/categoryMetadata";
+import { slugify } from "@/lib/utils/textConverter";
 import config from "@/config/config.json";
 
 const { blog_folder, pagination } = config.settings;
@@ -105,7 +106,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
           {categories.map((cat) => (
             cat.key === "all"
               ? <a href="/blog" class="bl-chip is-active">{cat.name}<span class="bl-chip__count">{cat.count}</span></a>
-              : <a href={`/categories/${cat.key}`} class="bl-chip">{cat.name}<span class="bl-chip__count">{cat.count}</span></a>
+              : <a href={`/categories/${slugify(cat.key)}`} class="bl-chip">{cat.name}<span class="bl-chip__count">{cat.count}</span></a>
           ))}
         </div>
       </div>
