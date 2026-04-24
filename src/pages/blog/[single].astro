@@ -415,18 +415,21 @@ const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
   }
   .ps-body .article-content a:hover { border-bottom-color: var(--color-blue-500); }
 
-  /* ── Images ──────────────────────────────────────────── */
-  .ps-body .article-content img {
+  /* ── Images (block-level only; excludes icons inside links/callouts) ── */
+  .ps-body .article-content > p > img,
+  .ps-body .article-content > figure img,
+  .ps-body .article-content section > p > img,
+  .ps-body .article-content section > figure img {
     max-width: 100%;
     height: auto;
     border-radius: 10px;
     margin: 24px 0;
   }
 
-  /* ── Blockquotes / callouts (from remark-callouts) ───── */
+  /* ── Blockquotes (fallback; most blockquotes become .notice) ───── */
   .ps-body .article-content blockquote {
     margin: 28px 0;
-    padding: 18px 22px;
+    padding: 16px 20px;
     background: #eef4ff;
     border-left: 4px solid var(--color-blue-500);
     border-radius: 0 10px 10px 0;
@@ -434,6 +437,45 @@ const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
   }
   .ps-body .article-content blockquote p { margin: 0 0 8px; }
   .ps-body .article-content blockquote p:last-child { margin: 0; }
+
+  /* ── Callouts (Notice shortcode) ───────────────────────── */
+  .ps-body .article-content .notice {
+    margin: 24px 0;
+    padding: 14px 18px;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .ps-body .article-content .notice > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .ps-body .article-content .notice > span:last-child { margin-left: 0; }
+  .ps-body .article-content .notice p { margin: 0; }
+  .ps-body .article-content .notice p + p { margin-top: 8px; }
+  .ps-body .article-content .notice img {
+    margin: 0;
+    border-radius: 2px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* ── FancyLink pill (a[role=button]) ───────────────────── */
+  .ps-body .article-content a[role="button"] {
+    border-bottom: none;
+    line-height: 1.4;
+    padding: 2px 8px !important;
+    vertical-align: baseline;
+  }
+  .ps-body .article-content a[role="button"] img {
+    margin: 0 6px 0 0 !important;
+    border-radius: 0;
+    display: inline-block;
+    vertical-align: middle;
+  }
 
   /* ── Tables ──────────────────────────────────────────── */
   .ps-body .article-content table {
