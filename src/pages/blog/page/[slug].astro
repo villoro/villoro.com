@@ -102,15 +102,10 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       <div class="bl-wrap bl-cats__flex">
         <span class="bl-cats__label">Category</span>
         <div class="bl-cats__chips">
-          {categories.map((cat, i) => (
-            <button
-              class={`bl-chip${i === 0 ? " is-active" : ""}`}
-              data-cat={cat.key}
-              type="button"
-            >
-              {cat.name}
-              <span class="bl-chip__count">{cat.count}</span>
-            </button>
+          {categories.map((cat) => (
+            cat.key === "all"
+              ? <a href="/blog" class="bl-chip is-active">{cat.name}<span class="bl-chip__count">{cat.count}</span></a>
+              : <a href={`/categories/${cat.key}`} class="bl-chip">{cat.name}<span class="bl-chip__count">{cat.count}</span></a>
           ))}
         </div>
       </div>
@@ -121,24 +116,20 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       <div class="bl-wrap">
 
         <div class="bl-grid-head">
-          <h2 class="bl-grid-title" id="bl-grid-title">All posts</h2>
+          <h2 class="bl-grid-title">All posts</h2>
           <span class="bl-grid-meta">Page {currentPage} of {totalPages} · newest first</span>
         </div>
 
-        <div class="bl-grid" id="bl-grid">
+        <div class="bl-grid">
           {currentPosts.map((post, i) => (
-            <div class="bl-grid__item" data-category={post.data.category ?? ""}>
-              <PostCard
-                post={post}
-                variant="small"
-                readTime={getReadTime(post)}
-                loading={i < 6 ? "eager" : "lazy"}
-              />
-            </div>
+            <PostCard
+              post={post}
+              variant="small"
+              readTime={getReadTime(post)}
+              loading={i < 6 ? "eager" : "lazy"}
+            />
           ))}
         </div>
-
-        <p class="bl-empty" id="bl-empty" hidden>No posts in this category yet.</p>
 
         <div class="bl-pagination">
           <Pagination section={blog_folder} currentPage={currentPage} totalPages={totalPages} />
@@ -152,33 +143,6 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
 
   </div>
 </BaseRedesign>
-
-<script>
-  const chips = document.querySelectorAll<HTMLButtonElement>(".bl-chip");
-  const items = document.querySelectorAll<HTMLElement>(".bl-grid__item");
-  const title = document.getElementById("bl-grid-title")!;
-  const empty = document.getElementById("bl-empty")!;
-
-  chips.forEach((chip) => {
-    chip.addEventListener("click", () => {
-      const cat = chip.dataset.cat ?? "all";
-
-      chips.forEach((c) => c.classList.remove("is-active"));
-      chip.classList.add("is-active");
-
-      let visible = 0;
-      items.forEach((item) => {
-        const show = cat === "all" || item.dataset.category === cat;
-        item.hidden = !show;
-        if (show) visible++;
-      });
-
-      const label = (chip.textContent ?? "").replace(/\s+\d+$/, "").trim();
-      title.textContent = cat === "all" ? "All posts" : label;
-      (empty as HTMLElement).hidden = visible > 0;
-    });
-  });
-</script>
 
 <style>
   .bl {
