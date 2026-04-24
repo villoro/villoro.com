@@ -97,9 +97,11 @@ const isBlog   = pathname.startsWith("/blog")
    * ------------------------------------------------------------------ */
 
   .sitenav {
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 30;
     background: var(--color-grey-50);
+    box-shadow: 0 1px 0 var(--color-grey-100);
   }
 
   .sitenav__inner {
@@ -107,7 +109,7 @@ const isBlog   = pathname.startsWith("/blog")
     align-items: center;
     justify-content: space-between;
     padding: 22px var(--container-px);
-    max-width: 1440px;
+    max-width: 1312px;
     margin: 0 auto;
   }
 
@@ -201,7 +203,7 @@ const isBlog   = pathname.startsWith("/blog")
 
   /* ThemeSwitcher wrapper spacing */
   .sitenav__theme {
-    margin: 0 16px;
+    margin: 0 20px;
   }
 
   /* Subscribe CTA */
@@ -219,7 +221,7 @@ const isBlog   = pathname.startsWith("/blog")
     text-decoration: none;
     box-shadow: var(--shadow-cta);
     transition: opacity 0.15s ease;
-    margin-left: 16px;
+    margin-left: 20px;
     white-space: nowrap;
   }
 

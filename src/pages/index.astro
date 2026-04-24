@@ -52,6 +52,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       <!-- faint "villoro." watermark -->
       <span class="hp-hero__watermark" aria-hidden="true">villoro.</span>
 
+      <div class="hp-wrap">
       <div class="hp-hero__grid">
         <!-- Left column -->
         <div class="hp-hero__left">
@@ -117,10 +118,12 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
           </div>
         </div>
       </div>
+      </div>
     </section>
 
     <!-- ════════════════════ ACTIVITY RIBBON ══════════════════ -->
     <div class="hp-ribbon">
+      <div class="hp-wrap hp-ribbon__flex">
       <div class="hp-ribbon__left">
         <span class="hp-ribbon__gear" aria-hidden="true">⚙</span>
         <span class="hp-ribbon__slogan">
@@ -137,11 +140,12 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
         <span class="hp-ribbon__sep" aria-hidden="true"></span>
         <span><strong>{postCount}+ posts</strong> · updated monthly</span>
       </div>
+      </div>
     </div>
 
     <!-- ══════════════════ LATEST WRITING ═════════════════════ -->
     <section class="hp-posts">
-      <div class="hp-posts__inner">
+      <div class="hp-wrap">
       <div class="hp-posts__head">
         <div>
           <h2 class="hp-posts__h2">
@@ -184,6 +188,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
     <!-- ════════════════════ NEWSLETTER ═══════════════════════ -->
     <section class="hp-nl">
       <span class="hp-nl__bg" aria-hidden="true">subscribe.</span>
+      <div class="hp-wrap">
       <div class="hp-nl__wrap">
         <div>
           <h2 class="hp-nl__h2">
@@ -226,10 +231,12 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
           </p>
         </div>
       </div>
+      </div>
     </section>
 
     <!-- ════════════════════ FOOTER ═══════════════════════════ -->
     <footer class="hp-footer">
+      <div class="hp-wrap hp-footer__flex">
       <div class="hp-footer__left">
         Made by&nbsp;
         <a href={`mailto:${config.footer.email}`} class="hp-footer__email">
@@ -264,6 +271,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
           </a>
         ))}
       </div>
+      </div>
     </footer>
   </div>
 </BaseRedesign>
@@ -286,6 +294,13 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   /* ---- Shared utilities ---- */
   .hp-blue       { color: var(--color-blue-500); }
   .hp-yellow     { color: var(--color-yellow-400); }
+
+  /* Centered content wrapper — used by every section */
+  .hp-wrap {
+    max-width: 1312px;
+    margin: 0 auto;
+    padding: 0 var(--container-px);
+  }
 
   .hp-yellow-chip {
     background: var(--color-yellow-400);
@@ -333,7 +348,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
 
   .hp-hero {
     position: relative;
-    padding: 40px var(--container-px) 64px;
+    padding: 40px 0 64px;
     overflow: hidden;
   }
 
@@ -475,12 +490,16 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   .hp-ribbon {
     background: var(--color-blue-500);
     color: #fff;
-    padding: 28px var(--container-px);
+    overflow: hidden;
+  }
+
+  .hp-ribbon__flex {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 32px;
-    overflow: hidden;
+    padding-top: 28px;
+    padding-bottom: 28px;
   }
 
   .hp-ribbon__left {
@@ -550,13 +569,8 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
    * ================================================================== */
 
   .hp-posts {
-    padding: var(--section-py) var(--container-px);
+    padding: var(--section-py) 0;
     background: var(--color-grey-50);
-  }
-
-  .hp-posts__inner {
-    max-width: 1312px;
-    margin: 0 auto;
   }
 
   .hp-posts__head {
@@ -600,7 +614,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
    * ================================================================== */
 
   .hp-nl {
-    padding: var(--section-py) var(--container-px);
+    padding: var(--section-py) 0;
     background: var(--color-navy-900);
     color: #fff;
     position: relative;
@@ -688,13 +702,16 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
    * ================================================================== */
 
   .hp-footer {
-    padding: 40px var(--container-px);
+    padding: 40px 0;
     background: var(--color-navy-900);
     color: var(--color-grey-400);
+    font-size: 13px;
+  }
+
+  .hp-footer__flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
     gap: 24px;
   }
 
@@ -729,21 +746,13 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
    * ================================================================== */
 
   @media (max-width: 1023px) {
-    .hp-hero,
-    .hp-ribbon,
-    .hp-posts,
-    .hp-nl,
-    .hp-footer {
+    .hp {
       --container-px: 32px;
     }
   }
 
   @media (max-width: 767px) {
-    .hp-hero,
-    .hp-ribbon,
-    .hp-posts,
-    .hp-nl,
-    .hp-footer {
+    .hp {
       --container-px: 20px;
     }
 
@@ -759,7 +768,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       display: none;
     }
 
-    .hp-ribbon {
+    .hp-ribbon__flex {
       flex-direction: column;
       align-items: flex-start;
       gap: 16px;
@@ -782,7 +791,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       grid-template-columns: 1fr;
     }
 
-    .hp-footer {
+    .hp-footer__flex {
       flex-direction: column;
       align-items: flex-start;
       gap: 16px;
