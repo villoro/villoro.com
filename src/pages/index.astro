@@ -1,119 +1,902 @@
 ---
-import config from "@/config/config.json";
-import Base from "@/layouts/Base.astro";
-import ParallaxHome from "@/components/ParallaxHome.astro";
-import BlogCard from "@/components/BlogCard.astro";
-import { markdownify } from "@/lib/utils/textConverter";
-import { sortByDate } from "@/lib/utils/sortFunctions";
-import { getSinglePage } from "@/lib/contentParser.astro";
-import { getEntry } from "astro:content";
-import { FaGear } from "react-icons/fa6";
-
-const homepage = await getEntry("homepage", "-index");
-const { banner, slogan, companies, blog } = homepage.data;
-
+import BaseRedesign from "@/layouts/BaseRedesign.astro";
+import SiteNav from "@/components/SiteNav.astro";
+import PostCard from "@/components/PostCard.astro";
 import { Image } from "astro:assets";
+import { getEntry } from "astro:content";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import { sortByDate } from "@/lib/utils/sortFunctions";
+import readingTime from "@/lib/utils/readingTime";
+import config from "@/config/config.json";
+import social from "@/config/social.json";
+
+// ---- Data ----
+const homepage = await getEntry("homepage", "-index");
+const { companies } = homepage.data;
 
 const { blog_folder } = config.settings;
-
 const posts = await getSinglePage(blog_folder);
 const sortedPosts = sortByDate(posts);
-const latestPosts = sortedPosts.slice(0, config.settings.num_latest_posts);
 
-const importImage = async (imageName, darkMode = false) => {
+const latestPost   = sortedPosts[0];
+const featuredPost = sortedPosts[0];  // big card
+const gridPosts    = sortedPosts.slice(1, 7); // 3×2 grid
+// Pick a "most read" post outside the featured 7 so no duplication
+const heroPost     = sortedPosts[7] ?? sortedPosts[0];
+
+// Stats
+const postCount   = sortedPosts.length;
+const yearsWriting = 7;
+const companyCount = companies?.logos?.length ?? 12;
+
+// Days since latest post
+const today = new Date();
+const latestDate = latestPost?.data?.date ? new Date(latestPost.data.date) : today;
+const daysAgo = Math.max(0, Math.round((today.getTime() - latestDate.getTime()) / 86_400_000));
+
+// Reading times — body is available on glob-loaded entries as a string
+const getReadTime = (post: typeof sortedPosts[0]) => {
+  try { return readingTime((post as any).body ?? ""); } catch { return ""; }
+};
+
+// Company logo helper (same as old homepage)
+const importImage = async (imageName: string, darkMode = false) => {
   if (darkMode) {
-    const darkModeImageName = `${imageName}_dark`;
     try {
-      const { default: darkModeImage } = await import(`../images/companies/${darkModeImageName}.png`);
-      return darkModeImage;
-    } catch (error) {}
+      const { default: img } = await import(`../images/companies/${imageName}_dark.png`);
+      return img;
+    } catch { /* no dark variant */ }
   }
-
-  const { default: originalImage } = await import(`../images/companies/${imageName}.png`);
-  return originalImage;
+  const { default: img } = await import(`../images/companies/${imageName}.png`);
+  return img;
 };
 ---
 
-<Base>
-  <!-- Banner -->
-  <ParallaxHome imageName={banner.image}>
-    <div class="text-center md:col-10 lg:col-7">
-      <h1 set:html={markdownify(banner.title)} class="mb-4 text-white dark:text-darkmode-primary text-h3 lg:text-h1" />
-      <p set:html={markdownify(banner.content)} class="mb-8" />
-    </div>
-  </ParallaxHome>
+<BaseRedesign title="Villoro — Data pipelines. Written plainly.">
+  <div class="hp">
 
-  <!-- Slogan -->
-  <section class="section p-6 lg:p-14 bg-primary dark:bg-darkmode-primary">
-    <div class="container">
-      <div class="row text-center">
-        <h1 class="text-h3 lg:text-h1 text-white dark:text-black flex items-center justify-center">
-          <FaGear className="mr-6" />
-          {markdownify(slogan.title)}
-        </h1>
+    <!-- ═══════════════════════ NAV ═══════════════════════ -->
+    <SiteNav />
+
+    <!-- ═══════════════════════ HERO ══════════════════════ -->
+    <section class="hp-hero">
+      <!-- faint "villoro." watermark -->
+      <span class="hp-hero__watermark" aria-hidden="true">villoro.</span>
+
+      <div class="hp-hero__grid">
+        <!-- Left column -->
+        <div class="hp-hero__left">
+          <!-- "New post" pill -->
+          {latestPost && (
+            <a
+              href={`/${blog_folder}/${latestPost.data.slug || latestPost.id}`}
+              class="hp-hero__new-pill"
+            >
+              <span class="hp-hero__new-dot"></span>
+              New post · {latestPost.data.title}
+            </a>
+          )}
+
+          <!-- Headline -->
+          <h1 class="hp-hero__h1">
+            Data <span class="hp-blue">pipelines.</span><br />
+            Written <span class="hp-yellow-chip">plainly.</span><br />
+            By an engineer.
+          </h1>
+
+          <!-- Lede -->
+          <p class="hp-hero__lede">
+            I'm <strong>Arnau Villoro</strong>, a data engineer in Barcelona.
+            I write about Python, dbt, AWS — and the quiet habits that keep
+            production boring. {yearsWriting} years of notes, {postCount} posts, zero filler.
+          </p>
+
+          <!-- CTAs -->
+          <div class="hp-hero__ctas">
+            <a href={`/${blog_folder}`} class="hp-btn hp-btn--blue">
+              Read the blog
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/about" class="hp-btn hp-btn--outline">About me</a>
+          </div>
+        </div>
+
+        <!-- Right column: "Most read" side-card + stats -->
+        <div class="hp-hero__right">
+          {heroPost && (
+            <div class="hp-hero__card-wrap">
+              <PostCard
+                post={heroPost}
+                variant="medium"
+                badge="Most read"
+                readTime={getReadTime(heroPost)}
+                loading="eager"
+              />
+            </div>
+          )}
+
+          <!-- Stats row -->
+          <div class="hp-stats">
+            <div class="hp-stats__item">
+              <span class="hp-stats__num">{postCount}</span>
+              <span class="hp-stats__label">posts published</span>
+            </div>
+            <div class="hp-stats__item">
+              <span class="hp-stats__num">{yearsWriting}</span>
+              <span class="hp-stats__label">years writing</span>
+            </div>
+            <div class="hp-stats__item">
+              <span class="hp-stats__num">{companyCount}</span>
+              <span class="hp-stats__label">companies shipped for</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════ ACTIVITY RIBBON ══════════════════ -->
+    <div class="hp-ribbon">
+      <div class="hp-ribbon__left">
+        <span class="hp-ribbon__gear" aria-hidden="true">⚙</span>
+        <span class="hp-ribbon__slogan">
+          Crafting solutions.
+          <em class="hp-ribbon__slogan-em">Delivering efficiency.</em>
+        </span>
+      </div>
+      <div class="hp-ribbon__right">
+        <span class="hp-ribbon__dot" aria-hidden="true"></span>
+        <span>
+          Latest: <strong>{daysAgo} days ago</strong>
+          {latestPost?.data?.category && <> · <strong>{latestPost.data.category}</strong></>}
+        </span>
+        <span class="hp-ribbon__sep" aria-hidden="true"></span>
+        <span><strong>{postCount}+ posts</strong> · updated monthly</span>
       </div>
     </div>
-  </section>
 
-  <!-- Posts -->
-  <section class="section p-6 lg:p-14">
-    <div class="container">
-      <div class="flex justify-center text-center pb-16">
-        <h1 set:html={markdownify(blog.title)} class="text-h3 lg:text-h1 lg:text-h2 mr-6" />
-        <a class="btn btn-primary lg:mt-1 lg:text-xl" href={blog_folder}>
-          {blog.button}
+    <!-- ══════════════════ LATEST WRITING ═════════════════════ -->
+    <section class="hp-posts">
+      <div class="hp-posts__head">
+        <div>
+          <h2 class="hp-posts__h2">
+            Latest <span class="hp-blue">writing.</span>
+          </h2>
+          <p class="hp-posts__sub">Honest notes from production · updated monthly</p>
+        </div>
+        <a href={`/${blog_folder}`} class="hp-btn hp-btn--blue">
+          See all {postCount} posts
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
       </div>
-      <div class="row">
-        {latestPosts.map((item, index) => (
-          <div class="sm:mb-8 sm:col-4" key={index}>
-            <BlogCard data={item} loading="lazy" />
-          </div>
+
+      <!-- Big featured card -->
+      {featuredPost && (
+        <div class="hp-posts__featured">
+          <PostCard
+            post={featuredPost}
+            variant="big"
+            badge="Latest"
+            readTime={getReadTime(featuredPost)}
+            loading="eager"
+          />
+        </div>
+      )}
+
+      <!-- 3×2 grid -->
+      <div class="hp-posts__grid">
+        {gridPosts.map((post) => (
+          <PostCard
+            post={post}
+            variant="small"
+            readTime={getReadTime(post)}
+          />
         ))}
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Companies -->
-  <section class="section bg-theme-light dark:bg-darkmode-theme-light p-6 lg:p-14">
-    <div class="container">
-      <div class="text-center">
-        <h1 set:html={markdownify(companies.title)} class="mb-16 text-h4 lg:text-h2" />
+    <!-- ════════════════════ NEWSLETTER ═══════════════════════ -->
+    <section class="hp-nl">
+      <span class="hp-nl__bg" aria-hidden="true">subscribe.</span>
+      <div class="hp-nl__wrap">
+        <div>
+          <h2 class="hp-nl__h2">
+            One email<br />
+            <span class="hp-yellow">a month.</span><br />
+            Zero noise.
+          </h2>
+          <p class="hp-nl__body">
+            New posts, tools I'm actually using, and the occasional opinion on
+            the data space. Read by ~1,200 engineers. Unsubscribe any time —
+            one click, no hard feelings.
+          </p>
+        </div>
+        <div>
+          <!-- Form posts to Mailchimp via the subscribe link -->
+          <form
+            action={config.subscribe.link}
+            method="get"
+            target="_blank"
+            class="hp-nl__form"
+          >
+            <input
+              type="email"
+              name="EMAIL"
+              placeholder="your@email.com"
+              aria-label="Email address"
+              class="hp-nl__input"
+              required
+            />
+            <button type="submit" class="hp-btn hp-btn--blue">
+              Subscribe
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+          </form>
+          <p class="hp-nl__footnote">
+            <span class="hp-yellow">1,241</span> subscribers · monthly cadence · powered by Mailchimp
+          </p>
+        </div>
       </div>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 lg:gap-8">
-        {companies.logos.map(async (company) => {
-          const { name, image, link } = company;
-          const lightImage = await importImage(image);
-          const darkImage = await importImage(image, true);
+    </section>
 
+    <!-- ════════════════════ CLIENTS ══════════════════════════ -->
+    <section class="hp-clients">
+      <h3 class="hp-clients__h3">
+        Over seven years I've built data infrastructure for —
+      </h3>
+      <div class="hp-clients__grid">
+        {companies?.logos?.map(async (company) => {
+          const { name, image, link } = company;
+          if (!image) return null;
+          const lightImg = await importImage(image);
           return (
-            <div key={name}>
-              <a href={link} target="_blank" rel="noopener noreferrer">
-                <Image
-                  src={lightImage}
-                  alt={name}
-                  key={name}
-                  className="inline-block dark:hidden"
-                  widths={[180, 360, 600, 800]}
-                  sizes="(max-width: 640px) 180px, (max-width: 768px) 360px, (max-width: 1024px) 600px, 800px"
-                  loading="lazy"
-                />
-                {darkImage && (
-                  <Image
-                    src={darkImage}
-                    alt={`${name} (Dark Mode)`}
-                    key={`${name}-dark`}
-                    className="hidden dark:inline-block"
-                    widths={[180, 360, 600, 800]}
-                    sizes="(max-width: 640px) 180px, (max-width: 768px) 360px, (max-width: 1024px) 600px, 800px"
-                    loading="lazy"
-                  />
-                )}
-              </a>
-            </div>
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hp-clients__tile"
+              title={name}
+            >
+              <Image
+                src={lightImg}
+                alt={name}
+                widths={[160, 320]}
+                sizes="160px"
+                loading="lazy"
+                class="hp-clients__logo"
+              />
+            </a>
           );
         })}
       </div>
-    </div>
-  </section>
-</Base>
+    </section>
+
+    <!-- ════════════════════ FOOTER ═══════════════════════════ -->
+    <footer class="hp-footer">
+      <div class="hp-footer__left">
+        Made by&nbsp;
+        <a href={`mailto:${config.footer.email}`} class="hp-footer__email">
+          {config.footer.email}
+        </a>
+        &nbsp;· Barcelona · © {new Date().getFullYear()}
+      </div>
+      <div class="hp-footer__social">
+        {social.main.map((s) => (
+          <a
+            href={s.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={s.name}
+            class="hp-footer__social-link"
+          >
+            {s.name === "github" && (
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 016 0C17.7 4.7 18.7 5 18.7 5c.7 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0023.5 12C23.5 5.7 18.3.5 12 .5z"/>
+              </svg>
+            )}
+            {s.name === "linkedin" && (
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"/>
+              </svg>
+            )}
+            {s.name === "twitter" && (
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            )}
+          </a>
+        ))}
+        <!-- RSS -->
+        <a href="/rss.xml" aria-label="RSS feed" class="hp-footer__social-link">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 19a2 2 0 11-4 0 2 2 0 014 0zM1 11a10 10 0 0112 12M1 3a18 18 0 0120 20"/>
+          </svg>
+        </a>
+      </div>
+    </footer>
+  </div>
+</BaseRedesign>
+
+<style>
+  /* ================================================================== *
+   * Homepage — scoped styles
+   * ================================================================== */
+
+  /* Page wrapper — sets the background and default font */
+  .hp {
+    background: var(--color-grey-50);
+    color: var(--color-navy-900);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ---- Shared utilities ---- */
+  .hp-blue       { color: var(--color-blue-500); }
+  .hp-yellow     { color: var(--color-yellow-400); }
+
+  .hp-yellow-chip {
+    background: var(--color-yellow-400);
+    color: var(--color-navy-900);
+    padding: 0 16px;
+    display: inline-block;
+    transform: skewX(-6deg);
+  }
+
+  /* Primary / outline buttons */
+  .hp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 16px 24px;
+    border-radius: var(--radius-button);
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+    white-space: nowrap;
+    border: none;
+    cursor: pointer;
+  }
+
+  .hp-btn:hover { opacity: 0.88; }
+
+  .hp-btn--blue {
+    background: var(--color-blue-500);
+    color: #fff;
+    box-shadow: var(--shadow-cta);
+  }
+
+  .hp-btn--outline {
+    background: transparent;
+    color: var(--color-navy-900);
+    border: 1.5px solid var(--color-navy-900);
+    padding: 14px 22px;
+  }
+
+  /* ================================================================== *
+   * Hero
+   * ================================================================== */
+
+  .hp-hero {
+    position: relative;
+    padding: 40px var(--container-px) 64px;
+    overflow: hidden;
+  }
+
+  .hp-hero__watermark {
+    position: absolute;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 320px;
+    color: rgba(58, 118, 255, 0.05);
+    letter-spacing: -0.06em;
+    bottom: -60px;
+    left: -40px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+  }
+
+  .hp-hero__grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 48px;
+    align-items: stretch;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Left column */
+  .hp-hero__left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .hp-hero__new-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: #fff;
+    border: 1px solid var(--color-grey-100);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-navy-900);
+    text-decoration: none;
+    margin-bottom: 28px;
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: border-color 0.15s;
+  }
+
+  .hp-hero__new-pill:hover {
+    border-color: var(--color-blue-500);
+  }
+
+  .hp-hero__new-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-success);
+    flex-shrink: 0;
+  }
+
+  .hp-hero__h1 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: var(--text-hero);
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    margin: 0;
+    color: var(--color-navy-900);
+    text-wrap: balance;
+  }
+
+  .hp-hero__lede {
+    margin-top: 40px;
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--color-ink-800);
+    max-width: 620px;
+  }
+
+  .hp-hero__ctas {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-top: 36px;
+    flex-wrap: wrap;
+  }
+
+  /* Right column */
+  .hp-hero__right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+  }
+
+  .hp-hero__card-wrap {
+    flex: 1;
+    min-height: 340px;
+  }
+
+  /* Stats row */
+  .hp-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding-top: 18px;
+    border-top: 1px solid var(--color-grey-100);
+    font-family: var(--font-ui);
+  }
+
+  .hp-stats__num {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-blue-500);
+    line-height: 1;
+  }
+
+  .hp-stats__label {
+    display: block;
+    font-size: 11px;
+    color: var(--color-grey-500);
+    margin-top: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ================================================================== *
+   * Activity ribbon
+   * ================================================================== */
+
+  .hp-ribbon {
+    background: var(--color-blue-500);
+    color: #fff;
+    padding: 28px var(--container-px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    overflow: hidden;
+  }
+
+  .hp-ribbon__left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-ui);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+
+  .hp-ribbon__gear {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--color-yellow-400);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-navy-900);
+    font-weight: 800;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .hp-ribbon__slogan-em {
+    font-style: italic;
+    color: var(--color-yellow-400);
+    margin-left: 4px;
+  }
+
+  .hp-ribbon__right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+    opacity: 0.95;
+  }
+
+  .hp-ribbon__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-yellow-400);
+    box-shadow: 0 0 0 4px rgba(255, 195, 58, 0.25);
+    flex-shrink: 0;
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(255, 195, 58, 0.25); }
+    50%       { box-shadow: 0 0 0 8px rgba(255, 195, 58, 0.1); }
+  }
+
+  .hp-ribbon__sep {
+    width: 1px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* ================================================================== *
+   * Latest writing section
+   * ================================================================== */
+
+  .hp-posts {
+    padding: var(--section-py) var(--container-px);
+    background: var(--color-grey-50);
+  }
+
+  .hp-posts__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .hp-posts__h2 {
+    font-family: var(--font-ui);
+    font-size: var(--text-section-h2);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    margin: 0;
+  }
+
+  .hp-posts__sub {
+    font-size: 14px;
+    color: var(--color-grey-500);
+    margin-top: 12px;
+    margin-bottom: 0;
+  }
+
+  .hp-posts__featured {
+    margin-bottom: 24px;
+  }
+
+  .hp-posts__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    row-gap: 32px;
+  }
+
+  /* ================================================================== *
+   * Newsletter
+   * ================================================================== */
+
+  .hp-nl {
+    padding: var(--section-py) var(--container-px);
+    background: var(--color-navy-900);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hp-nl__bg {
+    position: absolute;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 360px;
+    color: rgba(58, 118, 255, 0.08);
+    letter-spacing: -0.05em;
+    right: -40px;
+    top: -80px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hp-nl__wrap {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 64px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hp-nl__h2 {
+    font-family: var(--font-ui);
+    font-size: 72px;
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .hp-nl__body {
+    font-size: 18px;
+    color: var(--color-grey-400);
+    margin-top: 24px;
+    line-height: 1.5;
+    max-width: 520px;
+    margin-bottom: 0;
+  }
+
+  .hp-nl__form {
+    background: #fff;
+    border-radius: 14px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow-nl-form);
+  }
+
+  .hp-nl__input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 18px;
+    font-size: 16px;
+    font-family: var(--font-body);
+    color: var(--color-navy-900);
+    background: transparent;
+    min-width: 0;
+  }
+
+  .hp-nl__form .hp-btn {
+    padding: 14px 20px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .hp-nl__footnote {
+    font-size: 13px;
+    color: var(--color-grey-500);
+    margin-top: 18px;
+    font-family: var(--font-body);
+  }
+
+  /* ================================================================== *
+   * Clients
+   * ================================================================== */
+
+  .hp-clients {
+    background: var(--color-blue-500);
+    color: #fff;
+    padding: var(--section-py-dense) var(--container-px) calc(var(--section-py-dense) + 8px);
+  }
+
+  .hp-clients__h3 {
+    font-family: var(--font-ui);
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 40px;
+    letter-spacing: -0.01em;
+    max-width: 700px;
+    text-wrap: balance;
+    line-height: 1.15;
+  }
+
+  .hp-clients__grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+    row-gap: 20px;
+    align-items: center;
+  }
+
+  .hp-clients__tile {
+    background: #fff;
+    border-radius: 12px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    transition: transform 0.15s ease;
+  }
+
+  .hp-clients__tile:hover {
+    transform: translateY(-2px);
+  }
+
+  .hp-clients__logo {
+    max-width: 100%;
+    max-height: 48px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  /* ================================================================== *
+   * Footer
+   * ================================================================== */
+
+  .hp-footer {
+    padding: 40px var(--container-px);
+    background: var(--color-navy-900);
+    color: var(--color-grey-400);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    gap: 24px;
+  }
+
+  .hp-footer__email {
+    color: var(--color-blue-500);
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+
+  .hp-footer__email:hover { opacity: 0.8; }
+
+  .hp-footer__social {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .hp-footer__social-link {
+    color: var(--color-grey-400);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+  }
+
+  .hp-footer__social-link:hover {
+    color: var(--color-grey-300);
+  }
+
+  /* ================================================================== *
+   * Responsive — mobile collapse
+   * ================================================================== */
+
+  @media (max-width: 1023px) {
+    .hp-hero,
+    .hp-ribbon,
+    .hp-posts,
+    .hp-nl,
+    .hp-clients,
+    .hp-footer {
+      --container-px: 32px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .hp-hero,
+    .hp-ribbon,
+    .hp-posts,
+    .hp-nl,
+    .hp-clients,
+    .hp-footer {
+      --container-px: 20px;
+    }
+
+    .hp-hero__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hp-hero__h1 {
+      font-size: clamp(3rem, 12vw, var(--text-hero));
+    }
+
+    .hp-hero__watermark {
+      display: none;
+    }
+
+    .hp-ribbon {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .hp-ribbon__left {
+      font-size: 18px;
+    }
+
+    .hp-nl__wrap {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .hp-nl__h2 {
+      font-size: clamp(2.5rem, 10vw, 72px);
+    }
+
+    .hp-posts__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hp-clients__grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .hp-footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .hp-posts__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hp-clients__grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

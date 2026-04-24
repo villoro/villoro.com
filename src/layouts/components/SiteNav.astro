@@ -1,0 +1,280 @@
+---
+/**
+ * SiteNav — redesign 3.0 top navigation.
+ * Replaces the legacy Header for pages in the new design system.
+ * Wiring: same search trigger (data-search-trigger) and ThemeSwitcher
+ * as the old Header so existing JS continues to work.
+ */
+import Logo from "@/components/Logo.astro";
+import ThemeSwitcher from "@/components/ThemeSwitcher.astro";
+import config from "@/config/config.json";
+
+const { pathname } = Astro.url;
+const { settings } = config;
+
+const isHome   = pathname === "/" || pathname === "";
+const isAbout  = pathname.startsWith("/about");
+const isBlog   = pathname.startsWith("/blog")
+              || pathname.startsWith("/categories")
+              || pathname.startsWith("/tags");
+---
+
+<header class="sitenav">
+  <nav class="sitenav__inner">
+    <!-- Logo -->
+    <a href="/" aria-label="Villoro home" class="sitenav__logo">
+      <Logo />
+    </a>
+
+    <!-- Mobile hamburger (CSS-only toggle) -->
+    <input id="sitenav-toggle" type="checkbox" class="sitenav__checkbox" />
+    <label for="sitenav-toggle" class="sitenav__hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </label>
+
+    <!-- Right-side group: links + utilities -->
+    <div class="sitenav__right">
+      <ul class="sitenav__links" role="list">
+        <li>
+          <a href="/" class:list={["sitenav__link", { "is-active": isHome }]}>
+            Home
+          </a>
+        </li>
+        <li>
+          <a href="/about" class:list={["sitenav__link", { "is-active": isAbout }]}>
+            About
+          </a>
+        </li>
+        <li>
+          <a href="/blog" class:list={["sitenav__link", { "is-active": isBlog }]}>
+            Blog
+          </a>
+        </li>
+      </ul>
+
+      <div class="sitenav__divider" aria-hidden="true"></div>
+
+      {settings.search && (
+        <button
+          class="sitenav__icon-btn"
+          aria-label="Open search"
+          data-search-trigger
+        >
+          <!-- search icon -->
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </button>
+      )}
+
+      <ThemeSwitcher className="sitenav__theme" />
+
+      <a
+        href={config.subscribe.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="sitenav__subscribe"
+      >
+        Subscribe
+        <!-- arrow icon -->
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  /* ------------------------------------------------------------------ *
+   * SiteNav — scoped styles
+   * All color/spacing values reference tokens.css custom properties.
+   * ------------------------------------------------------------------ */
+
+  .sitenav {
+    position: relative;
+    z-index: 30;
+    background: var(--color-grey-50);
+  }
+
+  .sitenav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px var(--container-px);
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .sitenav__logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  /* Hidden checkbox powering the mobile toggle */
+  .sitenav__checkbox {
+    display: none;
+  }
+
+  .sitenav__hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .sitenav__hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-navy-900);
+    border-radius: 2px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  /* Right-side group */
+  .sitenav__right {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* Nav link list */
+  .sitenav__links {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sitenav__link {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-navy-900);
+    text-decoration: none;
+    letter-spacing: -0.005em;
+    transition: color 0.15s ease;
+  }
+
+  .sitenav__link:hover,
+  .sitenav__link.is-active {
+    color: var(--color-blue-500);
+  }
+
+  /* Divider between links and utilities */
+  .sitenav__divider {
+    width: 1px;
+    height: 18px;
+    background: var(--color-grey-100);
+    margin: 0 20px;
+    flex-shrink: 0;
+  }
+
+  /* Icon buttons (search, etc.) */
+  .sitenav__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-navy-900);
+    padding: 6px;
+    border-radius: 6px;
+    transition: color 0.15s ease;
+  }
+
+  .sitenav__icon-btn:hover {
+    color: var(--color-blue-500);
+  }
+
+  /* ThemeSwitcher wrapper spacing */
+  .sitenav__theme {
+    margin: 0 8px;
+  }
+
+  /* Subscribe CTA */
+  .sitenav__subscribe {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-blue-500);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: var(--radius-button);
+    text-decoration: none;
+    box-shadow: var(--shadow-cta);
+    transition: opacity 0.15s ease;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+
+  .sitenav__subscribe:hover {
+    opacity: 0.88;
+  }
+
+  /* ---- Mobile (≤ 767px) ---- */
+  @media (max-width: 767px) {
+    .sitenav__inner {
+      padding: 16px 20px;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    .sitenav__hamburger {
+      display: flex;
+    }
+
+    .sitenav__right {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 16px 0 8px;
+      gap: 16px;
+      border-top: 1px solid var(--color-grey-100);
+      margin-top: 12px;
+    }
+
+    /* Show when checkbox is checked */
+    .sitenav__checkbox:checked ~ .sitenav__right {
+      display: flex;
+    }
+
+    /* Animate hamburger to X */
+    .sitenav__checkbox:checked ~ .sitenav__hamburger span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .sitenav__checkbox:checked ~ .sitenav__hamburger span:nth-child(2) {
+      opacity: 0;
+    }
+    .sitenav__checkbox:checked ~ .sitenav__hamburger span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .sitenav__links {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .sitenav__divider {
+      display: none;
+    }
+  }
+</style>
