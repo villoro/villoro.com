@@ -183,55 +183,6 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       </div>
     </section>
 
-    <!-- ════════════════════ NEWSLETTER ═══════════════════════ -->
-    <section class="hp-nl">
-      <span class="hp-nl__bg" aria-hidden="true">subscribe.</span>
-      <div class="hp-wrap">
-      <div class="hp-nl__wrap">
-        <div>
-          <h2 class="hp-nl__h2">
-            One email<br />
-            <span class="hp-yellow">a month.</span><br />
-            Zero noise.
-          </h2>
-          <p class="hp-nl__body">
-            New posts, tools I'm actually using, and the occasional opinion on
-            the data space. Read by ~1,200 engineers. Unsubscribe any time —
-            one click, no hard feelings.
-          </p>
-        </div>
-        <div>
-          <!--
-            Mailchimp doesn't expose a direct POST endpoint from the eepurl link,
-            so we open the hosted signup page in a new tab. The email input is kept
-            for UX — clicking Subscribe opens Mailchimp where the user can paste it.
-          -->
-          <div class="hp-nl__form">
-            <input
-              id="nl-email"
-              type="email"
-              placeholder="your@email.com"
-              aria-label="Email address"
-              class="hp-nl__input"
-            />
-            <a
-              href={config.subscribe.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="hp-btn hp-btn--blue"
-            >
-              Subscribe
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-          <p class="hp-nl__footnote">
-            Monthly cadence · powered by Mailchimp
-          </p>
-        </div>
-      </div>
-      </div>
-    </section>
-
     <!-- ════════════════════ FOOTER ═══════════════════════════ -->
     <footer class="hp-footer">
       <div class="hp-wrap hp-footer__flex">
