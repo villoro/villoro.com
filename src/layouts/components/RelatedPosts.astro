@@ -1,6 +1,6 @@
 ---
 import config from "@/config/config.json";
-import BlogCard from "@/components/BlogCard.astro";
+import PostCard from "@/components/PostCard.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import similarItems from "@/lib/utils/similarItems";
 
@@ -16,7 +16,7 @@ const similarPosts = similarItems(currentPost, posts, similar_items_length);
   <div class="row justify-center">
     {similarPosts.map((post) => (
       <div class="sm:col-4">
-        <BlogCard data={post} loading="lazy" />
+        <PostCard post={post} variant="small" loading="lazy" />
       </div>
     ))}
   </div>
