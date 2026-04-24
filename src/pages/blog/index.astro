@@ -3,23 +3,28 @@ import BaseRedesign from "@/layouts/BaseRedesign.astro";
 import SiteNav from "@/components/SiteNav.astro";
 import PostCard from "@/components/PostCard.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
+import Pagination from "@/components/Pagination.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import readingTime from "@/lib/utils/readingTime";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 import config from "@/config/config.json";
 
-const { blog_folder } = config.settings;
-const posts = await getSinglePage(blog_folder);
-const sortedPosts = sortByDate(posts);
-const postCount = sortedPosts.length;
+const { blog_folder, pagination } = config.settings;
+const allPosts    = await getSinglePage(blog_folder);
+const sortedPosts = sortByDate(allPosts);
+const postCount   = sortedPosts.length;
+const totalPages  = Math.ceil(postCount / pagination);
+
+// Page 1 slice
+const currentPosts = sortedPosts.slice(0, pagination);
 
 const writingSince = new Date(config.settings.writing_since);
 const yearsWriting = Math.floor(
   (new Date().getTime() - writingSince.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
 );
 
-// Build category counts from actual posts
+// Category counts from ALL posts for accurate ribbon numbers
 const categoryCounts: Record<string, number> = {};
 for (const post of sortedPosts) {
   const cat = post.data.category;
@@ -107,18 +112,21 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
         </div>
 
         <div class="bl-grid" id="bl-grid">
-          {sortedPosts.map((post) => (
+          {currentPosts.map((post, i) => (
             <div class="bl-grid__item" data-category={post.data.category ?? ""}>
               <PostCard
                 post={post}
                 variant="small"
                 readTime={getReadTime(post)}
+                loading={i < 6 ? "eager" : "lazy"}
               />
             </div>
           ))}
         </div>
 
         <p class="bl-empty" id="bl-empty" hidden>No posts in this category yet.</p>
+
+        <Pagination section={blog_folder} currentPage={1} totalPages={totalPages} />
 
       </div>
     </section>
@@ -135,36 +143,28 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   const title = document.getElementById("bl-grid-title")!;
   const empty = document.getElementById("bl-empty")!;
 
-  function filterPosts(cat: string, label: string) {
-    chips.forEach((c) => c.classList.remove("is-active"));
-    document.querySelector(`[data-cat="${cat}"]`)?.classList.add("is-active");
-
-    let visible = 0;
-    items.forEach((item) => {
-      const show = cat === "all" || item.dataset.category === cat;
-      item.hidden = !show;
-      if (show) visible++;
-    });
-
-    title.textContent = cat === "all" ? "All posts" : label;
-    (empty as HTMLElement).hidden = visible > 0;
-  }
-
   chips.forEach((chip) => {
     chip.addEventListener("click", () => {
       const cat = chip.dataset.cat ?? "all";
-      // Strip trailing count from button text (e.g. "🐍 Python 14" → "🐍 Python")
+
+      chips.forEach((c) => c.classList.remove("is-active"));
+      chip.classList.add("is-active");
+
+      let visible = 0;
+      items.forEach((item) => {
+        const show = cat === "all" || item.dataset.category === cat;
+        item.hidden = !show;
+        if (show) visible++;
+      });
+
       const label = (chip.textContent ?? "").replace(/\s+\d+$/, "").trim();
-      filterPosts(cat, label);
+      title.textContent = cat === "all" ? "All posts" : label;
+      (empty as HTMLElement).hidden = visible > 0;
     });
   });
 </script>
 
 <style>
-  /* ------------------------------------------------------------------ *
-   * Blog index — scoped styles
-   * ------------------------------------------------------------------ */
-
   .bl {
     background: var(--color-grey-50);
     color: var(--color-navy-900);
@@ -174,7 +174,6 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
     --container-px: 64px;
   }
 
-  /* Centered content wrapper */
   .bl-wrap {
     max-width: 1312px;
     margin: 0 auto;
@@ -349,11 +348,8 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
     white-space: nowrap;
   }
 
-  .bl-chip:hover    { background: rgba(255, 255, 255, 0.22); }
-  .bl-chip.is-active {
-    background: #fff;
-    color: var(--color-navy-900);
-  }
+  .bl-chip:hover     { background: rgba(255, 255, 255, 0.22); }
+  .bl-chip.is-active { background: #fff; color: var(--color-navy-900); }
 
   .bl-chip__count {
     font-size: 11px;
@@ -383,6 +379,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
     font-weight: 700;
     letter-spacing: -0.02em;
     margin: 0;
+    color: var(--color-navy-900);
   }
 
   .bl-grid-meta {
