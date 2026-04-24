@@ -155,6 +155,34 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
   </article>
 )}
 
+<style is:global>
+  /* Image fill rules — kept global so they survive ClientRouter
+     view-transitions (scoped styles can be stripped on back-nav) */
+  .pc-big__img,
+  .pc-med__img,
+  .pc-small__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .pc-big__img {
+    transition: transform 0.4s ease;
+  }
+  .pc-big:hover .pc-big__img {
+    transform: scale(1.03);
+  }
+  .pc-med__img {
+    opacity: 0.7;
+  }
+  .pc-small__img {
+    transition: transform 0.35s ease;
+  }
+  .pc-small:hover .pc-small__img {
+    transform: scale(1.04);
+  }
+</style>
+
 <style>
   /* ------------------------------------------------------------------ *
    * PostCard — scoped styles (all three variants)
@@ -216,18 +244,6 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     aspect-ratio: 16 / 9;
     max-height: 480px;
     overflow: hidden;
-  }
-
-  .pc-big__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.4s ease;
-  }
-
-  .pc-big:hover .pc-big__img {
-    transform: scale(1.03);
   }
 
   .pc-big__overlay {
@@ -301,12 +317,6 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     box-shadow: var(--shadow-hero-card);
     display: flex;
     flex-direction: column;
-    transform: rotate(0.8deg);
-    transition: transform 0.2s ease;
-  }
-
-  .pc-med:hover {
-    transform: rotate(0deg);
   }
 
   .pc-med__img-wrap {
@@ -318,14 +328,6 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     text-decoration: none;
     flex-shrink: 0;
     background: var(--color-navy-800);
-  }
-
-  .pc-med__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    opacity: 0.7;
   }
 
   .pc-med__badge {
@@ -409,18 +411,6 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     background: var(--color-grey-100);
     text-decoration: none;
     flex-shrink: 0;
-  }
-
-  .pc-small__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.35s ease;
-  }
-
-  .pc-small:hover .pc-small__img {
-    transform: scale(1.04);
   }
 
   .pc-small__body {
