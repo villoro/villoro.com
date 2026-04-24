@@ -56,17 +56,6 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       <div class="hp-hero__grid">
         <!-- Left column -->
         <div class="hp-hero__left">
-          <!-- "New post" pill -->
-          {latestPost && (
-            <a
-              href={`/${blog_folder}/${latestPost.data.slug || latestPost.id}`}
-              class="hp-hero__new-pill"
-            >
-              <span class="hp-hero__new-dot"></span>
-              New post · {latestPost.data.title}
-            </a>
-          )}
-
           <!-- Headline -->
           <h1 class="hp-hero__h1">
             Data <span class="hp-blue">pipelines.</span><br />
@@ -87,11 +76,11 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
               Read the blog
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
             </a>
-            <a href="/about" class="hp-btn hp-btn--outline">About me</a>
+            <a href="/about" class="hp-btn hp-btn--blue">About me</a>
           </div>
         </div>
 
-        <!-- Right column: "Most read" side-card + stats -->
+        <!-- Right column: "Most read" side-card + latest pill + stats -->
         <div class="hp-hero__right">
           {heroPost && (
             <div class="hp-hero__card-wrap">
@@ -103,6 +92,17 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
                 loading="eager"
               />
             </div>
+          )}
+
+          <!-- Latest post pill -->
+          {latestPost && (
+            <a
+              href={`/${blog_folder}/${latestPost.data.slug || latestPost.id}`}
+              class="hp-hero__new-pill"
+            >
+              <span class="hp-hero__new-dot"></span>
+              New post · {latestPost.data.title}
+            </a>
           )}
 
           <!-- Stats row -->
@@ -137,8 +137,6 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
           Latest: <strong>{daysAgo} days ago</strong>
           {latestPost?.data?.category && <> · <strong>{latestPost.data.category}</strong></>}
         </span>
-        <span class="hp-ribbon__sep" aria-hidden="true"></span>
-        <span><strong>{postCount}+ posts</strong> · updated monthly</span>
       </div>
       </div>
     </div>
@@ -395,7 +393,6 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
     font-weight: 600;
     color: var(--color-navy-900);
     text-decoration: none;
-    margin-bottom: 28px;
     width: fit-content;
     max-width: 100%;
     overflow: hidden;
@@ -419,9 +416,9 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   .hp-hero__h1 {
     font-family: var(--font-ui);
     font-weight: 700;
-    font-size: var(--text-hero);
-    line-height: 0.9;
-    letter-spacing: -0.045em;
+    font-size: clamp(2.5rem, 5vw, var(--text-hero));
+    line-height: 1.05;
+    letter-spacing: -0.04em;
     margin: 0;
     color: var(--color-navy-900);
     text-wrap: balance;
@@ -459,11 +456,15 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   /* Stats row */
   .hp-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     padding-top: 18px;
     border-top: 1px solid var(--color-grey-100);
     font-family: var(--font-ui);
+  }
+
+  .hp-stats__item {
+    text-align: center;
   }
 
   .hp-stats__num {
