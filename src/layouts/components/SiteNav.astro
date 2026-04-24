@@ -21,10 +21,10 @@ const isBlog   = pathname.startsWith("/blog")
 
 <header class="sitenav">
   <nav class="sitenav__inner">
-    <!-- Logo -->
-    <a href="/" aria-label="Villoro home" class="sitenav__logo">
+    <!-- Logo (Logo.astro renders its own <a>, so we use a wrapper div) -->
+    <div class="sitenav__logo">
       <Logo />
-    </a>
+    </div>
 
     <!-- Mobile hamburger (CSS-only toggle) -->
     <input id="sitenav-toggle" type="checkbox" class="sitenav__checkbox" />
@@ -70,7 +70,9 @@ const isBlog   = pathname.startsWith("/blog")
         </button>
       )}
 
-      <ThemeSwitcher className="sitenav__theme" />
+      <div class="sitenav__theme-wrap">
+        <ThemeSwitcher />
+      </div>
 
       <a
         href={config.subscribe.link}
@@ -116,7 +118,6 @@ const isBlog   = pathname.startsWith("/blog")
   .sitenav__logo {
     display: flex;
     align-items: center;
-    text-decoration: none;
     flex-shrink: 0;
   }
 
@@ -202,7 +203,7 @@ const isBlog   = pathname.startsWith("/blog")
   }
 
   /* ThemeSwitcher wrapper spacing */
-  .sitenav__theme {
+  .sitenav__theme-wrap {
     margin: 0 20px;
   }
 
