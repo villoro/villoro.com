@@ -24,15 +24,21 @@ const gridPosts    = sortedPosts.slice(1, 7); // 3×2 grid
 // Pick a "most read" post outside the featured 7 so no duplication
 const heroPost     = sortedPosts[7] ?? sortedPosts[0];
 
-// Stats
-const postCount   = sortedPosts.length;
-const yearsWriting = 7;
+// Stats — all derived at build time, no magic constants
+const postCount    = sortedPosts.length;
 const companyCount = companies?.logos?.length ?? 12;
 
-// Days since latest post
 const today = new Date();
+
+// Years writing: from config.settings.writing_since to today
+const writingSince  = new Date(config.settings.writing_since);
+const yearsWriting  = Math.floor(
+  (today.getTime() - writingSince.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+);
+
+// Days since latest non-draft post
 const latestDate = latestPost?.data?.date ? new Date(latestPost.data.date) : today;
-const daysAgo = Math.max(0, Math.round((today.getTime() - latestDate.getTime()) / 86_400_000));
+const daysAgo    = Math.max(0, Math.round((today.getTime() - latestDate.getTime()) / 86_400_000));
 
 // Reading times — body is available on glob-loaded entries as a string
 const getReadTime = (post: typeof sortedPosts[0]) => {
@@ -211,28 +217,31 @@ const importImage = async (imageName: string, darkMode = false) => {
           </p>
         </div>
         <div>
-          <!-- Form posts to Mailchimp via the subscribe link -->
-          <form
-            action={config.subscribe.link}
-            method="get"
-            target="_blank"
-            class="hp-nl__form"
-          >
+          <!--
+            Mailchimp doesn't expose a direct POST endpoint from the eepurl link,
+            so we open the hosted signup page in a new tab. The email input is kept
+            for UX — clicking Subscribe opens Mailchimp where the user can paste it.
+          -->
+          <div class="hp-nl__form">
             <input
+              id="nl-email"
               type="email"
-              name="EMAIL"
               placeholder="your@email.com"
               aria-label="Email address"
               class="hp-nl__input"
-              required
             />
-            <button type="submit" class="hp-btn hp-btn--blue">
+            <a
+              href={config.subscribe.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hp-btn hp-btn--blue"
+            >
               Subscribe
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-            </button>
-          </form>
+            </a>
+          </div>
           <p class="hp-nl__footnote">
-            <span class="hp-yellow">1,241</span> subscribers · monthly cadence · powered by Mailchimp
+            Monthly cadence · powered by Mailchimp
           </p>
         </div>
       </div>
@@ -241,7 +250,7 @@ const importImage = async (imageName: string, darkMode = false) => {
     <!-- ════════════════════ CLIENTS ══════════════════════════ -->
     <section class="hp-clients">
       <h3 class="hp-clients__h3">
-        Over seven years I've built data infrastructure for —
+        Over {yearsWriting} years I've built data infrastructure for —
       </h3>
       <div class="hp-clients__grid">
         {companies?.logos?.map(async (company) => {
@@ -277,7 +286,7 @@ const importImage = async (imageName: string, darkMode = false) => {
         <a href={`mailto:${config.footer.email}`} class="hp-footer__email">
           {config.footer.email}
         </a>
-        &nbsp;· Barcelona · © {new Date().getFullYear()}
+        &nbsp;· Barcelona · © 2014
       </div>
       <div class="hp-footer__social">
         {social.main.map((s) => (
@@ -305,12 +314,6 @@ const importImage = async (imageName: string, darkMode = false) => {
             )}
           </a>
         ))}
-        <!-- RSS -->
-        <a href="/rss.xml" aria-label="RSS feed" class="hp-footer__social-link">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 19a2 2 0 11-4 0 2 2 0 014 0zM1 11a10 10 0 0112 12M1 3a18 18 0 0120 20"/>
-          </svg>
-        </a>
       </div>
     </footer>
   </div>
