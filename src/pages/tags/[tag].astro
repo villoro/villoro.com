@@ -1,44 +1,40 @@
 ---
-import config from "@/config/config.json";
-import BlogCard from "@/components/BlogCard.astro";
-import BlogCategories from "@/components/BlogCategories.astro";
+import BaseRedesign from "@/layouts/BaseRedesign.astro";
+import SiteNav from "@/components/SiteNav.astro";
+import PostCard from "@/components/PostCard.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
 import Pagination from "@/components/Pagination.astro";
-import Base from "@/layouts/Base.astro";
-import { fetchAndSortPosts } from "@/lib/blogUtils.astro";
+import config from "@/config/config.json";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { slugify } from "@/lib/utils/textConverter";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getTaxonomy } from "@/lib/taxonomyParser.astro";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
+import readingTime from "@/lib/utils/readingTime";
 
-const { blog_folder } = config.settings;
+const { blog_folder, pagination } = config.settings;
 
-// get static paths for all tags
 export async function getStaticPaths() {
-  const { blog_folder } = (await import('@/config/config.json')).settings;
+  const { blog_folder, pagination } = (await import('@/config/config.json')).settings;
   const tags = await getTaxonomy(blog_folder, "tags");
   const paths = [];
-
   for (const tag of tags) {
     const items = await getSinglePage(blog_folder);
     const filteredItems = taxonomyFilter(items, "tags", tag);
-    const totalPages = Math.ceil(filteredItems.length / config.settings.pagination);
-
+    const totalPages = Math.ceil(filteredItems.length / pagination);
     for (let i = 1; i <= totalPages; i++) {
-      paths.push({ params: { tag, slug: i.toString() } });
+      paths.push({ params: { tag } });
     }
   }
-
-  return paths;
+  return [...new Map(paths.map(p => [p.params.tag, p])).values()];
 }
 
-const { tag, slug } = Astro.params;
+const { tag } = Astro.params;
 const items = await getSinglePage(blog_folder);
 
-// Find the original case-sensitive tag
 let originalTag = tag;
 const normalizedTag = tag.toLowerCase();
-const filterByTags = items.filter(item => {
+const filtered = items.filter(item => {
   const itemTags = item.data.tags;
   if (itemTags && itemTags.some(t => slugify(t).toLowerCase() === normalizedTag)) {
     originalTag = itemTags.find(t => slugify(t).toLowerCase() === normalizedTag);
@@ -47,42 +43,135 @@ const filterByTags = items.filter(item => {
   return false;
 });
 
-const sortedPosts = sortByDate(filterByTags);
-const totalPages = Math.ceil(sortedPosts.length / config.settings.pagination);
-const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
-const indexOfLastPost = currentPage * config.settings.pagination;
-const indexOfFirstPost = indexOfLastPost - config.settings.pagination;
-const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
+const sortedPosts = sortByDate(filtered);
+const totalPages = Math.ceil(sortedPosts.length / pagination);
+const currentPosts = sortedPosts.slice(0, pagination);
+
+const getReadTime = (post: typeof sortedPosts[0]) => {
+  try { return readingTime((post as any).body ?? ""); } catch { return ""; }
+};
 ---
 
-<Base title={`Tag: ${originalTag}`}>
-  <section class="section pt-6 md:pt-14">
-    <div class="container pt-6 pb-12 text-center">
-      <h1>
-        Posts with
-        <span class="pl-2 mr-2 bg-theme-light dark:bg-darkmode-theme-light">
-          {originalTag}
-        </span>
-        tag
-      </h1>
-    </div>
+<BaseRedesign title={`Tag: ${originalTag} — Villoro`} description={`All posts tagged with ${originalTag}.`}>
+  <div class="bl">
+    <SiteNav />
 
-    <BlogCategories />
-
-    <!-- Posts -->
-    <div class="container">
-      <div class="row">
-        {currentPosts.map((item, index) => (
-          <div class="mb-14 md:col-6 lg:col-4" key={index}>
-            <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
-          </div>
-        ))}
+    <section class="bl-hero">
+      <div class="bl-wrap">
+        <nav class="bl-crumb" aria-label="breadcrumb">
+          <a href="/" class="bl-crumb__link">Villoro</a>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <a href="/blog" class="bl-crumb__link">Blog</a>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <span class="bl-crumb__current">#{originalTag}</span>
+        </nav>
+        <h1 class="bl-hero__h1">
+          Tag: <span class="bl-blue">#{originalTag}</span>
+        </h1>
+        <p class="bl-hero__lede">{sortedPosts.length} post{sortedPosts.length !== 1 ? "s" : ""} with this tag.</p>
       </div>
-      <Pagination
-        section={`tags/${tag}`}
-        currentPage={currentPage}
-        totalPages={totalPages}
-      />
-    </div>
-  </section>
-</Base>
+    </section>
+
+    <section class="bl-grid-sec">
+      <div class="bl-wrap">
+        <div class="bl-grid">
+          {currentPosts.map((post, i) => (
+            <PostCard post={post} variant="small" readTime={getReadTime(post)} loading={i < 6 ? "eager" : "lazy"} />
+          ))}
+        </div>
+        {totalPages > 1 && (
+          <div class="bl-pagination">
+            <Pagination section={`tags/${tag}`} currentPage={1} totalPages={totalPages} />
+          </div>
+        )}
+      </div>
+    </section>
+
+    <SiteFooter />
+  </div>
+</BaseRedesign>
+
+<style>
+  .bl {
+    background: var(--color-grey-50);
+    color: var(--color-navy-900);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    --container-px: 64px;
+  }
+
+  .bl-wrap {
+    max-width: 1312px;
+    margin: 0 auto;
+    padding: 0 var(--container-px);
+  }
+
+  .bl-blue { color: var(--color-blue-500); }
+
+  .bl-hero {
+    padding: 40px 0 48px;
+  }
+
+  .bl-crumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-grey-500);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .bl-crumb__link {
+    color: var(--color-grey-500);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .bl-crumb__link:hover { color: var(--color-blue-500); }
+  .bl-crumb__current    { color: var(--color-blue-500); }
+
+  .bl-hero__h1 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 5vw, 64px);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin: 0 0 16px;
+    color: var(--color-navy-900);
+  }
+
+  .bl-hero__lede {
+    font-size: 17px;
+    color: var(--color-navy-900);
+    opacity: 0.65;
+    margin: 0;
+  }
+
+  .bl-grid-sec {
+    padding: 0 0 80px;
+  }
+
+  .bl-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+
+  .bl-pagination {
+    margin-top: 48px;
+  }
+
+  @media (max-width: 1023px) {
+    .bl { --container-px: 32px; }
+    .bl-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 767px) {
+    .bl { --container-px: 20px; }
+    .bl-grid { grid-template-columns: 1fr; }
+  }
+</style>
