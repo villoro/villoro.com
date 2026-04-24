@@ -2,8 +2,6 @@
 import BaseRedesign from "@/layouts/BaseRedesign.astro";
 import SiteNav from "@/components/SiteNav.astro";
 import PostCard from "@/components/PostCard.astro";
-import { Image } from "astro:assets";
-import { getEntry } from "astro:content";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import readingTime from "@/lib/utils/readingTime";
@@ -11,9 +9,6 @@ import config from "@/config/config.json";
 import social from "@/config/social.json";
 
 // ---- Data ----
-const homepage = await getEntry("homepage", "-index");
-const { companies } = homepage.data;
-
 const { blog_folder } = config.settings;
 const posts = await getSinglePage(blog_folder);
 const sortedPosts = sortByDate(posts);
@@ -26,7 +21,6 @@ const heroPost     = sortedPosts[7] ?? sortedPosts[0];
 
 // Stats — all derived at build time, no magic constants
 const postCount    = sortedPosts.length;
-const companyCount = companies?.logos?.length ?? 12;
 
 const today = new Date();
 
@@ -45,17 +39,6 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   try { return readingTime((post as any).body ?? ""); } catch { return ""; }
 };
 
-// Company logo helper (same as old homepage)
-const importImage = async (imageName: string, darkMode = false) => {
-  if (darkMode) {
-    try {
-      const { default: img } = await import(`../images/companies/${imageName}_dark.png`);
-      return img;
-    } catch { /* no dark variant */ }
-  }
-  const { default: img } = await import(`../images/companies/${imageName}.png`);
-  return img;
-};
 ---
 
 <BaseRedesign title="Villoro — Data pipelines. Written plainly.">
@@ -131,10 +114,6 @@ const importImage = async (imageName: string, darkMode = false) => {
               <span class="hp-stats__num">{yearsWriting}</span>
               <span class="hp-stats__label">years writing</span>
             </div>
-            <div class="hp-stats__item">
-              <span class="hp-stats__num">{companyCount}</span>
-              <span class="hp-stats__label">companies shipped for</span>
-            </div>
           </div>
         </div>
       </div>
@@ -162,6 +141,7 @@ const importImage = async (imageName: string, darkMode = false) => {
 
     <!-- ══════════════════ LATEST WRITING ═════════════════════ -->
     <section class="hp-posts">
+      <div class="hp-posts__inner">
       <div class="hp-posts__head">
         <div>
           <h2 class="hp-posts__h2">
@@ -197,6 +177,7 @@ const importImage = async (imageName: string, darkMode = false) => {
             readTime={getReadTime(post)}
           />
         ))}
+      </div>
       </div>
     </section>
 
@@ -244,38 +225,6 @@ const importImage = async (imageName: string, darkMode = false) => {
             Monthly cadence · powered by Mailchimp
           </p>
         </div>
-      </div>
-    </section>
-
-    <!-- ════════════════════ CLIENTS ══════════════════════════ -->
-    <section class="hp-clients">
-      <h3 class="hp-clients__h3">
-        Over {yearsWriting} years I've built data infrastructure for —
-      </h3>
-      <div class="hp-clients__grid">
-        {companies?.logos?.map(async (company) => {
-          const { name, image, link } = company;
-          if (!image) return null;
-          const lightImg = await importImage(image);
-          return (
-            <a
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="hp-clients__tile"
-              title={name}
-            >
-              <Image
-                src={lightImg}
-                alt={name}
-                widths={[160, 320]}
-                sizes="160px"
-                loading="lazy"
-                class="hp-clients__logo"
-              />
-            </a>
-          );
-        })}
       </div>
     </section>
 
@@ -605,6 +554,11 @@ const importImage = async (imageName: string, darkMode = false) => {
     background: var(--color-grey-50);
   }
 
+  .hp-posts__inner {
+    max-width: 1312px;
+    margin: 0 auto;
+  }
+
   .hp-posts__head {
     display: flex;
     align-items: flex-end;
@@ -730,58 +684,6 @@ const importImage = async (imageName: string, darkMode = false) => {
   }
 
   /* ================================================================== *
-   * Clients
-   * ================================================================== */
-
-  .hp-clients {
-    background: var(--color-blue-500);
-    color: #fff;
-    padding: var(--section-py-dense) var(--container-px) calc(var(--section-py-dense) + 8px);
-  }
-
-  .hp-clients__h3 {
-    font-family: var(--font-ui);
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 40px;
-    letter-spacing: -0.01em;
-    max-width: 700px;
-    text-wrap: balance;
-    line-height: 1.15;
-  }
-
-  .hp-clients__grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 20px;
-    row-gap: 20px;
-    align-items: center;
-  }
-
-  .hp-clients__tile {
-    background: #fff;
-    border-radius: 12px;
-    height: 88px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 16px;
-    transition: transform 0.15s ease;
-  }
-
-  .hp-clients__tile:hover {
-    transform: translateY(-2px);
-  }
-
-  .hp-clients__logo {
-    max-width: 100%;
-    max-height: 48px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-  }
-
-  /* ================================================================== *
    * Footer
    * ================================================================== */
 
@@ -831,7 +733,6 @@ const importImage = async (imageName: string, darkMode = false) => {
     .hp-ribbon,
     .hp-posts,
     .hp-nl,
-    .hp-clients,
     .hp-footer {
       --container-px: 32px;
     }
@@ -842,7 +743,6 @@ const importImage = async (imageName: string, darkMode = false) => {
     .hp-ribbon,
     .hp-posts,
     .hp-nl,
-    .hp-clients,
     .hp-footer {
       --container-px: 20px;
     }
@@ -882,10 +782,6 @@ const importImage = async (imageName: string, darkMode = false) => {
       grid-template-columns: 1fr;
     }
 
-    .hp-clients__grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
     .hp-footer {
       flex-direction: column;
       align-items: flex-start;
@@ -896,10 +792,6 @@ const importImage = async (imageName: string, darkMode = false) => {
   @media (min-width: 768px) and (max-width: 1023px) {
     .hp-posts__grid {
       grid-template-columns: repeat(2, 1fr);
-    }
-
-    .hp-clients__grid {
-      grid-template-columns: repeat(4, 1fr);
     }
   }
 </style>
