@@ -4,12 +4,6 @@
  * Used at the end of every blog post.
  */
 import config from "@/config/config.json";
-
-interface Props {
-  coffeeUrl?: string;
-}
-
-const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
 ---
 
 <div class="cta">
@@ -108,6 +102,6 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
   @media (max-width: 767px) {
     .cta { flex-direction: column; align-items: flex-start; padding: 22px; }
     .cta__buttons { margin-left: 0; width: 100%; }
-    .cta__btn { flex: 1; justify-content: center; }
+    .cta__subscribe { flex: 1; justify-content: center; }
   }
 </style>
