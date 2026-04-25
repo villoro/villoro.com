@@ -16,11 +16,11 @@ draft: false
 > [!danger]
 > **DISCLAIMER:** A lot has changed since I wrote this. Even though `black` still works, I suggest using `ruff` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
 
-## 0. Intro
+## Intro
 
 `Black` is a Python formatter that automatically enforces a consistent style. Here you'll see what it offers and how to use it.
 
-## 1. What is black
+## What is black
 
 <FancyLink linkText="Black" url="https://github.com/ambv/black" company="github" dark="true"/> is a Python code formatter that allows developers to focus on code itself. You can try it online at <FancyLink linkText="Black playground" url="https://black.now.sh/" company="default" dark="true"/>.
 
@@ -31,7 +31,7 @@ From their github:
 
 The best way to explain it will be using an example.
 
-### 1.1. Input
+### Input
 
 ```python
 from seven_dwwarfs import Grumpy, Happy, Sleepy, Bashful, Sneezy, Dopey, Doc
@@ -69,7 +69,7 @@ regular_formatting = [
 ]
 ```
 
-### 1.2. Output from black
+### Output from black
 ```python
 from seven_dwwarfs import (
     Grumpy,
@@ -127,7 +127,7 @@ def very_important_function(
 regular_formatting = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 ```
 
-## 2. Installation and usage of black
+## Installation and usage of black
 
 You can install black using pip with:
 
@@ -155,7 +155,7 @@ line-length = 100
 py36 = true
 ```
 
-## 3. Sublack
+## Sublack
 
 <FancyLink linkText="Sublack" url="https://github.com/jgirardet/sublack" dark="true"/> is a sublime extension to run black. 
 

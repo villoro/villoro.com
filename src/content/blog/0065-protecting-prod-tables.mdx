@@ -10,7 +10,7 @@ tags: [dbt, SQL, DE]
 draft: false
 ---
 
-## 1. Ways of Protecting Production Tables
+## Ways of Protecting Production Tables
 
 Production tables are the backbone of any data platform. They feed dashboards, power APIs, and sometimes even trigger external actions (like sending emails or pushing updates to third-party systems).
 
@@ -20,7 +20,7 @@ Because of this, mistakes in production tables can quickly escalate into costly 
 2. Protecting against unexpected changes.
 3. Protecting sensitive data.
 
-## 2. Protecting Against Bad Data
+## Protecting Against Bad Data
 
 The idea is simple:
 
@@ -38,7 +38,7 @@ For example, if a table is used to trigger customer emails, it’s safer to dela
 > This pattern is not for every model. Use it sparingly — only when data quality is more important than timeliness.
 
 
-## 3. Protecting Against Unexpected Changes
+## Protecting Against Unexpected Changes
 
 Sometimes the main risk isn’t bad data, but unintentional modifications. A small schema tweak or row-level difference can trigger expensive or disruptive actions downstream (like syncing thousands of rows into Salesforce).
 
@@ -178,7 +178,7 @@ SELECT * FROM data_diff
 > [!note]
 > This adds a small PR overhead, but it prevents costly mistakes in production syncs and batch jobs.
 
-## 4. Protecting Sensitive Data
+## Protecting Sensitive Data
 
 Finally, some tables are too sensitive to expose — like payroll data. Access should be restricted to a small subset of users.
 
@@ -272,7 +272,7 @@ It’s important that the **seed schema matches the real source schema**. One wa
 > [!tip]
 > With this pattern, developers can test pipelines safely while production runs always use real data.
 
-## 5. Summary and Best Practices
+## Summary and Best Practices
 
 * **Bad data protection**: prioritize data quality over freshness. Use for critical tables powering user-facing actions.
 * **Unexpected changes**: catch unintended diffs before merging. Ideal for tables that trigger expensive syncs or updates.

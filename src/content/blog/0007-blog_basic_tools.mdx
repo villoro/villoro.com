@@ -10,7 +10,7 @@ tags: [Web, Tools, Setup]
 draft: false
 ---
   
-## 0. Why?
+## Why?
 
 If you just created a blog you will probably want to have common and useful features like:
 
@@ -24,7 +24,7 @@ In this post I am going to explain how to use **Google Analytics** to track visi
 
 It won't be a step by step guide, instead I will highlight the things I think are more relevant.
 
-## 1. Google Analytics
+## Google Analytics
 You should first register your web page and then copy and paste at the scripts part of your base template the code they provide.
 
 One thing I believe is really important is to **filter out your own traffic** to the webpage while you are developing or testing. In my case I did a filter to check if the host of the page is the bare domain of my page. This way I will effectively exclude visits from `localhost` or testing branches like `develop.villoro.com`.
@@ -54,7 +54,7 @@ Other ways of filtering the traffic would be:
 * <FancyLink linkText="Using IP filters" url="https://support.google.com/analytics/answer/1034840?hl=en"/>. You will need a static IP for every computer you use to develop.
 * Using cookies.
 
-## 2. Mailchimp
+## Mailchimp
 This service is the one that involves less code. Setting it up can be done through their webpage after signing up. I recommend that you customize some things:
 
 * Sign up form. There you will also get the URL that you will use in your site.
@@ -68,7 +68,7 @@ When you have finished that you can put a button in your page so that people can
 </a>
 ```
 
-## 3. Disqus
+## Disqus
 Setting up Disqus is really easy. You only need to register and then copy and paste two code parts. The first one will be the div with the comments:
 
 ```html

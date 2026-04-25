@@ -14,7 +14,7 @@ draft: false
 
 <script type="module" src="/js/posts/0026-plots-h2o.js"></script>
 
-## 1. What is H2O
+## What is H2O
 
 According to their website, H2O is a fully open source, distributed in-memory machine learning platform with linear scalability.
 H2O supports the most widely used statistical & machine learning algorithms including gradient boosted machines, generalized linear models, deep learning and more.
@@ -23,7 +23,7 @@ It uses MapReduce to break down tasks so that it can send tasks to workers on a 
 
 H2O also has an AutoML functionality that automatically runs through all the algorithms and their hyperparameters to produce a leaderboard of the best models.
 
-## 2. H2O AutoML
+## H2O AutoML
 
 The best way to understand **AutoML** is by showing a practical case.
 As an example we will use the <FancyLink linkText="Higgs Challenge" url="https://www.kaggle.com/c/higgs-boson/data"/> data.
@@ -34,7 +34,7 @@ Since the preprocessing is out of the scope of this post we can directly use a c
   <Button label="Test data" link="https://s3.amazonaws.com/erin-data/higgs/higgs_test_5k.csv" style="solid" />
 </div>
 
-### 2.1. Start H2O session
+### Start H2O session
 
 This is really straightforward:
 
@@ -47,7 +47,7 @@ h2o.init()
 
 This code will init an H2O session.
 
-### 2.2. Get data
+### Get data
 
 The first step is to load the data.
 Then we will create a list with the names of all feature columns and another for the target.
@@ -72,7 +72,7 @@ test[y] = test[y].asfactor()
 > [!tip]
 > This creates an `H2O` dataframe. You can always transform it to **Pandas** with `x.as_data_frame()`
 
-### 2.3. Train
+### Train
 
 The first step is to create the `H2OAutoML` object.
 Since we aim to get reproducibility of the example we will set a seed.
@@ -90,7 +90,7 @@ Once the **AutoML** object is declared to train you only need to pass the `train
 aml.train(x=x, y=y, training_frame=train)
 ```
 
-### 2.3. Check results
+### Check results
 
 You can see the results with `lb = aml.leaderboard`.
 However it is more useful to see all possible information with:
@@ -118,7 +118,7 @@ The total training time (for all models) of the example was **limited to 2 minut
 | DRF_1_AutoML                        | 0.7652 | 0.5802  | 0.7833 | 0.3405               |
 | XRT_1_AutoML                        | 0.7651 | 0.5822  | 0.7831 | 0.3492               |
 
-## 3. H2O vs Manual ML
+## H2O vs Manual ML
 
 In order to compare the results of **H2O AutoML** I trained a Support Vector Classifier (SVC) and a Random Forest Classifier (RFC).
 Then I also did a GridSearchCV with the RandomForest to get some numbers.
@@ -145,7 +145,7 @@ Here you can see how all models perform:
 
 The training time with **AutoML** was lower than sklearn while having equal or better results.
 
-## 4. Sparkling water
+## Sparkling water
 
 Even though **H2O** uses MapReduce it might be useful to integrate it with spark.
 To do so you only need to use **Sparkling water**.

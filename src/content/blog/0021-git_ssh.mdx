@@ -10,13 +10,13 @@ tags: [GIT, Security, Setup]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 **Secure Shell (SSH)** is a cryptographic network protocol for operating network services securely over an unsecured network. This allows you to connect securely to other services or machines.
 
 In this post I am going to explain how to configure your linux machine to github using **SSH**.
 
-## 1. Create **SSH keys**
+## Create **SSH keys**
 
 First we will create a SSH key that will allow you to connect to github.
 
@@ -28,7 +28,7 @@ Then I suggest you save the SSH key with some useful name like `/home/ubuntu/.ss
 
 Finally add a passphrase. This will ensure that your SSH credentials are safe even if someone access your computer.
 
-## 2. Use keychain
+## Use keychain
 
 > [!info]
 > If you are using **Windows** you don't need to do that step.
@@ -63,7 +63,7 @@ eval `keychain --agents ssh --eval github_ssh`
 > [!info]
 > `github_ssh` is the name of the SSH key to import you could add more separating them by spaces
 
-## 3. Add the SSH key to github
+## Add the SSH key to github
 
 This guide focus on github but you can do the same following similar steps for other git services like bitbucket.
 
@@ -74,7 +74,7 @@ This guide focus on github but you can do the same following similar steps for o
 5. Use some meaningful name like `aws_ec2`, paste the SSH key and save it.
 6. If asked, write your github password.
 
-## 4. Check the SSH connection
+## Check the SSH connection
 
 The first thing you should do is to **restart** the terminal so that changes can be applied.
 
@@ -89,7 +89,7 @@ The first time it will say that the authenticity of **github.com** can't be esta
 > [!success]
 > You should see a message saying `Hi XXXX! You've successfully authenticated`
 
-## 5. Cloning a **git** repo
+## Cloning a **git** repo
 
 Since you are using **SSH** the clone command will change a little bit. Instead of using:
 

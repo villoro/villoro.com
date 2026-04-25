@@ -10,18 +10,18 @@ tags: [Python, AWS]
 draft: false
 ---
 
-## 0. Overview
+## Overview
 
 AWS Lambda lets you run code without managing servers. Here we use it to start and stop EC2 and RDS instances on demand.
 
-## 1. Intro to AWS Lambdas
+## Intro to AWS Lambdas
 
 AWS Lambda is a compute service that lets you run code without provisioning or managing servers. AWS Lambda executes your code only when needed and scales automatically, from a few requests per day to thousands per second.
 
 AWS lambdas should be used for small and light functions. For more complicated or time expensive functions it is better to use an `EC2` instance which can be turned on/off when needed to keep costs low.
 
 
-## 2. Creating a lambda to start/stop instances
+## Creating a lambda to start/stop instances
 
 The idea is to create a lambda that can start a system (both an `EC2` and `RDS`) using an API.
 
@@ -39,13 +39,13 @@ queryStringParameters = {
 }
 ```
 
-### 2.1. How it works
+### How it works
 This lambda is created in **python 3.6** and relies on aws **boto3** library. There are 2 files:
 
 * **aws.py:** this handles the start/stop of the instances. This file is shared in all lambdas
 * **lambda_function.py:** this has the logic for deciding what to start/stop
 
-#### 2.1.1. aws.py
+#### aws.py
 First of all it will start an AWS session and it is important to start it in the correct region. There is no need to use any credentials since AWS has already put the ACCESS_KEY and SECRET_KEY as environment vars and are used in _boto3_ background.
 
 > [!warning]
@@ -62,7 +62,7 @@ The workflow is:
 * **start rds:** from 'stopped' to 'available'
 * **stop rds:** from 'available' to 'stopped'
 
-#### 2.1.2. lambda_handler.py
+#### lambda_handler.py
 
 There is a dictionary with the info of the instances that the lambdas can act upon. The idea is that users can only use the name of the system (```magento/vtiger```) and the dictionary will give the instance id.
 
@@ -102,7 +102,7 @@ If the token is correct it will iterate over the **systems** present in the requ
 }
 ```
 
-### 2.2. Create the lambda
+### Create the lambda
 First of all there is some work to do in AWS IAM service. This will give the lambdas the following permissions:
 
 1. Act on `EC2` instances
@@ -111,7 +111,7 @@ First of all there is some work to do in AWS IAM service. This will give the lam
 
 To do that first you will need to create a **policy** and then assign it to a **role**.
 
-#### 2.2.1. Create a IAM/Policy
+#### Create a IAM/Policy
 
 1. Go to AWS IAM service
 2. Create a Policy
@@ -161,7 +161,7 @@ The policy config is:
 }
 ```
 
-#### 2.2.2. Create a IAM/Role
+#### Create a IAM/Role
 
 1. Go to AWS IAM service
 2. Create a Policy
@@ -170,7 +170,7 @@ The policy config is:
     3. Select previously created policy
     4. Add name + description
 
-#### 2.2.3. Create lambda itself
+#### Create lambda itself
 
 1. Go to AWS Lambda service
 2. Go to sidebar ```functions```
@@ -186,7 +186,7 @@ The policy config is:
 5. Add tags
 6. Add environment vars for **instances_api**
 
-#### 2.2.4. Create API
+#### Create API
 
 
 ![AWS lambda screenshot](../../images/posts/2019/0015-aws_lambda_screenshot.png)
@@ -203,7 +203,7 @@ The policy config is:
     4. Click **add**
 4. Save lambda and then the API will be created
 
-## 3. Extending that lambda
+## Extending that lambda
 
 One way to give more functions to this lambda is to set times to start or stop certain systems. For example you could want to start a system at 7 am and then stop it at 19 pm on workdays. This could be useful for `development` systems.
 

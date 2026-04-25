@@ -10,7 +10,7 @@ tags: [SQL, DE, sqlglot, Performance, Analytics]
 draft: true
 ---
 
-## 1. Overview
+## Overview
 
 This post explains how to extract and structure SQL query insights from Athena using **sqlglot** and a custom Python parser. The focus is on building a foundation for later performance analysis rather than interpreting the results yet.
 
@@ -22,7 +22,7 @@ This guide is especially relevant if you want to:
 * Build an internal SQL insights dataset for cost/performance optimization.
 * Create a reproducible static analysis pipeline for SQL queries.
 
-## 2. Problem
+## Problem
 
 Data teams often accumulate thousands of historical SQL queries across BI tools, pipelines, and ad-hoc analysis. However, this data remains underutilized — stored as text without structure or insight.
 
@@ -43,7 +43,7 @@ The next sections detail the tools, parser, and pipeline that make this process 
 > [!warning]
 > This approach focuses solely on **static analysis** — it inspects query text, not execution results. Runtime metrics like execution time, data scanned, or bytes processed should be retrieved directly from your query engine’s system tables or APIs to complement this analysis.
 
-## 3. Extracting Query History (optional)
+## Extracting Query History (optional)
 
 > [!info]
 > This section is optional and **Athena-specific**. The post focuses on static parsing, but if you need sample input data, here’s a minimal way to fetch Athena query history. Other engines have different APIs/system tables; adjust the listing & detail calls accordingly.
@@ -111,7 +111,7 @@ executions = get_query_executions(ids)
 > [!warning]
 > Keep `max_iterations` conservative to control costs and latency. Add retries/backoff and time filtering (`started_at`) in production.
 
-## 4. Sqlglot
+## Sqlglot
 
 <FancyLink linkText="sqlglot" url="https://github.com/tobymao/sqlglot" dark="true"/> is an open-source SQL parser and transpiler that converts SQL text into an **Abstract Syntax Tree (AST)**. It’s fast, stable, and supports a wide range of dialects — including Athena, BigQuery, Presto, and Snowflake — making it a strong foundation for static query analysis.
 
@@ -130,7 +130,7 @@ In this project, `sqlglot` serves as the backbone for the **SqlAnalyzer** class 
 > [!warning]
 > While `sqlglot` can handle a large variety of dialects, some engine-specific extensions or macros (e.g., Athena comments or dbt Jinja syntax) may require pre-processing before parsing. Always sanitize queries before feeding them into the parser.
 
-### 4.1 Minimal example: parsing and inspecting a query
+### Minimal example: parsing and inspecting a query
 
 ```python
 from sqlglot import parse_one
@@ -162,12 +162,12 @@ print(f"Tables used in the query: {tables}")
 * `parse_one(..., read="athena")` builds an AST you can traverse.
 * `find_all(exp.Table)` retrieves table nodes; you can assemble `db.table` easily.
 
-## 5. SqlAnalyzer (methods)
+## SqlAnalyzer (methods)
 
 This section focuses **only on the methods** used to extract static insights from SQL text.
 We introduce the constructor and then group the public `get_*` methods by topic. Internal helpers (`_…`) appear the first time they’re referenced (inside accordions).
 
-### 5.0 Constructor
+### Constructor
 
 Parses once per query using the chosen dialect (Athena here). Everything else reads from the AST (`self.tree`).
 
@@ -178,7 +178,7 @@ class SqlAnalyzer:
         self.tree = parse_one(query.strip(), read=self.engine)
 ```
 
-### 5.1 Table lineage
+### Table lineage
 
 **What you learn:** which tables the query **reads** and which tables it **writes** to (INSERT/CTAS). This lets you attribute cost and time to specific tables and build lineage.
 
@@ -267,7 +267,7 @@ class SqlAnalyzer:
 
 </Accordion>
 
-### 5.2 Join & union metrics
+### Join & union metrics
 
 **What you learn:** amount and type of data combination and deduplication. More joins → larger intermediate data; `UNION DISTINCT` forces dedupe.
 
@@ -292,7 +292,7 @@ class SqlAnalyzer:
         return total, union_all, total - union_all
 ```
 
-### 5.3 Structural complexity
+### Structural complexity
 
 **What you learn:** how deep/complex the query is (CTEs, subqueries, windows, nesting). Higher values often correlate with slower planning and heavier shuffles.
 
@@ -327,7 +327,7 @@ class SqlAnalyzer:
         return maxd
 ```
 
-### 5.4 Predicate & projection metrics
+### Predicate & projection metrics
 
 **What you learn:** how selective and wide the query is. Large `IN` lists, long `OR` chains, function-wrapped columns, and leading-wildcard `LIKE` patterns often kill pruning and inflate scans.
 
@@ -413,7 +413,7 @@ class SqlAnalyzer:
 
 </Accordion>
 
-### 5.5 Best-practice flags
+### Best-practice flags
 
 **What you learn:** quick red flags that typically inflate cost or latency.
 
@@ -439,7 +439,7 @@ class SqlAnalyzer:
         return False
 ```
 
-### 5.6 Command classification
+### Command classification
 
 **What you learn:** whether a query performs reads only, or also DDL/DML (useful for governance and change tracking). `exp.Command` captures things like `UNLOAD`; explicit classes cover `INSERT/CREATE/ALTER/DROP`.
 
@@ -470,11 +470,11 @@ class SqlAnalyzer:
 > [!warning]
 > These methods provide **static** insights. Correlate with runtime metrics (execution time, bytes scanned, rows output) from your engine to prioritize remediation.
 
-## 6. Pipeline for Extracting Data
+## Pipeline for Extracting Data
 
 This section shows how the analyzer runs in batch (Prefect/ECS) and how results are materialized to the **Bronze** layer. We focus on how each query becomes an `AnalysisResult` record.
 
-### 6.1 Result schema (Pydantic) and `analyze`
+### Result schema (Pydantic) and `analyze`
 
 We attach a `query_id` to every result so downstream systems can trace metrics back to the original query. Failures are represented with `is_success=False`.
 
@@ -562,7 +562,7 @@ class SqlAnalyzer:
         )
 ```
 
-### 6.2 Batch extraction task (Prefect/ECS)
+### Batch extraction task (Prefect/ECS)
 
 This task queries recent Athena statements, runs the analyzer for each, and writes the results to an Iceberg-backed Bronze table.
 
@@ -609,11 +609,11 @@ def extract_batch():
 
 Each batch produces a DataFrame of analysis results, where each row represents one query and all computed metrics from `SqlAnalyzer.analyze()`.
 
-## 7. Next Steps
+## Next Steps
 
 Once the data is extracted and stored, the next phase is **analysis**. The goal is to turn raw static metrics into actionable insights for improving SQL practices across your organization.
 
-### 7.1 Analyze trends
+### Analyze trends
 
 Examine global patterns to understand how queries are written and evolve over time:
 
@@ -622,7 +622,7 @@ Examine global patterns to understand how queries are written and evolve over ti
 * Typical **AST depth** and **subquery counts** to estimate structural complexity.
 * Top N tables appearing across queries to detect heavily queried datasets.
 
-### 7.2 Establish SQL quality guidelines
+### Establish SQL quality guidelines
 
 Use these findings to propose internal standards:
 
@@ -632,7 +632,7 @@ Use these findings to propose internal standards:
 
 By periodically running this pipeline, you can detect regressions (e.g., more `SELECT *` or deeper nesting) and drive continuous improvements in your data engineering practices.
 
-### 7.3 Future extensions
+### Future extensions
 
 * **Cost integration:** correlate metrics with runtime cost (e.g., bytes scanned) for deeper efficiency analysis.
 * **Visualization:** load metrics into **Superset** or other BI tools for dashboards and trend tracking.

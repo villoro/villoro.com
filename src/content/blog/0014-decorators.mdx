@@ -10,11 +10,11 @@ tags: [Python]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 Decorators are a really useful tool for python development but not a lot of people know what they are and how they work. In this post you are going to master them so that you can use them and create your own.
 
-## 1. Understanding functions
+## Understanding functions
 
 Before starting with decorators it is important to understand how functions work in Python. Functions have **parameters** for example:
 
@@ -38,7 +38,7 @@ def message_to_person(message, name):
 > [!tip]
 > We can pass **any** object as a parameter to a function. We can even pass a **function** as a parameter.
 
-## 2. Decorators basics
+## Decorators basics
 
 The idea behind **decorators** is to modify a function so that some things happen 'around' that function. This means before or after the function (or both).
 
@@ -94,7 +94,7 @@ wait_3_seconds_and_print()
 
 Now we have the `timeit` decorator, the `wait_3_seconds` and the `wait_3_seconds_and_print` functions. Those both will wait 3 seconds but the second one will print the execution time.
 
-## 3. Using real decorators
+## Using real decorators
 
 Now that we understand the idea behind decorators, we can rewrite the examples using real decorators. The behavior will be exactly the same.
 
@@ -160,7 +160,7 @@ hello()
   After function
 </TerminalOutput>
 
-## 4. Passing arguments to decorators
+## Passing arguments to decorators
 
 It is possible to pass arguments to `decorators`. The idea is to create another wrapper that will take the parameters. For example:
 
@@ -197,11 +197,11 @@ hello_argh()
 > [!note]
 > This decorator allows the user to decide what to print before the main function.
 
-## 5. Some cool examples
+## Some cool examples
 
 Now that we understand how decorators work, let's see some useful examples of what decorators can offer.
 
-### 5.1. supertimeit decorator
+### supertimeit decorator
 
 This is a decorator that takes one outputting function and outputs the execution time. By default it will use the `print` function.
 
@@ -260,7 +260,7 @@ wait_2_seconds_and_log()
 
 Now the function logs the time.
 
-### 5.2. infallible decorator
+### infallible decorator
 
 This decorator will prevent any function from crashing and it will show the details of any `Exception` occurred.
 
@@ -305,7 +305,7 @@ wrong_math(1)
 > [!success]
 > Now we see a message when it crashes
 
-### 5.3. Using them both
+### Using them both
 
 And the best part is that we can use `supertimeit` and `infallible` decorators together.
 
