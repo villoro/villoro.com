@@ -5,6 +5,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @import "./generated-theme.css";
+@import "./tokens.css";
 
 @layer base {
   @import "./base.css";

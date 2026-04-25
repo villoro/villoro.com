@@ -1,0 +1,66 @@
+/* Design tokens — villoro.com redesign 3.0
+   Single source of truth for all colors, typography, spacing, and radii.
+   Do not scatter hex codes into components — reference these variables instead. */
+
+:root {
+  /* --- Brand colors --- */
+  --color-navy-900: #0b1026; /* primary text, dark sections (footer, newsletter, featured card) */
+  --color-navy-800: #1a2040; /* hero side-card gradient base */
+  --color-blue-500: #3a76ff; /* brand blue — CTAs, links, accent headings, ribbon */
+  --color-yellow-400: #ffc33a; /* brand yellow — highlight chips, badges, pulsing dots */
+
+  /* --- Grey scale --- */
+  --color-grey-50: #fbfbfd;  /* page background */
+  --color-grey-100: #eaedf2; /* card borders, dividers, inline-code background */
+  --color-grey-300: #d5d9ee; /* dark-section body text (featured card excerpt) */
+  --color-grey-400: #a6accb; /* dark-section secondary text (footer, newsletter footnote) */
+  --color-grey-500: #6a6e82; /* secondary / meta text */
+  --color-ink-800: #3a3d52;  /* hero supporting paragraph */
+  --color-success: #10b981;  /* "active" dot indicator */
+
+  /* --- Category colors (one per top-level category) --- */
+  --cat-de: #8b5cf6;
+  --cat-python: #eab308;
+  --cat-tools: #0ea5e9;
+  --cat-cloud-devops: #10b981;
+  --cat-ai: #ef4444;
+  --cat-web: #ec4899;
+  --cat-api: #f59e0b;
+  --cat-git: #f97316;
+  --cat-hardware: #14b8a6;
+  --cat-others: #6b7280;
+
+  /* --- Font families --- */
+  --font-display: "Fraunces", Georgia, serif;           /* display headlines — hero H1s, section H2s, post titles */
+  --font-body: "Heebo", system-ui, sans-serif;          /* body text, UI (default font-family) */
+  --font-ui: "Signika", system-ui, sans-serif;          /* button labels, stat labels, nav links */
+  --font-mono: "JetBrains Mono", "Fira Code", monospace; /* code blocks, inline code */
+  --font-accent: "Instrument Serif", Georgia, serif;    /* small accent italics */
+
+  /* --- Type scale (desktop) --- */
+  --text-hero: 7.25rem;         /* 116px / lh 0.9  / tracking -0.045em — hero H1 */
+  --text-section-h2: 4.25rem;   /* 68px  / lh 0.95 / tracking -0.03em  — section headings */
+  --text-featured-title: 3rem;  /* 48px  / lh 1.05 / tracking -0.025em — big card title */
+  --text-card-title: 1.375rem;  /* 22px  / lh 1.25 — grid card title */
+  --text-lede: 1.25rem;         /* 20px  / lh 1.5  — hero supporting paragraph */
+  --text-body: 1rem;            /* 16px  / lh 1.6  — body copy */
+  --text-meta: 0.875rem;        /* 14px  / lh 1.4  — dates, read-time, captions */
+  --text-chip: 0.6875rem;       /* 11px  — category chips, badges */
+
+  /* --- Layout --- */
+  --container-px: 64px;       /* horizontal padding inside the 1440-wide canvas */
+  --section-py: 96px;         /* vertical padding for major sections */
+  --section-py-dense: 64px;   /* vertical padding for denser sections (clients, footer) */
+
+  /* --- Radii --- */
+  --radius-hero-card: 20px;  /* hero cards + featured card */
+  --radius-post-card: 14px;  /* standard post cards (grid) */
+  --radius-button: 10px;     /* buttons */
+  --radius-chip: 4px;        /* category chips / badges */
+  --radius-pill: 999px;      /* pill chips, tags */
+
+  /* --- Shadows --- */
+  --shadow-cta: 0 8px 24px -8px rgba(58, 118, 255, 0.45);      /* primary CTA button */
+  --shadow-hero-card: 0 30px 60px -20px rgba(11, 16, 38, 0.25); /* hero side-card */
+  --shadow-nl-form: 0 30px 60px -20px rgba(58, 118, 255, 0.4);  /* newsletter form */
+}

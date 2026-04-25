@@ -1,45 +1,698 @@
 ---
-import Base from "@/layouts/Base.astro";
-import ParallaxAbout from "@/components/ParallaxAbout.astro";
-import { markdownify } from "@/lib/utils/textConverter";
-import { getEntry, render } from "astro:content";
-
-const about = await getEntry("about", "-index");
-const { Content } = await render(about);
-const { title, description, meta_title, image, info } = about.data;
-
+import BaseRedesign from "@/layouts/BaseRedesign.astro";
+import SiteNav from "@/components/SiteNav.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
 import { Image } from "astro:assets";
 import meImage from "../images/me.png";
+import { getSinglePage } from "@/lib/contentParser.astro";
+import config from "@/config/config.json";
+import social from "@/config/social.json";
+
+const { blog_folder } = config.settings;
+const posts      = await getSinglePage(blog_folder);
+const postCount  = posts.length;
+
+const writingSince = new Date(config.settings.writing_since);
+const yearsWriting = Math.floor(
+  (new Date().getTime() - writingSince.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+);
+
+const findSocial = (name: string) => social.main.find((s) => s.name === name)?.link ?? "#";
+
+const timeline = [
+  {
+    year: "2024 — now",
+    role: "Staff Data Engineer",
+    co: "Northius",
+    desc: "Leading the data lake creation — Prefect for orchestration, dbt for transformations, and ECS Python jobs for ingestion.",
+  },
+  {
+    year: "2021 — 2024",
+    role: "Data Engineering Manager",
+    co: "Glovo",
+    desc: "Scaled the team from 2 to 15. Led migration to Data Mesh, designed the first data products, and delivered ROI exceeding 10×.",
+  },
+  {
+    year: "2020 — 2021",
+    role: "Senior Data Engineer",
+    co: "Glovo",
+    desc: "Led transition from data warehouse to data lake. Built PySpark pipelines processing ~300M frontend events per day.",
+  },
+  {
+    year: "2015 — 2020",
+    role: "Consultant",
+    co: "Basetis",
+    desc: "Data Engineer, Data Scientist, and team lead across SEAT, Scytl, Naturgy, and Banc Sabadell — AWS, Azure, Databricks.",
+  },
+];
 ---
 
-<Base title={title} meta_title={meta_title} description={description}>
-  <ParallaxAbout imageName={image}>
-    <h1 class="text-white dark:text-darkmode-primary text-center text-4xl md:text-6xl">
-      {markdownify(title)}
-    </h1>
-  </ParallaxAbout>
+<BaseRedesign
+  title="About — Villoro"
+  description="Arnau Villoro — data engineer in Barcelona. Industrial engineering background, 12 years of notes, and a weakness for automation."
+>
+  <div class="ab">
 
-  <section class="section-sm bg-gradient">
-    <div class="container">
-      <div class="row items-center justify-between">
-        <div class="mb-8 md:mb-0 md:col-7 lg:col-6 md:order-2">
-          <h2 set:html={markdownify(info.title)} class="mb-4" />
-          <div class="content">
-            <Content />
+    <!-- ══════════════════════ NAV ════════════════════════ -->
+    <SiteNav />
+
+    <!-- ══════════════════════ HERO ═══════════════════════ -->
+    <section class="ab-hero">
+      <span class="ab-hero__bg" aria-hidden="true">hello.</span>
+      <div class="ab-wrap">
+
+        <nav class="ab-crumb" aria-label="breadcrumb">
+          <a href="/" class="ab-crumb__link">Villoro</a>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <span class="ab-crumb__current">About</span>
+        </nav>
+
+        <div class="ab-hero__grid">
+          <div class="ab-hero__left">
+            <h1 class="ab-hero__h1">
+              Hi, I'm<br />
+              <span class="ab-blue">Arnau.</span>
+            </h1>
+            <p class="ab-hero__lede">
+              <span class="ab-hi">Engineer in Barcelona</span> who's passionate about making
+              things run smoothly. I thrive on automation — it's like a puzzle to me,
+              finding ways to streamline processes and build efficient solutions from scratch.
+            </p>
+
+            <div class="ab-hero__social">
+              <a href={findSocial("linkedin")} target="_blank" rel="noopener noreferrer" class="ab-social-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"/></svg>
+                LinkedIn
+              </a>
+              <a href={findSocial("github")} target="_blank" rel="noopener noreferrer" class="ab-social-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.3 11.3 0 016 0C17.7 4.7 18.7 5 18.7 5c.7 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0023.5 12C23.5 5.7 18.3.5 12 .5z"/></svg>
+                GitHub
+              </a>
+              <a href={findSocial("twitter")} target="_blank" rel="noopener noreferrer" class="ab-social-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                Twitter
+              </a>
+            </div>
+          </div>
+
+          <div class="ab-portrait-wrap">
+            <div class="ab-portrait-badge">Trust me, I'm an engineer :)</div>
+            <div class="ab-portrait">
+              <Image
+                src={meImage}
+                alt="Arnau Villoro"
+                widths={[240, 480, 720, meImage.width]}
+                sizes="(max-width: 767px) 240px, (max-width: 1023px) 360px, 480px"
+                loading="eager"
+                class="ab-portrait__img"
+              />
+            </div>
           </div>
         </div>
-        <div class="flex justify-center mb:md-0 md:col-5 md:order-1">
-          <div class="mx-16 md:mx-8">
-            <Image
-              src={meImage}
-              alt={info.imageAlt}
-              widths={[180, 360, 600, 800, meImage.width]}
-              sizes={`(max-width: 360px) 180px, (max-width: 720px) 360px, (max-width: 1200px) 600px, (max-width: 1600px) 800px, ${meImage.width}px`}
-              loading="lazy"
-            />
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════ STORY ══════════════════════ -->
+    <section class="ab-story-sec">
+      <div class="ab-wrap ab-story-grid">
+        <aside class="ab-story-label">
+          <div class="ab-story-label__kicker">The Short Version</div>
+          <div class="ab-story-label__title">
+            From industrial engineering to data pipelines.
+          </div>
+        </aside>
+        <div class="ab-story-body">
+          <p>
+            With a background in <strong>Industrial Engineering</strong>, I've delved deep into
+            the world of data engineering. From crunching numbers as a Data Analyst to
+            leading teams as a Data Engineering Manager and diving into algorithms as a
+            Machine Learning Engineer, I've worn many hats in the data realm.
+          </p>
+          <p>
+            As a dedicated <strong>Data Engineer</strong>, I'm all about transforming raw data
+            into actionable insights — designing, developing, and deploying robust data
+            infrastructure to help businesses thrive in the digital age.
+          </p>
+          <p>
+            This site is where I keep <span class="ab-hi">{yearsWriting} years of notes</span> —
+            the patterns that stuck, the debugs that hurt, the tools I'd recommend to my past
+            self. {postCount} posts and counting.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ TIMELINE ═════════════════════ -->
+    <section class="ab-tl-sec">
+      <div class="ab-wrap">
+        <div class="ab-tl-head">
+          <div>
+            <div class="ab-tl-kicker">Career</div>
+            <h2 class="ab-tl-h">{yearsWriting} years · 3 employers</h2>
+          </div>
+          <p class="ab-tl-sub">
+            Consultant → senior engineer → engineering manager → staff engineer.
+            The titles changed, the question stayed the same.
+          </p>
+        </div>
+        <div class="ab-tl-grid">
+          {timeline.map((t) => (
+            <article class="ab-tl-card">
+              <div class="ab-tl-year">{t.year}</div>
+              <div class="ab-tl-role">{t.role}</div>
+              <div class="ab-tl-co">{t.co}</div>
+              <p class="ab-tl-desc">{t.desc}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ BEYOND THE TERMINAL ══════════════ -->
+    <section class="ab-beyond-sec">
+      <div class="ab-wrap">
+        <div class="ab-beyond-head">
+          <div class="ab-beyond-kicker">When I'm not knee-deep in code</div>
+          <h2 class="ab-beyond-h">
+            Beyond the <span class="ab-blue">terminal.</span>
+          </h2>
+        </div>
+        <div class="ab-beyond-grid">
+          <article class="ab-beyond-card">
+            <div class="ab-beyond-emoji">🧗</div>
+            <h3 class="ab-beyond-title">Scaling cliffs</h3>
+            <p class="ab-beyond-text">
+              Weekends on real rock. Climbing is the only thing that turns my brain off
+              completely — you can't debug a crux move.
+            </p>
+          </article>
+          <article class="ab-beyond-card">
+            <div class="ab-beyond-emoji">📖</div>
+            <h3 class="ab-beyond-title">A book in the sun</h3>
+            <p class="ab-beyond-text">
+              Currently alternating between systems writing and old-school sci-fi.
+              The patterns rhyme more than you'd expect.
+            </p>
+          </article>
+          <article class="ab-beyond-card">
+            <div class="ab-beyond-emoji">⚡</div>
+            <h3 class="ab-beyond-title">Electrical installations</h3>
+            <p class="ab-beyond-text">
+              Hands-on DIY — combining my technical skills with projects where a mistake
+              trips the breaker instead of a CI pipeline.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════════════════ CTA ═══════════════════════ -->
+    <section class="ab-cta-sec">
+      <div class="ab-wrap">
+        <div class="ab-cta-card">
+          <span class="ab-cta-bg" aria-hidden="true">hi.</span>
+          <h2 class="ab-cta-h">Have a pipeline that's causing you grief?</h2>
+          <div class="ab-cta-btns">
+            <a href={`mailto:${config.footer.email}`} class="ab-cta-primary">
+              {config.footer.email}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/blog" class="ab-cta-secondary">Read the blog</a>
           </div>
         </div>
       </div>
-    </div>
-  </section>
-</Base>
+    </section>
+
+    <!-- ══════════════════════ FOOTER ═════════════════════ -->
+    <SiteFooter />
+
+  </div>
+</BaseRedesign>
+
+<style>
+  .ab {
+    background: var(--color-grey-50);
+    color: var(--color-navy-900);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    --container-px: 64px;
+  }
+
+  .ab-wrap {
+    max-width: 1312px;
+    margin: 0 auto;
+    padding: 0 var(--container-px);
+  }
+
+  .ab-blue { color: var(--color-blue-500); }
+
+  .ab-hi {
+    background: linear-gradient(transparent 62%, rgba(255, 195, 58, 0.45) 62%);
+    padding: 0 2px;
+  }
+
+  /* ── Hero ─────────────────────────────────────────────────────────── */
+
+  .ab-hero {
+    position: relative;
+    padding: 40px 0 64px;
+    overflow: hidden;
+  }
+
+  .ab-hero__bg {
+    position: absolute;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 320px;
+    color: rgba(58, 118, 255, 0.05);
+    letter-spacing: -0.06em;
+    bottom: -80px;
+    left: -40px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .ab-crumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-grey-500);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .ab-crumb__link {
+    color: var(--color-grey-500);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .ab-crumb__link:hover { color: var(--color-blue-500); }
+  .ab-crumb__current    { color: var(--color-blue-500); }
+
+  .ab-hero__grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 64px;
+    align-items: start;
+    position: relative;
+    z-index: 2;
+  }
+
+  .ab-hero__h1 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: clamp(3.5rem, 8vw, 116px);
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    margin: 0;
+    color: var(--color-navy-900);
+    text-wrap: balance;
+  }
+
+  .ab-hero__lede {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--color-navy-900);
+    opacity: 0.8;
+    margin: 28px 0 0;
+    max-width: 640px;
+  }
+
+  .ab-hero__social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 28px;
+    font-family: var(--font-ui);
+  }
+
+  .ab-social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-navy-900);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: color 0.15s;
+  }
+  .ab-social-link:hover { color: var(--color-blue-500); }
+
+  /* Portrait */
+  .ab-portrait-wrap {
+    position: relative;
+    margin-top: 20px;
+  }
+
+  .ab-portrait-badge {
+    position: absolute;
+    top: -14px;
+    left: -14px;
+    background: var(--color-yellow-400);
+    color: var(--color-navy-900);
+    font-family: var(--font-ui);
+    font-weight: 800;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    box-shadow: 0 8px 24px -8px rgba(255, 195, 58, 0.6);
+    transform: rotate(-4deg);
+    z-index: 3;
+    white-space: nowrap;
+  }
+
+  .ab-portrait {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(255, 195, 58, 0.55);
+    display: block;
+  }
+
+  .ab-portrait__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+
+  /* ── Story ────────────────────────────────────────────────────────── */
+
+  .ab-story-sec {
+    padding: 40px 0 80px;
+  }
+
+  .ab-story-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .ab-story-label {
+    position: sticky;
+    top: 100px;
+    font-family: var(--font-ui);
+  }
+
+  .ab-story-label__kicker {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-blue-500);
+    margin-bottom: 10px;
+  }
+
+  .ab-story-label__title {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--color-navy-900);
+  }
+
+  .ab-story-body {
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--color-navy-900);
+    opacity: 0.85;
+    max-width: 720px;
+  }
+  .ab-story-body p { margin: 0 0 22px; }
+  .ab-story-body p:last-child { margin-bottom: 0; }
+  .ab-story-body strong { color: var(--color-navy-900); font-weight: 700; opacity: 1; }
+
+  /* ── Timeline ─────────────────────────────────────────────────────── */
+
+  .ab-tl-sec {
+    background: var(--color-navy-900);
+    color: #fff;
+    padding: 72px 0 80px;
+  }
+
+  .ab-tl-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    margin-bottom: 48px;
+    font-family: var(--font-ui);
+    flex-wrap: wrap;
+  }
+
+  .ab-tl-kicker {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-yellow-400);
+    margin-bottom: 8px;
+  }
+
+  .ab-tl-h {
+    font-size: clamp(2rem, 4.5vw, 56px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0;
+    color: #fff;
+  }
+
+  .ab-tl-sub {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.65);
+    max-width: 320px;
+    text-align: right;
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  .ab-tl-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+  }
+
+  .ab-tl-card {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 28px 24px 32px;
+    border-top: 2px solid var(--color-blue-500);
+    font-family: var(--font-ui);
+  }
+
+  .ab-tl-year {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--color-yellow-400);
+    margin-bottom: 10px;
+  }
+  .ab-tl-role {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+    color: #fff;
+  }
+  .ab-tl-co {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.55);
+    margin-bottom: 14px;
+  }
+  .ab-tl-desc {
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0;
+  }
+
+  /* ── Beyond the terminal ──────────────────────────────────────────── */
+
+  .ab-beyond-sec {
+    padding: 72px 0 40px;
+  }
+
+  .ab-beyond-head {
+    margin-bottom: 48px;
+    font-family: var(--font-ui);
+  }
+
+  .ab-beyond-kicker {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-blue-500);
+    margin-bottom: 10px;
+  }
+
+  .ab-beyond-h {
+    font-size: clamp(2.25rem, 4.5vw, 56px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin: 0;
+    color: var(--color-navy-900);
+  }
+
+  .ab-beyond-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .ab-beyond-card {
+    background: #fff;
+    border: 1px solid var(--color-grey-100);
+    border-radius: 20px;
+    padding: 36px 28px;
+    font-family: var(--font-ui);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .ab-beyond-card:hover {
+    border-color: var(--color-blue-500);
+    transform: translateY(-2px);
+  }
+
+  .ab-beyond-emoji { font-size: 36px; margin-bottom: 18px; line-height: 1; }
+
+  .ab-beyond-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 10px;
+    color: var(--color-navy-900);
+  }
+
+  .ab-beyond-text {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--color-navy-900);
+    opacity: 0.75;
+    margin: 0;
+    font-family: var(--font-body);
+  }
+
+  /* ── CTA ──────────────────────────────────────────────────────────── */
+
+  .ab-cta-sec {
+    padding: 40px 0 80px;
+  }
+
+  .ab-cta-card {
+    background: var(--color-blue-500);
+    border-radius: 24px;
+    padding: 56px 56px 60px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 48px;
+    font-family: var(--font-ui);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ab-cta-bg {
+    position: absolute;
+    font-weight: 700;
+    font-size: 260px;
+    color: rgba(255, 255, 255, 0.08);
+    letter-spacing: -0.06em;
+    bottom: -60px;
+    right: -20px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .ab-cta-h {
+    font-size: clamp(2rem, 3.6vw, 48px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0;
+    max-width: 560px;
+    text-wrap: balance;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ab-cta-btns {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ab-cta-primary {
+    background: var(--color-yellow-400);
+    color: var(--color-navy-900);
+    padding: 16px 24px;
+    border: none;
+    border-radius: 12px;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .ab-cta-primary:hover { opacity: 0.9; }
+
+  .ab-cta-secondary {
+    background: transparent;
+    color: #fff;
+    padding: 16px 24px;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .ab-cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+
+  /* ── Responsive ───────────────────────────────────────────────────── */
+
+  @media (max-width: 1023px) {
+    .ab { --container-px: 32px; }
+    .ab-hero__grid { grid-template-columns: 1fr; gap: 48px; }
+    .ab-story-grid { grid-template-columns: 1fr; gap: 24px; }
+    .ab-story-label { position: static; }
+    .ab-tl-grid { grid-template-columns: repeat(2, 1fr); }
+    .ab-beyond-grid { grid-template-columns: repeat(2, 1fr); }
+    .ab-tl-sub { text-align: left; }
+    .ab-cta-card { flex-direction: column; align-items: flex-start; padding: 40px; }
+  }
+
+  @media (max-width: 767px) {
+    .ab { --container-px: 20px; }
+    .ab-hero__bg { display: none; }
+    .ab-tl-grid { grid-template-columns: 1fr; }
+    .ab-beyond-grid { grid-template-columns: 1fr; }
+    .ab-portrait-badge { font-size: 11px; padding: 8px 12px; top: -10px; left: -10px; }
+    .ab-cta-card { padding: 32px 24px; }
+    .ab-cta-bg { font-size: 160px; bottom: -30px; }
+  }
+</style>
