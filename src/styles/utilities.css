@@ -95,6 +95,12 @@
   background-color: var(--color-blue-500);
 }
 
+/* Dark mode: --color-navy-900 remaps to near-white, making base icon-btn
+   nearly invisible. Match the yellow (blue-500 token) used by icon-btn-blue. */
+.dark .icon-btn {
+  background-color: var(--color-blue-500);
+}
+
 /* ────────────────────────────────────────────────────────────────
    CTA LINK — Link with action indicator (arrow, chevron, etc.)
 
