@@ -51,7 +51,7 @@ const pageList = buildPageList();
 ---
 
 {totalPages > 1 && (
-  <nav class="flex items-center justify-center space-x-3" aria-label="Pagination">
+  <nav class="pg-nav flex items-center justify-center space-x-3" aria-label="Pagination">
     {/* previous */}
     {hasPrevPage ? (
       <a
@@ -130,3 +130,30 @@ const pageList = buildPageList();
     )}
   </nav>
 )}
+
+<style>
+  /* On mobile the desktop padding/gap easily overflow the viewport
+     (current page chip clipped, arrows pushed off-screen).
+     Tighten spacing and shrink arrow icons; allow wrap as a final
+     safety net on very narrow screens when the window expands to
+     ~10 entries (e.g. on page 1 of a long archive). */
+  @media (max-width: 600px) {
+    .pg-nav {
+      flex-wrap: wrap;
+      gap: 4px;
+      row-gap: 6px;
+    }
+    /* Disable Tailwind's space-x-3 horizontal margin since gap handles it */
+    .pg-nav > :not([hidden]) ~ :not([hidden]) { margin-left: 0; }
+
+    .pg-nav a,
+    .pg-nav span {
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+      font-size: 14px;
+    }
+    .pg-nav svg { height: 22px; width: 22px; }
+  }
+</style>
