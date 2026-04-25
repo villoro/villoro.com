@@ -295,14 +295,15 @@ const breadcrumbs = [
   }
 
   /* ── Links ───────────────────────────────────────────── */
-  .al-body .article-content a {
+  /* `:not(.btn)` so button shortcodes keep their own colours */
+  .al-body .article-content a:not(.btn) {
     color: var(--color-blue-500);
     text-decoration: underline;
     text-decoration-color: color-mix(in srgb, var(--color-blue-500) 35%, transparent);
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
-  .al-body .article-content a:hover { text-decoration-color: var(--color-blue-500); }
+  .al-body .article-content a:not(.btn):hover { text-decoration-color: var(--color-blue-500); }
 
   /* FancyLink pill — no underline, uses .fancy-link border */
   .al-body .article-content a[role="button"] {

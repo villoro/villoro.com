@@ -39,11 +39,28 @@
   @apply no-underline border-primary bg-primary text-white dark:border-darkmode-primary dark:bg-darkmode-primary dark:text-dark transition-colors;
 }
 
-/* Dark mode: yellow bg needs dark text (dark:text-dark resolves to #fff — override it) */
-.dark .btn-primary { color: var(--color-on-accent); }
+/* Explicitly override prose `a` link colour for all states */
+.btn-primary,
+.btn-primary:link,
+.btn-primary:visited,
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:focus {
+  color: #fff;
+}
+
+/* Dark mode: yellow bg needs dark text */
+.dark .btn-primary,
+.dark .btn-primary:link,
+.dark .btn-primary:visited,
+.dark .btn-primary:hover,
+.dark .btn-primary:active,
+.dark .btn-primary:focus {
+  color: var(--color-on-accent);
+}
 
 .btn-primary:hover:not(:disabled) {
-  @apply border-black bg-black dark:border-white dark:bg-white text-white dark:text-black;
+  @apply border-black bg-black dark:border-white dark:bg-white;
 }
 
 .btn-primary:active:not(:disabled) {
