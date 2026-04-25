@@ -30,9 +30,9 @@ As the linter, I recommend using <FancyLink linkText="Sqlfluff" url="https://git
 To correctly parse dbt code (especially the templating part), we need to set it up properly.
 The easiest way is to create the `.sqlfluff` file in the repo root as follows:
 
-<TerminalOutput color="stone">
+<FileName>
   .sqlfluff
-</TerminalOutput>
+</FileName>
 ```toml
 [sqlfluff]
 dialect = duckdb
@@ -58,9 +58,9 @@ Notice that we are using DuckDB as the dialect and that we need to set a couple 
 
 And here is the very simple profile I use:
 
-<TerminalOutput color="stone">
+<FileName>
   ./dbt_src/profiles.yml
-</TerminalOutput>
+</FileName>
 ```yaml
 # This file is only used so that `pre-commit` can properly work
 #   (for sqlfluff)
@@ -84,9 +84,9 @@ More info about it in <FancyLink linkText="pre-commit" url="https://villoro.com/
 
 To set up `sqlfluff`, you only need to add these lines to the `.pre-commit-config.yaml` file:
 
-<TerminalOutput color="stone">
+<FileName>
   .pre-commit-config.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 repos:
 
@@ -255,9 +255,9 @@ To export all that data, I use a script that:
 
 The script is the following:
 
-<TerminalOutput color="stone">
+<FileName>
   .github/scripts/create_duck_db.py
-</TerminalOutput>
+</FileName>
 ```python
 import os
 import re

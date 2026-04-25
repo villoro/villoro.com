@@ -41,9 +41,9 @@ vhooks/
 
 The composite action serves as the glue between GitHub Actions and your Python script. It defines the inputs, runs any required setup, and calls your Python logic.
 
-<TerminalOutput color="stone">
+<FileName>
   `tag_version/action.yml`
-</TerminalOutput>
+</FileName>
 ```yaml
 name: Tag Version
 description: Tag with the version from a file only when selected paths change.
@@ -124,9 +124,9 @@ runs:
 
 The Python script extracts the version from your file and pushes a new tag if it doesn’t exist yet.
 
-<TerminalOutput color="stone">
+<FileName>
   `tag_version/tag_version.py`
-</TerminalOutput>
+</FileName>
 ```python
 import subprocess
 from pathlib import Path
@@ -216,9 +216,9 @@ Matrix jobs let you apply the same logic across multiple packages without duplic
 
 Only include the fields you truly need (here: `name` and `tag_prefix`). Everything else (paths, tags) is computed per package.
 
-<TerminalOutput color="stone">
+<FileName>
   `.github/workflows/tag_version.yml`
-</TerminalOutput>
+</FileName>
 ```yaml
 name: Tag Version
 on:
@@ -283,9 +283,9 @@ Branch protection becomes noisy if you require every matrix job. Add a gate job 
 
 Create a tiny job that always runs, inspects the matrix result, and exits accordingly.
 
-<TerminalOutput color="stone">
+<FileName>
   `.github/workflows/tag_version.yml` (continued)
-</TerminalOutput>
+</FileName>
 ```yaml
   tag_gate:
     name: tag_result

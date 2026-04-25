@@ -30,9 +30,9 @@ Whether you're new to PySpark or just tired of the headache, I've got your back.
 The simplest way to execute PySpark code on EMR is by storing a Python file in S3.
 For example, let's suppose we have a `main.py` file in a bucket named `your-bucket`:
 
-<TerminalOutput color="stone">
+<FileName>
   s3://your-bucket/main.py
-</TerminalOutput>
+</FileName>
 ```python
 from pyspark.sql import SparkSession
 
@@ -105,9 +105,9 @@ The steps I follow are:
 5. Create a `tar.gz` with the virtual environment
 6. Export the `tar.gz`
 
-<TerminalOutput color="stone">
+<FileName>
   Dockerfile
-</TerminalOutput>
+</FileName>
 ```sh
 FROM --platform=linux/amd64 amazonlinux:2023 AS base
 
@@ -174,9 +174,9 @@ RUN poetry build && \
 Another thing I added is the ability to pass the `version` as an argument.
 The final `Dockerfile` code would be:
 
-<TerminalOutput color="stone">
+<FileName>
   Dockerfile
-</TerminalOutput>
+</FileName>
 ```sh
 FROM --platform=linux/amd64 amazonlinux:2023 AS base
 
@@ -264,9 +264,9 @@ Let's imagine we have:
 Some of those files will be prepared to be an entrypoint.
 The only important part is that it has a `main` function.
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/salesforce/main.py
-</TerminalOutput>
+</FileName>
 ```python
 # Other code
 
@@ -305,9 +305,9 @@ The idea here is to define the entrypoint as a parameter in `click` and then cat
 
 The basic code for that would be:
 
-<TerminalOutput color="stone">
+<FileName>
   entrypoint.py
-</TerminalOutput>
+</FileName>
 ```python
 import click
 from loguru import logger
@@ -348,9 +348,9 @@ if __name__ == "__main__":
 
 Then you can define the parameters in each file as usual:
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/salesforce/main.py
-</TerminalOutput>
+</FileName>
 ```python
 # Other code
 
@@ -368,9 +368,9 @@ One way to improve the previous code is to define the parameters with <FancyLink
 
 You would do that with:
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/salesforce/main.py
-</TerminalOutput>
+</FileName>
 ```python
 from pydantic import BaseModel
 
@@ -398,9 +398,9 @@ The idea is to create a flow dynamically with  `flow(name="flow_name")(function)
 
 So the modified lines look like as follows:
 
-<TerminalOutput color="stone">
+<FileName>
   entrypoint.py
-</TerminalOutput>
+</FileName>
 ```python
 from prefect import flow
 
@@ -438,9 +438,9 @@ This takes care of:
 * Catching parameters as a `dict`
 * Adding `prefect.tags`
 
-<TerminalOutput color="stone">
+<FileName>
   entrypoint.py
-</TerminalOutput>
+</FileName>
 ```python
 import importlib
 import sys
@@ -512,9 +512,9 @@ Here we define:
 * `BaseParams`  to be extended in each module
 * A decorator that catches the `Params` and creates a `prefect.flow`
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/common/parameters.py
-</TerminalOutput>
+</FileName>
 ```python
 from time import time
 
@@ -582,9 +582,9 @@ def catch_params(ParamsClass):
 
 Here is an example of how to define a job:
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/salesforce/main.py
-</TerminalOutput>
+</FileName>
 ```python
 from datetime import datetime
 

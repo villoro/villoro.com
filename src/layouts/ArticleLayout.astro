@@ -216,10 +216,11 @@ const breadcrumbs = [
   }
 
   /* ── Headings with CSS counters ──────────────────────── */
-  .al-body .article-content { counter-reset: al-h2; }
+  /* H2 → "1."  H3 → "1.1"  H4 → "1.1.1"  H5 → "1.1.1.1"  TOC shows H2+H3 only. */
+  .al-body .article-content { counter-reset: al-h2 al-h3 al-h4 al-h5; }
   .al-body .article-content h2 {
     counter-increment: al-h2;
-    counter-reset: al-h3;
+    counter-reset: al-h3 al-h4 al-h5;
     font-family: var(--font-ui);
     font-size: 34px;
     font-weight: 700;
@@ -239,6 +240,7 @@ const breadcrumbs = [
   }
   .al-body .article-content h3 {
     counter-increment: al-h3;
+    counter-reset: al-h4 al-h5;
     font-family: var(--font-ui);
     font-size: 22px;
     font-weight: 700;
@@ -257,6 +259,8 @@ const breadcrumbs = [
     margin-right: 8px;
   }
   .al-body .article-content h4 {
+    counter-increment: al-h4;
+    counter-reset: al-h5;
     font-family: var(--font-ui);
     font-size: 18px;
     font-weight: 700;
@@ -264,16 +268,42 @@ const breadcrumbs = [
     color: var(--color-navy-900);
     scroll-margin-top: 100px;
   }
+  .al-body .article-content h4::before {
+    content: counter(al-h2) "." counter(al-h3) "." counter(al-h4) " ";
+    color: var(--color-blue-500);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.8em;
+    margin-right: 6px;
+  }
+  .al-body .article-content h5 {
+    counter-increment: al-h5;
+    font-family: var(--font-ui);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 22px 0 8px;
+    color: var(--color-navy-900);
+    scroll-margin-top: 100px;
+  }
+  .al-body .article-content h5::before {
+    content: counter(al-h2) "." counter(al-h3) "." counter(al-h4) "." counter(al-h5) " ";
+    color: var(--color-blue-500);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.8em;
+    margin-right: 6px;
+  }
 
   /* ── Links ───────────────────────────────────────────── */
-  .al-body .article-content a {
+  /* `:not(.btn)` so button shortcodes keep their own colours */
+  .al-body .article-content a:not(.btn) {
     color: var(--color-blue-500);
     text-decoration: underline;
     text-decoration-color: color-mix(in srgb, var(--color-blue-500) 35%, transparent);
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
-  .al-body .article-content a:hover { text-decoration-color: var(--color-blue-500); }
+  .al-body .article-content a:not(.btn):hover { text-decoration-color: var(--color-blue-500); }
 
   /* FancyLink pill — no underline, uses .fancy-link border */
   .al-body .article-content a[role="button"] {
@@ -313,6 +343,161 @@ const breadcrumbs = [
   .al-body .article-content blockquote p         { margin: 0 0 8px; }
   .al-body .article-content blockquote p:last-child { margin: 0; }
 
+  /* ── Terminal output (shortcode) ─────────────────────── */
+  .al-body .article-content .terminal-output {
+    margin: 24px 0;
+    border-radius: 12px;
+    border: 1px solid #3e3d32;
+    overflow: hidden;
+  }
+
+  /* Attach to a code block ABOVE — remove bottom radius + margin from code block */
+  .al-body .article-content pre:has(+ .terminal-output),
+  .al-body .article-content .astro-code:has(+ .terminal-output),
+  .al-body .article-content figure.expressive-code:has(+ .terminal-output) {
+    margin-bottom: 0;
+    border-radius: 12px 12px 0 0;
+  }
+  /* …and remove top of the terminal-output */
+  .al-body .article-content pre + .terminal-output,
+  .al-body .article-content .astro-code + .terminal-output,
+  .al-body .article-content figure.expressive-code + .terminal-output {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+
+  /* Attach to a code block BELOW (filename label) — remove bottom radius + margin */
+  .al-body .article-content .terminal-output:has(+ pre),
+  .al-body .article-content .terminal-output:has(+ .astro-code),
+  .al-body .article-content .terminal-output:has(+ figure.expressive-code) {
+    margin-bottom: 0;
+    border-radius: 12px 12px 0 0;
+  }
+  /* …and remove top of the following code block */
+  .al-body .article-content .terminal-output + pre,
+  .al-body .article-content .terminal-output + .astro-code,
+  .al-body .article-content .terminal-output + figure.expressive-code {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .al-body .article-content .terminal-output__body {
+    padding: 9px 26px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  /* Strip MDX-injected <p> and <code> margins/backgrounds inside the body */
+  .al-body .article-content .terminal-output__body p,
+  .al-body .article-content .terminal-output__body code {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-size: inherit;
+    color: inherit;
+    border-radius: 0;
+  }
+
+  /* Color variants — light */
+  .al-body .article-content .terminal-output--yellow .terminal-output__body {
+    background: rgba(255, 195, 58, 0.14);
+    color: #3d2e00;
+  }
+  .al-body .article-content .terminal-output--grey .terminal-output__body {
+    background: rgba(120, 120, 120, 0.10);
+    color: var(--color-navy-900);
+  }
+  .al-body .article-content .terminal-output--red .terminal-output__body {
+    background: rgba(220, 38, 38, 0.10);
+    color: #7f1d1d;
+  }
+  .al-body .article-content .terminal-output--green .terminal-output__body {
+    background: rgba(22, 163, 74, 0.10);
+    color: #14532d;
+  }
+
+  /* Color variants — dark */
+  .dark .al-body .article-content .terminal-output--yellow .terminal-output__body {
+    background: rgba(255, 195, 58, 0.12);
+    color: #ffe082;
+  }
+  .dark .al-body .article-content .terminal-output--grey .terminal-output__body {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-on-dark-body);
+  }
+  .dark .al-body .article-content .terminal-output--red .terminal-output__body {
+    background: rgba(220, 38, 38, 0.15);
+    color: #fca5a5;
+  }
+  .dark .al-body .article-content .terminal-output--green .terminal-output__body {
+    background: rgba(22, 163, 74, 0.15);
+    color: #86efac;
+  }
+
+  /* ── FileName label (shortcode) ──────────────────────── */
+  .al-body .article-content .file-name {
+    margin: 24px 0;
+    border-radius: 12px;
+    border: 1px solid #3e3d32;
+    overflow: hidden;
+  }
+
+  /* Attach to the code block below */
+  .al-body .article-content .file-name:has(+ pre),
+  .al-body .article-content .file-name:has(+ .astro-code),
+  .al-body .article-content .file-name:has(+ figure.expressive-code) {
+    margin-bottom: 0;
+    border-radius: 12px 12px 0 0;
+  }
+  .al-body .article-content .file-name + pre,
+  .al-body .article-content .file-name + .astro-code,
+  .al-body .article-content .file-name + figure.expressive-code {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .al-body .article-content .file-name__body {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 22px;
+    background: rgba(120, 120, 120, 0.10);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-navy-900);
+  }
+
+  .al-body .article-content .file-name__icon {
+    flex-shrink: 0;
+    opacity: 0.55;
+  }
+
+  .al-body .article-content .file-name__text {
+    opacity: 0.8;
+  }
+
+  /* Strip any <p> or <code> MDX injects inside */
+  .al-body .article-content .file-name__body p,
+  .al-body .article-content .file-name__body code {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-size: inherit;
+    color: inherit;
+    border-radius: 0;
+  }
+
+  /* Dark mode */
+  .dark .al-body .article-content .file-name__body {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-on-dark-body);
+  }
+
   /* ── Notice / callout (shortcode) ────────────────────── */
   .al-body .article-content .notice {
     margin: 24px 0;
@@ -340,22 +525,45 @@ const breadcrumbs = [
 
   /* ── Tables ──────────────────────────────────────────── */
   .al-body .article-content table {
-    width: 100%;
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border-collapse: collapse;
     margin: 24px 0;
     font-size: 15px;
+    border: 1px solid var(--color-grey-100);
+    border-radius: 10px;
   }
   .al-body .article-content th,
   .al-body .article-content td {
-    text-align: left;
+    text-align: right;
     padding: 10px 14px;
     border-bottom: 1px solid var(--color-grey-100);
+  }
+  .al-body .article-content th:first-child,
+  .al-body .article-content td:first-child {
+    text-align: left;
+  }
+  .al-body .article-content tr:last-child td {
+    border-bottom: none;
   }
   .al-body .article-content th {
     font-family: var(--font-ui);
     font-weight: 700;
-    color: var(--color-navy-900);
-    background: var(--color-grey-50);
+    color: #fff;
+    background: var(--color-blue-500);
+  }
+  .dark .al-body .article-content th {
+    color: var(--color-on-accent);
+  }
+  .dark .al-body .article-content th,
+  .dark .al-body .article-content td {
+    border-color: var(--color-grey-300);
+  }
+  .dark .al-body .article-content table {
+    border-color: var(--color-grey-300);
   }
 
   /* ── TOC active state (used by ArticleTOC scroll-spy) ── */
@@ -508,8 +716,13 @@ const breadcrumbs = [
     .al { --container-px: 32px; }
     .al-article {
       grid-template-columns: 1fr;
-      gap: 40px;
-      padding: 40px var(--container-px) 72px;
+      gap: 0px;
+      padding: 32px var(--container-px) 72px;
+    }
+    /* Remove the first heading's top margin — it immediately follows the TOC card */
+    .al-body .article-content section:first-child > h2,
+    .al-body .article-content > h2:first-child {
+      margin-top: 0;
     }
   }
 

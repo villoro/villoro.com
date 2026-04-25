@@ -4,6 +4,7 @@ import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
 import config from "@/config/config.json";
+import { getCollection } from "astro:content";
 
 const { blog_folder, pagination } = config.settings;
 const allPosts    = await getSinglePage(blog_folder);
@@ -13,18 +14,24 @@ const currentPosts = sorted.slice(0, pagination);
 
 const { postCount, categories } = getCategoryRibbonData(sorted);
 const yearsWriting = getYearsWriting();
+
+const allBlogEntries = await getCollection("blog");
+const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
 ---
 
 <BlogListingLayout
-  title="Blog — Villoro"
-  description="Data-engineering notes on Python, dbt, AWS, and the quiet habits that keep pipelines boring."
+  title={bi.meta_title ?? bi.title}
+  description={bi.description}
   breadcrumbs={[{ href: "/", label: "Villoro" }, { label: "Blog" }]}
   postCount={postCount}
   yearsWriting={yearsWriting}
+  heroH1={bi.hero?.h1}
+  heroLede={bi.hero?.lede}
+  heroCountLabel={bi.hero?.count_label}
   categories={categories}
   activeCategory="all"
-  sectionTitle="All posts"
-  sectionMeta="Sorted by date · newest first"
+  sectionTitle={bi.section?.title}
+  sectionMeta={bi.section?.meta}
   currentPosts={currentPosts}
   currentPage={1}
   totalPages={totalPages}

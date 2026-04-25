@@ -76,9 +76,9 @@ For guidance, refer to <FancyLink linkText="How to Build and Push Docker Images 
 
 This base Docker image installs Python and some basic Python packages.
 
-<TerminalOutput color="stone">
+<FileName>
   .github/docker/Dockerfile.base
-</TerminalOutput>
+</FileName>
 ```docker
 # Top level build args
 ARG BUILD_FOR=linux/amd64
@@ -126,9 +126,9 @@ RUN python -m pip install --upgrade \
 This image creates a virtual environment with all dependencies.
 It also packages all dbt code. Finally, it exports both as a `.tar.gz` file.
 
-<TerminalOutput color="stone">
+<FileName>
   .github/docker/Dockerfile.venv
-</TerminalOutput>
+</FileName>
 ```docker
 FROM dbt/base as base
 
@@ -167,9 +167,9 @@ This image runs in `Fargate`.
 Here, I set up the connection to `prefect` (more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>).
 I also export all the needed scripts to download all dbt code.
 
-<TerminalOutput color="stone">
+<FileName>
   .github/docker/Dockerfile.ecs
-</TerminalOutput>
+</FileName>
 ```docker
 FROM dbt/base
 
@@ -253,9 +253,9 @@ jobs:
 There are multiple ways the documents can be uploaded.
 Since I'm proficient with python I'm using it, but you can use any alternative approach following a similar process.
 
-<TerminalOutput color="stone">
+<FileName>
   .github/scripts/upload_all.py
-</TerminalOutput>
+</FileName>
 ```python
 import os
 
@@ -329,9 +329,9 @@ This script:
 1. Downloads the `pyproject.toml`
 2. Downloads the `venv.tar.gz` and extracts it
 
-<TerminalOutput color="stone">
+<FileName>
   scripts/download_poetry_config.py
-</TerminalOutput>
+</FileName>
 ```python
 import tarfile
 
@@ -404,9 +404,9 @@ This script:
 
 It is a separate script because it uses the virtual environment set up by the previous script.
 
-<TerminalOutput color="stone">
+<FileName>
   scripts/download_code.py
-</TerminalOutput>
+</FileName>
 ```python
 import os
 import shutil
@@ -511,9 +511,9 @@ This script:
 * Configures the virtual environment
 * Calls the real `entrypoint` of the Docker container (more on that in the next section)
 
-<TerminalOutput color="stone">
+<FileName>
   scripts/setup_and_run_dbt.sh
-</TerminalOutput>
+</FileName>
 ```sh
 echo "1. Downloading Poetry config"
 python download_poetry_config.py
@@ -592,9 +592,9 @@ With callbacks, you can easily add custom logs, particularly handy for sending l
 
 The concept here involves capturing information from the dbt events and sending the log based on the severity level.
 
-<TerminalOutput color="stone">
+<FileName>
   dbt_src/utils.py
-</TerminalOutput>
+</FileName>
 ```python
 def log_callback(event_raw):
     # In order to use 'prefect.logger' here we need it declared it as global (LOGGER)
@@ -626,9 +626,9 @@ In my opinion, some events are redundant or not useful at all.
 Therefore, I restrict the callback to a subset of all the events available.
 Here are the events I decided to log:
 
-<TerminalOutput color="stone">
+<FileName>
   dbt_src/utils.py
-</TerminalOutput>
+</FileName>
 ```python
 EVENTS_TO_LOG = [
     "AdapterRegistered",
@@ -656,9 +656,9 @@ EVENTS_TO_LOG = [
 
 To set up the logger, you need to declare a **global** `logger` in a function that is called inside a prefect `task` or `flow`.
 
-<TerminalOutput color="stone">
+<FileName>
   dbt_src/utils.py
-</TerminalOutput>
+</FileName>
 ```python
 from prefect import get_run_logger
 
@@ -694,9 +694,9 @@ The idea here is to combine the following files into one:
 
 The solution I use is based on <FancyLink linkText="Export dbt documentation" url="https://github.com/dbt-labs/dbt-docs/issues/53#issuecomment-1011053807" dark="true"/>.
 
-<TerminalOutput color="stone">
+<FileName>
   dbt_src/docs.py
-</TerminalOutput>
+</FileName>
 ```python
 def merge_docs():
     """
@@ -745,9 +745,9 @@ The idea is to extract information about the `runs` and `run_results` from the `
 This is done with some `pandas` code and then exported to `glue` with `awswrangler`.
 Here is the code:
 
-<TerminalOutput color="stone">
+<FileName>
   dbt_src/utils.py
-</TerminalOutput>
+</FileName>
 ```python
 import pandas as pd
 import awswrangler as wr
@@ -841,9 +841,9 @@ With it, I can catch the parameters passed to the `docker` so that they are late
 
 Here is the complete code:
 
-<TerminalOutput color="stone">
+<FileName>
   dbt_src/run.py
-</TerminalOutput>
+</FileName>
 ```python
 import click
 import utils

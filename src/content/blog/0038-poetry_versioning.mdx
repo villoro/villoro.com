@@ -72,9 +72,9 @@ For example, you could have `dbt_project.yml` if you are using `dbt`.
 In that case, you will need to declare in `pyproject.toml` the files you want to update along with the format it should look for.
 As an example for dbt:
 
-<TerminalOutput color="stone">
+<FileName>
   /pyproject.toml
-</TerminalOutput>
+</FileName>
 ```toml
 [[tool.poetry_bumpversion.replacements]]
 files = ["dbt_project.yml"]
@@ -92,9 +92,9 @@ This way you can decide if you want to increase the `major`, `minor`, or `patch`
 
 The first thing you need is a simple script that reads the package version from `pyproject.toml`:
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/scripts/get_version.py
-</TerminalOutput>
+</FileName>
 ```python
 import click
 import toml
@@ -121,9 +121,9 @@ if __name__ == "__main__":
 This scripts uses the `set_output`  function to export the version as an environment variable in GitHub action.
 Since this is used in another `python` script, it is declared in a `utils.py` file:
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/scripts/utils.py
-</TerminalOutput>
+</FileName>
 ```python
 import os
 
@@ -143,9 +143,9 @@ def set_output(name, value):
 Then you will need a script that checks if the version needs to be updated.
 It will compare the version from `main` to the one in the current PR.
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/scripts/check_if_update_needed.py
-</TerminalOutput>
+</FileName>
 ```python
 import click
 
@@ -175,9 +175,9 @@ if __name__ == "__main__":
 
 And the last step is to create a GitHub action that validates the version:
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/workflow/fix_version.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 name: Fix Version
 
@@ -254,9 +254,9 @@ The way this works is by:
 In order to keep better tracking of the package version, we will be tagging all commits to `main` with their version.
 We can do that with the following GitHub action:
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/workflow/tag_commits_on_main.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 name: Tag
 

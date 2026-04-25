@@ -18,19 +18,25 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
     <div class="cta__question">Support the blog or get the next one in your inbox.</div>
   </div>
   <div class="cta__buttons">
-    <a
-      href={coffeeUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="btn btn-secondary"
-    >
-      <span aria-hidden="true">☕</span> Buy me a coffee
-    </a>
+    <script
+      is:inline
+      type="text/javascript"
+      src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
+      data-name="bmc-button"
+      data-slug="villoro"
+      data-color="#FFDD00"
+      data-emoji=""
+      data-font="Cookie"
+      data-text="Buy me a coffee"
+      data-outline-color="#000000"
+      data-font-color="#000000"
+      data-coffee-color="#ffffff"
+    ></script>
     <a
       href={config.subscribe.link}
       target="_blank"
       rel="noopener noreferrer"
-      class="btn btn-primary"
+      class="btn btn-primary cta__subscribe"
     >
       {config.subscribe.title}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -85,13 +91,13 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
     flex-wrap: wrap;
   }
 
-  .cta__buttons .btn {
+  .cta__subscribe {
+    display: inline-flex;
+    align-items: center;
     gap: 8px;
+    white-space: nowrap;
     font-family: var(--font-ui);
     font-size: 14px;
-  }
-
-  .cta__buttons .btn-primary {
     box-shadow: var(--shadow-cta);
   }
 

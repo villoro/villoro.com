@@ -7,6 +7,11 @@ import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import readingTime from "@/lib/utils/readingTime";
 import config from "@/config/config.json";
+import { getCollection } from "astro:content";
+
+// ---- Content ----
+const [homepageEntry] = await getCollection("homepage");
+const hp = homepageEntry.data;
 
 // ---- Data ----
 const { blog_folder } = config.settings;
@@ -41,7 +46,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
 
 ---
 
-<BaseRedesign title="Villoro — Data pipelines. Written plainly.">
+<BaseRedesign title={hp.meta.title}>
   <div class="hp">
 
     <!-- ═══════════════════════ NAV ═══════════════════════ -->
@@ -58,25 +63,21 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
         <div class="hp-hero__left">
           <!-- Headline -->
           <h1 class="hp-hero__h1">
-            Data <span class="hp-blue">pipelines.</span><br />
-            Written <span class="hp-yellow-chip">plainly.</span><br />
-            By an engineer.
+            {hp.hero.h1_lines[0].split(' ')[0]} <span class="hp-blue">{hp.hero.h1_lines[0].split(' ').slice(1).join(' ')}</span><br />
+            {hp.hero.h1_lines[1].split(' ')[0]} <span class="hp-yellow-chip">{hp.hero.h1_lines[1].split(' ').slice(1).join(' ')}</span><br />
+            {hp.hero.h1_lines[2]}
           </h1>
 
           <!-- Lede -->
-          <p class="hp-hero__lede">
-            I'm <strong>Arnau Villoro</strong>, a data engineer in Barcelona.
-            I write about Python, dbt, AWS — and the quiet habits that keep
-            production boring. {yearsWriting} years of notes, {postCount} posts, zero filler.
-          </p>
+          <p class="hp-hero__lede" set:html={hp.hero.lede.replace('{years}', yearsWriting).replace('{posts}', postCount)} />
 
           <!-- CTAs -->
           <div class="hp-hero__ctas">
             <a href={`/${blog_folder}`} class="hp-btn hp-btn--blue">
-              Read the blog
+              {hp.hero.cta_blog}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
             </a>
-            <a href="/about" class="hp-btn hp-btn--blue">About me</a>
+            <a href="/about" class="hp-btn hp-btn--blue">{hp.hero.cta_about}</a>
           </div>
         </div>
 
@@ -87,7 +88,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
               <PostCard
                 post={heroPost}
                 variant="medium"
-                badge="Most read"
+                badge={hp.hero.badge_most_read}
                 readTime={getReadTime(heroPost)}
                 loading="eager"
               />
@@ -101,7 +102,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
               class="hp-hero__new-pill"
             >
               <span class="hp-hero__new-dot"></span>
-              New post · {latestPost.data.title}
+              {hp.hero.new_post_prefix} {latestPost.data.title}
             </a>
           )}
 
@@ -109,11 +110,11 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
           <div class="hp-stats">
             <div class="hp-stats__item">
               <span class="hp-stats__num">{postCount}</span>
-              <span class="hp-stats__label">posts published</span>
+              <span class="hp-stats__label">{hp.hero.stats_posts_label}</span>
             </div>
             <div class="hp-stats__item">
               <span class="hp-stats__num">{yearsWriting}</span>
-              <span class="hp-stats__label">years writing</span>
+              <span class="hp-stats__label">{hp.hero.stats_years_label}</span>
             </div>
           </div>
         </div>
@@ -127,8 +128,8 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       <div class="hp-ribbon__left">
         <span class="hp-ribbon__gear" aria-hidden="true">⚙</span>
         <span class="hp-ribbon__slogan">
-          Crafting solutions.
-          <em class="hp-ribbon__slogan-em">Delivering efficiency.</em>
+          {hp.ribbon.slogan}
+          <em class="hp-ribbon__slogan-em">{hp.ribbon.slogan_em}</em>
         </span>
       </div>
       <div class="hp-ribbon__right">
@@ -147,12 +148,12 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       <div class="hp-posts__head">
         <div>
           <h2 class="hp-posts__h2">
-            Latest <span class="hp-blue">writing.</span>
+            {hp.latest.heading.split(' ').slice(0, -1).join(' ')} <span class="hp-blue">{hp.latest.heading.split(' ').at(-1)}</span>
           </h2>
-          <p class="hp-posts__sub">Honest notes from production · updated monthly</p>
+          <p class="hp-posts__sub">{hp.latest.sub}</p>
         </div>
         <a href={`/${blog_folder}`} class="hp-btn hp-btn--blue">
-          See all {postCount} posts
+          {hp.latest.cta.replace('{posts}', String(postCount))}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
       </div>
@@ -163,7 +164,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
           <PostCard
             post={featuredPost}
             variant="big"
-            badge="Latest"
+            badge={hp.latest.badge}
             readTime={getReadTime(featuredPost)}
             loading="eager"
           />

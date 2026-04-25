@@ -49,9 +49,9 @@ pip install prefect
 
 Now, you're ready to create your first `flow` (this is how `Prefect` refers to a `DAG`) using a simple decorator:
 
-<TerminalOutput color="stone">
+<FileName>
   /main.py
-</TerminalOutput>
+</FileName>
 ```python
 from prefect import flow
 
@@ -74,9 +74,9 @@ python main.py
 In Prefect, you can add `tasks` to be run inside a `flow`.
 `Tasks` work similarly to `flows` since they are also defined with a decorator:
 
-<TerminalOutput color="stone">
+<FileName>
   /main.py
-</TerminalOutput>
+</FileName>
 ```python
 from prefect import flow
 from prefect import task

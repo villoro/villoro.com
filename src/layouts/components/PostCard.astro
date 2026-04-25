@@ -156,15 +156,9 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 )}
 
 <style is:global>
-  /* All dark card colours are now handled directly in the scoped <style> block
-     via semantic tokens (surface-dark, on-dark-*, on-accent) — no !important
-     overrides or dark-mode patches needed here. */
-
   /* Badge chip: token-yellow → blue in dark; ensure dark text stays readable */
   .dark .pc-chip { background: var(--color-yellow-400); color: var(--color-on-accent); }
 
-  /* Image fill rules — kept global so they survive ClientRouter
-     view-transitions (scoped styles can be stripped on back-nav) */
   .pc-big__img,
   .pc-med__img,
   .pc-small__img {

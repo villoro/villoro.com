@@ -50,9 +50,9 @@ While there are no official images for a `docker server`, we can use the officia
 
 The setup process involves providing the correct configuration for the database:
 
-<TerminalOutput color="stone">
+<FileName>
   /Dockerfile.server
-</TerminalOutput>
+</FileName>
 ```docker
 # Prefect version must match Dockerfile.worker and pyproject.toml
 FROM prefecthq/prefect:2.16-python3.10 AS base
@@ -98,9 +98,9 @@ You can do this using the Prefect UI:
 
 Once you have the `Work Pool`, we will create a Worker with Docker, following a similar approach to the Server:
 
-<TerminalOutput color="stone">
+<FileName>
   /Dockerfile.worker
-</TerminalOutput>
+</FileName>
 ```docker
 # Prefect version must match Dockerfile.server and pyproject.toml
 FROM prefecthq/prefect:2.16-python3.10 AS base
@@ -149,9 +149,9 @@ The first thing you will need to do is to create a `Prefect Block` (more info at
 
 Once done, we can define `how` to get the code and the `dependencies` with:
 
-<TerminalOutput color="stone">
+<FileName>
   /prefect.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 pull:
 - prefect.deployments.steps.git_clone:
@@ -173,9 +173,9 @@ pull:
 Now that we've defined how to fetch the code, we will create the first `Deployment`.
 Add the following code to the `prefect.yaml` you just created.
 
-<TerminalOutput color="stone">
+<FileName>
   /prefect.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 - name: lambdas.athena_history
   description: Export Athena history with a lambda
@@ -216,9 +216,9 @@ Now you can head to the server and trigger a run of the `Deployment` from there.
 What we've created works fine, but once you start adding multiple `Deployments`, you will probably encounter a lot of repetition.
 To avoid this, you can define some defaults that will be later used in each `Deployment` with:
 
-<TerminalOutput color="stone">
+<FileName>
   /prefect.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 definitions:
   work_pools:
@@ -239,9 +239,9 @@ You can read more about <FancyLink linkText="YAML alias nodes" url="https://yaml
 
 With that, you can reuse the defaults like so:
 
-<TerminalOutput color="stone">
+<FileName>
   /prefect.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 - name: lambdas.athena_history
   <<: *defaults
@@ -287,9 +287,9 @@ prefect --no-prompt deploy --all
 One really cool thing you can do is to manually deploy `Deployments` when you are creating a new one.
 Here's what I do: change the `branch` reference in `prefect.yaml` to the current branch where I am developing by with:
 
-<TerminalOutput color="stone">
+<FileName>
   /prefect.yaml
-</TerminalOutput>
+</FileName>
 ```diff
 prefect.deployments.steps.git_clone:
     id: clone-step
@@ -379,9 +379,9 @@ In my case, it's very useful for tagging the environment where the flow is runni
 
 You can do it with:
 
-<TerminalOutput color="stone">
+<FileName>
   /src/common/prefect_utils.py
-</TerminalOutput>
+</FileName>
 ```python
 import asyncio
 
@@ -415,9 +415,9 @@ def update_tags(tags):
 Here you have the simplest example I have for running external jobs from Prefect.
 This calls any lambda you might want:
 
-<TerminalOutput color="stone">
+<FileName>
   /src/lambdas/base.py
-</TerminalOutput>
+</FileName>
 ```python
 from prefect import get_run_logger
 from prefect import task
@@ -455,9 +455,9 @@ def run_lambda(env, name):
 With the `base.py` code for running lambdas, you can define a flow for each lambda you have.
 As an example, we could have:
 
-<TerminalOutput color="stone">
+<FileName>
   /src/lambdas/lambdas.py
-</TerminalOutput>
+</FileName>
 ```python
 from typing import Literal
 

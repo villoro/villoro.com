@@ -62,9 +62,9 @@ First of all, for this example let's create two python files (`register.py` and 
 They both will accept a name as parameter so that it can be run for different days.
 The first one will simply write a file with the execution time:
 
-<TerminalOutput color="stone">
+<FileName>
   register.py
-</TerminalOutput>
+</FileName>
 ```python
 from datetime import date, datetime
 
@@ -80,9 +80,9 @@ def main(filename):
 
 And the other will write the same as an html file:
 
-<TerminalOutput color="stone">
+<FileName>
   report.py
-</TerminalOutput>
+</FileName>
 ```python
 from datetime import date, datetime
 from markdown import markdown
@@ -205,9 +205,9 @@ When a task fails will output file with have a slightly different name so that i
 
 The full template would be:
 
-<TerminalOutput color="stone">
+<FileName>
   luigi_default.py
-</TerminalOutput>
+</FileName>
 ```python
 import os
 import time
@@ -312,9 +312,9 @@ class StandardTask(luigi.Task):
 
 Then is easy to create a StandardTask. The two task from the example below would be:
 
-<TerminalOutput color="stone">
+<FileName>
   master.py
-</TerminalOutput>
+</FileName>
 ```python
 import luigi
 
@@ -387,9 +387,9 @@ sudo mkdir /var/lib/luigi-server/
 
 And now declare the `luigid` service by creating the file `/etc/supervisor/conf.d/luigid.conf`
 
-<TerminalOutput color="stone">
+<FileName>
   /etc/supervisor/conf.d/luigid.conf
-</TerminalOutput>
+</FileName>
 ```toml
 [program:luigid]
 command=/home/ubuntu/.local/bin/luigid
@@ -448,9 +448,9 @@ And `deactivate` to deactivate the environment.
 
 Let's create the `run_luigi.sh` file with:
 
-<TerminalOutput color="stone">
+<FileName>
   ~/run_luigi.sh
-</TerminalOutput>
+</FileName>
 ```bash
 #!/bin/bash 
 

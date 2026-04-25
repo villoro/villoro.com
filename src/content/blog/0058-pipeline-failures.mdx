@@ -135,9 +135,9 @@ The important part is to pass the `flow_run_id` to dbt so that it can be added a
 
 Here is how we can query the results of a dbt run:
 
-<TerminalOutput color="stone">
+<FileName>
   QUERY_FAILURES
-</TerminalOutput>
+</FileName>
 ```sql
 WITH executions AS (
     SELECT invocation_id
@@ -160,9 +160,9 @@ WHERE relation_name IS NOT NULL
 
 And the python part:
 
-<TerminalOutput color="stone">
+<FileName>
   get_dbt_results
-</TerminalOutput>
+</FileName>
 ```python
 import asyncio
 from prefect import get_run_logger
@@ -198,9 +198,9 @@ def get_dbt_results(env, flow_run_id):
 
 Then we can check the results of the models we want using this function:
 
-<TerminalOutput color="stone">
+<FileName>
   are_results_good
-</TerminalOutput>
+</FileName>
 ```python
 from typing import List
 from typing import Optional
@@ -279,9 +279,9 @@ def are_results_good(df, models=None, tests=None):
 
 This would be called with something like:
 
-<TerminalOutput color="stone">
+<FileName>
   run_uploads
-</TerminalOutput>
+</FileName>
 ```python
 UPLOAD_JOBS = {
     ds.ds_export: {"models": ["leads_ds_id"]},
