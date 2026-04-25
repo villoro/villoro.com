@@ -313,6 +313,101 @@ const breadcrumbs = [
   .al-body .article-content blockquote p         { margin: 0 0 8px; }
   .al-body .article-content blockquote p:last-child { margin: 0; }
 
+  /* ── Terminal output (shortcode) ─────────────────────── */
+  .al-body .article-content .terminal-output {
+    margin: 24px 0;
+    border-radius: 12px;
+    border: 1px solid #3e3d32;
+    overflow: hidden;
+  }
+
+  /* Attach to a code block ABOVE — remove bottom radius + margin from code block */
+  .al-body .article-content pre:has(+ .terminal-output),
+  .al-body .article-content .astro-code:has(+ .terminal-output),
+  .al-body .article-content figure.expressive-code:has(+ .terminal-output) {
+    margin-bottom: 0;
+    border-radius: 12px 12px 0 0;
+  }
+  /* …and remove top of the terminal-output */
+  .al-body .article-content pre + .terminal-output,
+  .al-body .article-content .astro-code + .terminal-output,
+  .al-body .article-content figure.expressive-code + .terminal-output {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+
+  /* Attach to a code block BELOW (filename label) — remove bottom radius + margin */
+  .al-body .article-content .terminal-output:has(+ pre),
+  .al-body .article-content .terminal-output:has(+ .astro-code),
+  .al-body .article-content .terminal-output:has(+ figure.expressive-code) {
+    margin-bottom: 0;
+    border-radius: 12px 12px 0 0;
+  }
+  /* …and remove top of the following code block */
+  .al-body .article-content .terminal-output + pre,
+  .al-body .article-content .terminal-output + .astro-code,
+  .al-body .article-content .terminal-output + figure.expressive-code {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .al-body .article-content .terminal-output__body {
+    padding: 9px 26px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  /* Strip MDX-injected <p> and <code> margins/backgrounds inside the body */
+  .al-body .article-content .terminal-output__body p,
+  .al-body .article-content .terminal-output__body code {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-size: inherit;
+    color: inherit;
+    border-radius: 0;
+  }
+
+  /* Color variants — light */
+  .al-body .article-content .terminal-output--yellow .terminal-output__body {
+    background: rgba(255, 195, 58, 0.14);
+    color: #3d2e00;
+  }
+  .al-body .article-content .terminal-output--grey .terminal-output__body {
+    background: rgba(120, 120, 120, 0.10);
+    color: var(--color-navy-900);
+  }
+  .al-body .article-content .terminal-output--red .terminal-output__body {
+    background: rgba(220, 38, 38, 0.10);
+    color: #7f1d1d;
+  }
+  .al-body .article-content .terminal-output--green .terminal-output__body {
+    background: rgba(22, 163, 74, 0.10);
+    color: #14532d;
+  }
+
+  /* Color variants — dark */
+  .dark .al-body .article-content .terminal-output--yellow .terminal-output__body {
+    background: rgba(255, 195, 58, 0.12);
+    color: #ffe082;
+  }
+  .dark .al-body .article-content .terminal-output--grey .terminal-output__body {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-on-dark-body);
+  }
+  .dark .al-body .article-content .terminal-output--red .terminal-output__body {
+    background: rgba(220, 38, 38, 0.15);
+    color: #fca5a5;
+  }
+  .dark .al-body .article-content .terminal-output--green .terminal-output__body {
+    background: rgba(22, 163, 74, 0.15);
+    color: #86efac;
+  }
+
   /* ── Notice / callout (shortcode) ────────────────────── */
   .al-body .article-content .notice {
     margin: 24px 0;
