@@ -524,13 +524,16 @@ const breadcrumbs = [
 
   /* ── Tables ──────────────────────────────────────────── */
   .al-body .article-content table {
-    width: 100%;
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border-collapse: collapse;
     margin: 24px 0;
     font-size: 15px;
     border: 1px solid var(--color-grey-100);
     border-radius: 10px;
-    overflow: hidden;
   }
   .al-body .article-content th,
   .al-body .article-content td {
