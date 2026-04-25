@@ -16,17 +16,17 @@ draft: false
 > [!danger]
 > **DISCLAIMER:** A lot has changed since I wrote this. Even though `Poetry` still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
 
-## 0. Overview
+## Overview
 
 Poetry is a python packaging and dependency manager.
 It makes it really easy to manage packages while using environments under the hood.
 It also allows build and publishing packages to PyPI (or other sites).
 
-## 1. Alternatives. Why Poetry?
+## Alternatives. Why Poetry?
 
 Before viewing why **Poetry** is a good solution let's check the more common alternatives.
 
-### 1.1. Raw
+### Raw
 
 The easiest and least elegant way of handling dependencies is by simply installing all packages in the main environment.
 In other words this means installing packages only using:
@@ -52,13 +52,13 @@ This method will have some major problems:
 > [!note]
 > It is true that you can create a `requirements_dev.txt` file to handle development dependencies but you will need to manually maintain it.
 
-### 1.2. Virtualenv / Conda
+### Virtualenv / Conda
 
 With both `Virtualenv` or `Conda` it is possible to create **environment**. This will allow to have different versions for different projects.
 
 But except from that point there will still be the other problems.
 
-## 2. How Poetry works?
+## How Poetry works?
 
 With **Poetry** you create a project (or import one) and it automatically creates/uses a virtual environment under the hood.
 
@@ -91,9 +91,9 @@ build-backend = "poetry.masonry.api"
 
 Finally the `poetry.lock` is a snapshot with the exact versions install. It can be updated from the `pyproject.toml`.
 
-## 3. Creating a project
+## Creating a project
 
-### 3.1. Init a new project
+### Init a new project
 
 The first thing to do with python is to create a new project. You can do it with:
 
@@ -102,7 +102,7 @@ poetry new projectname
 # Replace projectname for the name you want
 ```
 
-### 3.2. Project structure
+### Project structure
 
 Creating a new project will create the following files:
 
@@ -119,11 +119,11 @@ Creating a new project will create the following files:
 
 There will be a dummy test inside the `tests` folder using the `pytest` package.
 
-## 4. Managing dependencies
+## Managing dependencies
 
 The idea is to use poetry to add or remove packages and let it handle the `pyproject.toml` file.
 
-### 4.1. Add/remove packages
+### Add/remove packages
 
 To add or remove packages you can use:
 
@@ -155,7 +155,7 @@ Which translates to `>=0.25.0 <1.0.0`
 
 You can check all the possible ways in the <FancyLink linkText="Poetry docs" url="https://python-poetry.org/docs/dependency-specification/#version-constraints" company="poetry"/>.
 
-### 4.2. Install update dependencies
+### Install update dependencies
 
 Once there is a `pyproject.toml` file you can install/update all the specified dependencies.
 
@@ -173,7 +173,7 @@ poetry install --no-dev
 > [!info]
 > Both commands will create a the `poetry.lock` file with a snapshot of the installed packages (or update it if already present).
 
-### 4.3. See dependencies
+### See dependencies
 
 With poetry you easily see the dependencies of your project as well as the dependencies of those dependencies.
 
@@ -189,11 +189,11 @@ As an example:
 
 ![Poetry Show](../../images/posts/2020/0031-poetry_show.png)
 
-### 4.4. Check
+### Check
 
 With `poetry check` you can check if the `pyproject.toml` file has any errors.
 
-## 5. Running code with Poetry
+## Running code with Poetry
 
 Since poetry uses a virtual environment and you are not activating/sourcing it has commands to actually work with the environment.
 
@@ -216,7 +216,7 @@ poetry run luigid
 poetry run python src/master.py
 ```
 
-## 6. Create and publish packages
+## Create and publish packages
 
 You can use poetry to build python packages with:
 
@@ -232,7 +232,7 @@ And then you can also upload it to `PyPI` with:
 poetry publish
 ```
 
-## 7. Poetry compatibility
+## Poetry compatibility
 
 Finally you can use poetry and allow other people to use the old `requirements.txt` file.
 
@@ -242,7 +242,7 @@ You will only need to export it with:
 poetry export -f requirements.txt > requirements.txt
 ```
 
-## 8. More info
+## More info
 
 If you want to read more about poetry check out the following links:
 

@@ -10,18 +10,18 @@ tags: [GIT]
 draft: false
 ---
 
-## 0. Motivation
+## Motivation
 
 Maintaining a clean and organized Git history is crucial for project management and collaboration.
 Over time, repositories can become cluttered with unnecessary commits, making it challenging to track changes effectively.
 In this guide, we'll walk through the process of cleaning up your Git history by rewriting commits, ensuring a streamlined and efficient version control system.
 
-## 1. Why Clean Git History Matters
+## Why Clean Git History Matters
 
 A cluttered Git history can obscure meaningful changes and make it difficult for team members to understand the evolution of a project.
 By rewriting Git history, you can eliminate unnecessary commits, squash related changes into logical units, and improve the overall clarity and readability of your repository.
 
-## 2. Step-by-Step Guide to Rewriting Git History
+## Step-by-Step Guide to Rewriting Git History
 
 > [!danger]
 > Make sure to read all post before rewriting the history.
@@ -29,14 +29,14 @@ By rewriting Git history, you can eliminate unnecessary commits, squash related 
 
 Also you might want to read <FancyLink linkText="Git Rewriting History" url="https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History"/>
 
-### 2.1. Create a New main Branch
+### Create a New main Branch
 
 To begin, create a new branch named `main` (or any preferred branch name) to perform the cleanup process without affecting the existing `master` branch.
 
 > [!warning]
 > If you already had a `main` branch, rename it to `old_main` or something similar. Adapt the code in this post so that any reference to `master` is replaced by `old_main`
 
-### 2.2. Cherry Pick the Oldest Commit on `master`
+### Cherry Pick the Oldest Commit on `master`
 
 Cherry pick the oldest commit from the `master` branch onto the new `main` branch using the following command:
 
@@ -47,7 +47,7 @@ git cherry-pick <commit_hash>
 > [!tip]
 > You might prefer using a git program such as <FancyLink linkText="Sublime Merge" url="https://www.sublimemerge.com/"/> instead.
 
-### 2.3. Edit the new `commit` date with
+### Edit the new `commit` date with
 
 Modify the date of the newly cherry-picked commit to match the original commit date using the following commands:
 
@@ -56,23 +56,23 @@ export GIT_COMMITTER_DATE="YYYY-MM-DDTHH:MM:SS"
 git commit --amend --no-edit --date="YYYY-MM-DD HH:MM:SS"
 ```
 
-### 2.4. Remove the Tag from the Cherry-Picked Commit
+### Remove the Tag from the Cherry-Picked Commit
 
 Remove the tag associated with the cherry-picked commit both locally and on GitHub to avoid conflicts with the newly created commit.
 
-### 2.5. Apply the Tag to the Newly Created Commit
+### Apply the Tag to the Newly Created Commit
 
 Apply the tag to the newly created commit on the main branch to maintain versioning consistency.
 
 
-### 2.6. Push the New Tag to GitHub
+### Push the New Tag to GitHub
 Ensure the updated tag is pushed to the remote repository on GitHub using the following command:
 
 ```bash
 git push origin <tag_name> -f
 ```
 
-## 3. Python Script for Automating the Process
+## Python Script for Automating the Process
 
 > [!danger]
 > Before running the automated process I **strongly** suggest you first try it in a demo repository.
@@ -138,6 +138,6 @@ with open("commands.sh", "w") as stream:
 
 Execute the generated shell script (`commands.sh`) to automate the Git history cleanup process.
 
-## 4. Conclusion
+## Conclusion
 
 By following these steps, you can effectively clean up your Git history and maintain a well-organized repository. Remember to review the changes carefully before pushing them to the remote repository. Embrace the power of Git's version control capabilities to enhance collaboration and project management within your development workflow.

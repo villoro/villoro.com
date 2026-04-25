@@ -10,18 +10,18 @@ tags: [Tools, Orchestration, Tutorial, Setup]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 Apache Airflow is a platform to programmatically author, schedule and monitor workflows. The airflow scheduler executes your tasks on an array of workers following the specified dependencies.
 
-## 1. Why Airflow?
+## Why Airflow?
 People usually need to execute some tasks periodically. One common solution is to use <FancyLink linkText="Cron" url="https://es.wikipedia.org/wiki/Cron_(Unix)" dark="true"/> which is a good solution for simple tasks. But the more tasks you need to schedule the more problems you will have, especially if there are dependencies between one another.
 
 Airflow allows to define workflows of tasks and you can define them as code making it more maintainable, versionable, testable and collaborative.
 Check out the <FancyLink linkText="Airflow documentation" url="https://airflow.apache.org/" company="airflow"/> for more information.
 
 
-## 2. Installation
+## Installation
 First of all you will need a Linux machine. I'd suggest you use an **AWS EC2** instance.
 You can see <FancyLink linkText="Creating EC2 instances in AWS" url="https://villoro.com/blog/creating-ec2-aws/" dark="true"/> how to create one.
 
@@ -35,7 +35,7 @@ When it is installed you can initialize the database (it will be SQLite by defau
 airflow initdb
 ```
 
-### 2.1 Test Airflow
+### Test Airflow
 We will test airflow with an example from <FancyLink linkText="Airflow documentation" url="https://airflow.apache.org/tutorial.html" company="airflow"/>. You will need to create the file `tutorial.py`:
 
 ```sh
@@ -110,7 +110,7 @@ You can test that things are going as expected if the following command does not
 python3 ~/airflow/dags/tutorial.py
 ```
 
-#### 2.1.1. Validate metadata
+#### Validate metadata
 You can check that the tutorial dag has been properly created with:
 
 ```sh
@@ -124,7 +124,7 @@ airflow list_tasks tutorial
 airflow list_tasks tutorial --tree
 ```
 
-#### 2.1.2 Run the test
+#### Run the test
 You can launch tasks with the following commands:
 
 ```sh
@@ -140,7 +140,7 @@ airflow test tutorial sleep 2015-06-01
 airflow test tutorial templated 2015-06-01
 ```
 
-## 3. Use Airflow UI
+## Use Airflow UI
 
 Of the great things about airflow is the <FancyLink linkText="Airflow UI" url="https://airflow.apache.org/ui.html" company="airflow"/>.
 
@@ -150,14 +150,14 @@ Of the great things about airflow is the <FancyLink linkText="Airflow UI" url="h
 
 ![Airflow Grid](../../images/posts/2019/0010-airflow_grid.png)
 
-### 3.1. Open EC2 ports (optional)
+### Open EC2 ports (optional)
 If you are using an **AWS EC2** you will probably have only the 22 port open to connect through SSH.
 
 1. Go to AWS console and then to the EC2 page. Use the sidebar to go to `NETWORK & SECURITY/Security Groups`.
 2. Find the security group of your EC2 instance and edit the **Inbound** rules.
 3. Add `Custom TCP Rule` with port `8080`.
 
-### 3.2. Start Airflow
+### Start Airflow
 You can start airflow with:
 
 ```sh
@@ -166,7 +166,7 @@ airflow webserver -p 8080 # or simply use 'airflow webserver'
 
 You can now view Airflow at `XX.XXX.XXX.XXX:8080` (Use your EC2 IP).
 
-### 3.3. Secure Airflow UI
+### Secure Airflow UI
 First we will edit the airflow configuration.
 
 ```sh
@@ -209,11 +209,11 @@ session.close()
 exit()
 ```
 
-## 4. Running airflow with supervisor
+## Running airflow with supervisor
 
 If you want a process always running and to be restarted on failure you should use **supervisor**.
 
-### 4.1. Clean examples and other tests
+### Clean examples and other tests
 
 Edit the `airflow.cfg` to disable the examples by editing `load_examples = True` to:
 
@@ -242,7 +242,7 @@ pkill -f airflow
 > [!warning]
 > This will delete the current **DAG** information
 
-### 4.2. Running supervisor
+### Running supervisor
 
 First install it with:
 
@@ -296,14 +296,14 @@ sudo supervisorctl status
 
 And that's it. You can now start using airflow.
 
-## 5. Next steps
+## Next steps
 
 You can add **DAG**s in the folder `~/airflow/dags` and they should be automatically loaded. 
 
 > [!tip]
 > It is advised to run airflow with at least a `t2.medium` **AWS instance**. You can run it with a smaller one (I use a `t2.micro` since it is in the free tier) but you can easily get your instance at 100% CPU usage while running tasks.
 
-### 5.1. Using git
+### Using git
 You can even change that path to a folder that is tracked with git to keep control of the **DAG**s by editing the `airflow.cfg`:
 
 <TerminalOutput color="stone">

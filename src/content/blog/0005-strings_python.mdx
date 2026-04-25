@@ -10,13 +10,13 @@ tags: [Python, Best Practices]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 There are a lot of ways to work with strings in Python. And there are some cool tricks I want to share that will make it easier to deal with strings.
 
-## 1. Formatting strings
+## Formatting strings
 
-### 1.1. Raw strings with `r" "`
+### Raw strings with `r" "`
 
 This allows you to have a literal string without escaping characters or special ones.
 
@@ -39,7 +39,7 @@ r"C:\some\name"
   ame
 </TerminalOutput>
 
-### 1.2. Formatting with repeated occurrences
+### Formatting with repeated occurrences
 
 You can use `"".format()` and use names for each text that you want to insert. For example:
 
@@ -63,7 +63,7 @@ print("""
 > [!tip]
 > Triple quotation marks (`"""`) allows to have more than one line in a string
 
-### 1.3. Formatting with `f" "` (Python 3.6+)
+### Formatting with `f" "` (Python 3.6+)
 
 Imagine you have the following filename `src/data/2019-02-16.xlsx`. The best way to get the filename giving the following parameters:
 
@@ -95,9 +95,9 @@ filename = "{}/{:%Y-%m-%d}.xlsx".format(path, mdate)
 
 All give the same result but with `f" "` it is more compact and easier to read.
 
-## 2. Concatenating strings
+## Concatenating strings
 
-### 2.1. Concat few strings
+### Concat few strings
 For small concatenations you can simply put two strings together:
 
 ```python
@@ -116,7 +116,7 @@ You can also repeat strings with:
   \> "hello_hello_hello_hello_"
 </TerminalOutput>
 
-### 2.2. Concat a lot of strings
+### Concat a lot of strings
 
 To concatenate strings you should work with lists and join them at the end. It's faster and cleaner.
 
@@ -143,7 +143,7 @@ for x in mlist:
   105 µs ± 3.92 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 </TerminalOutput>
 
-## 3. Slicing strings
+## Slicing strings
 
 ```python
 text = "hello world"
@@ -155,7 +155,7 @@ text[-5: -1]:     "worl"
 text[1:-1]:       "ello worl"
 ```
 
-## 4. String builtin functions
+## String builtin functions
 
 `Upper`, `lower` and `title` functions:
 

@@ -13,7 +13,7 @@ tags: [Python]
 draft: false
 ---
 
-## 1. Regex basics
+## Regex basics
 
 A regular expression, or **regex** for short, is a pattern describing a certain amount of text.
 The most simple regex is a regular string, like `hello` which will match the literal text `hello`.
@@ -23,7 +23,7 @@ As an example `ip.d` will match `ipad`, `ipod`, `ip@d` etc.
 
 If we want to only match `ipod` or `ipad` we can use `ip[ao]d`.
 
-### 1.1. Brackets `[]`
+### Brackets `[]`
 
 Brackets (`[` and `]`) are used for specifying which characters are allowed. It is similar to an **or** operator. As an example:
 
@@ -32,7 +32,7 @@ Brackets (`[` and `]`) are used for specifying which characters are allowed. It 
 * `[^a-c]`: anything but `a`, `b` or `c`
 * `[0-9a-fA-F]`: any number or any letter between `a` and `f` or between `A` and `F`. This represents hexadecimal
 
-### 1.2. Position
+### Position
 
 It is possible to specify matches based on the position with:
 
@@ -41,7 +41,7 @@ It is possible to specify matches based on the position with:
 
 For example `^ab` will only match the first `ab` in `ab abc ab` (<FancyLink linkText="Demo" url="https://regex101.com/r/TJzoA7/2"/>)
 
-### 1.3. Classes
+### Classes
 
 There are certain keywords that will match different types of characters.
 For example `\d` will match any digit (any of those `0123456789`).
@@ -55,7 +55,7 @@ The main classes available are:
 | `\w`  | Alphanumeric and/or `_`                 | <FancyLink linkText="w_example" url="https://regex101.com/r/IkIMMm/1"/> | `\W`    |
 | `\s`  | Whitespaces and equivalents (like tabs) | <FancyLink linkText="s_example" url="https://regex101.com/r/oSziKA/1"/> | `\S`    |
 
-### 1.4. Quantifiers
+### Quantifiers
 
 It is possible to specify how many times a letter or group (defined in the next section) should appear.
 
@@ -69,7 +69,7 @@ As an example we want the letter `a` + the letter `b` which should appear differ
 | `ab{2}`  | `a` + `b` exactly 2 times                       | <FancyLink linkText="example_ab{2}" url="https://regex101.com/r/TYBz4I/1"/>   |
 | `ab{2,5}`| `a` + `b` between 2 and 5 times (inclusive)     | <FancyLink linkText="example_ab{2,5}" url="https://regex101.com/r/b4oI9X/1"/> |
 
-### 1.5. Groups
+### Groups
 
 It is possible to define **groups** in regex.
 They are used to capture part of the text and are declared with parenthesis `()`.
@@ -80,7 +80,7 @@ We can use any regex inside the group. For example if we want to math `hello`:
 * `(?P<name>hello)`: same but giving the group a name (`name` in this case)
 * `(hello|bye):` **or** operator in groups.
 
-### 1.6. Boundaries
+### Boundaries
 
 It is possible to declare a boundary with `\b` (with the inverse `\B`).
 A boundary means that is surrounded with a non word type character.
@@ -96,7 +96,7 @@ It is easier to understand it with some examples:
 | `possible\B`   | Impossible to do                                                   | I'm possible :)                                                   | <span style="background-color:aquamarine;">possible</span>r | <FancyLink linkText="boundaries_4" url="https://regex101.com/r/jL4Lkv/1"/> |
 | `\Bpossible`   | Im<span style="background-color:aquamarine;">possible</span> to do | I'm possible :)                                                   | possibler                                                   | <FancyLink linkText="boundaries_5" url="https://regex101.com/r/bnTUnx/1"/> |
 
-### 1.7. Flags
+### Flags
 
 It is possible to change the behaviour of the regex with some flags:
 
@@ -104,7 +104,7 @@ It is possible to change the behaviour of the regex with some flags:
 * `(?m)`: **multi line**. When this is active the anchor `^` will be start of line instead of start of text (<FancyLink linkText="Demo" url="https://regex101.com/r/Ol3N99/1"/>)
 * `(?s)`: **single line**.
 
-### 1.8. Greedy vs lazy
+### Greedy vs lazy
 
 Imagine that we have the following text:
 
@@ -128,9 +128,9 @@ To sum up:
 > It can also be used with other quantifiers that are not the `+`.
 
 
-## 2. Regex with python
+## Regex with python
 
-### 2.1. `re` package
+### `re` package
 
 To use regex in **python** you first need to import the `re` package with
 
@@ -149,7 +149,7 @@ out = re.match(r"hello", "hello world")
 > [!tip]
 > When declaring regexs in python it is a good practise to declare them as **raw** strings with `r"regex"`
 
-### 2.2. `match` vs `search`
+### `match` vs `search`
 
 We have use `re.match` since it's faster. However this only looks at the beginning of the string.
 To do a more in deep search we can use `re.search`.
@@ -169,7 +169,7 @@ The results would be:
 | `r"world"` | ❌       | ✔️       |
 | `r"bye"`   | ❌       | ✔️       |
 
-### 2.3. `re.compile`
+### `re.compile`
 
 If we plan to reuse the same regex we can compile it with `regex = re.compile(regex)`:
 
@@ -187,7 +187,7 @@ regex.search("hello world")
 
 The advantage is that a **compiled regex is faster** than a non-compiled one.
 
-### 2.4. Working with groups
+### Working with groups
 
 Imagine that we have the following file names:
 
@@ -200,7 +200,7 @@ filenames = [
 ]
 ```
 
-#### 2.4.1. Unnamed groups
+#### Unnamed groups
 
 It looks more or less clear that we can extract some data from those names:
 
@@ -214,7 +214,7 @@ out.groups()
   \> ('AABBCCDD', '2020', '01')
 </TerminalOutput>
 
-#### 2.4.2. Named groups
+#### Named groups
 
 We can use named groups to better extract the data
 
@@ -247,7 +247,7 @@ for filename in filenames:
 </TerminalOutput>
 
 
-## 3. Regex with pandas
+## Regex with pandas
 
 There are multiple functions in **pandas** that can be used with **regex**. They are:
 
@@ -273,7 +273,7 @@ queries = [
 df = pd.DataFrame(queries, columns=["query"])
 ```
 
-### 3.1. `series.str.count`
+### `series.str.count`
 
 In this case we want to `count` the number of queries that come from the `users` table.
 It doesn't matter if the schema is specified or not. It can be done with:
@@ -288,7 +288,7 @@ df["query"].str.count(r"\s+FROM\s+(\w+\.)?users\b")
   0
 </TerminalOutput>
 
-### 3.2. `series.str.replace`
+### `series.str.replace`
 
 We can use this for deleting the renamings (like ` AS cnt`):
 
@@ -302,7 +302,7 @@ df["query"].str.replace(r"\s+AS\s+\w+\b", "", regex=True)
   `SELECT city, count(1) FROM orders GROUP BY 1`
 </TerminalOutput>
 
-### 3.3. `series.str.match`
+### `series.str.match`
 
 In this case we can look which queries are selecting all columns (`SELECT * FROM`):
 
@@ -316,7 +316,7 @@ df["query"].str.match(r"(?i)(SELECT)\s+\*\s+(?i)(FROM)")
   False
 </TerminalOutput>
 
-### 3.4. `series.str.contains`
+### `series.str.contains`
 
 Similar to the `replace` example, let's get the queries that have a rename `AS x`:
 
@@ -330,7 +330,7 @@ df["query"].str.contains(r"\s+AS\s+\w+")
   False
 </TerminalOutput>
 
-### 3.5. `series.str.findall`
+### `series.str.findall`
 
 We can use this for getting a list with all words that have between 5 and 8 letters:
 
@@ -347,7 +347,7 @@ df["query"].str.findall(r"\w{5,8}")
 > [!note]
 > Note that the output is one list per row.
 
-### 3.6. `series.str.split` / `series.str.rsplit`
+### `series.str.split` / `series.str.rsplit`
 
 In this case let's split the query in 2 parts, all before the `FROM` and all after it:
 
@@ -361,7 +361,7 @@ df["query"].str.split(r"\s+(?i)from\s+")
   [`SELECT city, count(1)`, `orders GROUP BY 1`]
 </TerminalOutput> 
 
-### 3.7. `series.str.extract`
+### `series.str.extract`
 
 With this function we can extract data from groups.
 The output of this function is a **DataFrame** where each group is a column.
@@ -394,7 +394,7 @@ The regex used in this example might be a little bit complex, let's analyze it b
 * `(?P<table>\w+)\b`: Capturing group named `table` made only with words and that has a right boundary
 
 
-## 4. Regex with redshift
+## Regex with redshift
 
 In **redshift** there are 4 string functions that work with regular expressions (regex).
 They are:

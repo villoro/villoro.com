@@ -10,13 +10,13 @@ tags: [DE, Best Practices]
 draft: false
 ---
 
-## 0. Motivation
+## Motivation
 
 In traditional pipelines, data processing typically focuses on the last batch, such as yesterday's data for daily executions.
 While effective under normal circumstances, multiple failures can lead to tedious backfilling processes.
 This post delves into the concept of self-healing pipelines, which streamline operations by automatically backfilling failed executions, reducing the need for manual interventions.
 
-## 1. Regular batch processing
+## Regular batch processing
 
 Let's imagine you have a daily pipeline that was running well until Friday (`2024-05-03`) when someone pushed a bug to production. 
 You discover the mistake on Monday (`2024-05-06`) morning.
@@ -30,7 +30,7 @@ However, this approach has some limitations:
 1. **Manual Intervention**: Backfilling requires manual intervention to schedule the jobs, which can be time-consuming and prone to errors.
 2. **Cost Considerations**: Running three separate jobs for each day can be less cost-effective, especially in systems like Spark, where spinning up multiple jobs incurs additional overhead.
 
-## 2. Processing new data
+## Processing new data
 
 The concept of `Self-healing pipelines`  revolves around processing data that is newer than the last successful extraction performed.
 In essence, the pipeline automatically identifies and handles data gaps or discrepancies by processing only the most recent data.
@@ -49,7 +49,7 @@ In the scenario described earlier, where the last correct extraction was perform
 > **Important:** When processing a large number of days, it may be necessary to allocate additional resources.
 > Moreover, automatic scaling of resources might be required for seamless operation.
 
-### 2.1. Partitioning
+### Partitioning
 
 Partitioning the data lake into three layers, as recommended by Databricks in their <FancyLink linkText="Medallion Architecture" url="https://www.databricks.com/glossary/medallion-architecture"/>, provides a structured approach to data management.
 Here are the layers:
@@ -60,14 +60,14 @@ Here are the layers:
 
 ![Data Lake Layers](../../images/posts/2024/0043-data-lake-layers.jpg)
 
-#### 2.1.1. Partitions in `bronze`
+#### Partitions in `bronze`
 
 Partitioning the `bronze` layer by the extraction datetime, typically labeled as `p_extracted_at`, offers several advantages:
 
 * **Avoidance of rewriting old partitions**: New data extractions can be appended without the need to update or rewrite existing partitions. This simplifies data ingestion and reduces the risk of inadvertently modifying historical data.
 * **Facilitation of tracking**: The partition column provides clear visibility into when the last extraction occurred and identifies which data needs processing. This makes it easier to monitor data freshness and manage incremental processing workflows effectively.
 
-#### 2.1.2. Partitions on `silver`/`gold`
+#### Partitions on `silver`/`gold`
 
 Then on `silver` and/or `gold` layers you can switch to partition by `creation_date` (based on the data) or to not partition at all.
 As a reference see <FancyLink linkText="When to partition tables on Databricks" url="https://docs.databricks.com/en/tables/partitions.html"/>.
@@ -76,7 +76,7 @@ They suggest that you only partition big tables (> 1TB) when using `delta` table
 So on those layers you will need to read all new partitions from `bronze` and update that table on `silver`/`gold`.
 The easiest way is to use the `MERGE INTO` option that both <FancyLink linkText="Delta Lake" url="https://delta.io/"/> and <FancyLink linkText="Iceberg" url="https://iceberg.apache.org/" company="iceberg"/> support.
 
-### 2.2. Deduplication
+### Deduplication
 
 In the `bronze` layer, where data extraction occurs, partitioning by `p_extracted_at` is essential for efficient data management. However, this partitioning strategy can lead to duplicates when processing multiple `bronze` partitions. To address this issue, we implement deduplication by retaining only the latest entry for each unique identifier (`id`).
 
@@ -89,7 +89,7 @@ Here's an overview of the deduplication process:
 1. **Identify unique rows**: Use the `row_number()` function to assign a sequential number (`rn`) to each row within a partition, ordered by the `last_modified_at` field (or `p_extracted_at` if `last_modified_at` is unavailable). This function is applied in descending order, ensuring that the latest entry for each `id` receives `rn = 1`.
 2. **Filter duplicates**: Keep only the records where `rn = 1`, as they represent the latest version of each unique identifier. Discard any rows with `rn > 1`, as they are duplicates.
 
-#### 2.2.1. Deduplication when there is no `id` column
+#### Deduplication when there is no `id` column
 
 If there is no `id` column, you will need to create one.
 This is done by creating a `composite key` as described in <FancyLink linkText="dbt | Composite key" url="https://docs.getdbt.com/reference/resource-configs/unique_key#use-a-combination-of-two-columns-as-a-unique-key"/>.
@@ -100,11 +100,11 @@ This is done by creating a `composite key` as described in <FancyLink linkText="
 
 That can easily be replicated in `python` or other programming languages.
 
-## 3. Code snippets
+## Code snippets
 
 Now that we have all the concepts clear, let's see how to implement it in `python` and `SQL`.
 
-### 3.1. Python
+### Python
 
 I use `spark` with `python` for extracting data for new sources.
 The important part here is to:
@@ -113,7 +113,7 @@ The important part here is to:
 2. Extract new data based on `max_datetime`
 3. Export it partitioned by `p_extracted_at`
 
-#### 3.1.1. Get `max_datetime`
+#### Get `max_datetime`
 
 ```python
 from datetime import datetime
@@ -186,7 +186,7 @@ def infer_max_datetime(
 > Given that the pipeline can fail and/or that we can do backfills, that max value might not be in the latest partition.
 > This is why I recommend querying `N` days of data (7 by default) and getting the max from there.
 
-#### 3.1.2. Extract new data and store it
+#### Extract new data and store it
 
 ```python
 from datetime import datetime
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 > `get_data`  is not defined since it's out of scope.
 > It's just a function that queries some external system.
 
-### 3.2. dbt (SQL)
+### dbt (SQL)
 
 I use `dbt` for transforming and creating the `silver` and `gold` layers.
 Those examples should explain how to:
@@ -230,7 +230,7 @@ Those examples should explain how to:
 * Process only new data
 * Deduplicate
 
-#### 3.2.1. dbt macros
+#### dbt macros
 
 With `dbt`, I like to define 2 macros:
 
@@ -290,7 +290,7 @@ macros:
         description: Name of the column that contains the `last_update`
 ```
 
-#### 3.2.2. dbt model
+#### dbt model
 
 Once you have the macros, the basic code for the model would look like:
 
@@ -333,7 +333,7 @@ FROM deduplicated
 > In general, it should be `materialization=incremental` (see: <FancyLink linkText="dbt | Incremental models" url="https://docs.getdbt.com/docs/build/incremental-models"/>).
 > And you might also need to set up the incremental strategy. For example, with <FancyLink linkText="dbt Athena" url="https://github.com/dbt-athena/dbt-athena"/> I set the `incremental_strategy: merge` and the `table_type: iceberg`.
 
-## 4. Handling schema changes
+## Handling schema changes
 
 One last thing you might want to automatically handle are schema changes.
 You cannot handle all of them but you can easily adapt to:
@@ -348,7 +348,7 @@ You cannot handle all of them but you can easily adapt to:
 > [!warning]
 > Notice that if you implement some automatic handling of schema changes you might have inconsistent data that you will need to handle. Do it at your own risk.
 
-### 4.1. New or missing columns
+### New or missing columns
 
 If you want to automatically handle missing columns, you simply need to add them as `NULL` in the input dataframe.
 
@@ -406,7 +406,7 @@ def fix_missmatching_columns(spark, sdf, tablename):
     return sdf
 ```
 
-### 4.2. Handling type changes
+### Handling type changes
 
 If you experience multiple type changes in your tables and you want to automatically handle them, I think that the best thing you can do is to convert all columns to `string`.
 Then on the `silver` layer, you can apply the proper `type` you want by casting.

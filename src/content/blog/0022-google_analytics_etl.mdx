@@ -11,14 +11,14 @@ tags: [API, Python, Pandas, DE, Tutorial]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 Google Analytics is really useful but sometimes you want to retrieve all the data and perform your own analysis and create your reports.
 In this post you will see how to do that with python.
 
-## 1. Google permisions and keys
+## Google permisions and keys
 
-### 1.1. Get the Google key
+### Get the Google key
 
 The first thing to do is to download the Google key. To do so you only need to follow <FancyLink linkText="Google Analytics API" url="https://developers.google.com/analytics/devguides/reporting/core/v3/quickstart/service-py"/> steps.
 
@@ -31,7 +31,7 @@ To sum them up you will need to:
 5. Create a `json` private key
 6. Download that key. It will allow you to access google data
 
-### 1.2. Enable Google Analytics API
+### Enable Google Analytics API
 
 You will need to enable the usage of the Google Analytics API with:
 
@@ -39,7 +39,7 @@ You will need to enable the usage of the Google Analytics API with:
 2. Make sure to select the desired project from the navigation bar (at the top).
 3. Click enable
 
-### 1.3. Allow the user to see Google Analytics data
+### Allow the user to see Google Analytics data
 
 From the previous step you created and account with an email similar to `your_project@your_web.iam.gserviceaccount.com`
 (you obviously need to change `your_web` and `your_project`). Then give it read permissions with:
@@ -53,13 +53,13 @@ From the previous step you created and account with an email similar to `your_pr
 > [!warning]
 > It can take some time until the new user has reading permissions.
 
-### 1.4. Profile ID
+### Profile ID
 
 Get the ID that you will need to use with the API. There are three levels and the ID that you need to use is in the last one, the one with the red mark in the image.
 
 ![Google Analytics Profile](../../images/posts/2019/0022-google_analytics_profile.jpg)
 
-## 2. Test the conection
+## Test the conection
 
 You can run the `test_connection.py` code to check that everything is working.
 
@@ -117,8 +117,8 @@ def test():
 > [!warning]
 > Remember to edit both `FILE_GA_KEY` and `PROFILE` constants using the values from the previous steps.
 
-## 3. Building the ETL
-### 3.1. Decide metrics and dimensions
+## Building the ETL
+### Decide metrics and dimensions
 
 Now is the time to decide what you want to download. There are two types of parameters **metrics** and **dimensions**.
 
@@ -128,7 +128,7 @@ Now is the time to decide what you want to download. There are two types of para
 You can check with <FancyLink linkText="Query explorer" url="https://ga-dev-tools.appspot.com/query-explorer/" company="google"/> the possible values for both
 of them and you can also try your queries.
 
-### 3.2. Extract and transform the data
+### Extract and transform the data
 
 In this step I will describe functions in the `etl.py` file.
 
@@ -291,24 +291,24 @@ def import_old_stats(end=date.today()):
 
 Right now it will download all data from 2017 until today.
 
-### 3.3. Load the data
+### Load the data
 
 In this example I'm going to show how to insert the data into **MySQL**.
 All this code is from `sql.py` file.
 
-#### 3.3.1. Handling duplicated data
+#### Handling duplicated data
 
 The idea is that the ETL can be run more than once without creating duplicated data.
 This is also important since the ETL is designed with redundancy to allow some failures so it is needed to handle duplicates.
 
 There are two approaches to this problem:
 
-##### 3.3.1.1. Using date as identifier
+##### Using date as identifier
 
 Every time you download data you will have a dataframe with info of the last 7 days.
 In order to avoid duplicates you can simply delete all rows that have data within the same days.
 
-##### 3.3.1.2. Use all 'index' columns
+##### Use all 'index' columns
 
 The other approach is to load all existing data and concatenate with the new one.
 This dataframe will have duplicates but they can be deleted with the `drop_duplicates` **pandas** function.
@@ -316,7 +316,7 @@ To do so you need to specify which are the columns that define a unique entry.
 
 This solution is less efficient since it will need to load all existing data and this can be time consuming.
 
-#### 3.3.2. Load code
+#### Load code
 
 The first thing to do is to create the SQL Alchemy engine for MySQL.
 For other SQL engines check the <FancyLink linkText="SQL Alchemy with python" url="https://villoro.com/blog/sql-alchemy-python/" dark="true"/>.

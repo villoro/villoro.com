@@ -10,7 +10,7 @@ tags: [DE, Performance, Spark, dbt]
 draft: false
 ---
 
-## 0. Motivation
+## Motivation
 
 In modern data lake architectures, managing the size and number of files is crucial for maintaining performance and cost-efficiency.
 During my work, I frequently encountered tables with a huge number of small files, which led to very poor query performance and significantly increased costs.
@@ -20,13 +20,13 @@ After investing considerable time into tracking and fixing these problems, I wan
 
 This post aims to provide a comprehensive guide on understanding, identifying, and resolving the small file problem in data lakes, ensuring that your data processing remains efficient and cost-effective.
 
-## 1. What's the problem
+## What's the problem
 
 In data lakes, managing the size of partitions is crucial for maintaining optimal performance and cost-efficiency.
 Partitions that are too small, generally less than 1 GB, can significantly degrade performance and inflate costs.
 This issue is well-documented in the <FancyLink linkText="Delta Lake Optimisation Guide" url="https://www.linkedin.com/pulse/delta-lake-optimisation-guide-deenar-toraskar/"/>, which highlights the adverse effects of small partitions on data processing and querying efficiency.
 
-### 1.1. Performance
+### Performance
 
 According to the article <FancyLink linkText="Fixing the Small File Problem in Data Lake with Spark" url="https://medium.com/@satadru1998/%EF%B8%8F-fixing-the-small-file-problem-in-data-lake-with-spark-2cc9fbb86796" dark="true"/>:
 
@@ -34,21 +34,21 @@ According to the article <FancyLink linkText="Fixing the Small File Problem in D
 
 This is because small files increase the number of tasks required to process the data, leading to higher overhead in task management and scheduling. Each task incurs a startup cost, and when there are many small tasks, this overhead can accumulate, resulting in significant slowdowns.
 
-### 1.2. Costs
+### Costs
 
 Another significant issue with small file partitions is the impact on costs.
 When I was working at Glovo, my colleagues observed that reducing the number of small files in heavily queried tables resulted in a **10x cost reduction**.
 
 This significant saving was primarily due to the decreased number of `S3 GET requests`, which are a major cost factor when querying small files.
 
-### 1.3. Default Behavior of Data Lake Writers
+### Default Behavior of Data Lake Writers
 
 By default, many data lake writers tend to create a large number of small files.
 For instance, Apache Spark will write multiple small files if not properly configured.
 Similarly, with AWS Athena, it is challenging to control the file sizes, often resulting in tiny files being created.
 If not set up correctly, these default behaviors can lead to a proliferation of small files, exacerbating performance and cost issues in the data lake.
 
-## 2. Good file size
+## Good file size
 
 Determining the optimal file size in a data lake can be challenging, as it depends on various factors such as the data processing engine, query patterns, and specific workload characteristics.
 However, most documentation and data processing engines recommend targeting a file size **around 1 GB**.
@@ -60,12 +60,12 @@ Similarly, the <FancyLink linkText="DuckDB | Parquet File Sizes" url="https://du
 > [!tip]
 > Around **1 GB per file** is the usual target for optimal file size in data lakes.
 
-## 3. How to avoid it?
+## How to avoid it?
 
 The key to avoiding small files in your data lake is to control the number of files written during data processing.
 Ensuring that the files are of optimal size improves both performance and cost-efficiency.
 
-### 3.1. Spark
+### Spark
 
 In Spark, you can control the number of files written by using the `sdf.repartition(n_files)` function, which allows you to specify the number of partitions (and hence the number of output files).
 Additionally, you can configure Spark to manage the size of files by setting the minimum and maximum number of rows per file through the configuration options `spark.sql.files.maxRecordsPerFile` and `spark.sql.files.minRecordsPerFile`.
@@ -74,7 +74,7 @@ Additionally, you can configure Spark to manage the size of files by setting the
 > Using `repartition` can cause significant shuffling of data, which might lead to performance issues.
 > The number of partitions also affects Spark's parallelization; too few partitions can lead to underutilized resources, while too many can cause excessive overhead.
 
-### 3.2. Athena with dbt
+### Athena with dbt
 
 > [!warning]
 > In AWS Athena, **there is no direct way to control the number of files** written during query execution.
@@ -153,7 +153,7 @@ models:
       - "{{ vacuum() }}"
 ```
 
-## 4. Good partitioning
+## Good partitioning
 
 When it comes to partitioning tables in a data lake, it's important to consider the type of data and its usage patterns.
 There are generally two types of tables:
@@ -162,7 +162,7 @@ There are generally two types of tables:
 
 * **Aggregated (or presentation) tables**: These tables represent a final snapshot or aggregated view of the data. They often don't need to be partitioned unless the dataset is very large. Partitioning might not be necessary for these tables as they are typically queried in their entirety or by specific dimensions that do not benefit significantly from partitioning.
 
-### 4.1. Partitioning Fact tables
+### Partitioning Fact tables
 
 For fact tables, while partitioning by time is common, it can be more efficient to avoid partitioning if it leads to small files.
 Using data formats like <FancyLink linkText="Delta Lake" url="https://delta.io/"/> or <FancyLink linkText="Apache Iceberg" url="https://iceberg.apache.org/" company="iceberg"/> can help manage this.
@@ -182,13 +182,13 @@ See <FancyLink linkText="Iceberg | Partition Transforms" url="https://iceberg.ap
 
 This is possible because of <FancyLink linkText="Iceberg's hidden partitioning" url="https://iceberg.apache.org/docs/1.4.0/partitioning/#icebergs-hidden-partitioning" company="iceberg"/>.
 
-## 5. How to track the problem
+## How to track the problem
 
 Tracking the number of files and partitions each table has is crucial for managing data lakes efficiently.
 Both Iceberg and Delta provide ways to query the metadata, which can then be exported into a table.
 Ideally, this data should be exported every time a table is written.
 
-### 5.1. Iceberg
+### Iceberg
 
 With Iceberg, you can query the `files` metadata, which gives you detailed information such as:
 
@@ -213,7 +213,7 @@ SELECT
 FROM {{ this.schema }}."{{ this.table }}$files";
 ```
 
-#### 5.1.1. Iceberg in Spark
+#### Iceberg in Spark
 
 According to the official documentation (<FancyLink linkText="Spark: Querying with SQL | Iceberg" url="https://iceberg.apache.org/docs/latest/spark-queries/#querying-with-sql" company="iceberg"/>), you can query the `files` metadata with:
 
@@ -284,7 +284,7 @@ While Iceberg can handle concurrent write operations, issues can sometimes occur
 Therefore, retries with <FancyLink linkText="Backoff" url="https://github.com/litl/backoff" dark="true"/> are recommended.
 For more information, see <FancyLink linkText="Concurrent write operations | Iceberg" url="https://iceberg.apache.org/docs/1.4.1/reliability/#concurrent-write-operations" company="iceberg"/>.
 
-#### 5.1.2. Iceberg in Athena with dbt
+#### Iceberg in Athena with dbt
 
 You can query the `files` metadata with:
 
@@ -408,7 +408,7 @@ models:
       - "{{ export_metadata() }}" # <-- Add this
 ```
 
-#### 5.1.3. Track `files_by_day`
+#### Track `files_by_day`
 
 Now that we have a table with a snapshot of the metadata for each table whenever there is a write, we can create a table that tracks the latest state by day.
 This table will help us monitor partitioning problems.
@@ -539,7 +539,7 @@ models:
         tests: [not_null]
 ```
 
-### 5.2. Delta
+### Delta
 
 With Delta, you can use the `DESCRIBE DETAIL table` command to get similar information.
 This produces a table like this:
@@ -555,19 +555,19 @@ You can read more about this in the docs <FancyLink linkText="Review Delta Lake 
 
 For tracking metadata, you can follow a similar approach to what was described for Iceberg.
 
-## 6. Fixing the problem
+## Fixing the problem
 
 After following the previous steps, you have detected multiple tables that are not well partitioned and have a lot of small files.
 What can you do to fix the data?
 
-### 6.1. Non partitioned tables
+### Non partitioned tables
 
 For non-partitioned tables, it is quite straightforward. You can simply run `OPTIMIZE` to compact the table.
 
 > [!warning]
 > The `OPTIMIZE` command can take a lot of time and might require a lot of processing power, depending on the table size. Proceed with caution.
 
-### 6.2. Partitioned tables
+### Partitioned tables
 
 For partitioned tables, the best case scenario is where you can compact the partitions with `OPTIMIZE`, similar to non-partitioned tables.
 If you want, you can optimize only some partitions, which will be faster and require less computing power.
@@ -575,7 +575,7 @@ If you want, you can optimize only some partitions, which will be faster and req
 If compacting the partitions is not enough, you will need to change the partitioning of the table.
 This process differs for Delta and Iceberg tables.
 
-### 6.2.1. Partitioned Delta tables
+### Partitioned Delta tables
 
 Delta tables have fixed partitioning, and you **cannot change the partitioning** of an existing table.
 Therefore, you will need to recreate the table without the partition column or with a different partitioning.
@@ -615,7 +615,7 @@ Once everything is good with the new table, you can recreate the original table:
 3. Move back all the data.
 4. Delete the temporary table.
 
-### 6.2.2. Partitioned Iceberg tables
+### Partitioned Iceberg tables
 
 With Iceberg, you can perform schema evolutions, such as changing the partitioning.
 You can read more about it at <FancyLink linkText="Iceberg evolutions" url="https://iceberg.apache.org/docs/nightly/evolution/"/>.
@@ -628,7 +628,7 @@ However, there is a caveat:
 To compact old partitions, you still need to move the data to a temporary table and then bring it back.
 You can follow a similar approach to what was described for Delta tables.
 
-## 7. Conclusion
+## Conclusion
 
 Managing the size and number of files in a data lake is essential for maintaining optimal performance and controlling costs.
 Throughout this post, we've explored the challenges posed by small files, the ideal file sizes recommended by various data processing engines, and practical strategies for avoiding and fixing these issues.

@@ -10,7 +10,7 @@ tags: [Tutorial, Setup, Windows]
 draft: false
 ---
 
-## 0. Motivation
+## Motivation
 
 I'm frequently installing Windows on computers because I believe periodic reinstalls improve PC performance and are essential when helping family members set up their PCs.
 A few months ago, I bought three Lenovo ThinkCentre minis for my family.
@@ -18,7 +18,7 @@ They are old but still quite powerful for lighter use.
 Since I needed to install Windows on these three computers, I decided to document the process to easily repeat it in the future.
 This guide serves as a comprehensive resource for anyone looking to perform a clean Windows installation.
 
-## 1. Download Windows
+## Download Windows
 
 You can easily download Windows from Microsoft's website.
 At this stage, you don't need a Windows license.
@@ -30,7 +30,7 @@ To download it, you should:
 
 This will allow you to create a bootable USB.
 
-## 2. Create bootable USB
+## Create bootable USB
 
 Use the `MediaCreationTool` to create a bootable USB.
 
@@ -47,7 +47,7 @@ This will trigger:
 2. Formatting the USB.
 3. Adding all needed files to the drive and making it bootable.
 
-## 3. Install Windows
+## Install Windows
 
 What we want to avoid is getting bloatware (as much as possible) when installing Windows.
 
@@ -55,7 +55,7 @@ This can be done by selecting `English (World)` or `English (Europe)` for the `T
 
 For more info, see: <FancyLink linkText="How to install Windows 11 without bloatware apps" url="https://pureinfotech.com/install-windows-11-without-bloatware-apps/" company="default" dark="true"/>.
 
-### 3.1. Clean the Disk
+### Clean the Disk
 
 After you have selected the region, you will need to decide where to install Windows.
 I like to go to the `Custom: Install Windows only (advanced)` option. With that, I can make sure to do a clean install.
@@ -65,7 +65,7 @@ I like to go to the `Custom: Install Windows only (advanced)` option. With that,
 
 Select the disk where you want to install Windows. If needed, delete the existing partitions and create a new one.
 
-## 4. Set up windows
+## Set up windows
  
 Here, we want to create a local account. This is because:
 
@@ -77,7 +77,7 @@ Given that you might be installing Windows for another user, I think this is the
 
 We will be following this guide: <FancyLink linkText="How to Install Windows 11 Without a Microsoft Account" url="https://www.tomshardware.com/how-to/install-windows-11-without-microsoft-account" company="default" dark="true"/>.
 
-### 4.1. OOBEREGION 'Error'
+### OOBEREGION 'Error'
 
 If you see the OOBEREGION error, don't panic.
 It just means that Windows is unable to determine which bloatware to install. Just skip that step.
@@ -85,7 +85,7 @@ It just means that Windows is unable to determine which bloatware to install. Ju
 > [!tip]
 > It's not an error. It means no bloatware will be installed.
 
-### 4.2. Disable Internet
+### Disable Internet
 
 When it asks for an internet connection, hit `SHIFT` + `F10`. A command prompt will appear. Then just write:
 
@@ -101,39 +101,39 @@ When it asks about the internet connection, select `I don't have internet`. Even
 
 From there, you can set up a username and you will have your local account.
 
-## 5. Install Programs
+## Install Programs
 
 Once you are inside Windows, you can connect to the internet to start downloading everything you need.
 
 Everyone has different preferences, but there is a way to get the most common programs and install them all at once. Just go to <FancyLink linkText="ninite.com" url="https://ninite.com/"/> and select the programs you want.
 Once done, hit `Get Your Ninite` to download an `ninite.exe` file that will install them all.
 
-### 5.1. Change the Default Browser (if desired)
+### Change the Default Browser (if desired)
 
 I don't like Edge, and you might not like it either.
 You can download any internet browser you want, but I suggest you try <FancyLink linkText="Brave" url="https://brave.com/"/>.
 
 It's the only browser that has a built-in ad blocker, which is quite useful for faster loading times and privacy.
 
-## 6. Configure the Computer
+## Configure the Computer
 
-### 6.1 Check Startup Apps
+### Check Startup Apps
 
 Here you might want to disable apps that you don't use so that the computer loads faster.
 For example, you might not be using `OneDrive` (which is installed even if you do the `English (world)` trick), and in that case, it would be better to disable it.
 
 To do so, open the `Task Manager` and go to `Startup apps`.
 
-### 6.2. Set the Timezone
+### Set the Timezone
 
 The only problem with selecting `English (World)` is that you probably won't have the correct timezone.
 Just right-click the Windows clock and go to `Adjust date and time`.
 
-### 6.3. Set Correct Windows Language
+### Set Correct Windows Language
 
 If needed, change the Windows language to whatever you want.
 
-### 6.4. Install Drivers
+### Install Drivers
 
 On modern computers, you might not need to do it.
 But if you are installing Windows on an old computer, you might need to install some drivers.
@@ -145,7 +145,7 @@ The most common ones I have needed to install are:
 
 Here, the best thing you can do is to Google your computer model and go to the official website of the brand and download anything you need.
 
-### 6.5. Install Office
+### Install Office
 
 You can download Microsoft Office directly from Microsoft's official Content Delivery Network (CDN) links:
 
@@ -154,15 +154,15 @@ You can download Microsoft Office directly from Microsoft's official Content Del
 
 After downloading, you can mount the image files to begin the installation. To mount an image, simply **right-click on the file and select `Mount`**. Once mounted, run the installer to set up Microsoft Office on your computer.
 
-## 7. Set up Windows
+## Set up Windows
 
-### 7.1. Windows updates
+### Windows updates
 
 Windows updates take a lot of time to install and sometimes can go wrong.
 So, I think it's best that you download all updates you can so that your computer is as updated as possible.
 This will usually require multiple restarts.
 
-### 7.2. Activate Windows
+### Activate Windows
 
 Some computers come with a working Windows key, and in certain cases, activation happens automatically. If this doesn't apply to you, it's **strongly recommended to activate Windows** to ensure you receive security updates and access all features.
 
@@ -173,7 +173,7 @@ I advise against using online activators that could introduce harmful changes to
 
 If you still insist on using an activator, ensure you understand the risks involved. A safer option in this regard is to refer to <FancyLink linkText="Microsoft Activation Scripts (MAS)" url="https://massgrave.dev/" company="default" dark="true"/>, a trusted community-maintained resource. However, this approach carries risks, and you should proceed at your own discretion.
 
-## 8. [Optional] Set up DNS
+## [Optional] Set up DNS
 
 Finally, you might want to change DNS. This will allow you to:
 

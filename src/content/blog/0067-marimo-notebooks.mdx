@@ -13,13 +13,13 @@ draft: false
 import marimoUi from "../../images/posts/2026/0067-marimo-ui.png";
 import marimoRecoverS3 from "../../images/posts/2026/0067-marimo-recover-s3-files.png";
 
-## 0. Intro
+## Intro
 
 I have used Jupyter notebooks for years, and recently I started trying <FancyLink linkText="marimo" url="https://marimo.io/"/>.
 
 In this post I want to explain why I think it is a very interesting alternative for Python projects, and then show one small example at the end.
 
-## 1. Marimo as a Jupyter alternative
+## Marimo as a Jupyter alternative
 
 I still think Jupyter notebooks are very useful.
 For quick exploration, ad-hoc analysis, or testing an idea, they are hard to beat.
@@ -56,7 +56,7 @@ It is Python code that happens to render as a notebook.
 So I do not really see marimo as "Jupyter but nicer".
 I see it more as a notebook tool for the cases where the notebook is slowly becoming part of the project itself.
 
-## 2. Execution order, reloading, and variable redefinition
+## Execution order, reloading, and variable redefinition
 
 This is the part I liked the most.
 
@@ -124,7 +124,7 @@ It forces a cleaner structure, and that makes the notebook easier to understand 
 > The nice part is not only that the notebook updates automatically.
 > It is that the update follows the dependencies between cells, so the notebook behaves more like a DAG than like a mutable scratchpad.
 
-## 3. Why being a plain Python file matters
+## Why being a plain Python file matters
 
 This is another big reason I like it.
 
@@ -173,7 +173,7 @@ The nice part is that there is no special format involved here, just regular Pyt
 And I think that matters a lot.
 If a notebook is useful enough to keep, then it is useful enough to deserve clean diffs and normal code review.
 
-## 4. UI elements
+## UI elements
 
 Marimo has quite a few useful UI elements:
 
@@ -234,7 +234,7 @@ Without them, the widgets can end up feeling scattered.
 > [!note]
 > This is enough to turn a notebook into a small internal tool without leaving Python.
 
-## 5. SQL integration and plotting
+## SQL integration and plotting
 
 This is another area where marimo is stronger than I expected.
 
@@ -267,7 +267,7 @@ So for data exploration, the combination is very nice:
 > [!note]
 > I think this is one of the strongest parts of marimo for data work: SQL and plots are not bolted on, they fit naturally into the same reactive workflow.
 
-## 6. A real example: recovering deleted S3 files
+## A real example: recovering deleted S3 files
 
 One example I like a lot is a marimo notebook I built for recovering deleted S3 files.
 I already explained the underlying recovery logic in <FancyLink linkText="Recover deleted S3 files with delete markers" url="https://villoro.com/blog/recover-s3-files-delete-markers/" dark="true"/>, so here I only want to focus on why marimo is a good fit for the interface.
@@ -360,7 +360,7 @@ I like this example because it combines most of the things I mentioned before:
 
 And I think this is exactly the kind of workflow where marimo makes a lot of sense.
 
-## 7. Closing thoughts
+## Closing thoughts
 
 Marimo gets a lot of small things right:
 
