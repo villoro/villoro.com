@@ -10,13 +10,13 @@ tags: [Python, Pandas, DE]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 When developing with python people usually want to store some data.
 If this data is quite big and/or contains personal information it is not advised to store it in **github** (or other git providers).
 One good option is to store it in <FancyLink linkText="Dropbox" url="https://www.dropbox.com/"/>.
 
-## 1. Using dropbox with python
+## Using dropbox with python
 Dropbox has a really nice package that you can install with
 
 ```sh
@@ -38,7 +38,7 @@ Once you have create the app go to the app settings page and create a token.
 
 You can now store that secret in a safe way (for example as an environment variable or a hidden file).
 
-## 2. Working with BytesIO
+## Working with BytesIO
 
 The key to write or read files is using `io.BytesIO` object.
 
@@ -69,7 +69,7 @@ with io.BytesIO(txt.encode()) as stream:
 > [!warning]
 > It is important to run `stream.seek(0)` to go to the beginning of the stream.
 
-## 3. Writting files to dropbox
+## Writting files to dropbox
 
 The first thing you need to do is to init the dropbox object with:
 
@@ -82,7 +82,7 @@ DBX = dropbox.Dropbox(token)
 
 After creating the `DBX` instance you can upload files using `DBX.files_upload`.
 
-### 3.1. Write a text file
+### Write a text file
 
 You will need to create the `io.BytesIO` object and upload it.
 
@@ -101,7 +101,7 @@ To allow overwriting you need to pass `mode=dropbox.files.WriteMode.overwrite` t
 > [!warning]
 > **Important:** filenames should start with `/`. It won't work without it.
 
-### 3.2. Write a json
+### Write a json
 
 To write a dictionary-like file you can use the following:
 
@@ -118,7 +118,7 @@ with io.StringIO() as stream:
     DBX.files_upload(stream.read().encode(), "/test.json", mode=dropbox.files.WriteMode.overwrite)
 ```
 
-### 3.3. Write a yaml
+### Write a yaml
 
 It is very similar to writing a `json`:
 
@@ -138,7 +138,7 @@ with io.StringIO() as stream:
 
 This time we are encoding the stream to transform it to bytes.
 
-### 3.4. Write an Excel with Pandas
+### Write an Excel with Pandas
 
 ```python
 import pandas as pd
@@ -158,7 +158,7 @@ with io.BytesIO() as stream:
 
 The key is to use the `ExcelWriter` from **pandas**.
 
-### 3.5. Write a csv with Pandas
+### Write a csv with Pandas
 
 Unfortunatelly it is not possible to dump a `csv` directly with **Pandas** into a `StringIO` at this time (More info: <FancyLink linkText="Pandas issue 22555" url="https://github.com/pandas-dev/pandas/issues/22555" dark="true"/>)
 
@@ -175,12 +175,12 @@ with io.BytesIO(data.encode()) as stream:
     DBX.files_upload(stream.read(), "/test.csv", mode=dropbox.files.WriteMode.overwrite)
 ```
 
-## 4. Reading files
+## Reading files
 
 To read a file you can use `DBX.files_download`.
 This will return some metadata as the first parameter and the result of the **API** call as the second.
 
-### 4.1. Read a text file
+### Read a text file
 
 ```python
 _, res = DBX.files_download("/test.txt")
@@ -194,7 +194,7 @@ with io.BytesIO(res.content) as stream:
 > [!warning]
 > Remember to decode the stream to transform it from bytes to string
 
-### 4.2. Read a json
+### Read a json
 
 ```python
 _, res = DBX.files_download("/test.json")
@@ -203,7 +203,7 @@ with io.BytesIO(res.content) as stream:
     data = json.load(stream)
 ```
 
-### 4.3. Read a yaml
+### Read a yaml
 
 ```python
 _, res = DBX.files_download("/test.yaml")
@@ -215,7 +215,7 @@ with io.BytesIO(res.content) as stream:
 > [!warning]
 > You should always use `yaml.safe_load` instead of `yaml.load`
 
-### 4.4. Read an Excel with Pandas
+### Read an Excel with Pandas
 
 ```python
 _, res = DBX.files_download("/test.xlsx")
@@ -227,7 +227,7 @@ with io.BytesIO(res.content) as stream:
 > [!tip]
 > If you do not want a new dummy index use `index_col=0`.
 
-### 4.5. Read a csv with Pandas
+### Read a csv with Pandas
 
 ```python
 _, res = DBX.files_download("/test.csv")
@@ -236,11 +236,11 @@ with io.BytesIO(res.content) as stream:
     df = pd.read_csv(stream, index_col=0)
 ```
 
-## 5. Deleting files
+## Deleting files
 
 To delete a file simply call `DBX.files_delete(filename)`.
 
-## 6. Working with other formats
+## Working with other formats
 
 With this post you should have enough to work with **dropbox** using python.
 However, if you need to work another format look on how to create a `StringIO` object that represent this format.

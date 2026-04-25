@@ -10,7 +10,7 @@ tags: [Python, API, Data Engineering, Best Practices]
 draft: true
 ---
 
-## 0. Intro
+## Intro
 
 Most teams meet Qlik Cloud through dashboards, but as a data engineer you eventually need to **automate** it: list apps, harvest metadata, and trigger reloads from your pipelines. Qlik’s API supports async, bulk, and webhooks, but the fastest path to reliable automation is a **small, synchronous client** you understand end-to-end.
 
@@ -24,7 +24,7 @@ This guide builds that client in incremental steps with `requests`, focusing on 
 * Trigger **reloads** and **poll** status until success/failure/timeout
 * Pragmatic **error handling** and retry pointers
 
-## 1. Authentication
+## Authentication
 
 We will create a class because it provides a clean way to encapsulate authentication, session reuse, and default settings. This makes it easier to extend later with helpers for pagination, reloads, and metadata.
 
@@ -61,7 +61,7 @@ class QlikClient:
 
 Next, we’ll add a safe request helper that wraps `requests` with timeouts, optional retries, and debug-aware error handling.
 
-## 2. `_get` helper
+## `_get` helper
 
 Every client needs a **single choke-point** for read requests. Centralizing GET logic gives you one place to set defaults (headers, timeouts), enforce invariants (pagination limit), and add behavior (debug, retries, logging) without touching call-sites.
 
@@ -108,7 +108,7 @@ Why an internal `_get`:
 > [!note]
 > If you see 400s with boolean query params, try casting them to strings (see the commented line). Some gateways expect `true`/`false` as strings.
 
-## 3. Pagination
+## Pagination
 
 Many Qlik endpoints return a `links.next.href` for the next page. Here’s how to walk them:
 
@@ -155,7 +155,7 @@ Many Qlik endpoints default to returning only 100 items per page so in order to 
 > [!warning]
 > Tune `self.max_calls` to protect your jobs from runaway loops (e.g., if the API keeps returning a next link). Add logging around `i` if you need visibility.
 
-## 4. Custom public methods
+## Custom public methods
 
 Some endpoints need **special treatment** (validation, parameter shaping, friendlier errors). Expose these as **public methods** on your client and keep the one-off logic inside them, while leaving `_get` small and generic.
 
@@ -191,7 +191,7 @@ Why a public method here?
 > [!note]
 > You can reuse `_check_uuid` for other endpoints (e.g., reloads, automations) by passing named arguments: `self._check_uuid(reload_id=reload_id)`.
 
-## 5. Triggering reloads with `_post`
+## Triggering reloads with `_post`
 
 Reloads are submitted with a POST. Qlik returns a `reload_id` you can use to track progress.
 
@@ -237,7 +237,7 @@ Keep `_post` generic just like `_get`. Endpoint-specific quirks (e.g., required 
 > [!note]
 > Qlik often answers with `202 Accepted` for fire-and-forget operations. Returning `{}` from `_post` in that case avoids JSON decode errors and keeps call-sites simple.
 
-## 6. Polling reload status
+## Polling reload status
 
 Reloads may take minutes. You can’t assume they finish instantly, so polling is essential. Below is a simple, sync poller that uses `time.monotonic()` and caps total wait time.
 
@@ -292,7 +292,7 @@ Why polling is necessary
 * A single reload can outlive your HTTP timeout.
 * Polling gives you control over total wait time and backoff cadence.
 
-## 7. Error handling and retries
+## Error handling and retries
 
 Things to watch out for:
 

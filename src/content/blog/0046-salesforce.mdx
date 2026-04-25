@@ -12,7 +12,7 @@ draft: false
 
 <script type="module" src="/js/posts/0046-plots-salesforce.js"></script>
 
-## 0. Motivation
+## Motivation
 
 I've spent a lot of time figuring out how to get data from Salesforce using Python.
 Along the way, I faced many challenges and learned a lot.
@@ -21,7 +21,7 @@ This post is a guide to extracting data from Salesforce with Python.
 I'll explain things step by step, give examples, and offer tips to make it easier for you.
 My goal is to help you get the data you need from Salesforce for your own projects.
 
-## 1. Simple Salesforce
+## Simple Salesforce
 
 There are multiple ways of querying Salesforce data with Python.
 I prefer using <FancyLink linkText="Simple Salesforce" url="https://github.com/simple-salesforce/simple-salesforce" dark="true"/> because, as the name suggests, it simplifies the data extraction process.
@@ -44,7 +44,7 @@ sf = Salesforce(
 > [!warning]
 > Please ensure that you replace all the placeholder strings with the appropriate values.
 
-### 1.1. Querying and `__getattr__`
+### Querying and `__getattr__`
 
 This is the simplest query you can execute:
 
@@ -65,7 +65,7 @@ sf.__getattr__("Account").get('003e0000003GuNXAA0')
 > [!tip]
 > You'll find that this approach can be applied throughout this post.
 
-## 2. Querying options
+## Querying options
 
 There are various methods available for retrieving data from Salesforce using the <FancyLink linkText="Simple Salesforce" url="https://github.com/simple-salesforce/simple-salesforce" dark="true"/> library.
 Here's a detailed overview of each:
@@ -89,7 +89,7 @@ You can also view the query time of each method using the same query.
 > [!tip]
 > I would recommend using either `query_all_iter`.
 
-### 2.1. Entity get
+### Entity get
 
 You can use the `get` method to retrieve a single entity:
 
@@ -100,7 +100,7 @@ sf.Account.get('003e0000003GuNXAA0')
 > [!warning]
 > While useful for retrieving a single value, it's not suitable for exporting a large number of rows.
 
-### 2.2. query
+### query
 
 You can use `sf.query` to retrieve multiple rows at once.
 However, there's a limit on the number of records you can fetch. If your query exceeds this limit, you'll need to use `sf.query_more`.
@@ -119,7 +119,7 @@ You can find more information about this in the <FancyLink linkText="Queries | S
 > [!warning]
 > I don't suggest using this option since there are easier methods available that don't require dealing with the `sf.query_more` option.
 
-### 2.3. query_all
+### query_all
 
 This method is similar to `query`, but it returns all results as a Python object:
 
@@ -130,7 +130,7 @@ sf.query_all("SELECT Id, Name FROM Account")
 > [!warning]
 > The problem with this approach is that you can easily encounter `Out of Memory (OOM)` errors when attempting to load a large amount of data into memory.
 
-### 2.4. query_all_iter
+### query_all_iter
 
 This works similarly to the previous methods, but the result is an iterator.
 This allows you to process each row one at a time and avoid `Out of Memory (OOM)` errors.
@@ -151,7 +151,7 @@ You may notice that the first row takes longer to retrieve than the rest when qu
 > [!tip]
 > This is the method I recommend using.
 
-### 2.5. Bulk
+### Bulk
 
 There are two ways of querying with `bulk`: the regular one and the lazy operation.
 The regular method works similarly to `query_all_iter`, allowing you to iterate over the results without encountering OOM errors.
@@ -189,7 +189,7 @@ for chunk in data:
 > This function is consistently **2 to 3 times faster** than `query_all_iter`.
 > However, since it cannot extract compound fields, it would make extraction more complex, as you would need to recreate all that logic in the data lake.
 
-### 2.6. Bulk2
+### Bulk2
 
 Finally, there's also the `bulk2` option.
 
@@ -214,7 +214,7 @@ However, one important caveat is that the result is a Python string similar to a
 During testing, I observed around a 20% performance improvement compared to `bulk`.
 However, given that it's not a significant improvement, I believe it's not worth the effort.
 
-## 3. Avoiding Timeouts and Out of Memory Errors
+## Avoiding Timeouts and Out of Memory Errors
 
 After extracting data from Salesforce for several months, I've discovered a couple of tricks to make the pipeline more resilient. These include:
 
@@ -224,7 +224,7 @@ After extracting data from Salesforce for several months, I've discovered a coup
 Additionally, I've found it beneficial to always query only the data that has been updated.
 You can find more information about this approach in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
 
-### 3.1. Chunks
+### Chunks
 
 Exporting data in chunks is a straightforward method. For tables that may contain a large amount of data, I prefer exporting records in smaller, manageable chunks.
 The chunk size can be adjusted based on query speed observations.
@@ -277,7 +277,7 @@ This approach helps to:
 * Avoid Out of Memory (OOM) errors.
 * Provide progress updates for long-running queries that may fail.
 
-### 3.2. Batches
+### Batches
 
 Attempting to query a large amount of data in one go can sometimes lead to timeouts.
 Based on my experience, if the first row cannot be extracted within 2 minutes, `simple_salesforce` will raise an exception.
@@ -323,7 +323,7 @@ def get_dates_batches(min_date, max_date, max_days_per_batch=None):
     return chunks
 ```
 
-## 4. Types of Fields
+## Types of Fields
 
 Fields (or Columns) in Salesforce are flexible and can contain different types of data. I classify fields into three types:
 
@@ -331,7 +331,7 @@ Fields (or Columns) in Salesforce are flexible and can contain different types o
 2. **Reference fields**: These are links to other tables, similar to a join.
 3. **Compound fields**: These are formulas based on other fields, including fields from referenced tables.
 
-### 4.1. Primitive Fields
+### Primitive Fields
 
 Primitive fields are the basic type of fields, providing information about the entity itself.
 For example, in the `User` table, primitive fields might include:
@@ -339,7 +339,7 @@ For example, in the `User` table, primitive fields might include:
 * `firstname`: The user's first name (string).
 * `age`: The user's age (integer).
 
-### 4.2. Reference Fields
+### Reference Fields
 
 Reference fields are links to other tables and behave similarly to a **join** in SQL.
 The two important parts of reference fields are:
@@ -356,7 +356,7 @@ Here are examples of reference fields:
 | Delegation__c    | reference | [Delegation__c] | Delegation__r    |
 | User__c          | reference | [User]          | User__r          |
 
-### 4.3. Compound Fields (Calculated Fields)
+### Compound Fields (Calculated Fields)
 
 Compound fields are populated at query time based on a formula.
 For example, in the `User` table, we might have `firstName` and `lastName` as primitive fields, with `fullName` defined as `FirstName & ’ ’ & LastName`. More information about compound fields can be found in <FancyLink linkText="Compound fields" url="https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/compound_fields.htm"/>.
@@ -375,7 +375,7 @@ When extracting data, compound fields are risky because:
 In the example above, modifying `User.FirstName` would result in a different `fullName`, but the `Order` table's `LastModifiedDate` would remain unchanged.
 This can lead to incorrect data extraction.
 
-### 4.4. Retrieving Field Information
+### Retrieving Field Information
 
 You can use `sf.Entity.describe()` to retrieve field definitions as a dictionary.
 This can be transformed into a Pandas DataFrame for easier viewing:
@@ -402,13 +402,13 @@ class Column(BaseModel):
     relationship
 ```
 
-## 5. Querying with External Changes
+## Querying with External Changes
 
 > [!warning]
 > After writing this post I discovered that I can simply use `SystemModstamp` for getting all changes done to an entity.
 > Here is the original content for reference, but **I strongly suggest you query with `SystemModstamp`** instead.
 
-### 5.1. The problem
+### The problem
 
 Compound fields can be calculated based on external entities.
 However, an update on the related entity does not change the `LastModifiedDate` of the main entity.
@@ -418,7 +418,7 @@ Let's illustrate this problem with an example where we want to query the `Delega
 
 ![Problem with external fields](../../images/posts/2024/0046-salesforce_external_fields.jpg)
 
-### 5.2. The solution
+### The solution
 
 To address this issue, we need to filter the `LastModifiedDate` of both entities when querying.
 To automate this process, we can retrieve all fields of type `reference` and check if their `relationshipName` is used in any `calculatedFormula`.
@@ -464,7 +464,7 @@ WHERE (LastModifiedDate >= {min_date} AND LastModifiedDate < {max_date})
 > [!warning]
 > You should replace `{min_date}` and `{max_date}` with datetimes with the format `%Y-%m-%dT%H:%M:%SZ` (do not include any `"` or `'`).
 
-#### 5.2.1. Deciding Date Ranges
+#### Deciding Date Ranges
 
 In regular runs, I query data from the last extraction (`max(LastUpdateDate)` from the table where the export will be stored) up until the current datetime (`datetime.now()`).
 More information about this approach can be found in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
@@ -479,7 +479,7 @@ For example:
 
 When dealing with external entities, we only include the `min_date` since that date won't be used for the next execution to determine the next `min_date`.
 
-### 5.3. Automatically Detecting Related Entities
+### Automatically Detecting Related Entities
 
 To automate the detection of related entities, we can search for `relationshipName` entries in an entity and check if they are found in the `calculatedFormula` of any other field.
 This can be achieved using regular expressions:
@@ -526,7 +526,7 @@ def get_referenced_entities(entity):
 This function retrieves all fields of type `reference`, extracts their `relationshipName`, and checks if it appears in any `calculatedFormula`.
 If found, it adds the related entity to the query.
 
-### 5.4. Data size
+### Data size
 
 With this new approach, you will download rows whenever:
 
@@ -553,11 +553,11 @@ Other alternatives could be:
 * Letting the long process run and assuming the cost.
 * Triggering the pipeline more frequently, which could lead to smaller batches.
 
-## 6. Bonus: Final code
+## Bonus: Final code
 
 Here you can see the final code that is explained during the post
 
-### 6.1. Salesforce connector class
+### Salesforce connector class
 
 This is the code for querying salesforce:
 
@@ -789,7 +789,7 @@ class SalesForceConnector:
         return out
 ```
 
-### 6.2. Saleforce export
+### Saleforce export
 
 This is the python file that calls the queries and exports them:
 
@@ -910,7 +910,7 @@ def main(params):
 > [!note]
 > There are some functions that are not defined (such as `get_tables`, `infer_min_datetime` and `export_records`) since they are out of the scope of this post.
 
-## 7. Conclusion
+## Conclusion
 
 In this guide, we've explored various techniques for building robust data extraction pipelines from Salesforce, covering strategies to handle timeouts, avoid memory errors, and efficiently query related entities. By implementing these approaches, you can ensure reliable and scalable data retrieval processes tailored to your organization's needs.
 

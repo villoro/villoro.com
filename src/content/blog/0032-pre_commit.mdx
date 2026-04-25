@@ -12,7 +12,7 @@ tags: [Tools]
 draft: false
 ---
 
-## 1. What is pre-commit
+## What is pre-commit
 
 With pre-commit you can automate some repetitive tasks before doing a `commit` on a **git** repository.
 It is useful for identifying simple issues before submission to code review.
@@ -21,7 +21,7 @@ For example with **pre-commit** you can point out issues in code such as missing
 
 **Pre-commit** can work with **any development language** even though is a python package.
 
-## 2. Installation
+## Installation
 
 To install you can simply run:
 
@@ -29,7 +29,7 @@ To install you can simply run:
 pip install pre-commit
 ```
 
-## 3. Configuration
+## Configuration
 
 Once you have the package installed you need the file `.pre-commit-config.yaml` with the hooks you need.
 
@@ -58,7 +58,7 @@ Once you are in a repository that has the `.pre-commit-config.yaml` file you can
 pre-commit install
 ```
 
-## 4. Usage
+## Usage
 
 By default `pre-commit` will run only on the stagged files. You can check all the files the first time you install it with:
 
@@ -68,7 +68,7 @@ pre-commit run --all-files
 
 After that each time you try to do a commit `pre-commit` will run all hooks and will prevent you from commiting simple issues.
 
-## 5. Updating hooks
+## Updating hooks
 
 You can update all `pre-commit` hooks with:
 
@@ -76,7 +76,7 @@ You can update all `pre-commit` hooks with:
 pre-commit autoupdate
 ```
 
-## 6. Continuous integration (CI)
+## Continuous integration (CI)
 
 It is a good idea to run `pre-commit` on your CI to check that nobody is pushing code with errors.
 
@@ -92,7 +92,7 @@ If you want to only run it on the files that have changed just do:
 pre-commit run --from-ref origin.HEAD --to-ref HEAD
 ```
 
-## 7. Useful hooks
+## Useful hooks
 
 There are some default hooks defined <FancyLink linkText="Pre-commit hooks" url="https://github.com/pre-commit/pre-commit-hooks" dark="true"/>.
 

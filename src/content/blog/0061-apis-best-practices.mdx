@@ -10,7 +10,7 @@ tags: [Python, API, DE, Best Practices]
 draft: false
 ---
 
-## 0. Building a Robust Python API Client
+## Building a Robust Python API Client
 
 APIs are one of the most common ways to move data into your pipelines, but they come with pitfalls: timeouts, rate limits, transient errors, and memory issues. A fragile client can make extractions unreliable and hard to debug.
 
@@ -23,9 +23,9 @@ This guide distills **battle-tested practices** for building API clients in Pyth
 
 So you can build from the basics up to production-ready patterns.
 
-## 1. Structure & Basics
+## Structure & Basics
 
-### 1.1. Encapsulate in a Class
+### Encapsulate in a Class
 
 Encapsulate all API logic inside a client class. This keeps configuration and state in one place and avoids global variables.
 
@@ -50,7 +50,7 @@ class QlikClient:
 > [!note]
 > Using a class makes it easy to reuse settings and ensures a single responsibility: the client only handles API calls.
 
-### 1.2. Reuse the Session
+### Reuse the Session
 
 Use a `requests.Session` to reuse TCP connections and reduce latency.
 
@@ -67,7 +67,7 @@ This avoids reconnecting on each call, which can **significantly improve perform
 > [!warning]
 > Always close the session when done (`self.session.close()`) or implement `__enter__`/`__exit__` for context manager support.
 
-### 1.3. Log Intent
+### Log Intent
 
 Log what the client is doing, especially the URL and parameters.
 
@@ -90,9 +90,9 @@ def _get(self, url=None, params=None, headers=None, timeout=None):
 > [!warning]
 > Be careful not to log sensitive info like API keys or tokens. Mask or omit them.
 
-## 2. Safety & Performance
+## Safety & Performance
 
-### 2.1. Timeouts
+### Timeouts
 
 Always set timeouts to avoid hanging requests.
 
@@ -107,7 +107,7 @@ Here we use a **connect timeout of 5s** and a **read timeout of 30s**. See <Fanc
 > [!tip]
 > Choose sensible defaults. For APIs, a few seconds connect timeout and a higher read timeout is typical.
 
-### 2.2. Handle Pagination with for/else
+### Handle Pagination with for/else
 
 Prevent infinite loops by limiting max pages.
 
@@ -143,14 +143,14 @@ def query_all(self, url, params=None):
 > [!note]
 > Python’s `for/else` lets you raise an error if the loop never breaks — a safeguard against infinite pagination.
 
-### 2.3. Separate Concerns
+### Separate Concerns
 
 The client should **only handle API calls** — not data processing.
 
 > [!warning]
 > Don’t mix Pandas/Spark into your client. Keep it lightweight and focused. Transformation belongs downstream.
 
-### 2.4. Export in Batches
+### Export in Batches
 
 For large datasets, don’t keep everything in memory. Process or export in chunks.
 
@@ -163,7 +163,7 @@ for page in client.query_all(endpoint):
         results = []
 ```
 
-### 2.5. Respect Rate Limits
+### Respect Rate Limits
 
 Don’t just react to 429s — **pace your calls proactively**. A minimal, readable approach is to space requests evenly and honor common headers when present. For advanced concurrency + rate limiting, see <FancyLink linkText="Concurrent Async Calls to OpenAI with Rate Limiting" url="https://villoro.com/blog/async-openai-calls-rate-limiter/" dark="true"/>.
 
@@ -191,9 +191,9 @@ for payload in payloads:
 > [!warning]
 > Rate limits are provider‑specific. Prefer header‑driven sleeps (`Retry-After`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`) over hardcoded delays. Check docs, e.g. <FancyLink linkText="GitHub API rate limits" url="https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting" dark="true"/>.
 
-## 3. Error Handling & Reliability
+## Error Handling & Reliability
 
-### 3.1. Raise for Errors
+### Raise for Errors
 
 Never ignore HTTP errors. Use `raise_for_status()` for unknown responses.
 
@@ -221,7 +221,7 @@ response.raise_for_status()  # Raise for all other errors
 > [!warning]
 > Fail fast on unexpected errors — silent failures can corrupt downstream data.
 
-### 3.2. Backoff for Transient Failures
+### Backoff for Transient Failures
 
 Use exponential backoff for rate limits or known errors.
 
@@ -245,14 +245,14 @@ def _query_data(self, url, params):
 > [!tip]
 > Backoff reduces stress on APIs and increases resilience. See <FancyLink linkText="backoff docs" url="https://pypi.org/project/backoff/"/>.
 
-### 3.3. Avoid Self‑Recursion
+### Avoid Self‑Recursion
 
 Don’t retry by recursively calling the same function. Use loops or backoff instead.
 
 > [!warning]
 > Recursive retries can hit Python’s recursion limit (~1000) and crash the program.
 
-### 3.4. Export Partial Results on Failure
+### Export Partial Results on Failure
 
 Always save what you have if extraction fails mid‑way.
 
@@ -283,9 +283,9 @@ finally:
 > [!danger]
 > Don’t exit from `finally`: no `return`, `break`, or `continue`. These suppress any exception from `try`. Also avoid raising new errors here, wrap exports so failures don’t mask the original. If you need to return a value, do it **after** the `try/finally`.
 
-## 4. Advanced Usage
+## Advanced Usage
 
-### 4.1. Stream or Yield Data
+### Stream or Yield Data
 
 For very large responses, yield results instead of accumulating.
 
@@ -304,7 +304,7 @@ def query_all(self, url, params=None):
 > [!tip]
 > Streaming reduces memory usage. See <FancyLink linkText="requests streaming" url="https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests"/>.
 
-### 4.2. Clean Up Resources
+### Clean Up Resources
 
 Support context managers so the session is always closed.
 
@@ -327,7 +327,7 @@ with QlikClient() as client:
 > [!note]
 > If you are running your code on ephemeral infrastructure, you can skip this since your machine is terminated after running the extraction.
 
-### 4.3. Query From the Last Successful Extraction
+### Query From the Last Successful Extraction
 
 Rather than hard‑coding time windows (e.g., *yesterday*), use your **destination as the source of truth**:
 

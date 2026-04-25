@@ -10,7 +10,7 @@ tags: [Python, Pandas, Intro]
 draft: false
 ---
 
-## 0. Overview
+## Overview
 
 **Pandas** is a python library used for working with tabular data.
 It is easy to use and it is fast since it uses **C** under the hood.
@@ -37,9 +37,9 @@ print(pd.__version__)
 > [!note]
 > This tutorial uses pandas **0.25.3** since it was the latest version available at the time this post was written.
 
-## 1. Input/Output operations (reading and writing data).
+## Input/Output operations (reading and writing data).
 
-### 1.1. pd.DataFrame
+### pd.DataFrame
 To create a new DataFrame from python objects use `pd.DataFrame`.
 It works with almost all python objects, for example:
 
@@ -47,7 +47,7 @@ It works with almost all python objects, for example:
 df = pd.DataFrame({"A": range(5), "B": list("ABCDE")})
 ```
 
-### 1.2. Read
+### Read
 The most common reading function is `pd.read_csv`.
 But there are also functions to read almost everything (<FancyLink linkText="Pandas docs" url="https://pandas.pydata.org/pandas-docs/stable/reference/io.html" company="pandas" dark="true"/>).
 
@@ -59,7 +59,7 @@ df = pd.read_csv("datasets/titanic_train.csv")
 df_iris = pd.read_excel("datasets/iris.xlsx")
 ```
 
-### 1.3. Write
+### Write
 Dataframes have functions that allows you to export them to almost any format.
 For example you can export it to `parquet` (a really efficient file format, more info <FancyLink linkText="Storing tables efficiently with Pandas" url="https://villoro.com/blog/storing-tables-efficiently-pandas/" dark="true"/>).
 
@@ -67,12 +67,12 @@ For example you can export it to `parquet` (a really efficient file format, more
 df.to_parquet("datasets/output.parquet")
 ```
 
-## 2. Overview data
+## Overview data
 
 **Pandas** is usually used to handle a lot of data so it is difficult to view all of it.
 That is why is important to preview, describe and summarize the data it contains.
 
-###  2.1. Preview data
+###  Preview data
 
 One of the most basic things to do is to view a part of the data.
 The three most common functions to do so are:
@@ -83,7 +83,7 @@ The three most common functions to do so are:
 | `df.tail(n)`   | Show last n rows        |
 | `df.sample(n)` | Show a sample of n rows |
 
-### 2.2. Describe the dataframe
+### Describe the dataframe
 
 There are some ways to describe the whole dataframe.
 The most common way is by calling `df.describe()`.
@@ -103,7 +103,7 @@ df.info(memory_usage='deep')
 
 This will show the types of each column and an approximation of how much memory is used.
 
-### 2.3. View a column (Series)
+### View a column (Series)
 
 A column of the dataframe in pandas is called a **Series**.
 To best way to view a column is with `df[name]`.
@@ -120,7 +120,7 @@ There are also some functions to describe the column. The most important are:
 | `df[column].unique()`       | Show all unique values                                           |
 | `df["Sex"].value_counts()`  | Show all unique values while counting how many times they appear |
 
-### 2.4. Summarize
+### Summarize
 
 There are some functions to retrieve one basic stat for the whole dataframe. Those are:
 
@@ -137,12 +137,12 @@ As an example they can be called with `df.mean()`.
 
 They can also be used for a column like `df[col].nunique()`.
 
-## 3. Slicing
+## Slicing
 
 **Pandas** is usually used to work with a lot of information.
 So it is really important to know how to slice the dataframe to get a subset of it.
 
-### 3.1. Get one value
+### Get one value
 
 The best way to get one value is with the `.at` method.
 The first parameter would be the name of the row and the second the name of the column.
@@ -154,7 +154,7 @@ df.at[1, "Sex"]
 
 This would yield the value of the `Sex` column on the row with index `1`.
 
-### 3.2. Accessing one or more columns
+### Accessing one or more columns
 
 As seen in the previous section a column can be called like `df["Sex"]`.
 By passing a list instead of only one name it will return some columns.
@@ -164,7 +164,7 @@ For example:
 df[["Sex", "Age"]] # Return 'Age' and 'Sex' columns
 ```
 
-### 3.3. Filter rows
+### Filter rows
 
 To filter some rows you will need to call `df[some_filter]`.
 This filter could be complex by using the and operator (`&`), the or (`|`) or the not (`~`).
@@ -194,7 +194,7 @@ df[df["Pclass"].isin([1, 2])] # All with 'Pclass' 1 or 2
 df[df["Cabin"].isna()] # All that does not have 'Cabin' informed
 ```
 
-### 3.4. Filtering rows and columns at the same time
+### Filtering rows and columns at the same time
 
 You can use `loc` when using rows/columns names or `iloc` when using the position (number) for rows/columns.
 Some examples:
@@ -213,11 +213,11 @@ So you must really get comfortable with it!
 > [!warning]
 > You might find the function `ix` but it has been deprecated in favor of `loc/iloc`. Please do not use `ix`.
 
-## 4. Modify data
+## Modify data
 
 It is important to see the data but it is usually not enough.
 
-### 4.1. Basic modifications
+### Basic modifications
 In general you can assign values by using the same functions that were used to access data.
 For example:
 
@@ -229,8 +229,8 @@ df["Ticket"] = "no ticket" # Assign a value to all rows
 df["Dummy"] = df["Age"] + df["Survived"] # sum to columns and assign the value to a new column
 ```
 
-### 4.2. Special types
-#### 4.2.1. Strings
+### Special types
+#### Strings
 
 For columns that have string values it is possible the call `.str` and use some string special functions.
 As an example:
@@ -243,7 +243,7 @@ df["Name"] = df["Name"].str.replace("Mr", "Hello") # This updates the values
 df["Name"].str[:10] # First 10 chars of each string
 ```
 
-#### 4.2.2. Datetime
+#### Datetime
 
 There are also some special functions for date columns by calling `.dt`.
 But to use them first you would need to transform the column to datetime.
@@ -263,7 +263,7 @@ df["key"].dt.day # Gets the day
 df["key"].dt.strftime("%Y-%m-01") # Get first day of the month
 ```
 
-### 4.3. Missing values
+### Missing values
 
 The function `fillna` will fill the missing values.
 In order to update the original values you need to set **inplace** to true (`fillna.(fill_value, inplace=True)`)
@@ -275,7 +275,7 @@ df["Cabin"].fillna("Unknown")
 
 It is also possible to drop rows with missing values with `df[col].dropna()`
 
-### 4.4. Sorting
+### Sorting
 
 This is really straight forward:
 
@@ -283,7 +283,7 @@ This is really straight forward:
 df.sort_values("Cabin", ascending=False) # Default ascending=True
 ```
 
-### 4.5. Handling duplicates
+### Handling duplicates
 
 It is possible to drop rows that have duplicates with:
 
@@ -291,7 +291,7 @@ It is possible to drop rows that have duplicates with:
 df.drop_duplicates(["Pclass"]) # Discard the duplicates based on certain columns
 ```
 
-### 4.6. Custom functions
+### Custom functions
 You can apply custom functions.
 Remember that usually functions have names but you can define unnamed functions using lambdas.
 As an example:
@@ -328,7 +328,7 @@ def custom_categories(x):
 df["SL"].apply(custom_categories)
 ```
 
-### 4.7. Apply changes to a slice
+### Apply changes to a slice
 It is possible to apply changes to only part of the dataframe using `loc`.
 For example:
 
@@ -345,9 +345,9 @@ df.loc[mfilter, "Age"] = df.loc[mfilter, "Age"]*2
 
 This will double the Age for all rows where `Embarked = S`.
 
-## 5. Modify the dataframe
+## Modify the dataframe
 
-### 5.1. Delete rows/columns
+### Delete rows/columns
 
 This is done with `df.drop`. To delete rows set `axis=0` and `axis=1` for columns.
 For example:
@@ -357,7 +357,7 @@ df.drop("Dummy", axis=1)
 df.drop(["Dummy", "Fare", "Cabin"], axis=1, inplace=True) # inplace=True to update the original dataframe
 ```
 
-### 5.2. Rename columns
+### Rename columns
 
 The function `df.columns` retrieves the names of the columns.
 To rename them simply pass a list with the desired names. For example:
@@ -366,8 +366,8 @@ To rename them simply pass a list with the desired names. For example:
 df.columns = ['id', 'survived', 'pclass', 'name', 'sex', 'age', 'sibsp', 'parch', 'ticket', 'embarked']
 ```
 
-## 6. Transformations
-### 6.1. Group by values
+## Transformations
+### Group by values
 
 A really common transformation for tables is to group them by one or more columns.
 Once the aggrupation is done you can call one or more aggregation function.

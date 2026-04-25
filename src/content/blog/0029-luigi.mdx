@@ -12,7 +12,7 @@ tags: [Tools, Orchestration]
 draft: false
 ---
 
-## 1. What is Luigi
+## What is Luigi
 
 Luigi is a **Python** package that helps you build complex pipelines of batch jobs.
 It handles dependency resolution, workflow management, visualization, handling failures, command line integration, and much more.
@@ -26,9 +26,9 @@ You can install it directly with **pip**:
 pip install luigi
 ```
 
-## 2. Usage
+## Usage
 
-### 2.1. How it works
+### How it works
 
 **Luigi** work with tasks that are defined with classes that extend the `luigi.Task` class.
 The basic usage is to overwrite the `run` function (with what to do) and the `output` (with the file that will output).
@@ -54,7 +54,7 @@ class ReportTask(luigi.Task):
 
 This task will write a file called `output.txt` with the execution datetime.
 
-### 2.2. Basic example
+### Basic example
 
 For a real example tasks should also have dependencies.
 
@@ -173,7 +173,7 @@ python master.py
 
 And you should see how **Luigi** completes the 3 tasks.
 
-### 2.3. Luigi server
+### Luigi server
 
 If you go to `localhost:8082` you can see luigi server.
 
@@ -192,7 +192,7 @@ It is also possible view the dependency graph created with `D3`.
 
 ![Luigi Pipeline D3](../../images/posts/2020/0029-luigi_pipeline_d3.jpg)
 
-## 3. Using task templates
+## Using task templates
 
 The best way to orchestrate tasks in a fault tolerant way is by having a script (or package) for each task.
 This is the same as the last example where there ware `report.py` and `register.py` scripts.
@@ -354,14 +354,14 @@ class ReportTask(StandardTask):
             stream.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 ```
 
-## 4. Automatically run luigi
+## Automatically run luigi
 
 If you want a process always running and to be restarted on failure you should use **supervisor**.
 You should you use it for `luigid`.
 
 For running the tasks themselves **Luigi** does not have a scheduler but you can use **cron** instead.
 
-### 4.1. Install supervisor
+### Install supervisor
 
 First install it with:
 
@@ -418,7 +418,7 @@ sudo supervisorctl status
 
 If there are no errors you can start using **Luigi**.
 
-### 4.2. Create a virtual environment
+### Create a virtual environment
 
 First install **virtualenv** with:
 
@@ -444,7 +444,7 @@ source /home/ubuntu/venv/vtasks/bin/activate
 
 And `deactivate` to deactivate the environment.
 
-### 4.3. Script file to run luigi
+### Script file to run luigi
 
 Let's create the `run_luigi.sh` file with:
 
@@ -495,7 +495,7 @@ In order to run this you should give it executable permissions with:
 chmod +x /home/ubuntu/run_luigi.sh
 ```
 
-### 4.4. Running luigi tasks with cron
+### Running luigi tasks with cron
 
 The best way to run **Luigi** automatically is using cron.
 
