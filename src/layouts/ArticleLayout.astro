@@ -715,8 +715,13 @@ const breadcrumbs = [
     .al { --container-px: 32px; }
     .al-article {
       grid-template-columns: 1fr;
-      gap: 40px;
-      padding: 40px var(--container-px) 72px;
+      gap: 0px;
+      padding: 32px var(--container-px) 72px;
+    }
+    /* Remove the first heading's top margin — it immediately follows the TOC card */
+    .al-body .article-content section:first-child > h2,
+    .al-body .article-content > h2:first-child {
+      margin-top: 0;
     }
   }
 

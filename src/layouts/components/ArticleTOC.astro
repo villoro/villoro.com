@@ -132,7 +132,7 @@ if (toc.length === 0) return;
     gap: 10px;
     padding: 4px 0;
     font-family: var(--font-ui);
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--color-ink-800);
     text-decoration: none;
@@ -143,12 +143,12 @@ if (toc.length === 0) return;
 
   /* Depth-3 indented + smaller */
   .at-item--d3 { padding-left: 16px; }
-  .at-item--d3 a { font-size: 12.5px; color: var(--color-grey-500); }
+  .at-item--d3 a { font-size: 14px; color: var(--color-grey-500); }
 
   .at-num {
     font-family: var(--font-mono);
     color: var(--color-grey-500);
-    font-size: 11.5px;
+    font-size: 13px;
     font-weight: 500;
     flex-shrink: 0;
     min-width: 32px;
@@ -167,12 +167,25 @@ if (toc.length === 0) return;
   @media (max-width: 1023px) {
     .at-wrap {
       position: static;
+      height: fit-content;
+      align-self: start;
       max-height: none;
       overflow: visible;
-      padding: 20px 22px;
+      padding: 16px 22px 0px;
       background: #fff;
       border: 1px solid var(--color-grey-100);
       border-radius: 12px;
+    }
+    .at-nav {
+      margin: 0;
+      padding: 0;
+    }
+    .at-nav ul {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .at-nav li:last-child a {
+      padding-bottom: 16px;
     }
     :global(.dark) .at-wrap {
       background: var(--color-grey-100);
