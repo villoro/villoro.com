@@ -66,9 +66,9 @@ nano /var/www/html/index.py
 
 And paste the following code:
 
-<TerminalOutput color="stone">
+<FileName>
   `/var/www/html/index.py`
-</TerminalOutput>
+</FileName>
 ```python
 from flask import Flask
 
@@ -122,9 +122,9 @@ sudo nano /etc/supervisor/conf.d/flask_test.conf
 
 And write the following configuration:
 
-<TerminalOutput color="stone">
+<FileName>
   `/etc/supervisor/conf.d/flask_test.conf`
-</TerminalOutput>
+</FileName>
 ```toml
 [program:flask_test]
 command = gunicorn index:app -b localhost:8000
@@ -174,9 +174,9 @@ sudo nano /etc/nginx/sites-available/flask_test
 
 And write the following configuration:
 
-<TerminalOutput color="stone">
+<FileName>
   `/etc/nginx/sites-available/flask_test`
-</TerminalOutput>
+</FileName>
 ```text
 server {
     listen 80 flask_server;
@@ -215,9 +215,9 @@ You can now go to `XX.XXX.XXX.XXX` and you should see the flask app `Hello World
 
 The nginx configuration you used is really simple. For example you can set nginx to serve static files directly instead of passing through the flask app by:
 
-<TerminalOutput color="stone">
+<FileName>
   `/etc/nginx/sites-available/flask_test`
-</TerminalOutput>
+</FileName>
 ```text
 server {
     listen 80 flask_server;

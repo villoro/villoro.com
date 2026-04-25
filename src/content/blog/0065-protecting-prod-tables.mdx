@@ -48,9 +48,9 @@ The solution is to **compare changes between the developer’s version and the p
 
 We use a custom `data_diff` macro for this. It highlights row-level differences across key columns, so the developer can review them during the pull request process.
 
-<TerminalOutput color="stone">
+<FileName>
   macros/data_diff.sql
-</TerminalOutput>
+</FileName>
 ```sql
 {% macro data_diff(baseline, compare_with, pk, select=[], exclude=[]) %}
     {%- set cols = [] -%}
@@ -104,9 +104,9 @@ We use a custom `data_diff` macro for this. It highlights row-level differences 
 
 And the documentation:
 
-<TerminalOutput color="stone">
+<FileName>
   macros/data_diff.yml
-</TerminalOutput>
+</FileName>
 ```yaml
 macros:
   - name: data_diff
@@ -139,9 +139,9 @@ macros:
 
 This lets us create diff models like:
 
-<TerminalOutput color="stone">
+<FileName>
   models/salesforce/data_diff__salesforce__users.sql
-</TerminalOutput>
+</FileName>
 ```sql
 {# Enable it only on testing runs, you might need to change it #}
 {{ config(

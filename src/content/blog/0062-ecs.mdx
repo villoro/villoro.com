@@ -160,9 +160,9 @@ ecs_northius = [
 
 ### Dockerfile.venv
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/docker/Dockerfile.venv`
-</TerminalOutput>
+</FileName>
 ```bash
 # 0. Pull images
 ARG BUILD_FOR=linux/amd64
@@ -238,9 +238,9 @@ docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_V
 Once built, we publish the venv and its companion files to S3. The **`upload_all.py`** script handles this automatically.
 It can also optionally upload the requested version as `latest`.
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/scripts/upload_all.py`
-</TerminalOutput>
+</FileName>
 ```python
 from time import time
 import boto3
@@ -301,9 +301,9 @@ The container just downloads, activates, and executes.
 
 ### Runtime Image
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/docker/Dockerfile.runtime`
-</TerminalOutput>
+</FileName>
 ```bash
 ARG BUILD_FOR=linux/amd64
 FROM --platform=${BUILD_FOR} python:3.12-slim-bookworm AS runtime
@@ -330,9 +330,9 @@ The size can increase with big libraries such as awswrangler.
 
 Executed automatically when the container starts:
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/scripts/setup_and_run.sh`
-</TerminalOutput>
+</FileName>
 ```bash
 echo 1. Downloading venv and config
 python download_all.py "$@"
@@ -362,9 +362,9 @@ python entrypoint.py "$@"
 
 This script fetches all necessary artifacts (venv, entrypoint, and config) from S3 and prepares the environment for execution.
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/scripts/download_all.py`
-</TerminalOutput>
+</FileName>
 ```python
 import pathlib
 import tarfile
@@ -450,9 +450,9 @@ We keep **testing**, **venv publishing**, and **runtime image pushes** as separa
 
 ### CI: Tests with `uv`
 
-<TerminalOutput color="stone">
+<FileName>
   `.github/workflows/CI.yaml`
-</TerminalOutput>
+</FileName>
 ```yaml
 name: CI
 
@@ -490,9 +490,9 @@ jobs:
 
 Triggers when app code, dependency files, or deployment config changes. Produces a **versioned quartet**: `pyproject_<v>.toml`, `uv_<v>.lock`, `entrypoint_<v>.py`, `venv_<v>.tar.gz`.
 
-<TerminalOutput color="stone">
+<FileName>
   `.github/workflows/CD_venv.yaml`
-</TerminalOutput>
+</FileName>
 ```yaml
 name: CD Venv
 
@@ -546,9 +546,9 @@ jobs:
 
 This job changes infrequently (scripts or the runtime Dockerfile). It tags with the version from `pyproject.toml` and with `latest`.
 
-<TerminalOutput color="stone">
+<FileName>
   `.github/workflows/CD_docker.yaml`
-</TerminalOutput>
+</FileName>
 ```yaml
 name: CD Docker
 

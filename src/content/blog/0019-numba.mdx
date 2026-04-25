@@ -42,9 +42,9 @@ print(a)
 
 You can also cythonize python code. So for example you can create a file to compute Fibonacci series:
 
-<TerminalOutput color="stone">
+<FileName>
   fib.pyx
-</TerminalOutput>
+</FileName>
 ```python
 def fib(n):
     """Print the Fibonacci series up to n."""
@@ -166,9 +166,9 @@ The format for declaring the `dtypes` is `[output(input1, input2, ...)]`.
 
 First we will time the execution of different `sum` functions. The first option will be a for loop in python:
 
-<TerminalOutput color="stone">
+<FileName>
   iter_and_sum
-</TerminalOutput>
+</FileName>
 ```python
 def iter_and_sum(data):
     """ Sums each element in an iterable """
@@ -181,9 +181,9 @@ def iter_and_sum(data):
 
 And we will test both `jit` and `njit` **numba** decorators. As an example this is how the `jit` version would be defined:
 
-<TerminalOutput color="stone">
+<FileName>
   jit
-</TerminalOutput>
+</FileName>
 ```python
 @jit
 def jit_iter_and_sum(data):

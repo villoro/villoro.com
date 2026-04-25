@@ -89,9 +89,9 @@ The `VACUUM` command removes any files that are no longer needed after the optim
 
 Here is the macros you will need:
 
-<TerminalOutput color="stone">
+<FileName>
   macros/iceberg.sql
-</TerminalOutput>
+</FileName>
 ```sql
 {%- macro optimize(table=this) -%}
     {%- if (model.config.table_type == "iceberg")
@@ -114,9 +114,9 @@ Here is the macros you will need:
 
 And the docs for those macros:
 
-<TerminalOutput color="stone">
+<FileName>
   macros/iceberg.yml
-</TerminalOutput>
+</FileName>
 ```yaml
 version: 2
 
@@ -142,9 +142,9 @@ macros:
 
 And then, you can declare the **post-hook** in the `dbt_project.yml`:
 
-<TerminalOutput color="stone">
+<FileName>
   dbt_project.yml
-</TerminalOutput>
+</FileName>
 ```yaml
 models:
   your_project:
@@ -296,9 +296,9 @@ For more info, read <FancyLink linkText="Querying Iceberg table metadata | Athen
 
 To automate this, create the following macros:
 
-<TerminalOutput color="stone">
+<FileName>
   macros/metadata.sql
-</TerminalOutput>
+</FileName>
 ```sql
 {%- macro create_metadata_schema() -%}
     {%- if is_scheduled_pro_run() -%}
@@ -357,9 +357,9 @@ To automate this, create the following macros:
 
 And their documentation:
 
-<TerminalOutput color="stone">
+<FileName>
   macros/metadata.yml
-</TerminalOutput>
+</FileName>
 ```yaml
 version: 2
 
@@ -396,9 +396,9 @@ macros:
 
 And then, declare the **post-hook** in the `dbt_project.yml`:
 
-<TerminalOutput color="stone">
+<FileName>
   dbt_project.yml
-</TerminalOutput>
+</FileName>
 ```yaml
 models:
   your_project:
@@ -415,9 +415,9 @@ This table will help us monitor partitioning problems.
 
 Here is the dbt model for that:
 
-<TerminalOutput color="stone">
+<FileName>
   models/files_by_day.sql
-</TerminalOutput>
+</FileName>
 ```sql
 {{ config(unique_key='_uuid') }}
 
@@ -493,9 +493,9 @@ FROM daily_with_additions
 
 And the documentation for it:
 
-<TerminalOutput color="stone">
+<FileName>
   models/files_by_day.yml
-</TerminalOutput>
+</FileName>
 ```yaml
 models:
   - name: files_by_day

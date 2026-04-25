@@ -289,9 +289,9 @@ Below are the four models used to structure and clean the inventory data:
 4. **`stg_metadata__s3_inventory.sql`:** Final staging model to remove temporary columns and select clean fields.
 
 <Accordion client:load title="base_metadata__s3_inventory.sql">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/base/base_metadata__s3_inventory.sql
-  </TerminalOutput>
+  </FileName>
   ```sql
   WITH source AS (
       SELECT *
@@ -326,9 +326,9 @@ Below are the four models used to structure and clean the inventory data:
 </Accordion>
 
 <Accordion client:load title="clean_metadata__s3_inventory.sql">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/clean/clean_metadata__s3_inventory.sql
-  </TerminalOutput>
+  </FileName>
   ```sql
   WITH source AS (
       SELECT *
@@ -359,9 +359,9 @@ Below are the four models used to structure and clean the inventory data:
 </Accordion>
 
 <Accordion client:load title="int_metadata__s3_inventory.sql">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/internal/int_metadata__s3_inventory.sql
-  </TerminalOutput>
+  </FileName>
   ```sql
   -- Here we are categorizing differents paths with the `CASE WHEN s3_id LIKE pattern` so that we can better explore files.
   -- Together with the `folders` columns they provide an excelent way to dig further into the costs.
@@ -407,9 +407,9 @@ Below are the four models used to structure and clean the inventory data:
 </Accordion>
 
 <Accordion client:load title="stg_metadata__s3_inventory.sql">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/stg/stg_metadata__s3_inventory.sql
-  </TerminalOutput>
+  </FileName>
   ```sql
   WITH source AS (
       SELECT *
@@ -449,9 +449,9 @@ Below are the four models used to structure and clean the inventory data:
 </Accordion>
 
 <Accordion client:load title="stg_metadata__s3_inventory.yml">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/stg/stg_metadata__s3_inventory.yml
-  </TerminalOutput>
+  </FileName>
   ```yaml
   version: 2
   models:

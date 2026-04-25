@@ -39,9 +39,9 @@ The first thing you will need are some `html` templates. I suggest that you use 
 
 The `base.html` file should have the basic structure, for example:
 
-<TerminalOutput color="stone">
+<FileName>
   `src/templates/base.html`
-</TerminalOutput>
+</FileName>
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -64,9 +64,9 @@ The `base.html` file should have the basic structure, for example:
 
 Then we can create the `about.html` page template using:
 
-<TerminalOutput color="stone">
+<FileName>
   `src/templates/about.html`
-</TerminalOutput>
+</FileName>
 ```jinja
 {% extends "base.html" %}
 
@@ -88,9 +88,9 @@ Then we can create the `about.html` page template using:
 
 The `index.py` will be the actual `Flask` app. It will only render the templates.
 
-<TerminalOutput color="stone">
+<FileName>
   `src/index.py`
-</TerminalOutput>
+</FileName>
 ```python
 from flask import Flask, render_template
 
@@ -112,9 +112,9 @@ Now you can run `python src/index.py` to view the app at `localhost:5000`.
 
 Then you can create the `freeze.py` file that will create the static html files.
 
-<TerminalOutput color="stone">
+<FileName>
   `src/freeze.py`
-</TerminalOutput>
+</FileName>
 ```python
 from flask_frozen import Freezer
 from index import APP
@@ -133,9 +133,9 @@ In order to make it easier to customize the pages I suggest using `yaml` files. 
 
 For example you can create the file `about.yaml` with:
 
-<TerminalOutput color="stone">
+<FileName>
   `src/content/about.yaml`
-</TerminalOutput>
+</FileName>
 ```yaml
 title: Title 1
 description: Hello **world**
@@ -144,9 +144,9 @@ description: Hello **world**
 I suggest that you also transform the description from **markdown** to **html** since it will give you more flexibility.
 To do all of that you should modify the file `index.py` to read that `yaml`.
 
-<TerminalOutput color="stone">
+<FileName>
   `src/index.py`
-</TerminalOutput>
+</FileName>
 ```python
 import oyaml as yaml
 

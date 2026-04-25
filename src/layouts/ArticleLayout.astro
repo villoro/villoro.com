@@ -408,6 +408,66 @@ const breadcrumbs = [
     color: #86efac;
   }
 
+  /* ── FileName label (shortcode) ──────────────────────── */
+  .al-body .article-content .file-name {
+    margin: 24px 0;
+    border-radius: 12px;
+    border: 1px solid #3e3d32;
+    overflow: hidden;
+  }
+
+  /* Attach to the code block below */
+  .al-body .article-content .file-name:has(+ pre),
+  .al-body .article-content .file-name:has(+ .astro-code),
+  .al-body .article-content .file-name:has(+ figure.expressive-code) {
+    margin-bottom: 0;
+    border-radius: 12px 12px 0 0;
+  }
+  .al-body .article-content .file-name + pre,
+  .al-body .article-content .file-name + .astro-code,
+  .al-body .article-content .file-name + figure.expressive-code {
+    margin-top: 0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .al-body .article-content .file-name__body {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 22px;
+    background: rgba(120, 120, 120, 0.10);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-navy-900);
+  }
+
+  .al-body .article-content .file-name__icon {
+    flex-shrink: 0;
+    opacity: 0.55;
+  }
+
+  .al-body .article-content .file-name__text {
+    opacity: 0.8;
+  }
+
+  /* Strip any <p> or <code> MDX injects inside */
+  .al-body .article-content .file-name__body p,
+  .al-body .article-content .file-name__body code {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-size: inherit;
+    color: inherit;
+    border-radius: 0;
+  }
+
+  /* Dark mode */
+  .dark .al-body .article-content .file-name__body {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-on-dark-body);
+  }
+
   /* ── Notice / callout (shortcode) ────────────────────── */
   .al-body .article-content .notice {
     margin: 24px 0;

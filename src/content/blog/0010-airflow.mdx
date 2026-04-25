@@ -47,9 +47,9 @@ nano tutorial.py
 
 And then paste the example and save the file:
 
-<TerminalOutput color="stone">
+<FileName>
   `~/airflow/dags/tutorial.py`
-</TerminalOutput>
+</FileName>
 ```python
 """
 Code that goes along with the Airflow tutorial located at:
@@ -175,9 +175,9 @@ nano ~/airflow/airflow.cfg
 
 Inside the section `[webserver]` find the line `authenticate=X` and replace it with:
 
-<TerminalOutput color="stone">
+<FileName>
   `~/airflow/airflow.cfg`
-</TerminalOutput>
+</FileName>
 ```cfg
 authenticate = True
 auth_backend = airflow.contrib.auth.backends.password_auth
@@ -217,9 +217,9 @@ If you want a process always running and to be restarted on failure you should u
 
 Edit the `airflow.cfg` to disable the examples by editing `load_examples = True` to:
 
-<TerminalOutput color="stone">
+<FileName>
   `~/airflow/airflow.cfg`
-</TerminalOutput>
+</FileName>
 ```
 load_examples = False
 ```
@@ -258,9 +258,9 @@ sudo mkdir /var/log/airflow/
 
 And now declare the `airflow` services by creating the file `/etc/supervisor/conf.d/airflow.conf`
 
-<TerminalOutput color="stone">
+<FileName>
   `/etc/supervisor/conf.d/airflow.conf`
-</TerminalOutput>
+</FileName>
 ```toml
 [program:airflow_webserver]
 command=airflow webserver -p 8080
@@ -306,9 +306,9 @@ You can add **DAG**s in the folder `~/airflow/dags` and they should be automatic
 ### Using git
 You can even change that path to a folder that is tracked with git to keep control of the **DAG**s by editing the `airflow.cfg`:
 
-<TerminalOutput color="stone">
+<FileName>
   `~/airflow/airflow.cfg`
-</TerminalOutput>
+</FileName>
 ```cfg
 dags_folder = "home/ubuntu/airflow_tasks/src"
 ```
