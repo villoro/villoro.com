@@ -670,4 +670,35 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
       grid-template-columns: repeat(2, 1fr);
     }
   }
+
+  /* ================================================================== *
+   * Dark mode overrides — yellow-background elements need dark text
+   * ================================================================== */
+
+  /* Blue CTA buttons become yellow in dark mode — switch to dark text */
+  :global(.dark) .hp-btn--blue {
+    color: #1c1c1c;
+  }
+
+  /* Activity ribbon: blue bg → yellow, white text becomes unreadable */
+  :global(.dark) .hp-ribbon {
+    color: #1c1c1c;
+  }
+
+  /* Slogan italic accent: yellow-400 → blue in dark, fine on yellow ribbon */
+  :global(.dark) .hp-ribbon__slogan-em {
+    color: rgba(0, 0, 0, 0.55);
+  }
+
+  /* Pulse dot: token-blue dot on yellow ribbon — make it dark */
+  :global(.dark) .hp-ribbon__dot {
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.12);
+    animation: none;
+  }
+
+  /* "latest" right-side text (inherits from .hp-ribbon color, already fixed above) */
+  :global(.dark) .hp-ribbon strong {
+    color: #1c1c1c;
+  }
 </style>
