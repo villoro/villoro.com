@@ -218,6 +218,7 @@ const isBlog   = pathname.startsWith("/blog")
     box-shadow: var(--shadow-cta);
   }
 
+
   /* ---- Mobile (≤ 767px) ---- */
   @media (max-width: 767px) {
     .sitenav__inner {
@@ -267,5 +268,16 @@ const isBlog   = pathname.startsWith("/blog")
     .sitenav__divider {
       display: none;
     }
+  }
+</style>
+
+<style is:global>
+  /* These rules must survive ClientRouter view-transition back-navigation,
+     so they live in a global block rather than the scoped block above. */
+  .sitenav__subscribe {
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    gap: 8px !important;
   }
 </style>
