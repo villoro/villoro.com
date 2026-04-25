@@ -132,7 +132,6 @@ Aliases: `summary`→abstract, `hint`→tip, `check`→success, `help`→questio
 - **Dark mode**: Class-based (`dark` on `<html>`), not media-query. Toggle handled by `ThemeSwitcher.astro`.
 - **Colors**: Defined in `src/config/theme.json`, auto-generated to `src/styles/generated-theme.css`. Never hardcode hex colors — use theme variables.
 - **Fonts**: Heebo (body) + Signika (headings), loaded from Google Fonts in `Base.astro`.
-- **Grid**: `tailwind-bootstrap-grid` plugin is included — Bootstrap-style grid classes work.
 
 ## Image Conventions
 
