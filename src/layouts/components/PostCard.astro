@@ -156,19 +156,29 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 )}
 
 <style is:global>
-  /* Dark mode: featured cards are always dark navy — not remapped by tokens */
-  .dark .pc-big { background: #0b1026; }
-  .dark .pc-med { background: #0b1026; }
+  /* Dark mode: featured cards are always dark navy — not remapped by tokens.
+     !important is needed because the scoped .pc-big/.pc-med rules (specificity 0,2,0)
+     use var(--color-navy-900) which remaps to near-white in dark mode, and Astro
+     outputs scoped styles after global ones so they win at equal specificity. */
+  .dark .pc-big { background: #0b1026 !important; }
+  .dark .pc-med { background: #0b1026 !important; }
 
-  /* Ensure text inside dark cards stays white (guards against token remap bleed-through) */
+  /* Ensure text inside dark cards stays white.
+     !important needed for the same reason as backgrounds above — scoped rules
+     win at equal specificity and use tokens that remap to dark values in dark mode. */
   .dark .pc-big__title-link,
-  .dark .pc-big__title-link:visited  { color: #fff; }
-  .dark .pc-big__excerpt             { color: rgba(255, 255, 255, 0.85); }
-  .dark .pc-big__meta-text           { color: rgba(255, 255, 255, 0.7); }
+  .dark .pc-big__title-link:visited  { color: #fff !important; }
+  .dark .pc-big__excerpt             { color: rgba(255, 255, 255, 0.85) !important; }
+  .dark .pc-big__meta-text           { color: rgba(255, 255, 255, 0.7) !important; }
   .dark .pc-med__title-link,
-  .dark .pc-med__title-link:visited  { color: #fff; }
-  /* pc-med__excerpt uses --color-grey-300 which remaps to #3e3e3e (very dark) in dark mode */
-  .dark .pc-med__excerpt             { color: rgba(255, 255, 255, 0.7); }
+  .dark .pc-med__title-link:visited  { color: #fff !important; }
+  .dark .pc-med__excerpt             { color: rgba(255, 255, 255, 0.7) !important; }
+  .dark .pc-med__img-meta            { color: rgba(255, 255, 255, 0.7) !important; }
+
+  /* CTA "Read the post" link inside dark cards: yellow-400 remaps to blue in dark mode.
+     Use blue-500 (which remaps to yellow) to keep the warm accent on dark cards. */
+  .dark .pc-big .pc-cta-link,
+  .dark .pc-med .pc-cta-link { color: var(--color-blue-500) !important; }
 
   /* Badge chip: yellow bg → token-yellow becomes blue in dark, keep chip readable */
   .dark .pc-chip { background: var(--color-yellow-400); color: #1c1c1c; }
