@@ -20,6 +20,41 @@
 }
 
 /* ────────────────────────────────────────────────────────────────
+   FANCY LINK — Compact inline pill for FancyLink shortcode.
+   Sits inline within prose text, thin border, subtle hover.
+   Much smaller than .btn — designed for inline text links.
+   ──────────────────────────────────────────────────────────────── */
+
+.fancy-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 7px 1px 4px;
+  border: 1px solid var(--color-grey-100);
+  border-radius: 6px;
+  font-size: 0.88em;
+  font-weight: 500;
+  text-decoration: none !important;
+  vertical-align: baseline;
+  line-height: 1.6;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.fancy-link:hover {
+  background: var(--color-grey-50);
+  border-color: var(--color-grey-300);
+}
+
+.dark .fancy-link {
+  border-color: var(--color-grey-400);
+}
+
+.dark .fancy-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-grey-300);
+}
+
+/* ────────────────────────────────────────────────────────────────
    ICON BUTTON — Small square button for icons
 
    Fixed 40x40px size, flex-centered, no text, 10px radius.

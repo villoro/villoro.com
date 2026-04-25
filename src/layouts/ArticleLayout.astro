@@ -272,17 +272,18 @@ const breadcrumbs = [
   }
   .al-body .article-content a:hover { text-decoration-color: var(--color-blue-500); }
 
-  /* FancyLink pill — no underline, uses its own border */
+  /* FancyLink pill — no underline, uses .fancy-link border */
   .al-body .article-content a[role="button"] {
     text-decoration: none;
-    line-height: 1.4;
     vertical-align: baseline;
   }
+  /* Do NOT set display here — it would override Tailwind's .hidden class
+     (used to toggle light/dark logos). The flex container handles layout. */
   .al-body .article-content a[role="button"] img {
-    margin: 0 6px 0 0 !important;
     border-radius: 0;
-    display: inline-block;
     vertical-align: middle;
+    /* margin is handled by .fancy-link gap — no override needed */
+    margin: 0 !important;
   }
 
   /* ── Block-level images only ─────────────────────────── */
