@@ -4,6 +4,8 @@
  * Used at the end of every blog post.
  */
 import config from "@/config/config.json";
+
+const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`;
 ---
 
 <div class="cta">
@@ -12,20 +14,16 @@ import config from "@/config/config.json";
     <div class="cta__question">Support the blog or get the next one in your inbox.</div>
   </div>
   <div class="cta__buttons">
-    <script
-      is:inline
-      type="text/javascript"
-      src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
-      data-name="bmc-button"
-      data-slug="villoro"
-      data-color="#FFDD00"
-      data-emoji=""
-      data-font="Cookie"
-      data-text="Buy me a coffee"
-      data-outline-color="#000000"
-      data-font-color="#000000"
-      data-coffee-color="#ffffff"
-    ></script>
+    <a
+      href={coffeeUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="cta__coffee"
+      aria-label="Buy me a coffee"
+    >
+      <span class="cta__coffee-icon" aria-hidden="true">☕</span>
+      Buy me a coffee
+    </a>
     <a
       href={config.subscribe.link}
       target="_blank"
@@ -84,6 +82,31 @@ import config from "@/config/config.json";
     margin-left: auto;
     flex-wrap: wrap;
   }
+
+  .cta__coffee {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--radius-button, 6px);
+    background: var(--color-yellow-400);
+    color: var(--color-navy-900);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .cta__coffee:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+  .cta__coffee-icon { font-size: 18px; line-height: 1; }
+
+  /* Dark mode: yellow stays yellow, navy text remaps to white via tokens
+     — but we want dark text on yellow regardless. Pin the text colour. */
+  :global(.dark) .cta__coffee { color: #1a1a1a; }
 
   .cta__subscribe {
     display: inline-flex;
