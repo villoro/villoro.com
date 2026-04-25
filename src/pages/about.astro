@@ -213,6 +213,23 @@ const timeline = [
   </div>
 </BaseRedesign>
 
+<!-- Global styles survive Astro ClientRouter back-navigation (scoped styles can be
+     stripped from cache-restored pages). Only the rules that use switching tokens
+     and could show wrong colours on nav-back need to be here. -->
+<style is:global>
+  /* Timeline section — permanent dark surface */
+  .ab-tl-sec {
+    background: var(--color-surface-dark) !important;
+    color: var(--color-on-dark) !important;
+  }
+
+  /* Hobby cards — switches between white (light) and #2b2b2b (dark) */
+  .ab-beyond-card {
+    background: var(--color-surface-card) !important;
+    border-color: var(--color-border-card) !important;
+  }
+</style>
+
 <style>
   .ab {
     background: var(--color-grey-50);
