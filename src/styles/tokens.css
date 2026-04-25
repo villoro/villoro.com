@@ -63,6 +63,31 @@
   --shadow-cta: 0 8px 24px -8px rgba(58, 118, 255, 0.45);      /* primary CTA button */
   --shadow-hero-card: 0 30px 60px -20px rgba(11, 16, 38, 0.25); /* hero side-card */
   --shadow-nl-form: 0 30px 60px -20px rgba(58, 118, 255, 0.4);  /* newsletter form */
+
+  /* ── Semantic surface tokens ─────────────────────────────────────
+     These encode the INTENT of a color, not just its value.
+     All dark-mode remaps live in .dark {} below — components just
+     reference these tokens and the right value is selected automatically.
+     ──────────────────────────────────────────────────────────────── */
+
+  /* Permanent dark surface — footer, article hero, featured cards.
+     Intentionally does NOT remap in dark mode: always deep navy. */
+  --color-surface-dark:       #0b1026;
+  --color-surface-dark-rgb:   11, 16, 38;  /* for rgba() gradient overlays */
+
+  /* Switching surfaces — auto-swap via .dark block below */
+  --color-surface-card:       #fff;         /* card / panel background */
+  --color-surface-quote:      #eef4ff;      /* blockquote / callout */
+  --color-border-card:        var(--color-grey-100); /* card border */
+
+  /* Text ON --color-surface-dark — always white, never remaps */
+  --color-on-dark:            #fff;
+  --color-on-dark-body:       rgba(255, 255, 255, 0.85);
+  --color-on-dark-secondary:  rgba(255, 255, 255, 0.70);
+  --color-on-dark-faint:      rgba(255, 255, 255, 0.55);
+
+  /* Text ON the accent color (blue in light / yellow in dark) — must switch */
+  --color-on-accent:          #fff;         /* white on blue */
 }
 
 /* ─── Dark mode overrides ────────────────────────────────────────
@@ -93,4 +118,12 @@
   /* ── Shadows (soften on dark backgrounds) ── */
   --shadow-cta:       0 8px 24px -8px  rgba(255, 195, 58, 0.35);
   --shadow-hero-card: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
+
+  /* ── Semantic surface remaps ── */
+  --color-surface-card:   var(--color-grey-100);            /* #2b2b2b */
+  --color-surface-quote:  rgba(255, 195, 58, 0.07);         /* subtle yellow tint */
+  --color-border-card:    var(--color-grey-300);            /* #3e3e3e */
+  --color-on-accent:      #1c1c1c;   /* dark text on yellow accent */
+  /* surface-dark, surface-dark-rgb, and on-dark-* are NOT remapped —
+     they are intentionally permanent (always dark surfaces / always white text) */
 }

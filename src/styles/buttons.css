@@ -40,7 +40,7 @@
 }
 
 /* Dark mode: yellow bg needs dark text (dark:text-dark resolves to #fff — override it) */
-.dark .btn-primary { color: #1c1c1c; }
+.dark .btn-primary { color: var(--color-on-accent); }
 
 .btn-primary:hover:not(:disabled) {
   @apply border-black bg-black dark:border-white dark:bg-white text-white dark:text-black;

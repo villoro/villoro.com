@@ -72,7 +72,7 @@
   cursor: pointer;
   transition: opacity 0.15s, background-color 0.15s;
   background-color: var(--color-navy-900);
-  color: #fff;
+  color: var(--color-on-dark);
   flex-shrink: 0;
 }
 

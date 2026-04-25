@@ -242,7 +242,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
 
   .hp-btn--blue {
     background: var(--color-blue-500);
-    color: #fff;
+    color: var(--color-on-accent);
     box-shadow: var(--shadow-cta);
   }
 
@@ -299,8 +299,8 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
     align-items: center;
     gap: 10px;
     padding: 8px 14px;
-    background: #fff;
-    border: 1px solid var(--color-grey-100);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-card);
     border-radius: var(--radius-pill);
     font-family: var(--font-ui);
     font-size: 13px;
@@ -404,7 +404,7 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
 
   .hp-ribbon {
     background: var(--color-blue-500);
-    color: #fff;
+    color: var(--color-on-accent);
     overflow: hidden;
   }
 
@@ -672,41 +672,25 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   }
 
   /* ================================================================== *
-   * Dark mode overrides — yellow-background elements need dark text
+   * Dark mode — residual overrides
+   *
+   * hp-btn--blue, hp-ribbon, hp-hero__new-pill no longer need overrides —
+   * they now use on-accent / surface-card / border-card tokens that
+   * auto-remap via tokens.css .dark block.
+   *
+   * Only purely decorative one-offs remain below.
    * ================================================================== */
 
-  /* Blue CTA buttons become yellow in dark mode — switch to dark text */
-  :global(.dark) .hp-btn--blue {
-    color: #1c1c1c;
-  }
-
-  /* Activity ribbon: blue bg → yellow, white text becomes unreadable */
-  :global(.dark) .hp-ribbon {
-    color: #1c1c1c;
-  }
-
-  /* Slogan italic accent: yellow-400 → blue in dark, fine on yellow ribbon */
+  /* Slogan italic em: yellow-400 token → blue in dark on yellow ribbon.
+     A muted dark tone reads better than the full blue reversal. */
   :global(.dark) .hp-ribbon__slogan-em {
     color: rgba(0, 0, 0, 0.55);
   }
 
-  /* Pulse dot: token-blue dot on yellow ribbon — make it dark */
+  /* Pulse dot: on yellow ribbon the token-blue dot looks odd; use a dark dot */
   :global(.dark) .hp-ribbon__dot {
     background: rgba(0, 0, 0, 0.45);
     box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.12);
     animation: none;
-  }
-
-  /* "latest" right-side text (inherits from .hp-ribbon color, already fixed above) */
-  :global(.dark) .hp-ribbon strong {
-    color: #1c1c1c;
-  }
-
-  /* "New post" pill: hardcoded #fff bg stays white in dark mode;
-     color: navy-900 remaps to near-white → white text on white pill = invisible */
-  :global(.dark) .hp-hero__new-pill {
-    background: var(--color-grey-100);   /* #2b2b2b dark bg */
-    border-color: var(--color-grey-300);
-    color: var(--color-navy-900);        /* near-white — readable on dark bg */
   }
 </style>

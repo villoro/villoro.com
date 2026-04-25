@@ -418,8 +418,8 @@ const timeline = [
   /* ── Timeline ─────────────────────────────────────────────────────── */
 
   .ab-tl-sec {
-    background: var(--color-navy-900);
-    color: #fff;
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
     padding: 72px 0 80px;
   }
 
@@ -448,12 +448,12 @@ const timeline = [
     letter-spacing: -0.03em;
     line-height: 1;
     margin: 0;
-    color: #fff;
+    color: var(--color-on-dark);
   }
 
   .ab-tl-sub {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.65);
+    color: var(--color-on-dark-secondary);
     max-width: 320px;
     text-align: right;
     margin: 0;
@@ -485,17 +485,17 @@ const timeline = [
     font-weight: 700;
     letter-spacing: -0.01em;
     margin-bottom: 4px;
-    color: #fff;
+    color: var(--color-on-dark);
   }
   .ab-tl-co {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--color-on-dark-faint);
     margin-bottom: 14px;
   }
   .ab-tl-desc {
     font-size: 13px;
     line-height: 1.55;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--color-on-dark-secondary);
     margin: 0;
   }
 
@@ -535,8 +535,8 @@ const timeline = [
   }
 
   .ab-beyond-card {
-    background: #fff;
-    border: 1px solid var(--color-grey-100);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-card);
     border-radius: 20px;
     padding: 36px 28px;
     font-family: var(--font-ui);
@@ -657,26 +657,15 @@ const timeline = [
   }
 
   /* ── Dark mode ───────────────────────────────────────────────────── */
-  /*
-   * :global(.dark) is required — Astro's CSS scoping adds the component hash
-   * to every selector, so ".dark .ab-tl-sec" would become
-   * ".dark[hash] .ab-tl-sec[hash]" which never matches <html class="dark">.
-   */
+  /* ab-tl-sec and ab-beyond-card no longer need :global(.dark) overrides —
+     they now use surface-dark / surface-card / border-card tokens that
+     auto-remap in the .dark block in tokens.css. */
 
-  /* Timeline: hardcode dark bg so the white text stays readable */
-  :global(.dark) .ab-tl-sec {
-    background: #0b1026;
-  }
-
-  /* Hobby cards: white bg in dark mode + near-white text from token remap = invisible */
-  :global(.dark) .ab-beyond-card {
-    background: var(--color-grey-100);   /* #2b2b2b */
-    border-color: var(--color-grey-300); /* #3e3e3e */
-  }
-
-  /* Portrait badge: yellow-400 remaps to blue in dark — keep dark text readable */
+  /* Portrait badge: background is yellow-400 (→ blue in dark), so we need
+     white text in dark mode. :global(.dark) is required because Astro's CSS
+     scoping would add the component hash to .dark, and <html> never has it. */
   :global(.dark) .ab-portrait-badge {
-    color: #fff;
+    color: var(--color-on-dark);
   }
 
   /* ── Responsive ───────────────────────────────────────────────────── */

@@ -156,32 +156,12 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 )}
 
 <style is:global>
-  /* Dark mode: featured cards are always dark navy — not remapped by tokens.
-     !important is needed because the scoped .pc-big/.pc-med rules (specificity 0,2,0)
-     use var(--color-navy-900) which remaps to near-white in dark mode, and Astro
-     outputs scoped styles after global ones so they win at equal specificity. */
-  .dark .pc-big { background: #0b1026 !important; }
-  .dark .pc-med { background: #0b1026 !important; }
+  /* All dark card colours are now handled directly in the scoped <style> block
+     via semantic tokens (surface-dark, on-dark-*, on-accent) — no !important
+     overrides or dark-mode patches needed here. */
 
-  /* Ensure text inside dark cards stays white.
-     !important needed for the same reason as backgrounds above — scoped rules
-     win at equal specificity and use tokens that remap to dark values in dark mode. */
-  .dark .pc-big__title-link,
-  .dark .pc-big__title-link:visited  { color: #fff !important; }
-  .dark .pc-big__excerpt             { color: rgba(255, 255, 255, 0.85) !important; }
-  .dark .pc-big__meta-text           { color: rgba(255, 255, 255, 0.7) !important; }
-  .dark .pc-med__title-link,
-  .dark .pc-med__title-link:visited  { color: #fff !important; }
-  .dark .pc-med__excerpt             { color: rgba(255, 255, 255, 0.7) !important; }
-  .dark .pc-med__img-meta            { color: rgba(255, 255, 255, 0.7) !important; }
-
-  /* CTA "Read the post" link inside dark cards: yellow-400 remaps to blue in dark mode.
-     Use blue-500 (which remaps to yellow) to keep the warm accent on dark cards. */
-  .dark .pc-big .pc-cta-link,
-  .dark .pc-med .pc-cta-link { color: var(--color-blue-500) !important; }
-
-  /* Badge chip: yellow bg → token-yellow becomes blue in dark, keep chip readable */
-  .dark .pc-chip { background: var(--color-yellow-400); color: #1c1c1c; }
+  /* Badge chip: token-yellow → blue in dark; ensure dark text stays readable */
+  .dark .pc-chip { background: var(--color-yellow-400); color: var(--color-on-accent); }
 
   /* Image fill rules — kept global so they survive ClientRouter
      view-transitions (scoped styles can be stripped on back-nav) */
@@ -255,8 +235,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     position: relative;
     border-radius: var(--radius-hero-card);
     overflow: hidden;
-    background: var(--color-navy-900);
-    color: #fff;
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
     cursor: pointer;
   }
 
@@ -278,9 +258,9 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(11, 16, 38, 0)    30%,
-      rgba(11, 16, 38, 0.55) 65%,
-      rgba(11, 16, 38, 0.95) 100%
+      rgba(var(--color-surface-dark-rgb), 0)    30%,
+      rgba(var(--color-surface-dark-rgb), 0.55) 65%,
+      rgba(var(--color-surface-dark-rgb), 0.95) 100%
     );
     pointer-events: none;
   }
@@ -305,7 +285,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     font-family: var(--font-ui);
     font-size: 12px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-on-dark-secondary);
   }
 
   .pc-big__title {
@@ -320,13 +300,13 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
   }
 
   .pc-big__title-link {
-    color: #fff;
+    color: var(--color-on-dark);
     text-decoration: none;
   }
 
   .pc-big__excerpt {
     font-size: 17px;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--color-on-dark-body);
     max-width: 720px;
     line-height: 1.5;
     margin: 0 0 22px;
@@ -337,8 +317,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
    * ================================================================== */
 
   .pc-med {
-    background: var(--color-navy-900);
-    color: #fff;
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
     border-radius: var(--radius-hero-card);
     overflow: hidden;
     box-shadow: var(--shadow-hero-card);
@@ -378,7 +358,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-on-dark-secondary);
   }
 
   .pc-med__body {
@@ -400,14 +380,14 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
   }
 
   .pc-med__title-link {
-    color: #fff;
+    color: var(--color-on-dark);
     text-decoration: none;
   }
 
   .pc-med__excerpt {
     font-size: 14px;
     line-height: 1.55;
-    color: var(--color-grey-300);
+    color: var(--color-on-dark-secondary);
     margin: 0;
     flex: 1;
   }

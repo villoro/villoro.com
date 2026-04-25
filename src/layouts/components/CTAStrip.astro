@@ -46,8 +46,8 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
   .cta {
     margin: 56px 0 32px;
     padding: 28px 32px;
-    background: #fff;
-    border: 1px solid var(--color-grey-100);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-card);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -95,15 +95,9 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
     box-shadow: var(--shadow-cta);
   }
 
-  /* :global(.dark) avoids Astro adding the scoped hash to the .dark selector
-     (which lives on <html> and would never match the component's hash) */
-  :global(.dark) .cta {
-    background: var(--color-grey-100);
-    border-color: var(--color-grey-300);
-  }
-
-  /* On dark card bg, navy-900 token becomes near-white — stays readable.
-     Kicker (grey-500 token) also remaps to a legible mid-tone. No overrides needed. */
+  /* No dark mode override needed — surface-card and border-card tokens
+     auto-remap (#2b2b2b bg / #3e3e3e border). navy-900 text and grey-500
+     kicker both remap correctly via tokens.css. */
 
   @media (max-width: 767px) {
     .cta { flex-direction: column; align-items: flex-start; padding: 22px; }
