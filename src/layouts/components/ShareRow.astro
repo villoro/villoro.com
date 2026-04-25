@@ -1,0 +1,144 @@
+---
+/**
+ * ShareRow — copy-link + social share buttons below a blog post.
+ * Handles the copy-to-clipboard interaction via a small inline script.
+ */
+import config from "@/config/config.json";
+
+interface Props {
+  title: string;
+  description?: string;
+  slug: string;         // e.g. "querying-apis-best-practices"
+  blogFolder?: string;  // default: config.settings.blog_folder
+}
+
+const {
+  title,
+  description = "",
+  slug,
+  blogFolder = config.settings.blog_folder,
+} = Astro.props;
+
+const base    = config.site.base_url;
+const postUrl = `${base}/${blogFolder}/${slug}`;
+---
+
+<div class="sr">
+  <span class="sr__label">Share this post</span>
+  <div class="sr__btns">
+    <!-- Copy link -->
+    <button
+      type="button"
+      class="sr__btn sr__btn--dark"
+      aria-label="Copy link"
+      data-sr-copy
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+    </button>
+
+    <!-- LinkedIn -->
+    <a
+      class="sr__btn sr__btn--blue"
+      aria-label="Share on LinkedIn"
+      href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(title)}`}
+      target="_blank" rel="noopener noreferrer"
+    >
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"/>
+      </svg>
+    </a>
+
+    <!-- Twitter / X -->
+    <a
+      class="sr__btn sr__btn--blue"
+      aria-label="Share on Twitter"
+      href={`https://twitter.com/intent/tweet/?text=${encodeURIComponent(title)}&url=${encodeURIComponent(postUrl)}`}
+      target="_blank" rel="noopener noreferrer"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    </a>
+
+    <!-- Email -->
+    <a
+      class="sr__btn sr__btn--blue"
+      aria-label="Share by email"
+      href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(postUrl)}`}
+    >
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2"/>
+        <path d="m3 7 9 6 9-6"/>
+      </svg>
+    </a>
+  </div>
+</div>
+
+<script>
+  function initCopyBtn() {
+    document.querySelectorAll('[data-sr-copy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          (btn as HTMLElement).style.background = 'var(--color-blue-500)';
+          setTimeout(() => { (btn as HTMLElement).style.background = ''; }, 800);
+        } catch {}
+      });
+    });
+  }
+  document.addEventListener('astro:page-load', initCopyBtn);
+  document.addEventListener('astro:after-swap', initCopyBtn);
+</script>
+
+<style>
+  .sr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-top: 1px solid var(--color-grey-100);
+    border-bottom: 1px solid var(--color-grey-100);
+    margin: 0 0 40px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .sr__label {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-grey-500);
+  }
+
+  .sr__btns { display: flex; gap: 8px; }
+
+  .sr__btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .sr__btn:hover { opacity: 0.85; }
+  .sr__btn--dark { background: var(--color-navy-900); }
+  .sr__btn--blue { background: var(--color-blue-500); }
+
+  @media (max-width: 767px) {
+    .sr { flex-direction: column; align-items: flex-start; gap: 14px; }
+  }
+</style>

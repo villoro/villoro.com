@@ -1,0 +1,81 @@
+---
+/**
+ * Breadcrumb — lightweight nav used in both listing and article heroes.
+ *
+ * Each item either renders as a link (href provided) or as the current
+ * page indicator (no href, coloured blue).
+ *
+ * Usage:
+ *   <Breadcrumb items={[
+ *     { href: "/",     label: "Villoro" },
+ *     { href: "/blog", label: "Blog" },
+ *     {                label: "Python" },   ← current (no href)
+ *   ]} />
+ *
+ * Variant "dark" = used on the white listing hero (grey text → blue current).
+ * Variant "light" = used on the dark image hero of single posts (white text).
+ */
+
+interface BreadcrumbItem {
+  href?: string;
+  label: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+  variant?: "dark" | "light";
+  class?: string;
+}
+
+const { items, variant = "dark", class: cls = "" } = Astro.props;
+
+const ARROW = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+  stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>`;
+---
+
+<nav
+  class:list={["bc", `bc--${variant}`, cls]}
+  aria-label="breadcrumb"
+>
+  {items.map((item, i) => (
+    <>
+      {i > 0 && <Fragment set:html={ARROW} />}
+      {item.href
+        ? <a href={item.href} class="bc__link">{item.label}</a>
+        : <span class="bc__current" aria-current="page">{item.label}</span>
+      }
+    </>
+  ))}
+</nav>
+
+<style>
+  .bc {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* Dark variant (listing hero, white bg) */
+  .bc--dark { color: var(--color-grey-500); }
+  .bc--dark .bc__link    { color: var(--color-grey-500); }
+  .bc--dark .bc__current { color: var(--color-blue-500); }
+
+  /* Light variant (article hero, dark image bg) */
+  .bc--light { color: rgba(255, 255, 255, 0.75); }
+  .bc--light .bc__link    { color: rgba(255, 255, 255, 0.75); }
+  .bc--light .bc__current { color: var(--color-yellow-400); }
+
+  .bc__link {
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .bc--dark  .bc__link:hover { color: var(--color-blue-500); }
+  .bc--light .bc__link:hover { color: var(--color-yellow-400); }
+</style>

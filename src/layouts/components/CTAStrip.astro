@@ -1,0 +1,110 @@
+---
+/**
+ * CTAStrip — "Enjoyed this?" box with Buy-me-a-coffee + Subscribe buttons.
+ * Used at the end of every blog post.
+ */
+import config from "@/config/config.json";
+
+interface Props {
+  coffeeUrl?: string;
+}
+
+const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
+---
+
+<div class="cta">
+  <div class="cta__text">
+    <div class="cta__kicker">Enjoyed this?</div>
+    <div class="cta__question">Support the blog or get the next one in your inbox.</div>
+  </div>
+  <div class="cta__buttons">
+    <a
+      href={coffeeUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="cta__btn cta__btn--coffee"
+    >
+      <span aria-hidden="true">☕</span> Buy me a coffee
+    </a>
+    <a
+      href={config.subscribe.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="cta__btn cta__btn--subscribe"
+    >
+      {config.subscribe.title}
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 12h14M13 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+</div>
+
+<style>
+  .cta {
+    margin: 56px 0 32px;
+    padding: 28px 32px;
+    background: #fff;
+    border: 1px solid var(--color-grey-100);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .cta__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .cta__kicker {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-grey-500);
+  }
+
+  .cta__question {
+    font-family: var(--font-ui);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-navy-900);
+  }
+
+  .cta__buttons {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+
+  .cta__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .cta__btn:hover { opacity: 0.9; }
+
+  .cta__btn--coffee    { background: var(--color-yellow-400); color: var(--color-navy-900); }
+  .cta__btn--subscribe { background: var(--color-blue-500); color: #fff; box-shadow: var(--shadow-cta); }
+
+  @media (max-width: 767px) {
+    .cta { flex-direction: column; align-items: flex-start; padding: 22px; }
+    .cta__buttons { margin-left: 0; width: 100%; }
+    .cta__btn { flex: 1; justify-content: center; }
+  }
+</style>

@@ -1,0 +1,517 @@
+---
+/**
+ * ArticleLayout — full-page layout for single blog posts.
+ *
+ * Structure:
+ *   SiteNav
+ *   Hero (16:9 image + gradient overlay + breadcrumb + category + title + tags + author meta)
+ *   Article (260px sticky ArticleTOC + 1fr body slot)
+ *   CTAStrip + ShareRow + GiscusComments
+ *   RelatedPostsGrid
+ *   SiteFooter
+ *
+ * The MDX <Content /> component goes into the default slot.
+ *
+ * All prose styles live here as `<style is:global>` so they apply to
+ * rehype-sectionize–generated sections and MDX shortcode output.
+ */
+import BaseRedesign from "@/layouts/BaseRedesign.astro";
+import SiteNav from "@/components/SiteNav.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import ImageMod from "@/components/ImageMod.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import ArticleTOC from "@/components/ArticleTOC.astro";
+import CTAStrip from "@/components/CTAStrip.astro";
+import ShareRow from "@/components/ShareRow.astro";
+import RelatedPostsGrid from "@/components/RelatedPostsGrid.astro";
+import GiscusComments from "@/components/GiscusComments.astro";
+import { slugify } from "@/lib/utils/textConverter";
+import type { CollectionEntry } from "astro:content";
+import type { TocItem } from "@/components/ArticleTOC.astro";
+
+interface Props {
+  // SEO
+  title: string;
+  meta_title?: string;
+  description?: string;
+  image?: string;
+  canonical?: string;
+
+  // Post metadata (for hero)
+  category: string;
+  catName: string;
+  catColor: string;
+  tags: string[];
+  formattedDate: string;
+  readTime: string;
+  slug: string;
+  blogFolder: string;
+
+  // TOC
+  toc: TocItem[];
+
+  // Related posts
+  relatedPosts: CollectionEntry<"blog">[];
+}
+
+const {
+  title,
+  meta_title,
+  description,
+  image,
+  canonical,
+  category,
+  catName,
+  catColor,
+  tags,
+  formattedDate,
+  readTime,
+  slug,
+  blogFolder,
+  toc,
+  relatedPosts,
+} = Astro.props;
+
+const catSlug = slugify(category);
+
+const breadcrumbs = [
+  { href: "/",    label: "Villoro" },
+  { href: "/blog", label: "Blog" },
+  { href: `/categories/${catSlug}`, label: catName },
+];
+---
+
+<BaseRedesign
+  title={title}
+  meta_title={meta_title}
+  description={description}
+  image={image}
+  canonical={canonical}
+>
+  <div class="al">
+    <SiteNav />
+
+    <!-- ═══════════════════════ HERO ════════════════════════ -->
+    <section class="al-hero">
+      {image && (
+        <ImageMod
+          src={image}
+          alt={title}
+          width={1920}
+          height={1080}
+          format="webp"
+          loading="eager"
+          class="al-hero__img"
+        />
+      )}
+      <div class="al-hero__overlay"></div>
+
+      <Breadcrumb
+        items={breadcrumbs}
+        variant="light"
+        class="al-hero__crumb"
+      />
+
+      <div class="al-hero__body">
+        <span class="al-hero__cat" style={`background: ${catColor}`}>{catName}</span>
+        <h1 class="al-hero__title">{title}</h1>
+
+        {tags.length > 0 && (
+          <div class="al-hero__tags">
+            {tags.map((t: string) => (
+              <a href={`/tags/${slugify(t)}`} class="al-hero__tag">#{t}</a>
+            ))}
+          </div>
+        )}
+
+        <div class="al-hero__meta">
+          <span class="al-hero__author">Arnau Villoro</span>
+          {formattedDate && (
+            <><span class="al-hero__dot">·</span><span>{formattedDate}</span></>
+          )}
+          {readTime && (
+            <><span class="al-hero__dot">·</span><span>{readTime}</span></>
+          )}
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ ARTICLE ═════════════════════════ -->
+    <section class="al-article">
+      {toc.length > 0 && <ArticleTOC toc={toc} />}
+
+      <article class="al-body">
+        <div class="article-content">
+          <slot />
+        </div>
+
+        <CTAStrip />
+        <ShareRow title={title} description={description} slug={slug} blogFolder={blogFolder} />
+        <div class="al-comments">
+          <GiscusComments />
+        </div>
+      </article>
+    </section>
+
+    <RelatedPostsGrid posts={relatedPosts} />
+    <SiteFooter />
+  </div>
+</BaseRedesign>
+
+<!-- ══════════ Prose styles — global so MDX/rehype output is styled ══════════ -->
+<style is:global>
+  /* ── Inline code ──────────────────────────────────────── */
+  .al-body .article-content :not(pre) > code {
+    background: var(--color-grey-100);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--color-navy-900);
+  }
+
+  /* ── Code blocks (Shiki / monokai) ───────────────────── */
+  .al-body .article-content pre {
+    background: #0e1330 !important;
+    color: #e4e7f5;
+    padding: 22px 26px;
+    border-radius: 0 0 12px 12px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0;
+  }
+  .al-body .article-content pre code {
+    background: transparent !important;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+  .al-body .article-content .astro-code,
+  .al-body .article-content figure.expressive-code,
+  .al-body .article-content pre {
+    margin: 24px 0;
+    border-radius: 12px;
+    border: 1px solid #0b1026;
+    overflow: hidden;
+  }
+
+  /* ── Paragraphs, lists ───────────────────────────────── */
+  .al-body .article-content { font-size: 17px; line-height: 1.75; color: #222437; }
+  .al-body .article-content > p:first-of-type { font-size: 20px; color: var(--color-ink-800); margin-bottom: 32px; }
+  .al-body .article-content p  { margin: 0 0 22px; }
+  .al-body .article-content ul,
+  .al-body .article-content ol { margin: 0 0 24px 1.5rem; padding: 0; }
+  .al-body .article-content li { margin: 0 0 6px; }
+  .al-body .article-content strong { color: var(--color-navy-900); font-weight: 700; }
+  .al-body .article-content em    { font-style: italic; }
+  .al-body .article-content hr {
+    border: none;
+    border-top: 1px solid var(--color-grey-100);
+    margin: 40px 0;
+  }
+
+  /* ── Headings with CSS counters ──────────────────────── */
+  .al-body .article-content { counter-reset: al-h2; }
+  .al-body .article-content h2 {
+    counter-increment: al-h2;
+    counter-reset: al-h3;
+    font-family: var(--font-ui);
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 56px 0 20px;
+    color: var(--color-navy-900);
+    scroll-margin-top: 100px;
+  }
+  .al-body .article-content h2::before {
+    content: counter(al-h2) ". ";
+    color: var(--color-blue-500);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.75em;
+    margin-right: 10px;
+  }
+  .al-body .article-content h3 {
+    counter-increment: al-h3;
+    font-family: var(--font-ui);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    margin: 40px 0 14px;
+    color: var(--color-navy-900);
+    scroll-margin-top: 100px;
+  }
+  .al-body .article-content h3::before {
+    content: counter(al-h2) "." counter(al-h3) " ";
+    color: var(--color-blue-500);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.8em;
+    margin-right: 8px;
+  }
+  .al-body .article-content h4 {
+    font-family: var(--font-ui);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 28px 0 10px;
+    color: var(--color-navy-900);
+    scroll-margin-top: 100px;
+  }
+
+  /* ── Links ───────────────────────────────────────────── */
+  .al-body .article-content a {
+    color: var(--color-blue-500);
+    text-decoration: underline;
+    text-decoration-color: rgba(58, 118, 255, 0.3);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s;
+  }
+  .al-body .article-content a:hover { text-decoration-color: var(--color-blue-500); }
+
+  /* FancyLink pill — no underline, uses its own border */
+  .al-body .article-content a[role="button"] {
+    text-decoration: none;
+    line-height: 1.4;
+    vertical-align: baseline;
+  }
+  .al-body .article-content a[role="button"] img {
+    margin: 0 6px 0 0 !important;
+    border-radius: 0;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* ── Block-level images only ─────────────────────────── */
+  .al-body .article-content > p > img,
+  .al-body .article-content > figure img,
+  .al-body .article-content section > p > img,
+  .al-body .article-content section > figure img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin: 24px 0;
+  }
+
+  /* ── Blockquote (fallback) ───────────────────────────── */
+  .al-body .article-content blockquote {
+    margin: 28px 0;
+    padding: 16px 20px;
+    background: #eef4ff;
+    border-left: 4px solid var(--color-blue-500);
+    border-radius: 0 10px 10px 0;
+    color: var(--color-ink-800);
+  }
+  .al-body .article-content blockquote p         { margin: 0 0 8px; }
+  .al-body .article-content blockquote p:last-child { margin: 0; }
+
+  /* ── Notice / callout (shortcode) ────────────────────── */
+  .al-body .article-content .notice {
+    margin: 24px 0;
+    padding: 14px 18px;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .al-body .article-content .notice > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .al-body .article-content .notice > span:last-child { margin-left: 0; }
+  .al-body .article-content .notice p           { margin: 0; }
+  .al-body .article-content .notice p + p       { margin-top: 8px; }
+  .al-body .article-content .notice img {
+    margin: 0;
+    border-radius: 2px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* ── Tables ──────────────────────────────────────────── */
+  .al-body .article-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 15px;
+  }
+  .al-body .article-content th,
+  .al-body .article-content td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-grey-100);
+  }
+  .al-body .article-content th {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    color: var(--color-navy-900);
+    background: var(--color-grey-50);
+  }
+
+  /* ── TOC active state (used by ArticleTOC scroll-spy) ── */
+  .at-item.is-active > a .at-text,
+  .at-item > a.active .at-text { color: var(--color-navy-900); font-weight: 700; }
+  .at-item.is-active > a .at-num,
+  .at-item > a.active .at-num  { color: var(--color-blue-500); }
+</style>
+
+<style>
+  .al {
+    background: var(--color-grey-50);
+    color: var(--color-navy-900);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    --container-px: 64px;
+  }
+
+  /* ── Hero ─────────────────────────────────────────────── */
+  .al-hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 620px;
+    min-height: 420px;
+    overflow: hidden;
+    color: #fff;
+    background: var(--color-navy-900);
+  }
+
+  .al-hero :global(.al-hero__img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .al-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(11, 16, 38, 0.3) 0%,
+      rgba(11, 16, 38, 0.5) 55%,
+      rgba(11, 16, 38, 0.92) 100%
+    );
+  }
+
+  /* Breadcrumb positioned top-left over the image */
+  .al-hero :global(.al-hero__crumb) {
+    position: absolute;
+    top: 28px;
+    left: var(--container-px);
+    z-index: 3;
+    font-size: 12px;
+    gap: 10px;
+  }
+
+  .al-hero__body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 48px var(--container-px) 56px;
+    max-width: 1440px;
+    margin: 0 auto;
+    z-index: 2;
+  }
+
+  .al-hero__cat {
+    display: inline-block;
+    color: #fff;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-bottom: 18px;
+  }
+
+  .al-hero__title {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 5.5vw, 72px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin: 0;
+    max-width: 1050px;
+    text-wrap: balance;
+    color: #fff;
+  }
+
+  .al-hero__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+  }
+  .al-hero__tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .al-hero__tag:hover { background: rgba(255, 255, 255, 0.25); }
+
+  .al-hero__meta {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .al-hero__author { font-weight: 700; color: #fff; }
+  .al-hero__dot    { opacity: 0.5; }
+
+  /* ── Article 2-col grid ───────────────────────────────── */
+  .al-article {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 72px;
+    padding: 64px var(--container-px) 96px;
+    align-items: start;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .al-body {
+    max-width: 780px;
+    min-width: 0;
+  }
+
+  .al-comments { padding: 8px 0 0; }
+
+  /* ── Responsive ────────────────────────────────────────── */
+  @media (max-width: 1023px) {
+    .al { --container-px: 32px; }
+    .al-article {
+      grid-template-columns: 1fr;
+      gap: 40px;
+      padding: 40px var(--container-px) 72px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .al { --container-px: 20px; }
+    .al-hero { min-height: 340px; }
+    .al-hero__body { padding: 28px var(--container-px) 32px; }
+    .al-hero :global(.al-hero__crumb) { top: 16px; font-size: 11px; }
+  }
+</style>
