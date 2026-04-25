@@ -35,6 +35,9 @@ interface Props {
   // "full" variant:
   postCount?: number;
   yearsWriting?: number;
+  heroH1?: string[];
+  heroLede?: string;
+  heroCountLabel?: string;
   // "simple" variant — plain h1 with optional accent span:
   simpleH1?: string;       // e.g. "Tag:"
   simpleAccent?: string;   // e.g. "#python"  (rendered in blue)
@@ -45,8 +48,8 @@ interface Props {
   activeCategory?: string; // slug, or "all"
 
   // ── Grid section ─────────────────────────────────────
-  sectionTitle: string;
-  sectionMeta: string;
+  sectionTitle?: string;
+  sectionMeta?: string;
   currentPosts: CollectionEntry<"blog">[];
 
   // ── Pagination ───────────────────────────────────────
@@ -62,6 +65,9 @@ const {
   heroVariant = "full",
   postCount = 0,
   yearsWriting = 0,
+  heroH1,
+  heroLede,
+  heroCountLabel,
   simpleH1 = "",
   simpleAccent = "",
   simpleLede = "",
@@ -95,21 +101,17 @@ const getReadTime = (post: CollectionEntry<"blog">) => {
         {heroVariant === "full" ? (
           <>
             <h1 class="bl-hero__h1">
-              Notes from<br />
-              <span class="bl-blue">production.</span>
+              {heroH1![0]}<br />
+              <span class="bl-blue">{heroH1![1]}</span>
             </h1>
             <div class="bl-hero__row">
-              <p class="bl-hero__lede">
-                {yearsWriting} years of data-engineering notes — Python, dbt, AWS,
-                and the quiet habits that keep pipelines boring. No filler, no
-                sponsored posts, no SEO bait.
-              </p>
+              <p class="bl-hero__lede" set:html={heroLede!.replace('{years}', String(yearsWriting))} />
               <div class="bl-hero__count">
                 <div class="bl-hero__count-num">
                   <span class="bl-hero__count-bg" aria-hidden="true"></span>
                   <span class="bl-hero__count-val">{postCount}</span>
                 </div>
-                <div class="bl-hero__count-label">posts · updated monthly</div>
+                <div class="bl-hero__count-label">{heroCountLabel}</div>
               </div>
             </div>
           </>

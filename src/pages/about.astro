@@ -7,6 +7,11 @@ import meImage from "../images/me.png";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import config from "@/config/config.json";
 import social from "@/config/social.json";
+import { getCollection } from "astro:content";
+
+// ---- Content ----
+const [aboutEntry] = await getCollection("about");
+const ab = aboutEntry.data;
 
 const { blog_folder } = config.settings;
 const posts      = await getSinglePage(blog_folder);
@@ -19,37 +24,12 @@ const yearsWriting = Math.floor(
 
 const findSocial = (name: string) => social.main.find((s) => s.name === name)?.link ?? "#";
 
-const timeline = [
-  {
-    year: "2024 — now",
-    role: "Staff Data Engineer",
-    co: "Northius",
-    desc: "Leading the data lake creation — Prefect for orchestration, dbt for transformations, and ECS Python jobs for ingestion.",
-  },
-  {
-    year: "2021 — 2024",
-    role: "Data Engineering Manager",
-    co: "Glovo",
-    desc: "Scaled the team from 2 to 15. Led migration to Data Mesh, designed the first data products, and delivered ROI exceeding 10×.",
-  },
-  {
-    year: "2020 — 2021",
-    role: "Senior Data Engineer",
-    co: "Glovo",
-    desc: "Led transition from data warehouse to data lake. Built PySpark pipelines processing ~300M frontend events per day.",
-  },
-  {
-    year: "2015 — 2020",
-    role: "Consultant",
-    co: "Basetis",
-    desc: "Data Engineer, Data Scientist, and team lead across SEAT, Scytl, Naturgy, and Banc Sabadell — AWS, Azure, Databricks.",
-  },
-];
+const timeline = ab.timeline?.entries ?? [];
 ---
 
 <BaseRedesign
-  title="About — Villoro"
-  description="Arnau Villoro — data engineer in Barcelona. Industrial engineering background, 12 years of notes, and a weakness for automation."
+  title={ab.meta_title ?? ab.title ?? "About — Villoro"}
+  description={ab.description}
 >
   <div class="ab">
 
@@ -58,7 +38,7 @@ const timeline = [
 
     <!-- ══════════════════════ HERO ═══════════════════════ -->
     <section class="ab-hero">
-      <span class="ab-hero__bg" aria-hidden="true">hello.</span>
+      <span class="ab-hero__bg" aria-hidden="true">{ab.hero.watermark}</span>
       <div class="ab-wrap">
 
         <nav class="ab-crumb" aria-label="breadcrumb">
@@ -70,14 +50,10 @@ const timeline = [
         <div class="ab-hero__grid">
           <div class="ab-hero__left">
             <h1 class="ab-hero__h1">
-              Hi, I'm<br />
-              <span class="ab-blue">Arnau.</span>
+              {ab.hero.h1[0]}<br />
+              <span class="ab-blue">{ab.hero.h1[1]}</span>
             </h1>
-            <p class="ab-hero__lede">
-              <span class="ab-hi">Engineer in Barcelona</span> who's passionate about making
-              things run smoothly. I thrive on automation — it's like a puzzle to me,
-              finding ways to streamline processes and build efficient solutions from scratch.
-            </p>
+            <p class="ab-hero__lede">{ab.hero.lede}</p>
 
             <div class="ab-hero__social">
               <a href={findSocial("linkedin")} target="_blank" rel="noopener noreferrer" class="ab-social-link">
@@ -96,7 +72,7 @@ const timeline = [
           </div>
 
           <div class="ab-portrait-wrap">
-            <div class="ab-portrait-badge">Trust me, I'm an engineer :)</div>
+            <div class="ab-portrait-badge">{ab.hero.badge}</div>
             <div class="ab-portrait">
               <Image
                 src={meImage}
@@ -117,28 +93,13 @@ const timeline = [
     <section class="ab-story-sec">
       <div class="ab-wrap ab-story-grid">
         <aside class="ab-story-label">
-          <div class="ab-story-label__kicker">The Short Version</div>
-          <div class="ab-story-label__title">
-            From industrial engineering to data pipelines.
-          </div>
+          <div class="ab-story-label__kicker">{ab.story.kicker}</div>
+          <div class="ab-story-label__title">{ab.story.label}</div>
         </aside>
         <div class="ab-story-body">
-          <p>
-            With a background in <strong>Industrial Engineering</strong>, I've delved deep into
-            the world of data engineering. From crunching numbers as a Data Analyst to
-            leading teams as a Data Engineering Manager and diving into algorithms as a
-            Machine Learning Engineer, I've worn many hats in the data realm.
-          </p>
-          <p>
-            As a dedicated <strong>Data Engineer</strong>, I'm all about transforming raw data
-            into actionable insights — designing, developing, and deploying robust data
-            infrastructure to help businesses thrive in the digital age.
-          </p>
-          <p>
-            This site is where I keep <span class="ab-hi">{yearsWriting} years of notes</span> —
-            the patterns that stuck, the debugs that hurt, the tools I'd recommend to my past
-            self. {postCount} posts and counting.
-          </p>
+          {ab.story.paragraphs.map((para) => (
+            <p set:html={para.replace('{years}', String(yearsWriting)).replace('{posts}', String(postCount))} />
+          ))}
         </div>
       </div>
     </section>
@@ -148,13 +109,10 @@ const timeline = [
       <div class="ab-wrap">
         <div class="ab-tl-head">
           <div>
-            <div class="ab-tl-kicker">Career</div>
-            <h2 class="ab-tl-h">{yearsWriting} years · 3 employers</h2>
+            <div class="ab-tl-kicker">{ab.timeline.kicker}</div>
+            <h2 class="ab-tl-h">{yearsWriting} {ab.timeline.heading_suffix}</h2>
           </div>
-          <p class="ab-tl-sub">
-            Consultant → senior engineer → engineering manager → staff engineer.
-            The titles changed, the question stayed the same.
-          </p>
+          <p class="ab-tl-sub">{ab.timeline.sub}</p>
         </div>
         <div class="ab-tl-grid">
           {timeline.map((t) => (
@@ -173,36 +131,19 @@ const timeline = [
     <section class="ab-beyond-sec">
       <div class="ab-wrap">
         <div class="ab-beyond-head">
-          <div class="ab-beyond-kicker">When I'm not knee-deep in code</div>
+          <div class="ab-beyond-kicker">{ab.hobbies.kicker}</div>
           <h2 class="ab-beyond-h">
-            Beyond the <span class="ab-blue">terminal.</span>
+            {ab.hobbies.heading.split(' ').slice(0, -1).join(' ')} <span class="ab-blue">{ab.hobbies.heading.split(' ').at(-1)}</span>
           </h2>
         </div>
         <div class="ab-beyond-grid">
-          <article class="ab-beyond-card">
-            <div class="ab-beyond-emoji">🧗</div>
-            <h3 class="ab-beyond-title">Scaling cliffs</h3>
-            <p class="ab-beyond-text">
-              Weekends on real rock. Climbing is the only thing that turns my brain off
-              completely — you can't debug a crux move.
-            </p>
-          </article>
-          <article class="ab-beyond-card">
-            <div class="ab-beyond-emoji">📖</div>
-            <h3 class="ab-beyond-title">A book in the sun</h3>
-            <p class="ab-beyond-text">
-              Currently alternating between systems writing and old-school sci-fi.
-              The patterns rhyme more than you'd expect.
-            </p>
-          </article>
-          <article class="ab-beyond-card">
-            <div class="ab-beyond-emoji">⚡</div>
-            <h3 class="ab-beyond-title">Electrical installations</h3>
-            <p class="ab-beyond-text">
-              Hands-on DIY — combining my technical skills with projects where a mistake
-              trips the breaker instead of a CI pipeline.
-            </p>
-          </article>
+          {ab.hobbies.entries.map((hobby) => (
+            <article class="ab-beyond-card">
+              <div class="ab-beyond-emoji">{hobby.emoji}</div>
+              <h3 class="ab-beyond-title">{hobby.title}</h3>
+              <p class="ab-beyond-text">{hobby.text}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
