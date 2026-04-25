@@ -66,6 +66,7 @@ const { categories, activeKey } = Astro.props;
     flex-shrink: 0;
     padding-top: 8px; /* align with chip text */
   }
+  :global(.dark) .cr__label { color: rgba(0, 0, 0, 0.50); }
 
   .cr__chips {
     display: flex;
@@ -90,9 +91,15 @@ const { categories, activeKey } = Astro.props;
   }
   .cr__chip:hover     { background: rgba(255, 255, 255, 0.22); }
   .cr__chip.is-active { background: #fff; color: #1c1c1c; }
-  /* Dark mode: ribbon turns yellow (via token swap), keep chip readable */
+
+  /* Dark mode: ribbon turns yellow (via token swap), switch chips to dark text */
   :global(.dark) .cr { box-shadow: 0 8px 24px -12px rgba(255, 195, 58, 0.3); }
-  :global(.dark) .cr__chip.is-active { background: #fff; color: #1c1c1c; }
+  :global(.dark) .cr__chip {
+    background: rgba(0, 0, 0, 0.10);
+    color: rgba(0, 0, 0, 0.80);
+  }
+  :global(.dark) .cr__chip:hover { background: rgba(0, 0, 0, 0.18); }
+  :global(.dark) .cr__chip.is-active { background: rgba(0, 0, 0, 0.75); color: #fff; }
 
   .cr__chip-count {
     font-size: 11px;
