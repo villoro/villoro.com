@@ -207,28 +207,28 @@ const timeline = [
       </div>
     </section>
 
-    <!-- ═════════════════════ CTA ═══════════════════════ -->
-    <section class="ab-cta-sec">
-      <div class="ab-wrap">
-        <div class="ab-cta-card">
-          <span class="ab-cta-bg" aria-hidden="true">hi.</span>
-          <h2 class="ab-cta-h">Have a pipeline that's causing you grief?</h2>
-          <div class="ab-cta-btns">
-            <a href={`mailto:${config.footer.email}`} class="ab-cta-primary">
-              {config.footer.email}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-            </a>
-            <a href="/blog" class="ab-cta-secondary">Read the blog</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ══════════════════════ FOOTER ═════════════════════ -->
     <SiteFooter />
 
   </div>
 </BaseRedesign>
+
+<!-- Global styles survive Astro ClientRouter back-navigation (scoped styles can be
+     stripped from cache-restored pages). Only the rules that use switching tokens
+     and could show wrong colours on nav-back need to be here. -->
+<style is:global>
+  /* Timeline section — permanent dark surface */
+  .ab-tl-sec {
+    background: var(--color-surface-dark) !important;
+    color: var(--color-on-dark) !important;
+  }
+
+  /* Hobby cards — switches between white (light) and #2b2b2b (dark) */
+  .ab-beyond-card {
+    background: var(--color-surface-card) !important;
+    border-color: var(--color-border-card) !important;
+  }
+</style>
 
 <style>
   .ab {
@@ -435,8 +435,8 @@ const timeline = [
   /* ── Timeline ─────────────────────────────────────────────────────── */
 
   .ab-tl-sec {
-    background: var(--color-navy-900);
-    color: #fff;
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
     padding: 72px 0 80px;
   }
 
@@ -465,12 +465,12 @@ const timeline = [
     letter-spacing: -0.03em;
     line-height: 1;
     margin: 0;
-    color: #fff;
+    color: var(--color-on-dark);
   }
 
   .ab-tl-sub {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.65);
+    color: var(--color-on-dark-secondary);
     max-width: 320px;
     text-align: right;
     margin: 0;
@@ -502,17 +502,17 @@ const timeline = [
     font-weight: 700;
     letter-spacing: -0.01em;
     margin-bottom: 4px;
-    color: #fff;
+    color: var(--color-on-dark);
   }
   .ab-tl-co {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--color-on-dark-faint);
     margin-bottom: 14px;
   }
   .ab-tl-desc {
     font-size: 13px;
     line-height: 1.55;
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--color-on-dark-secondary);
     margin: 0;
   }
 
@@ -552,8 +552,8 @@ const timeline = [
   }
 
   .ab-beyond-card {
-    background: #fff;
-    border: 1px solid var(--color-grey-100);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-card);
     border-radius: 20px;
     padding: 36px 28px;
     font-family: var(--font-ui);
@@ -671,6 +671,18 @@ const timeline = [
   .ab-cta-secondary:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.7);
+  }
+
+  /* ── Dark mode ───────────────────────────────────────────────────── */
+  /* ab-tl-sec and ab-beyond-card no longer need :global(.dark) overrides —
+     they now use surface-dark / surface-card / border-card tokens that
+     auto-remap in the .dark block in tokens.css. */
+
+  /* Portrait badge: background is yellow-400 (→ blue in dark), so we need
+     white text in dark mode. :global(.dark) is required because Astro's CSS
+     scoping would add the component hash to .dark, and <html> never has it. */
+  :global(.dark) .ab-portrait-badge {
+    color: var(--color-on-dark);
   }
 
   /* ── Responsive ───────────────────────────────────────────────────── */

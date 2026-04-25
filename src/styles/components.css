@@ -239,3 +239,26 @@
     }
   }
 }
+
+/* card — Base card styling for content containers
+
+   Used as a base for cards with borders, shadows, and hover effects.
+   Applies to post cards, CTA boxes, search results, etc.
+*/
+.card {
+  border-radius: 12px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* No .dark .card override needed — surface-card and border-card tokens
+   auto-remap to dark values (#2b2b2b bg / #3e3e3e border) via tokens.css */
+
+.dark .card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}

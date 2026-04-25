@@ -128,7 +128,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 )}
 
 {variant === "small" && (
-  <article class="pc-small">
+  <article class="card pc-small">
     <a href={href} class="pc-small__img-wrap">
       {image && (
         <ImageMod
@@ -156,6 +156,13 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 )}
 
 <style is:global>
+  /* All dark card colours are now handled directly in the scoped <style> block
+     via semantic tokens (surface-dark, on-dark-*, on-accent) — no !important
+     overrides or dark-mode patches needed here. */
+
+  /* Badge chip: token-yellow → blue in dark; ensure dark text stays readable */
+  .dark .pc-chip { background: var(--color-yellow-400); color: var(--color-on-accent); }
+
   /* Image fill rules — kept global so they survive ClientRouter
      view-transitions (scoped styles can be stripped on back-nav) */
   .pc-big__img,
@@ -228,8 +235,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     position: relative;
     border-radius: var(--radius-hero-card);
     overflow: hidden;
-    background: var(--color-navy-900);
-    color: #fff;
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
     cursor: pointer;
   }
 
@@ -251,9 +258,9 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(11, 16, 38, 0)    30%,
-      rgba(11, 16, 38, 0.55) 65%,
-      rgba(11, 16, 38, 0.95) 100%
+      rgba(var(--color-surface-dark-rgb), 0)    30%,
+      rgba(var(--color-surface-dark-rgb), 0.55) 65%,
+      rgba(var(--color-surface-dark-rgb), 0.95) 100%
     );
     pointer-events: none;
   }
@@ -278,7 +285,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     font-family: var(--font-ui);
     font-size: 12px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-on-dark-secondary);
   }
 
   .pc-big__title {
@@ -293,13 +300,13 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
   }
 
   .pc-big__title-link {
-    color: #fff;
+    color: var(--color-on-dark);
     text-decoration: none;
   }
 
   .pc-big__excerpt {
     font-size: 17px;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--color-on-dark-body);
     max-width: 720px;
     line-height: 1.5;
     margin: 0 0 22px;
@@ -310,8 +317,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
    * ================================================================== */
 
   .pc-med {
-    background: var(--color-navy-900);
-    color: #fff;
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
     border-radius: var(--radius-hero-card);
     overflow: hidden;
     box-shadow: var(--shadow-hero-card);
@@ -351,7 +358,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-on-dark-secondary);
   }
 
   .pc-med__body {
@@ -373,34 +380,28 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
   }
 
   .pc-med__title-link {
-    color: #fff;
+    color: var(--color-on-dark);
     text-decoration: none;
   }
 
   .pc-med__excerpt {
     font-size: 14px;
     line-height: 1.55;
-    color: var(--color-grey-300);
+    color: var(--color-on-dark-secondary);
     margin: 0;
     flex: 1;
   }
 
   /* ================================================================== *
    * variant="small" — white grid card
+   * Uses global .card base class for border, background, and hover shadow.
+   * This section handles card-specific layout and image sizing.
    * ================================================================== */
 
   .pc-small {
-    border-radius: var(--radius-post-card);
     overflow: hidden;
-    background: #fff;
-    border: 1px solid var(--color-grey-100);
     display: flex;
     flex-direction: column;
-    transition: box-shadow 0.2s ease;
-  }
-
-  .pc-small:hover {
-    box-shadow: 0 4px 20px -4px rgba(11, 16, 38, 0.1);
   }
 
   .pc-small__img-wrap {
