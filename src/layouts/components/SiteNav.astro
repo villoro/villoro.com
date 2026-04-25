@@ -272,8 +272,6 @@ const isBlog   = pathname.startsWith("/blog")
 </style>
 
 <style is:global>
-  /* These rules must survive ClientRouter view-transition back-navigation,
-     so they live in a global block rather than the scoped block above. */
   .sitenav__subscribe {
     display: inline-flex !important;
     align-items: center !important;

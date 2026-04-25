@@ -26,19 +26,6 @@ latest:
   badge: "Latest"
   cta: "See all {posts} posts"
 
-# Legacy fields kept for reference
-banner:
-  image: me_thinking
-  title: Hi, I am Arnau Villoro
-  content: "Trust me, I'm an engineer :)"
-
-slogan:
-  title: Crafting Solutions, Delivering Efficiency
-
-blog:
-  title: Latest posts
-  button: See all
-
 companies:
   title: "I'm proud to have collaborated with some awesome companies:"
   logos:

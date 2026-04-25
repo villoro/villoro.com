@@ -154,9 +154,6 @@ const timeline = ab.timeline?.entries ?? [];
   </div>
 </BaseRedesign>
 
-<!-- Global styles survive Astro ClientRouter back-navigation (scoped styles can be
-     stripped from cache-restored pages). Only the rules that use switching tokens
-     and could show wrong colours on nav-back need to be here. -->
 <style is:global>
   /* Timeline section — permanent dark surface */
   .ab-tl-sec {
