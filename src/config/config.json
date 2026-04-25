@@ -14,13 +14,11 @@
 
   "settings": {
     "search": true,
-    "sticky_header": true,
     "theme_switcher": true,
     "default_theme": "system",
     "pagination": 9,
     "pagination_window_size": 2,
     "similar_items_length": 3,
-    "num_latest_posts": 3,
     "blog_folder": "blog",
     "page_name": "page",
     "writing_since": "2014-03-01"
@@ -29,6 +27,10 @@
   "subscribe": {
     "link": "http://eepurl.com/ghAetb",
     "title": "Join mailing list"
+  },
+
+  "buymeacoffee": {
+    "username": "villoro"
   },
 
   "metadata": {
@@ -45,9 +47,5 @@
     "repoId": "MDEwOlJlcG9zaXRvcnkxNTQxODUxMDA=",
     "category": "Announcements",
     "categoryId": "DIC_kwDOCTCtjM4CedzP"
-  },
-
-  "blog": {
-    "toc": "Table of Contents"
   }
 }

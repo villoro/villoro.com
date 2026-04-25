@@ -306,6 +306,39 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     margin: 0 0 22px;
   }
 
+  /* On mobile, the .pc-big "featured" card switches to the same
+     image-on-top / white-body layout used by the small grid cards
+     so the homepage feed reads as one consistent stack. */
+  @media (max-width: 767px) {
+    .pc-big {
+      background: var(--color-surface-card);
+      color: var(--color-navy-900);
+      border: 1px solid var(--color-border-card);
+      border-radius: 12px;
+    }
+    .pc-big__img-wrap {
+      aspect-ratio: 16 / 9;
+      max-height: none;
+    }
+    .pc-big__overlay { display: none; }
+    .pc-big__body {
+      position: static;
+      padding: 20px 22px 22px;
+    }
+    .pc-big__meta-text { color: var(--color-grey-500); }
+    .pc-big__title {
+      font-size: var(--text-card-title);
+      line-height: 1.2;
+      margin: 4px 0 10px;
+    }
+    .pc-big__title-link { color: var(--color-navy-900); }
+    .pc-big__excerpt {
+      font-size: 15px;
+      color: var(--color-ink-800);
+      margin: 0 0 16px;
+    }
+  }
+
   /* ================================================================== *
    * variant="medium" — dark side-card (hero right column)
    * ================================================================== */

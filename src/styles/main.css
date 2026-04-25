@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
-@plugin "tailwind-bootstrap-grid";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @import "./generated-theme.css";
