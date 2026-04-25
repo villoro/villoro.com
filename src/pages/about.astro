@@ -656,6 +656,29 @@ const timeline = [
     border-color: rgba(255, 255, 255, 0.7);
   }
 
+  /* ── Dark mode ───────────────────────────────────────────────────── */
+  /*
+   * :global(.dark) is required — Astro's CSS scoping adds the component hash
+   * to every selector, so ".dark .ab-tl-sec" would become
+   * ".dark[hash] .ab-tl-sec[hash]" which never matches <html class="dark">.
+   */
+
+  /* Timeline: hardcode dark bg so the white text stays readable */
+  :global(.dark) .ab-tl-sec {
+    background: #0b1026;
+  }
+
+  /* Hobby cards: white bg in dark mode + near-white text from token remap = invisible */
+  :global(.dark) .ab-beyond-card {
+    background: var(--color-grey-100);   /* #2b2b2b */
+    border-color: var(--color-grey-300); /* #3e3e3e */
+  }
+
+  /* Portrait badge: yellow-400 remaps to blue in dark — keep dark text readable */
+  :global(.dark) .ab-portrait-badge {
+    color: #fff;
+  }
+
   /* ── Responsive ───────────────────────────────────────────────────── */
 
   @media (max-width: 1023px) {

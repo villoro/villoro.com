@@ -167,6 +167,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
   .dark .pc-big__meta-text           { color: rgba(255, 255, 255, 0.7); }
   .dark .pc-med__title-link,
   .dark .pc-med__title-link:visited  { color: #fff; }
+  /* pc-med__excerpt uses --color-grey-300 which remaps to #3e3e3e (very dark) in dark mode */
+  .dark .pc-med__excerpt             { color: rgba(255, 255, 255, 0.7); }
 
   /* Badge chip: yellow bg → token-yellow becomes blue in dark, keep chip readable */
   .dark .pc-chip { background: var(--color-yellow-400); color: #1c1c1c; }

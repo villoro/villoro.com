@@ -701,4 +701,12 @@ const getReadTime = (post: typeof sortedPosts[0]) => {
   :global(.dark) .hp-ribbon strong {
     color: #1c1c1c;
   }
+
+  /* "New post" pill: hardcoded #fff bg stays white in dark mode;
+     color: navy-900 remaps to near-white → white text on white pill = invisible */
+  :global(.dark) .hp-hero__new-pill {
+    background: var(--color-grey-100);   /* #2b2b2b dark bg */
+    border-color: var(--color-grey-300);
+    color: var(--color-navy-900);        /* near-white — readable on dark bg */
+  }
 </style>
