@@ -10,13 +10,13 @@ tags: [Python, API, AsyncIO, Data Engineering]
 draft: true
 ---
 
-## 0. Intro
+## Intro
 
 In the previous post (<FancyLink linkText="Querying Qlik API with Python" url="https://villoro.com/blog/querying-qlik-api-python/" dark="true"/>) we built a **synchronous client** for Qlik Cloud. It was simple, debuggable, and covered the basics: auth, pagination, reloads, and retries. But when you start to automate **multiple reloads** or poll **many apps at once**, sync becomes a bottleneck.
 
 With Python’s `asyncio` and `aiohttp`, you can scale to **dozens or hundreds of API calls concurrently**, without threads or processes. This post shows how to rebuild the client with async foundations, keeping the same principles: copy/paste‑ready code, tight surface area, and clear seams for production use.
 
-## 1. Async foundations (with tiny, practical examples)
+## Async foundations (with tiny, practical examples)
 
 Why bother?
 
@@ -25,7 +25,7 @@ Why bother?
 
 Goal: show what async *is* with minimal, standalone snippets. No Qlik yet.
 
-### 1.1 Blocking vs async waiting
+### Blocking vs async waiting
 
 **Blocking**: the loop sleeps *serially*.
 
@@ -58,7 +58,7 @@ asyncio.run(main())
 > [!note]
 > **Idea:** `await` yields control while the task is waiting (I/O, sleep), so other tasks can run.
 
-### 1.2 Async context managers
+### Async context managers
 
 Use `async with` to manage resources (e.g., network sessions, DB connections):
 
@@ -79,7 +79,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### 1.3 Bounded concurrency with a semaphore
+### Bounded concurrency with a semaphore
 
 Limit how many tasks run at once to avoid overwhelming services.
 
@@ -99,7 +99,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### 1.4 Mapping work over inputs (no `while` loops)
+### Mapping work over inputs (no `while` loops)
 
 Create tasks from inputs and collect results.
 
@@ -126,7 +126,7 @@ asyncio.run(main())
 2. Prefer `asyncio.gather` over manual scheduling when you can.
 3. Add a semaphore when calling external services to cap concurrency.
 
-## 2. Rebuilding the client
+## Rebuilding the client
 
 We’ll mirror the sync client, but use async building blocks from Section 1: `async def`, `await`, `async with`, and a semaphore for back‑pressure.
 
@@ -177,7 +177,7 @@ class QlikAsyncClient:
 > [!tip]
 > The semaphore is your safety valve. Start conservative (e.g., 5–10). You can raise it after measuring Qlik tenant limits and your runner’s bandwidth.
 
-## 3. Async GET helper
+## Async GET helper
 
 This mirrors the sync `_get`, but uses `await`, a semaphore, and optional retries. One choke‑point keeps headers, limits, and error handling consistent.
 
@@ -228,7 +228,7 @@ class QlikAsyncClient:
 > [!note]
 > If you hit 400s when sending boolean query params, cast them to strings (`"true"/"false"`). Gateways differ.
 
-## 4. Pagination, async style
+## Pagination, async style
 
 We follow Qlik’s `links.next.href` cursor until it disappears. No `while` loops: we bound work with a `for` capped by `max_calls`, then break when there’s no next link.
 
@@ -272,7 +272,7 @@ Why this shape:
 > [!warning]
 > If you routinely hit `max_calls`, log the last page payload and review server-side filters or page size.
 
-## 5. Triggering & polling reloads concurrently
+## Triggering & polling reloads concurrently
 
 Reloads are fire‑and‑forget: you `POST` to start, then **poll** a status endpoint until success/failure/timeout. Async lets you trigger many reloads at once and poll them in parallel without threads.
 
@@ -352,7 +352,7 @@ async def main(app_ids):
 > [!warning]
 > Always cap total wait (`max_time_s`) and use a **bounded loop** (no `while True`). If you need jittered polling or cancellation, this method is the single place to enhance.
 
-## 6. Error handling & retries
+## Error handling & retries
 
 Async doesn’t change the fundamentals: retry what can succeed later (network hiccups), fail fast on what won’t (bad input/permissions). Keep retries close to your low‑level request helpers so the rest of the code stays clean.
 
@@ -400,7 +400,7 @@ Why this shape
 > [!tip]
 > If you need different policies (e.g., more aggressive on metadata reads than reload posts), add thin wrappers like `_request_read` / `_request_write` with different decorators, but keep the core logic in one place.
 
-## 7. Optional: Notifications
+## Optional: Notifications
 
 You often want a heads‑up when a reload fails or times out. Make it **pluggable**: accept an async callback and call it just before raising. That keeps transport details (Slack, email, PagerDuty) outside the client.
 
@@ -452,7 +452,7 @@ Why callbacks, not logging hooks
 > [!tip]
 > Keep the callback optional and fire it only on terminal failures (FAILED/ERROR/ABORTED/TIMEOUT). Success paths should remain silent.
 
-## 8. Trade-offs and takeaways
+## Trade-offs and takeaways
 
 * **Async = faster** when you need many concurrent calls.
 * **Complexity = higher**, but it’s isolated inside the client (semaphore, session, bounded polling) so call‑sites stay simple.

@@ -10,9 +10,9 @@ tags: [Python, dbt, DE, Environments]
 draft: true
 ---
 
-## 1. Why multiple environments exist
+## Why multiple environments exist
 
-### 1.1 The traditional setup: dev, test, sandbox, prod
+### The traditional setup: dev, test, sandbox, prod
 
 In software and data engineering, it’s common to separate work into multiple environments. Code is built in **dev**, validated in **test/staging**, sometimes explored in a **sandbox**, and only then deployed to **prod**. The idea is simple: keep experiments and errors away from the systems that matter.
 
@@ -20,7 +20,7 @@ In software and data engineering, it’s common to separate work into multiple e
 
 This layering reduces risk by catching problems earlier and isolating them from production.
 
-### 1.2 What problems they try to solve
+### What problems they try to solve
 
 Multiple environments exist to:
 
@@ -33,9 +33,9 @@ Multiple environments exist to:
 > [!note]
 > More environments mean more guardrails before code reaches production.
 
-## 2. The dbt perspective
+## The dbt perspective
 
-### 2.1 How dbt handles environments
+### How dbt handles environments
 
 In dbt, environments live in the `profiles.yml`. Each profile contains one or more **targets** that describe how dbt should connect: warehouse, database, schema, and credentials. This design means your project code doesn’t change — dbt simply decides *where* to build models based on the target.
 
@@ -46,7 +46,7 @@ The important piece is how dbt uses **database/schema naming conventions**. Inst
 
 This allows everyone to work against the same production data and warehouse while keeping outputs separated. Developers can safely test changes in their own prefixed schemas without touching production tables.
 
-### 2.2 Switching targets with profiles
+### Switching targets with profiles
 
 Profiles make it easy to switch between these targets. By default, a developer might run dbt with a personal target, which builds into `villoro_salesforce`. When deploying, the pipeline switches to the `prod` target, which builds into `prod_salesforce`. You can read more about it at <FancyLink linkText="dbt | Understanding custom schemas" url="https://docs.getdbt.com/docs/build/custom-schemas#understanding-custom-schemas"/>.
 
@@ -55,17 +55,17 @@ Profiles make it easy to switch between these targets. By default, a developer m
 
 Both environments use the same underlying warehouse and data, so development runs closely mimic production. The only difference is the schema prefix — `prod_` for production, `<user>_` for development. This convention ensures realistic testing, strict protection of production outputs, and seamless promotion from personal work to production.
 
-## 3. One environment to rule them all
+## One environment to rule them all
 
 The same idea can be applied outside of dbt. In Python projects, you can also run everything on production infrastructure while keeping outputs isolated.
 
-### 3.1 How to make it safe
+### How to make it safe
 
 * **Schema prefixes** – follow the same pattern as dbt: `prod_salesforce` for production, `villoro_salesforce` for a dev run. Everyone shares the same data and compute, but results go into different schemas.
 * **Environment variables** – control the prefix with an `ENV` or `SCHEMA_PREFIX` variable. Pipelines stay identical; only the destination changes.
 * **Permissions** – block developers from writing to `prod_` schemas. Even if someone misconfigures, they can’t damage production tables.
 
-### 3.2 Dealing with side effects
+### Dealing with side effects
 
 Code often does more than write tables: send emails, call APIs, trigger dashboards. These actions can be dangerous in a prod-only setup.
 
@@ -83,7 +83,7 @@ else:
 
 The same trick applies to API calls, data deletions, or notifications.
 
-### 3.3 Patterns in practice
+### Patterns in practice
 
 Many teams use this approach:
 
@@ -93,16 +93,16 @@ Many teams use this approach:
 
 ![dbt custom schemas](../../images/posts/2025/9999-dbt-custom-schemas.jpg)
 
-## 4. Pros and cons
+## Pros and cons
 
-### 4.1 Advantages: simplicity, less drift, fewer surprises
+### Advantages: simplicity, less drift, fewer surprises
 
 * **Less infra** – only one environment to manage.
 * **No drift** – everyone works in the same place, no mismatched configs.
 * **Realistic dev** – you test against real data and prod-like conditions.
 * **Faster cycle** – no need to promote across multiple stages.
 
-### 4.2 Risks: less safe experimentation, higher blast radius
+### Risks: less safe experimentation, higher blast radius
 
 * **Unsafe tests** – mistakes can impact prod data if not isolated.
 * **Bigger blast radius** – a bad query or heavy job can hurt live workloads.
@@ -112,7 +112,7 @@ Many teams use this approach:
 > [!danger]
 > The main risk of prod-only is a **higher blast radius** — one mistake can affect critical data or workloads.
 
-### 4.3 Mitigation strategies
+### Mitigation strategies
 
 * **Schema prefixes** – `prod_salesforce` for prod, `villoro_salesforce` for dev.
 * **Permissions** – devs can’t write to `prod_` schemas.
@@ -122,15 +122,15 @@ Many teams use this approach:
 > [!tip]
 > Combining schema isolation, strict permissions, and feature toggles gives most of the safety of multi-env setups, without the overhead.
 
-## 5. Closing thoughts
+## Closing thoughts
 
-### 5.1 When it makes sense to go prod-only
+### When it makes sense to go prod-only
 
 * Small teams that can coordinate easily.
 * Mature pipelines with solid tests and monitoring.
 * When cost and simplicity matter more than strict safety.
 
-### 5.2 When you probably still want multiple environments
+### When you probably still want multiple environments
 
 * Large or complex systems with many users.
 * Workflows tied to external services.

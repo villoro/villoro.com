@@ -10,7 +10,7 @@ tags: [Python, DE, API]
 draft: false
 ---
 
-## 1. ING Developer
+## ING Developer
 
 ING has a <FancyLink linkText="developer portal" url="https://developer.ing.com/openbanking/home"/> with instructions
 for accessing their APIs.
@@ -30,7 +30,7 @@ This post focus on the **Open Banking** API.
 > **Only accredited institutions will get the required credentials.**
 > I discovered after doing all the work and I'm sharing it in case anyone wants to try it and/or in case individuals can use it in the future.
 
-## 2. The Open Banking API
+## The Open Banking API
 
 At the moment of writing of this post there is not a lot that you can do with this API.
 Those are the 2 APIs you can use:
@@ -47,7 +47,7 @@ I also contacted their **support** and they told me they plan to allow users to 
 But there is no ETA for that.
 
 
-## 3. Open Banking API Sandbox
+## Open Banking API Sandbox
 
 This part follows the <FancyLink linkText="Getting Started with Open Banking API" url="https://developer.ing.com/openbanking/get-started/openbanking"/>.
 
@@ -77,7 +77,7 @@ pip install pycryptodome
 
 Let's break down the script in parts
 
-### 3.1. Digesting and signing
+### Digesting and signing
 
 You need to calculate the `SHA256` of some parts.
 That can be done with:
@@ -123,7 +123,7 @@ from base64 import b64encode
 b64encode(out).decode()
 ```
 
-### 3.2. Parameters
+### Parameters
 
 Now let's create the basic parameters:
 
@@ -147,7 +147,7 @@ headers = {
 }
 ```
 
-### 3.3. Getting the signature
+### Getting the signature
 
 In this step you need to encode with `SHA256` the composition of:
 * endpoint
@@ -180,7 +180,7 @@ def get_signature(method, endpoint, mdate, digest, req_id):
     return ",".join(signature)
 ```
 
-### 3.4. Doing the request
+### Doing the request
 
 Now we need to append the authorization as a header:
 
@@ -207,7 +207,7 @@ result = requests.request(
 )
 ```
 
-### 3.5. Getting the token
+### Getting the token
 
 This can be done with the code explained and using those params:
 
@@ -216,13 +216,13 @@ This can be done with the code explained and using those params:
 * body: `grant_type=client_credentials`
 
 
-## 4. Creating your app
+## Creating your app
 
 In this step you need to sign in to the <FancyLink linkText="ING developer portal" url="https://developer.ing.com/openbanking/auth/login"/>.
 
 Then you need to create an app.
 
-### 4.1. Generating your certificates
+### Generating your certificates
 
 You need to generate:
 
@@ -244,7 +244,7 @@ openssl x509 -req -sha256 -days 365 -in ing_http.csr -signkey ing_http.key -out 
 
 Then need to repeat the 3 steps but replacing `ing_http` by `ing_tls`.
 
-### 4.2. Getting a token with your API
+### Getting a token with your API
 
 You need to follow the same as before but changing some params:
 
@@ -254,7 +254,7 @@ You need to follow the same as before but changing some params:
 * tls_cert: `certificates/ing_tls.crt`
 * tls_key: `certificates/ing_tls.key`
 
-### 4.3. Doing a hello world
+### Doing a hello world
 
 Once you have the open you can subscribe to <FancyLink linkText="Showcase API" url="https://developer.ing.com/api-marketplace/marketplace/5f5106c4-3413-4b3c-890a-bb4cfa165dba/overview"/>.
 You will need to wait until your request is approved.
@@ -265,6 +265,6 @@ Once it is approved you can query the only endpoint to check that everything is 
 * endpoint: `/greetings/single`
 
 
-## 5. Next steps
+## Next steps
 
 Now you can wait with me until they add more APIs under the Open Banking 😢

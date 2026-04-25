@@ -10,11 +10,11 @@ tags: [Python, ML, Intro, Tutorial]
 draft: false
 ---
 
-## 1. What is Machine Learning?
+## What is Machine Learning?
 
 Machine Learning is an application of Artificial Intelligence (AI) that allows computers to automatically learn from data without being explicitly programmed. Instead of using explicit instructions it relies on patterns and inference instead.
 
-### 1.1. Types of Machine Learning
+### Types of Machine Learning
 
 There are different tasks that ML can perform and they can be categorized in three categories:
 
@@ -24,20 +24,20 @@ There are different tasks that ML can perform and they can be categorized in thr
 
 ![Machine Learning types](../../images/posts/2019/0013-machine_learning_types.jpg)
 
-#### 1.1.1. Supervised Learning
+#### Supervised Learning
 Supervised Learning algorithms build a mathematical model from both the inputs and the desired outputs. Each training example has one or more inputs (features, usually represented as `x`) and at least one desired output (target, represented as `y`). It will have an objective function that will be optimized through iterations (training). After the training is completed the algorithm would be able to predict the target given the features of new examples.
 
 Supervised learning algorithms include classification and regression.
 
-#### 1.1.2. Unsupervised Learning
+#### Unsupervised Learning
 
 Unsupervised learning algorithms take a set of data that contains only the inputs and find a structure. The algorithm learns from unlabeled data and is able to create groups (clusters) of similar points.
 
-#### 1.1.3. Reinforcement Learning
+#### Reinforcement Learning
 
 Reinforcement learning (RL) is an area of machine learning concerned with how software agents ought to take actions in an environment so as to maximize some notion of cumulative reward. The focus of the agent is in finding a balance between exploration (of uncharted territory) and exploitation (of current knowledge).
 
-### 1.2. Machine Learning steps
+### Machine Learning steps
 
 There are seven steps:
 
@@ -45,14 +45,14 @@ There are seven steps:
 
 In this post we will do everything except the data gathering.
 
-## 2. Full Machine Learning example
+## Full Machine Learning example
 
 As a way to help you understand what is ML we will use an example of supervised learning.
 We will use the <FancyLink linkText="Bike sharing data" url="https://www.kaggle.com/contactprad/bike-share-daily-data"/> from <FancyLink linkText="Kaggle" url="https://www.kaggle.com"/>.
 
 Bike-sharing rental process is highly correlated to the environmental and seasonal settings. For instance, weather conditions, precipitation, day of week, season, hour of the day, etc. can affect the rental behaviors. So in this example of regression we will use that information to try to predict the bike rental.
 
-### 2.1. How the data is used in a supervised learning problem
+### How the data is used in a supervised learning problem
 
 The data will be split in 3 groups:
 
@@ -64,7 +64,7 @@ The data will be split in 3 groups:
 
 The idea is to learn with **training** data. Then check the model with the **validation** data and if the results are not good tune the parameters train another time. When the results are good stop and do one final test with the **test** data.
 
-### 2.2. Preparing the data
+### Preparing the data
 
 The first thing we need to do is to handle the categorical features since machine learning algorithms don't work with text as inputs. In this dataset we have 5 categorical features:
 
@@ -85,11 +85,11 @@ Let's also check the target we want to predict. In the dataset there are the ren
 
 ![Preview target variable](../../images/posts/2019/0013-preview-target-variable.png)
 
-### 2.3. Selecting the algorithm
+### Selecting the algorithm
 
 In this example we will use Support Vector Regression (SVR). It is an algorithm that is similar to a linear regression but using a threshold. It is out of the scope of this post to explain how it works but you can read it <FancyLink linkText="Support Vector Regression Or SVR" url="https://medium.com/coinmonks/support-vector-regression-or-svr-8eb3acf6d0ff"/>.
 
-### 2.4. Training and parameter tuning
+### Training and parameter tuning
 
 First we fit the algorithm using the **training** data and we check the result using the **validation** data.
 
@@ -98,7 +98,7 @@ First we fit the algorithm using the **training** data and we check the result u
 > [!success]
 > Since the results are good there is no need to tune the parameters, the default ones work well.
 
-### 2.5. Check that the algorithm is working
+### Check that the algorithm is working
 
 Now we will use the **test** data to ensure that everything is working well.
 

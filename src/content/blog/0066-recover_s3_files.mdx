@@ -10,11 +10,11 @@ tags: [DE, AWS, S3, Python, Best Practices, Versioning]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 APIs and data lakes are unforgiving: one wrong path and you can “delete” an entire table. This post shows exactly how we recovered **Iceberg tables deleted by mistake** by leveraging **S3 Versioning** and **delete markers**, with a notebook‑friendly pandas workflow.
 
-## 1. What happened
+## What happened
 
 > [!warning]
 > If your buckets aren’t versioned, stop and enable Versioning before anything else. Without it, you’ll need backups/replication or CloudTrail logs to reconstruct keys.
@@ -42,11 +42,11 @@ Because we use **Iceberg tables**, recovering the wrong files could break table 
 
 Fortunately, all S3 deletions are logged, and our buckets had **versioning and delete markers enabled**, letting us precisely identify the deletion window and safely restore the affected files.
 
-## 2. S3 Versioning
+## S3 Versioning
 
 When working with critical datasets like Iceberg tables, **S3 Versioning is your safety net**. It allows you to recover any object or undo accidental deletions by maintaining historical versions of every file.
 
-### 2.1. Why it matters
+### Why it matters
 
 Versioning ensures that every modification or deletion is reversible:
 
@@ -59,7 +59,7 @@ This behavior protects you from accidents like mass deletions, misconfigured pat
 > [!note]
 > When versioning is enabled, you can roll back changes at the object level — essential for recovering partitioned Iceberg tables where structure and data must stay consistent.
 
-### 2.2. How to enable versioning
+### How to enable versioning
 
 You can enable versioning on any S3 bucket through the AWS Console or CLI:
 
@@ -76,7 +76,7 @@ aws s3api put-bucket-versioning \
 
 For more details, see the <FancyLink linkText="S3 Versioning | AWS docs" url="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html" company="aws"/>.
 
-### 2.3. Recommended practices
+### Recommended practices
 
 * **Lifecycle policies:** Automatically clean up older versions after a defined retention period to manage costs.
 * **MFA Delete:** Add an extra confirmation layer for deletions (useful for production or critical buckets).
@@ -85,7 +85,7 @@ For more details, see the <FancyLink linkText="S3 Versioning | AWS docs" url="ht
 > [!warning]
 > Versioning only protects files **after** it’s enabled. Enable it early before something goes wrong.
 
-## 3. How Delete Markers Work
+## How Delete Markers Work
 
 When S3 versioning is enabled, deleting an object doesn’t actually remove its data. Instead, AWS adds a **delete marker** which is a special placeholder that marks the object as deleted while keeping all its previous versions safely stored.
 
@@ -125,11 +125,11 @@ Removing `v4` restores `v2` (the most recent data version). Removing `v3` change
 > [!warning]
 > If versioning is disabled or suspended, delete markers may behave differently. Ensure versioning was active when the deletion happened.
 
-## 4. Our Recovery Strategy
+## Our Recovery Strategy
 
 After confirming versioning was enabled, the goal was to **recover only the files deleted during the incident window** — not everything that had ever changed. Recovering too much could break Iceberg table consistency, so precision was essential.
 
-### 4.1. Steps we followed
+### Steps we followed
 
 1. **Identify the time window** of the incident
    * We used Prefect logs to pinpoint exactly when the erroneous delete ran.
@@ -151,7 +151,7 @@ After confirming versioning was enabled, the goal was to **recover only the file
 > [!note]
 > Restoring a file means deleting its delete marker. We filtered strictly by the incident timestamps to ensure that only the files deleted by mistake were brought back.
 
-## 5. Investigate delete markers
+## Investigate delete markers
 
 Before restoring anything, we first **enumerate all delete markers** for a given prefix and filter them to the exact incident window.
 This gives us a clear, auditable list of what would be restored.
@@ -226,7 +226,7 @@ def scan_delete_markers(s3, bucket, prefix, start_ts, end_ts):
 > [!note]
 > The scan collects rows first, then vectorizes timestamp casting and eligibility — faster and simpler than per‑row logic.
 
-## 6. Actually recovering files
+## Actually recovering files
 
 Now that we have an audited list of delete markers, we restore by **deleting those markers**. Start with a dry‑run to validate scope, then apply in batches.
 
@@ -294,11 +294,11 @@ def recover_s3_delete_markers(bucket, prefix, start_ts, end_ts, dry_run=True, ex
     return df
 ```
 
-## 7. Conclusion
+## Conclusion
 
 Recovering the Iceberg tables wasn’t about luck, it was about preparation. Versioning gave us a rewind button, and precise recovery logic kept metadata and data aligned.
 
-### 7.1. Key lessons
+### Key lessons
 
 * Always isolate table paths — no shared prefixes.
 * Keep S3 versioning **enabled** across all critical buckets.
