@@ -28,14 +28,13 @@ const FancyLink: React.FC<FancyLinkProps> = ({ url, linkText, company, dark = fa
     <a
       href={url}
       role="button"
-      style={{ textDecoration: "none" }}
-      className="inline-flex rounded-md border border-gray-300 dark:border-gray-600 px-2 items-center hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="btn btn-outline-primary inline-flex items-center gap-2"
     >
-      <img src={domainLogoUrl} alt="Domain Logo" className={`w-4 h-4 mr-2 my-0 ${dark ? "dark:hidden" : ""}`} />
+      <img src={domainLogoUrl} alt="Domain Logo" className={`w-4 h-4 ${dark ? "dark:hidden" : ""}`} />
       {dark && (
-        <img src={darkDomainLogoUrl} alt="Domain Logo Darkmode" className="w-4 h-4 mr-2 my-0 hidden dark:inline-block" />
+        <img src={darkDomainLogoUrl} alt="Domain Logo Darkmode" className="w-4 h-4 hidden dark:inline-block" />
       )}
-      <span className="text-primary dark:text-darkmode-primary">{linkText}</span>
+      <span>{linkText}</span>
     </a>
   );
 };

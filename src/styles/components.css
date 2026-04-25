@@ -239,3 +239,24 @@
     }
   }
 }
+
+/* card — Base card styling for content containers
+
+   Used as a base for cards with borders, shadows, and hover effects.
+   Applies to post cards, CTA boxes, search results, etc.
+*/
+.card {
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--color-grey-100);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dark .card {
+  background: var(--color-dark);
+  border-color: var(--color-grey-400);
+}

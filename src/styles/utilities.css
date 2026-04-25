@@ -18,3 +18,82 @@
 .shadow {
   box-shadow: 0px 4px 40px rgba(0, 0, 0, 0.05);
 }
+
+/* ────────────────────────────────────────────────────────────────
+   ICON BUTTON — Small square button for icons
+
+   Fixed 40x40px size, flex-centered, no text, 10px radius.
+   Variants provided via additional classes or inline color styles.
+   ──────────────────────────────────────────────────────────────── */
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.15s, background-color 0.15s;
+  background-color: var(--color-navy-900);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}
+
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Blue variant (e.g., LinkedIn, Twitter, Email share buttons) */
+.icon-btn-blue {
+  background-color: var(--color-blue-500);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   CTA LINK — Link with action indicator (arrow, chevron, etc.)
+
+   Flex layout with gap between text and icon.
+   Hover animates gap to create arrow "push" effect.
+   ──────────────────────────────────────────────────────────────── */
+
+.cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: gap 0.15s ease;
+  cursor: pointer;
+}
+
+.cta-link:hover:not(:disabled) {
+  gap: 12px;
+}
+
+.cta-link:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   BUTTON GROUP — Flex container for button rows
+
+   Consistent gap and flex wrapping for button/icon groups.
+   ──────────────────────────────────────────────────────────────── */
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}

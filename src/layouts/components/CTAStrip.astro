@@ -22,7 +22,7 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
       href={coffeeUrl}
       target="_blank"
       rel="noopener noreferrer"
-      class="cta__btn cta__btn--coffee"
+      class="btn btn-secondary"
     >
       <span aria-hidden="true">☕</span> Buy me a coffee
     </a>
@@ -30,7 +30,7 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
       href={config.subscribe.link}
       target="_blank"
       rel="noopener noreferrer"
-      class="cta__btn cta__btn--subscribe"
+      class="btn btn-primary"
     >
       {config.subscribe.title}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -85,22 +85,15 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
     flex-wrap: wrap;
   }
 
-  .cta__btn {
-    display: inline-flex;
-    align-items: center;
+  .cta__buttons .btn {
     gap: 8px;
-    padding: 12px 18px;
-    border-radius: 10px;
     font-family: var(--font-ui);
     font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: opacity 0.15s;
   }
-  .cta__btn:hover { opacity: 0.9; }
 
-  .cta__btn--coffee    { background: var(--color-yellow-400); color: var(--color-navy-900); }
-  .cta__btn--subscribe { background: var(--color-blue-500); color: #fff; box-shadow: var(--shadow-cta); }
+  .cta__buttons .btn-primary {
+    box-shadow: var(--shadow-cta);
+  }
 
   @media (max-width: 767px) {
     .cta { flex-direction: column; align-items: flex-start; padding: 22px; }

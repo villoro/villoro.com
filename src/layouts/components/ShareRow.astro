@@ -29,7 +29,7 @@ const postUrl = `${base}/${blogFolder}/${slug}`;
     <!-- Copy link -->
     <button
       type="button"
-      class="sr__btn sr__btn--dark"
+      class="icon-btn"
       aria-label="Copy link"
       data-sr-copy
     >
@@ -43,7 +43,7 @@ const postUrl = `${base}/${blogFolder}/${slug}`;
 
     <!-- LinkedIn -->
     <a
-      class="sr__btn sr__btn--blue"
+      class="icon-btn icon-btn-blue"
       aria-label="Share on LinkedIn"
       href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(title)}`}
       target="_blank" rel="noopener noreferrer"
@@ -55,7 +55,7 @@ const postUrl = `${base}/${blogFolder}/${slug}`;
 
     <!-- Twitter / X -->
     <a
-      class="sr__btn sr__btn--blue"
+      class="icon-btn icon-btn-blue"
       aria-label="Share on Twitter"
       href={`https://twitter.com/intent/tweet/?text=${encodeURIComponent(title)}&url=${encodeURIComponent(postUrl)}`}
       target="_blank" rel="noopener noreferrer"
@@ -67,7 +67,7 @@ const postUrl = `${base}/${blogFolder}/${slug}`;
 
     <!-- Email -->
     <a
-      class="sr__btn sr__btn--blue"
+      class="icon-btn icon-btn-blue"
       aria-label="Share by email"
       href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(postUrl)}`}
     >
@@ -119,24 +119,10 @@ const postUrl = `${base}/${blogFolder}/${slug}`;
     color: var(--color-grey-500);
   }
 
-  .sr__btns { display: flex; gap: 8px; }
-
-  .sr__btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: opacity 0.15s;
+  .sr__btns {
+    display: flex;
+    gap: 8px;
   }
-  .sr__btn:hover { opacity: 0.85; }
-  .sr__btn--dark { background: var(--color-navy-900); }
-  .sr__btn--blue { background: var(--color-blue-500); }
 
   @media (max-width: 767px) {
     .sr { flex-direction: column; align-items: flex-start; gap: 14px; }

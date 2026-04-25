@@ -1,19 +1,91 @@
+/* ────────────────────────────────────────────────────────────────
+   BASE BUTTON STYLES
+
+   All buttons use the shared `.btn` base for consistent padding,
+   font weight, border, and transitions. Variants add color schemes.
+   ──────────────────────────────────────────────────────────────── */
+
 .btn {
-  @apply inline-block px-5 py-2 font-semibold capitalize rounded border border-transparent transition;
+  @apply inline-block px-5 py-2 font-semibold capitalize rounded border border-transparent transition-all duration-150 cursor-pointer;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
+/* Small button variant (compact padding) */
 .btn-sm {
   @apply px-4 py-1.5 text-sm rounded-sm;
 }
+
+/* Focus state (accessibility) */
+.btn:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}
+
+/* Disabled state */
+.btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   PRIMARY VARIANT — Filled blue button
+
+   Light mode: blue background, white text
+   Dark mode: adjusts to dark palette
+   Hover: darkens to navy/black
+   ──────────────────────────────────────────────────────────────── */
 
 .btn-primary {
   @apply no-underline border-primary bg-primary text-white dark:border-darkmode-primary dark:bg-darkmode-primary dark:text-dark transition-colors;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   @apply border-black bg-black dark:border-white dark:bg-white text-white dark:text-black;
 }
 
+.btn-primary:active:not(:disabled) {
+  @apply scale-95;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   OUTLINE VARIANT — Bordered button, transparent background
+
+   Light mode: dark border, dark text
+   Dark mode: white border, white text
+   Hover: fills background
+   ──────────────────────────────────────────────────────────────── */
+
 .btn-outline-primary {
-  @apply no-underline border-dark bg-transparent hover:bg-dark hover:text-white text-dark dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-dark transition-colors;
+  @apply no-underline border-dark bg-transparent text-dark dark:border-white dark:text-white transition-colors;
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  @apply bg-dark text-white dark:bg-white dark:text-dark;
+}
+
+.btn-outline-primary:active:not(:disabled) {
+  @apply scale-95;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   SECONDARY VARIANT — Yellow/warning button for secondary actions
+
+   Light mode: yellow background, dark text
+   Dark mode: adjusted yellow palette
+   Hover: darkens slightly
+   ──────────────────────────────────────────────────────────────── */
+
+.btn-secondary {
+  background: var(--color-yellow-400);
+  color: var(--color-navy-900);
+  border-color: var(--color-yellow-400);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-yellow-300, #f0ad0a);
+  border-color: var(--color-yellow-300, #f0ad0a);
+}
+
+.btn-secondary:active:not(:disabled) {
+  @apply scale-95;
 }

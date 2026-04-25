@@ -78,7 +78,7 @@ const isBlog   = pathname.startsWith("/blog")
         href={config.subscribe.link}
         target="_blank"
         rel="noopener noreferrer"
-        class="sitenav__subscribe"
+        class="btn btn-primary sitenav__subscribe"
       >
         Subscribe
         <!-- arrow icon -->
@@ -207,27 +207,15 @@ const isBlog   = pathname.startsWith("/blog")
     margin: 0 20px;
   }
 
-  /* Subscribe CTA */
+  /* Subscribe CTA — uses global .btn-primary class */
   .sitenav__subscribe {
-    display: inline-flex;
-    align-items: center;
     gap: 8px;
-    background: var(--color-blue-500);
-    color: #fff;
     font-family: var(--font-ui);
     font-size: 13px;
-    font-weight: 700;
     padding: 10px 18px;
-    border-radius: var(--radius-button);
-    text-decoration: none;
-    box-shadow: var(--shadow-cta);
-    transition: opacity 0.15s ease;
     margin-left: 20px;
     white-space: nowrap;
-  }
-
-  .sitenav__subscribe:hover {
-    opacity: 0.88;
+    box-shadow: var(--shadow-cta);
   }
 
   /* ---- Mobile (≤ 767px) ---- */
