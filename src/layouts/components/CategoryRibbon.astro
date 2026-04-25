@@ -89,7 +89,10 @@ const { categories, activeKey } = Astro.props;
     transition: background 0.15s;
   }
   .cr__chip:hover     { background: rgba(255, 255, 255, 0.22); }
-  .cr__chip.is-active { background: #fff; color: var(--color-navy-900); }
+  .cr__chip.is-active { background: #fff; color: #1c1c1c; }
+  /* Dark mode: ribbon turns yellow (via token swap), keep chip readable */
+  .dark .cr { box-shadow: 0 8px 24px -12px rgba(255, 195, 58, 0.3); }
+  .dark .cr__chip.is-active { background: #fff; color: #1c1c1c; }
 
   .cr__chip-count {
     font-size: 11px;

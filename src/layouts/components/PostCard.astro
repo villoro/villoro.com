@@ -156,6 +156,10 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 )}
 
 <style is:global>
+  /* Dark mode: featured cards are always dark navy — not remapped by tokens */
+  .dark .pc-big { background: #0b1026; }
+  .dark .pc-med { background: #0b1026; }
+
   /* Image fill rules — kept global so they survive ClientRouter
      view-transitions (scoped styles can be stripped on back-nav) */
   .pc-big__img,

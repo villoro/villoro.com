@@ -64,3 +64,33 @@
   --shadow-hero-card: 0 30px 60px -20px rgba(11, 16, 38, 0.25); /* hero side-card */
   --shadow-nl-form: 0 30px 60px -20px rgba(58, 118, 255, 0.4);  /* newsletter form */
 }
+
+/* ─── Dark mode overrides ────────────────────────────────────────
+   Toggled via the .dark class on <html> (set by ThemeSwitcher).
+
+   Key design decisions:
+   · Blue ↔ yellow accent swap — brand blue becomes yellow in dark
+   · Grey scale inverts to dark navy surfaces
+   · navy-900 remapped to near-white for text (use hardcoded #0b1026
+     for permanent dark backgrounds like footer and featured cards)
+   ──────────────────────────────────────────────────────────────── */
+.dark {
+  /* ── Accent swap: blue ↔ yellow ── */
+  --color-blue-500:   #ffc33a;   /* brand blue   → yellow in dark */
+  --color-yellow-400: #3a76ff;   /* brand yellow → blue in dark   */
+
+  /* ── Surface progression (dark) ── */
+  --color-grey-50:  #1c1c1c;    /* page background */
+  --color-grey-100: #2b2b2b;    /* card borders, dividers */
+  --color-grey-300: #3e3e3e;    /* heavier borders */
+  --color-grey-400: #717171;    /* muted text */
+  --color-grey-500: #b4afb6;    /* secondary / meta text */
+
+  /* ── Text ── */
+  --color-navy-900: #e8eaf6;    /* dark text → near-white   */
+  --color-ink-800:  #c8cad8;    /* supporting / body text   */
+
+  /* ── Shadows (soften on dark backgrounds) ── */
+  --shadow-cta:       0 8px 24px -8px  rgba(255, 195, 58, 0.35);
+  --shadow-hero-card: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
+}

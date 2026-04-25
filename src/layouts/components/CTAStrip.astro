@@ -95,6 +95,11 @@ const { coffeeUrl = "https://www.buymeacoffee.com/villoro" } = Astro.props;
     box-shadow: var(--shadow-cta);
   }
 
+  .dark .cta {
+    background: var(--color-grey-100);
+    border-color: var(--color-grey-300);
+  }
+
   @media (max-width: 767px) {
     .cta { flex-direction: column; align-items: flex-start; padding: 22px; }
     .cta__buttons { margin-left: 0; width: 100%; }

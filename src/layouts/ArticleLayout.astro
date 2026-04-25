@@ -169,6 +169,7 @@ const breadcrumbs = [
     font-size: 0.9em;
     color: var(--color-navy-900);
   }
+  /* In dark mode, grey-100 becomes #2b2b2b — good contrast already */
 
   /* ── Code blocks (Shiki / monokai) ───────────────────── */
   .al-body .article-content pre {
@@ -198,7 +199,7 @@ const breadcrumbs = [
   }
 
   /* ── Paragraphs, lists ───────────────────────────────── */
-  .al-body .article-content { font-size: 17px; line-height: 1.75; color: #222437; }
+  .al-body .article-content { font-size: 17px; line-height: 1.75; color: var(--color-navy-900); }
   .al-body .article-content > p:first-of-type { font-size: 20px; color: var(--color-ink-800); margin-bottom: 32px; }
   .al-body .article-content p  { margin: 0 0 22px; }
   .al-body .article-content ul,
@@ -266,7 +267,7 @@ const breadcrumbs = [
   .al-body .article-content a {
     color: var(--color-blue-500);
     text-decoration: underline;
-    text-decoration-color: rgba(58, 118, 255, 0.3);
+    text-decoration-color: color-mix(in srgb, var(--color-blue-500) 35%, transparent);
     text-underline-offset: 3px;
     transition: text-decoration-color 0.15s;
   }
@@ -305,6 +306,9 @@ const breadcrumbs = [
     border-left: 4px solid var(--color-blue-500);
     border-radius: 0 10px 10px 0;
     color: var(--color-ink-800);
+  }
+  .dark .al-body .article-content blockquote {
+    background: rgba(255, 195, 58, 0.07);  /* subtle yellow tint in dark */
   }
   .al-body .article-content blockquote p         { margin: 0 0 8px; }
   .al-body .article-content blockquote p:last-child { margin: 0; }
@@ -379,7 +383,7 @@ const breadcrumbs = [
     min-height: 420px;
     overflow: hidden;
     color: #fff;
-    background: var(--color-navy-900);
+    background: #0b1026;   /* always dark — not remapped by dark mode tokens */
   }
 
   .al-hero :global(.al-hero__img) {
