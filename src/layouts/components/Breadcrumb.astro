@@ -16,6 +16,8 @@
  * Variant "light" = used on the dark image hero of single posts (white text).
  */
 
+import IconArrow from "@/components/IconArrow.astro";
+
 interface BreadcrumbItem {
   href?: string;
   label: string;
@@ -28,10 +30,6 @@ interface Props {
 }
 
 const { items, variant = "dark", class: cls = "" } = Astro.props;
-
-const ARROW = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-  stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>`;
 ---
 
 <nav
@@ -40,7 +38,7 @@ const ARROW = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none"
 >
   {items.map((item, i) => (
     <>
-      {i > 0 && <Fragment set:html={ARROW} />}
+      {i > 0 && <IconArrow size={10} />}
       {item.href
         ? <a href={item.href} class="bc__link">{item.label}</a>
         : <span class="bc__current" aria-current="page">{item.label}</span>

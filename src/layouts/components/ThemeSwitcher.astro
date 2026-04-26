@@ -5,11 +5,10 @@ const {
   theme_switcher,
   default_theme,
 } = config.settings;
-const { className } = Astro.props;
 ---
 
 {theme_switcher && (
-  <div class={`theme-switcher ${className}`}>
+  <div class="theme-switcher">
     <input id="theme-switcher" data-theme-switcher type="checkbox" />
     <label for="theme-switcher">
       <span class="sr-only">theme switcher</span>

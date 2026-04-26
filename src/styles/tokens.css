@@ -18,18 +18,6 @@
   --color-ink-800: #3a3d52;  /* hero supporting paragraph */
   --color-success: #10b981;  /* "active" dot indicator */
 
-  /* --- Category colors (one per top-level category) --- */
-  --cat-de: #8b5cf6;
-  --cat-python: #eab308;
-  --cat-tools: #0ea5e9;
-  --cat-cloud-devops: #10b981;
-  --cat-ai: #ef4444;
-  --cat-web: #ec4899;
-  --cat-api: #f59e0b;
-  --cat-git: #f97316;
-  --cat-hardware: #14b8a6;
-  --cat-others: #6b7280;
-
   /* --- Font families --- */
   --font-display: "Fraunces", Georgia, serif;           /* display headlines — hero H1s, section H2s, post titles */
   --font-body: "Heebo", system-ui, sans-serif;          /* body text, UI (default font-family) */

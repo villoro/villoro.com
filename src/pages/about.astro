@@ -2,6 +2,7 @@
 import BaseRedesign from "@/layouts/BaseRedesign.astro";
 import SiteNav from "@/components/SiteNav.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
+import IconArrow from "@/components/IconArrow.astro";
 import { Image } from "astro:assets";
 import meImage from "../images/me.png";
 import { getSinglePage } from "@/lib/contentParser.astro";
@@ -43,7 +44,7 @@ const timeline = ab.timeline?.entries ?? [];
 
         <nav class="ab-crumb" aria-label="breadcrumb">
           <a href="/" class="ab-crumb__link">Villoro</a>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <IconArrow size={10} />
           <span class="ab-crumb__current">About</span>
         </nav>
 

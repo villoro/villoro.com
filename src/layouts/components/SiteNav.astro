@@ -7,6 +7,7 @@
  */
 import Logo from "@/components/Logo.astro";
 import ThemeSwitcher from "@/components/ThemeSwitcher.astro";
+import IconArrow from "@/components/IconArrow.astro";
 import config from "@/config/config.json";
 
 const { pathname } = Astro.url;
@@ -80,11 +81,7 @@ const isBlog   = pathname.startsWith("/blog")
         class="btn btn-primary sitenav__subscribe"
       >
         Subscribe
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M5 12h14M13 5l7 7-7 7"/>
-        </svg>
+        <IconArrow size={12} />
       </a>
     </div>
   </nav>

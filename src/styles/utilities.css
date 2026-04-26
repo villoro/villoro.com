@@ -7,9 +7,6 @@
 .rounded-lg {
   @apply rounded-[12px];
 }
-.rounded-xl {
-  @apply rounded-[16px];
-}
 
 /* ────────────────────────────────────────────────────────────────
    FANCY LINK — Compact inline pill for FancyLink shortcode.
@@ -93,40 +90,3 @@
   background-color: var(--color-blue-500);
 }
 
-/* ────────────────────────────────────────────────────────────────
-   CTA LINK — Link with action indicator (arrow, chevron, etc.)
-
-   Flex layout with gap between text and icon.
-   Hover animates gap to create arrow "push" effect.
-   ──────────────────────────────────────────────────────────────── */
-
-.cta-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-  transition: gap 0.15s ease;
-  cursor: pointer;
-}
-
-.cta-link:hover:not(:disabled) {
-  gap: 12px;
-}
-
-.cta-link:focus-visible {
-  outline: 2px solid var(--color-blue-500);
-  outline-offset: 2px;
-}
-
-/* ────────────────────────────────────────────────────────────────
-   BUTTON GROUP — Flex container for button rows
-
-   Consistent gap and flex wrapping for button/icon groups.
-   ──────────────────────────────────────────────────────────────── */
-
-.button-group {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}

@@ -146,7 +146,7 @@ const breadcrumbs = [
         </div>
 
         <CTAStrip />
-        <ShareRow title={title} description={description} slug={slug} blogFolder={blogFolder} />
+        <ShareRow title={title} slug={slug} blogFolder={blogFolder} />
         <div class="al-comments">
           <GiscusComments />
         </div>
@@ -218,78 +218,66 @@ const breadcrumbs = [
   /* ── Headings with CSS counters ──────────────────────── */
   /* H2 → "1."  H3 → "1.1"  H4 → "1.1.1"  H5 → "1.1.1.1"  TOC shows H2+H3 only. */
   .al-body .article-content { counter-reset: al-h2 al-h3 al-h4 al-h5; }
+
+  .al-body .article-content :is(h2, h3, h4, h5) {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    color: var(--color-navy-900);
+    scroll-margin-top: 100px;
+  }
+  .al-body .article-content :is(h2, h3, h4, h5)::before {
+    color: var(--color-blue-500);
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
   .al-body .article-content h2 {
     counter-increment: al-h2;
     counter-reset: al-h3 al-h4 al-h5;
-    font-family: var(--font-ui);
     font-size: 34px;
-    font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.15;
     margin: 56px 0 20px;
-    color: var(--color-navy-900);
-    scroll-margin-top: 100px;
   }
   .al-body .article-content h2::before {
     content: counter(al-h2) ". ";
-    color: var(--color-blue-500);
-    font-family: var(--font-mono);
-    font-weight: 600;
     font-size: 0.75em;
     margin-right: 10px;
   }
+
   .al-body .article-content h3 {
     counter-increment: al-h3;
     counter-reset: al-h4 al-h5;
-    font-family: var(--font-ui);
     font-size: 22px;
-    font-weight: 700;
     letter-spacing: -0.015em;
     line-height: 1.25;
     margin: 40px 0 14px;
-    color: var(--color-navy-900);
-    scroll-margin-top: 100px;
   }
   .al-body .article-content h3::before {
     content: counter(al-h2) "." counter(al-h3) " ";
-    color: var(--color-blue-500);
-    font-family: var(--font-mono);
-    font-weight: 600;
     font-size: 0.8em;
     margin-right: 8px;
   }
+
   .al-body .article-content h4 {
     counter-increment: al-h4;
     counter-reset: al-h5;
-    font-family: var(--font-ui);
     font-size: 18px;
-    font-weight: 700;
     margin: 28px 0 10px;
-    color: var(--color-navy-900);
-    scroll-margin-top: 100px;
   }
   .al-body .article-content h4::before {
     content: counter(al-h2) "." counter(al-h3) "." counter(al-h4) " ";
-    color: var(--color-blue-500);
-    font-family: var(--font-mono);
-    font-weight: 600;
     font-size: 0.8em;
     margin-right: 6px;
   }
+
   .al-body .article-content h5 {
     counter-increment: al-h5;
-    font-family: var(--font-ui);
     font-size: 16px;
-    font-weight: 700;
     margin: 22px 0 8px;
-    color: var(--color-navy-900);
-    scroll-margin-top: 100px;
   }
   .al-body .article-content h5::before {
     content: counter(al-h2) "." counter(al-h3) "." counter(al-h4) "." counter(al-h5) " ";
-    color: var(--color-blue-500);
-    font-family: var(--font-mono);
-    font-weight: 600;
     font-size: 0.8em;
     margin-right: 6px;
   }
