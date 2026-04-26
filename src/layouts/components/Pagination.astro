@@ -48,34 +48,29 @@ function buildPageList(): PageEntry[] {
 }
 
 const pageList = buildPageList();
+
+const PREV_PATH = "M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z";
+const NEXT_PATH = "M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z";
+
+const navLinkClass = "rounded px-2 py-1.5 text-dark hover:bg-theme-light dark:text-darkmode-dark dark:hover:bg-darkmode-theme-light";
+const navDisabledClass = "rounded px-2 py-1.5 text-light";
 ---
 
 {totalPages > 1 && (
-  <nav class="flex items-center justify-center space-x-3" aria-label="Pagination">
+  <nav class="pg-nav flex items-center justify-center space-x-3" aria-label="Pagination">
     {/* previous */}
     {hasPrevPage ? (
-      <a
-        href={indexPageLink ? pageUrl(1) : pageUrl(currentPage - 1)}
-        class="rounded px-2 py-1.5 text-dark hover:bg-theme-light dark:text-darkmode-dark dark:hover:bg-darkmode-theme-light"
-      >
+      <a href={indexPageLink ? pageUrl(1) : pageUrl(currentPage - 1)} class={navLinkClass}>
         <span class="sr-only">Previous</span>
         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" height="30" width="30">
-          <path
-            fill-rule="evenodd"
-            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-            clip-rule="evenodd"
-          />
+          <path fill-rule="evenodd" d={PREV_PATH} clip-rule="evenodd" />
         </svg>
       </a>
     ) : (
-      <span class="rounded px-2 py-1.5 text-light">
+      <span class={navDisabledClass}>
         <span class="sr-only">Previous</span>
         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" height="30" width="30">
-          <path
-            fill-rule="evenodd"
-            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-            clip-rule="evenodd"
-          />
+          <path fill-rule="evenodd" d={PREV_PATH} clip-rule="evenodd" />
         </svg>
       </span>
     )}
@@ -103,30 +98,46 @@ const pageList = buildPageList();
 
     {/* next page */}
     {hasNextPage ? (
-      <a
-        href={pageUrl(currentPage + 1)}
-        class="rounded px-2 py-1.5 text-dark hover:bg-theme-light dark:text-darkmode-dark dark:hover:bg-darkmode-theme-light"
-      >
+      <a href={pageUrl(currentPage + 1)} class={navLinkClass}>
         <span class="sr-only">Next</span>
         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" height="30" width="30">
-          <path
-            fill-rule="evenodd"
-            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-            clip-rule="evenodd"
-          />
+          <path fill-rule="evenodd" d={NEXT_PATH} clip-rule="evenodd" />
         </svg>
       </a>
     ) : (
-      <span class="rounded px-2 py-1.5 text-light">
+      <span class={navDisabledClass}>
         <span class="sr-only">Next</span>
         <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" height="30" width="30">
-          <path
-            fill-rule="evenodd"
-            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-            clip-rule="evenodd"
-          />
+          <path fill-rule="evenodd" d={NEXT_PATH} clip-rule="evenodd" />
         </svg>
       </span>
     )}
   </nav>
 )}
+
+<style>
+  /* On mobile the desktop padding/gap easily overflow the viewport
+     (current page chip clipped, arrows pushed off-screen).
+     Tighten spacing and shrink arrow icons; allow wrap as a final
+     safety net on very narrow screens when the window expands to
+     ~10 entries (e.g. on page 1 of a long archive). */
+  @media (max-width: 600px) {
+    .pg-nav {
+      flex-wrap: wrap;
+      gap: 4px;
+      row-gap: 6px;
+    }
+    /* Disable Tailwind's space-x-3 horizontal margin since gap handles it */
+    .pg-nav > :not([hidden]) ~ :not([hidden]) { margin-left: 0; }
+
+    .pg-nav a,
+    .pg-nav span {
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+      font-size: 14px;
+    }
+    .pg-nav svg { height: 22px; width: 22px; }
+  }
+</style>

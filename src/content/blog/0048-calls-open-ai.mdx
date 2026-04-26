@@ -10,11 +10,11 @@ tags: [Python, DE, AI, Tutorial, OpenAI]
 draft: false
 ---
 
-## 0. Motivation
+## Motivation
 
 At work we wanted to extract information from calls done using a CTI. This way we can improve the service we offer by getting insights from the call and by providing suggestions to agents. We can do that using different OpenAI models.
 
-## 1. How to extract insights from an audio with OpenAI
+## How to extract insights from an audio with OpenAI
 
 At the time of writing `ChatGPT 4o` is not able to process multimodal information. That means that we cannot pass an audio together with text to extract insights. To do so, we need to do it with 2 steps:
 
@@ -25,7 +25,7 @@ We will do it using <FancyLink linkText="OpenAI python" url="https://github.com/
 
 First, let's focus on the transcription.
 
-### 2. Using `Whisper` to transcribe the call
+### Using `Whisper` to transcribe the call
 
 With `whisper` we can transcribe an audio file easily.
 It can be done with:
@@ -59,7 +59,7 @@ transcription = transcribe_audio(client, file)
 
 This code assumes that the file is stored in `S3` but it can easily be adapted for local files or for other cloud providers.
 
-## 3. Handling invalid calls
+## Handling invalid calls
 
 When processing the first calls, I noticed that we had a lot of super short calls where no transcription could be extracted.
 Trying to transcribe those calls is a waste of resources.
@@ -113,7 +113,7 @@ def process_file(client, s3, filename):
     return transcription
 ```
 
-## 4. Adding metadata
+## Adding metadata
 
 I think that is always really useful to have some metadata whenever doing operations in the datalake.
 It will be specially useful when debugging issues.
@@ -143,9 +143,9 @@ class Transcription(BaseModel):
 
 With that, we can add this to the `process_file` function:
 
-<TerminalOutput color="stone">
+<FileName>
   process_file
-</TerminalOutput>
+</FileName>
 ```python
     return Transcription(
         filename=filename,
@@ -155,7 +155,7 @@ With that, we can add this to the `process_file` function:
     )
 ```
 
-## 5. Using `ChatGPT` to Extract Insights
+## Using `ChatGPT` to Extract Insights
 
 To extract information, you can make a standard call to `ChatGPT`.
 The key here is to leverage the newly introduced structured outputs, which were announced recently (<FancyLink linkText="Introducing Structured Outputs in the API" url="https://openai.com/index/introducing-structured-outputs-in-the-api/"/>).
@@ -165,7 +165,7 @@ For more details, refer to the <FancyLink linkText="API Reference | response_for
 > Note that there is an option to directly provide a Pydantic class in the API call, which will automatically handle the casting.
 > However, since this feature is still in beta, I prefer not to use it at this time.
 
-### 5.1. Defining the Prompt with a Pydantic Model
+### Defining the Prompt with a Pydantic Model
 
 To ensure consistency and avoid code duplication, we'll start by creating a <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/> class that defines the structure and fields of the output:
 

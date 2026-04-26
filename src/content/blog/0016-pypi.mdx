@@ -13,7 +13,7 @@ draft: false
 > [!danger]
 > **DISCLAIMER:** A lot has changed since I wrote this. Even though this still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
 
-## 1. Create a python package
+## Create a python package
 
 To work with python you only need a `.py` file. However if you are creating a package you need to follow a concrete structure and include some needed files.
 
@@ -26,7 +26,7 @@ pip search package_name
 > [!info]
 > You can also look for it at <FancyLink linkText="Pypi" url="https://pypi.org/"/>.
 
-### 1.1. Structure your project
+### Structure your project
 
 You should have your project inside a folder with the name of the package. This will be the `root` of your project and should include `.gitignore`, `README.md` and `LICENSE.txt` among other configuration files.
 
@@ -45,7 +45,7 @@ The code should be inside another folder with the name of the package. So the st
     └── setup.py
 ```
 
-#### 1.1.1. Main files
+#### Main files
 
 All files inside `/package_name/package_name` should have imports that work from the main path. For example to import the `file1` in `file2` you should:
 
@@ -71,7 +71,7 @@ import package_name
 package_name.public_function() # This will call the 'public_function' from 'file2.py'
 ```
 
-#### 1.1.2. setup.py
+#### setup.py
 
 This is where you define the package itself, how can it be installed and some basic information about it. A basic example would be:
 
@@ -96,13 +96,13 @@ setup(
 )
 ```
 
-##### 1.1.2.1. long_description param
+##### long_description param
 `long_description` is extracted from the `README.md`
 
 > [!info]
 > You can use other formats for the README like `ost`
 
-##### 1.1.2.2. install_requires param
+##### install_requires param
 `install_requires` is a list of requirements. In the example I get it from `requirements.txt`.
 
 You could also write the requirements by hand with:
@@ -114,11 +114,11 @@ install_requires=["pandas>0.22", "flask"]
 > [!info]
 > You should avoid requirements with a fixed number version use `<` or `>` instead.
 
-##### 1.1.2.3. package_data param
+##### package_data param
 
 The `package_data` parameter allows you to include all files inside `/package_name/resources/` path even if they are not `.py` files. This will be useful if you want to include `html` templates or `yaml`/`json` with data. 
 
-### 1.2. Create the package
+### Create the package
 
 Before creating the package I suggest you add some rules in the `.gitignore`:
 
@@ -136,9 +136,9 @@ python setup.py sdist bdist_wheel
 
 Then you will have `build` with the content of the package and `dist` with `tar` and `wheels` of the package (what will be uploaded).
 
-## 2. Upload the package
+## Upload the package
 
-### 2.1. Requirements
+### Requirements
 
 When you run `pip install package` you are actually downloading it from <FancyLink linkText="Pypi" url="https://pypi.org/"/>.
 There is also <FancyLink linkText="Test Pypi" url="https://test.pypi.org/"/> for testing purposes.
@@ -153,7 +153,7 @@ To upload the packages I suggest you use `twine`. You can install it with:
 pip install twine
 ```
 
-### 2.2. Uploading a package to test.pypi
+### Uploading a package to test.pypi
 
 You can run the next command which will upload all packages created in the `dist` folder:
 
@@ -173,7 +173,7 @@ pip install --index-url https://test.pypi.org/simple/ package_name
 pip install --index-url https://test.pypi.org/simple/ package_name==X.X.X
 ```
 
-## 2.3. Uploading a package to pypi
+## Uploading a package to pypi
 
 In order to upload the package to `pypi` the process is very similar to the step before:
 

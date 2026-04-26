@@ -1,0 +1,113 @@
+---
+/**
+ * CategoryRibbon — sticky blue category filter bar used on all listing pages.
+ *
+ * Props:
+ *   categories   — array of { key, name, count }; "all" key links to /blog.
+ *   activeKey    — slug of the currently active category, or "all".
+ */
+import { slugify } from "@/lib/utils/textConverter";
+import type { CategoryItem } from "@/lib/listingData";
+
+interface Props {
+  categories: CategoryItem[];
+  activeKey: string; // "all" or a slugified category key
+}
+
+const { categories, activeKey } = Astro.props;
+---
+
+<div class="cr">
+  <div class="cr__inner">
+    <span class="cr__label">Category</span>
+    <div class="cr__chips">
+      {categories.map((cat) => {
+        const href = cat.key === "all" ? "/blog" : `/categories/${slugify(cat.key)}`;
+        const isActive = cat.key === "all"
+          ? activeKey === "all"
+          : slugify(cat.key) === activeKey;
+        return (
+          <a href={href} class:list={["cr__chip", { "is-active": isActive }]}>
+            {cat.name}
+            <span class="cr__chip-count">{cat.count}</span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</div>
+
+<style>
+  .cr {
+    background: var(--color-blue-500);
+    position: sticky;
+    top: 74px;
+    z-index: 20;
+    box-shadow: 0 8px 24px -12px rgba(58, 118, 255, 0.4);
+  }
+
+  .cr__inner {
+    max-width: 1312px;
+    margin: 0 auto;
+    padding: 16px var(--container-px);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .cr__label {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+    flex-shrink: 0;
+    padding-top: 8px; /* align with chip text */
+  }
+  :global(.dark) .cr__label { color: rgba(0, 0, 0, 0.50); }
+
+  .cr__chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .cr__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .cr__chip:hover     { background: rgba(255, 255, 255, 0.22); }
+  .cr__chip.is-active { background: #fff; color: #1c1c1c; }
+
+  :global(.dark) .cr { box-shadow: 0 8px 24px -12px rgba(255, 195, 58, 0.3); }
+  :global(.dark) .cr__chip {
+    background: rgba(0, 0, 0, 0.10);
+    color: rgba(0, 0, 0, 0.80);
+  }
+  :global(.dark) .cr__chip:hover { background: rgba(0, 0, 0, 0.18); }
+  :global(.dark) .cr__chip.is-active { background: rgba(0, 0, 0, 0.75); color: #fff; }
+
+  .cr__chip-count {
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0.65;
+  }
+  .cr__chip.is-active .cr__chip-count { opacity: 0.45; }
+
+  @media (max-width: 767px) {
+    .cr { position: static; }
+  }
+</style>

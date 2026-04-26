@@ -1,88 +1,68 @@
 ---
-import config from "@/config/config.json";
-import BlogCard from "@/components/BlogCard.astro";
-import BlogCategories from "@/components/BlogCategories.astro";
-import Pagination from "@/components/Pagination.astro";
-import Base from "@/layouts/Base.astro";
-import { fetchAndSortPosts } from "@/lib/blogUtils.astro";
+import BlogListingLayout from "@/layouts/BlogListingLayout.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
-import { slugify } from "@/lib/utils/textConverter";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getTaxonomy } from "@/lib/taxonomyParser.astro";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
+import { slugify } from "@/lib/utils/textConverter";
+import config from "@/config/config.json";
 
-const { blog_folder } = config.settings;
+const { blog_folder, pagination } = config.settings;
 
-// get static paths for all tags
 export async function getStaticPaths() {
-  const { blog_folder } = (await import('@/config/config.json')).settings;
+  const { blog_folder, pagination } = (await import("@/config/config.json")).settings;
   const tags = await getTaxonomy(blog_folder, "tags");
   const paths = [];
-
   for (const tag of tags) {
     const items = await getSinglePage(blog_folder);
-    const filteredItems = taxonomyFilter(items, "tags", tag);
-    const totalPages = Math.ceil(filteredItems.length / config.settings.pagination);
-
+    const filtered = taxonomyFilter(items, "tags", tag);
+    const totalPages = Math.ceil(filtered.length / pagination);
     for (let i = 1; i <= totalPages; i++) {
       paths.push({ params: { tag, slug: i.toString() } });
     }
   }
-
   return paths;
 }
 
 const { tag, slug } = Astro.params;
+const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
+
 const items = await getSinglePage(blog_folder);
 
-// Find the original case-sensitive tag
 let originalTag = tag;
 const normalizedTag = tag.toLowerCase();
-const filterByTags = items.filter(item => {
+const filtered = items.filter((item) => {
   const itemTags = item.data.tags;
-  if (itemTags && itemTags.some(t => slugify(t).toLowerCase() === normalizedTag)) {
-    originalTag = itemTags.find(t => slugify(t).toLowerCase() === normalizedTag);
+  if (itemTags?.some((t: string) => slugify(t).toLowerCase() === normalizedTag)) {
+    originalTag = itemTags.find((t: string) => slugify(t).toLowerCase() === normalizedTag);
     return true;
   }
   return false;
 });
 
-const sortedPosts = sortByDate(filterByTags);
-const totalPages = Math.ceil(sortedPosts.length / config.settings.pagination);
-const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
-const indexOfLastPost = currentPage * config.settings.pagination;
-const indexOfFirstPost = indexOfLastPost - config.settings.pagination;
-const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
+const sortedPosts  = sortByDate(filtered);
+const totalPages   = Math.ceil(sortedPosts.length / pagination);
+const start        = (currentPage - 1) * pagination;
+const currentPosts = sortedPosts.slice(start, start + pagination);
 ---
 
-<Base title={`Tag: ${originalTag}`}>
-  <section class="section pt-6 md:pt-14">
-    <div class="container pt-6 pb-12 text-center">
-      <h1>
-        Posts with
-        <span class="pl-2 mr-2 bg-theme-light dark:bg-darkmode-theme-light">
-          {originalTag}
-        </span>
-        tag - Page {currentPage}
-      </h1>
-    </div>
-
-    <BlogCategories />
-
-    <!-- Posts -->
-    <div class="container">
-      <div class="row">
-        {currentPosts.map((item, index) => (
-          <div class="mb-14 md:col-6 lg:col-4" key={index}>
-            <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
-          </div>
-        ))}
-      </div>
-      <Pagination
-        section={`tags/${tag}`}
-        currentPage={currentPage}
-        totalPages={totalPages}
-      />
-    </div>
-  </section>
-</Base>
+<BlogListingLayout
+  title={`Tag: ${originalTag} — Page ${currentPage} — Villoro`}
+  description={`All posts tagged with ${originalTag}.`}
+  breadcrumbs={[
+    { href: "/",           label: "Villoro" },
+    { href: "/blog",       label: "Blog" },
+    { href: `/tags/${tag}`, label: `#${originalTag}` },
+    { label: `Page ${currentPage}` },
+  ]}
+  heroVariant="simple"
+  simpleH1="Tag:"
+  simpleAccent={`#${originalTag}`}
+  simpleLede={`Page ${currentPage} of ${totalPages} · ${sortedPosts.length} posts.`}
+  sectionTitle={`#${originalTag}`}
+  sectionMeta={`Page ${currentPage} of ${totalPages} · newest first`}
+  currentPosts={currentPosts}
+  currentPage={currentPage}
+  totalPages={totalPages}
+  paginationSection={`tags/${tag}`}
+/>

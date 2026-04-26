@@ -1,0 +1,115 @@
+---
+/**
+ * ShareRow — copy-link + social share buttons below a blog post.
+ * Handles the copy-to-clipboard interaction via a small inline script.
+ */
+import config from "@/config/config.json";
+import SocialIcon from "@/components/SocialIcon.astro";
+
+interface Props {
+  title: string;
+  slug: string;         // e.g. "querying-apis-best-practices"
+  blogFolder?: string;  // default: config.settings.blog_folder
+}
+
+const {
+  title,
+  slug,
+  blogFolder = config.settings.blog_folder,
+} = Astro.props;
+
+const base    = config.site.base_url;
+const postUrl = `${base}/${blogFolder}/${slug}`;
+---
+
+<div class="sr">
+  <span class="sr__label">Share this post</span>
+  <div class="sr__btns">
+    <!-- Copy link -->
+    <button
+      type="button"
+      class="icon-btn"
+      aria-label="Copy link"
+      data-sr-copy
+    >
+      <SocialIcon name="copy" size={16} />
+    </button>
+
+    <!-- LinkedIn -->
+    <a
+      class="icon-btn icon-btn-blue"
+      aria-label="Share on LinkedIn"
+      href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(title)}`}
+      target="_blank" rel="noopener noreferrer"
+    >
+      <SocialIcon name="linkedin" />
+    </a>
+
+    <!-- Twitter / X -->
+    <a
+      class="icon-btn icon-btn-blue"
+      aria-label="Share on Twitter"
+      href={`https://twitter.com/intent/tweet/?text=${encodeURIComponent(title)}&url=${encodeURIComponent(postUrl)}`}
+      target="_blank" rel="noopener noreferrer"
+    >
+      <SocialIcon name="twitter" size={16} />
+    </a>
+
+    <!-- Email -->
+    <a
+      class="icon-btn icon-btn-blue"
+      aria-label="Share by email"
+      href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(postUrl)}`}
+    >
+      <SocialIcon name="email" />
+    </a>
+  </div>
+</div>
+
+<script>
+  function initCopyBtn() {
+    document.querySelectorAll('[data-sr-copy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          (btn as HTMLElement).style.background = 'var(--color-blue-500)';
+          setTimeout(() => { (btn as HTMLElement).style.background = ''; }, 800);
+        } catch {}
+      });
+    });
+  }
+  document.addEventListener('astro:page-load', initCopyBtn);
+  document.addEventListener('astro:after-swap', initCopyBtn);
+</script>
+
+<style>
+  .sr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-top: 1px solid var(--color-grey-100);
+    border-bottom: 1px solid var(--color-grey-100);
+    margin: 0 0 40px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .sr__label {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-grey-500);
+  }
+
+  .sr__btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  @media (max-width: 767px) {
+    .sr { flex-direction: column; align-items: flex-start; gap: 14px; }
+  }
+</style>

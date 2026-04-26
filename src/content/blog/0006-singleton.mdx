@@ -10,11 +10,11 @@ tags: [Python]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 Python classes are very useful but sometimes they lack some features that might be very useful.
 
-## 1. The problem
+## The problem
 Let's imagine you want to create a class that has some data. This class will also have a sync function to update the data. As an example let's create two loader instances of the same class.
 
 ```python
@@ -53,7 +53,7 @@ loader2.get_value()
 
 If what you need is to use this data in multiple python files and you want to only call the sync function once and not in every python file this won't work as expected.
 
-## 2. The singleton pattern
+## The singleton pattern
 What is needed is a class that can only have **one instance**. This is the singleton (more info at <FancyLink linkText="Python3 patterns and idioms" url="https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html" company="readthedocs"/>). The simplest way to achieve that is by creating a new Python file since by design it will be unique.
 
 So for example let's create `single_loader.py`.
@@ -99,13 +99,13 @@ single_loader2.get_value()
   \> 1
 </TerminalOutput>
 
-### 2.1. One real example
+### One real example
 
 While I was working with one of my <FancyLink linkText="Dash" url="https://plot.ly/products/dash/" company="plotly"/> projects I made use of that to create a `data_loader.py` file. You can view the code <FancyLink linkText="Expensor personal" url="https://github.com/villoro/expensor_personal/tree/4.3.3/src" dark="true"/>.
 
 What I have is a `data_loader.py` that implements a `sync` function to update both `DFS` and `YML` vars. Those two vars are then used in all files inside the `pages` folder. And the `sync` function of the `data_loader.py` is only called in `index.py/update_sync_count()`.
 
-## 3. Another option: Using class variables
+## Another option: Using class variables
 As pointed out by **Gustau** in the comments there is another way to do it using classes.
 
 ```python
@@ -142,7 +142,7 @@ loader2.get_value()
   \> 1
 </TerminalOutput>
 
-### 3.1. Mixing the two methods
+### Mixing the two methods
 
 Be careful, you probably don't want to mix both types of variable assignments because it can yield unexpected results. Let's take the following example:
 

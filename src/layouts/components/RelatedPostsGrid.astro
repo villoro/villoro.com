@@ -1,0 +1,88 @@
+---
+/**
+ * RelatedPostsGrid — 3-col grid of related PostCards shown below an article.
+ * Renders nothing if posts array is empty.
+ */
+import PostCard from "@/components/PostCard.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  posts: CollectionEntry<"blog">[];
+  heading?: string;
+}
+
+const { posts, heading = "Related posts" } = Astro.props;
+if (posts.length === 0) return;
+---
+
+<section class="rp">
+  <div class="rp__inner">
+    <div class="rp__head">
+      <h2 class="rp__h">{heading}</h2>
+      <a href="/blog" class="rp__all">All posts →</a>
+    </div>
+    <div class="rp__grid">
+      {posts.map((p) => (
+        <PostCard post={p} variant="small" loading="lazy" />
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .rp {
+    background: #fff;
+    border-top: 1px solid var(--color-grey-100);
+    padding: 64px 0 80px;
+  }
+
+  :global(.dark) .rp {
+    background: var(--color-grey-50);
+    border-color: var(--color-grey-100);
+  }
+
+  .rp__inner {
+    max-width: 1312px;
+    margin: 0 auto;
+    padding: 0 var(--container-px);
+  }
+
+  .rp__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    font-family: var(--font-ui);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .rp__h {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin: 0;
+    color: var(--color-navy-900);
+  }
+
+  .rp__all {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-blue-500);
+    text-decoration: none;
+  }
+  .rp__all:hover { text-decoration: underline; }
+
+  .rp__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  @media (max-width: 1023px) {
+    .rp__grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 767px) {
+    .rp__grid { grid-template-columns: 1fr; }
+  }
+</style>

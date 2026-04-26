@@ -28,6 +28,7 @@ export default defineConfig({
       imports: [
         "@/shortcodes/Accordion",
         "@/shortcodes/Button",
+        "@/shortcodes/FileName",
         "@/shortcodes/FancyLink",
         "@/shortcodes/Notice",
         "@/shortcodes/Tab",

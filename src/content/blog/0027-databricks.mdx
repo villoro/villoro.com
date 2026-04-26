@@ -12,7 +12,7 @@ tags: [Tools, Spark]
 draft: false
 ---
 
-## 0. Overview
+## Overview
 
 **Databricks** provides a Unified Analytics Platform that accelerates innovation by unifying data science, engineering and business.
 
@@ -25,20 +25,20 @@ There are two options:
 > [!tip]
 > I suggest you start trying it with the **Community Edition**
 
-## 1. Clusters
+## Clusters
 
-### 1.1. Cluster creation
+### Cluster creation
 
 In order to use databricks you will first need to create a cluster.
 The available options will change based on the **Databricks** version you are using.
 
-#### 1.1.1. Community Edition Version
+#### Community Edition Version
 
 With this version you can configure more things.
 
 ![Databricks Cluster Creation](../../images/posts/2019/0027-databricks_cluster_creation.png)
 
-##### 1.1.1.1. Cluster mode
+##### Cluster mode
 
 The default mode is `standard` and will work well for 1 user.
 For multiuser use `high concurrency`.
@@ -46,30 +46,30 @@ For multiuser use `high concurrency`.
 > [!warning]
 > If you want to use scala you must use `standard` cluster mode
 
-##### 1.1.1.2. Databricks runtime version
+##### Databricks runtime version
 
 Databricks runtimes are the set of core components that run on Databricks clusters.
 This will decide the `python`, `R` and `spark` version as well as some pre-installed libraries.
 
 You can read more about the versions of each databricks runtime in <FancyLink linkText="Databricks releases notes" url="https://docs.databricks.com/release-notes/runtime/supported.html#release-notes"/>.
 
-##### 1.1.1.3. Python version
+##### Python version
 
 **Use python 3**. Python 2 is deprecated so please do not use it.
 
-##### 1.1.1.4. Autopilot
+##### Autopilot
 
 The first parameter is `Enable Autoscaling`.
 This will allow to create more workers for the cluster if needed and of course it will mean that the cost might increase as you need more machines.
 
 There is the `terminate after` param that sets the minutes of inactivity before shutting down the cluster.
 
-##### 1.1.1.5. Environ vars
+##### Environ vars
 
 By clicking `Advanced Options` and then `Spark` you can set the **Environment Variables**.
 This is really useful to do some configuration at the cluster level.
 
-#### 1.1.2. Community Edition Version
+#### Community Edition Version
 
 If you are using the **Community Edition** version of databricks is really easy to create a new version.
 
@@ -77,7 +77,7 @@ You only need to write a cluster name and decide the databricks runtime version.
 
 ![Databricks Cluster Creation CE](../../images/posts/2019/0027-databricks_cluster_creation_community_edition.png)
 
-### 1.2. Permissions
+### Permissions
 
 In `Advanced Options` / `Permissions` is where permissions are set.
 The available options are:
@@ -86,7 +86,7 @@ The available options are:
 * **Can Restart:** allows to start, restart and close the cluster
 * **Can Manage :** admin privilege
 
-### 1.3. Libraries
+### Libraries
 
 There are multiple ways of installing python libraries:
 
@@ -113,7 +113,7 @@ You can see an example of the libraries installed on a cluster:
 And lastly you should avoid installing libraries using `dbutils`.
 This also won't work if you are using a `conda` databricks runtime.
 
-### 1.4. Logs
+### Logs
 
 There are some kind of logs:
 
@@ -128,26 +128,26 @@ There are some kind of logs:
 
 ![Databricks logs](../../images/posts/2019/0027-databricks_logs.jpg)
 
-#### 1.4.1. Event logs
+#### Event logs
 
 In this section is possible to view the actions performed to the cluster.
 For example a start of the cluster will be registered here.
 
-#### 1.4.2. Driver logs
+#### Driver logs
 
 Those are the logs that the **driver** machine writes.
 
 The `standard output` and `standard error` are self explanatory.
 The `log4j output` is the output that **spark** uses.
 
-#### 1.4.3. Spark logs
+#### Spark logs
 
 This allows to access the `stdout` and `stderr` logs of each spark worker.
 
 ![Databricks logs spark 1](../../images/posts/2019/0027-databricks_logs_spark_1.jpg)
 ![Databricks logs spark 2](../../images/posts/2019/0027-databricks_logs_spark_2.jpg)
 
-## 2. Notebooks
+## Notebooks
 
 The way to work with databricks is by using notebooks.
 They are really similiar to the <FancyLink linkText="Jupyter" url="https://jupyter.org/"/> notebooks so it should be easy if you already know them.
@@ -160,7 +160,7 @@ Once you create a new notebook you will need to set:
 
 You can later rename the notebook or attach it to another cluster if needed.
 
-### 2.1. Multilanguage
+### Multilanguage
 
 You can work with multiple languages in the same notebook even though there is a default one.
 To do so you only need to use some magic commands like `%python` to work with python.
@@ -179,13 +179,13 @@ The languages you can use are:
 | R              | %r      |
 | scala          | %scala  |
 
-### 2.2. Spark
+### Spark
 
 One of the great things about **databricks** is that it comes with spark install, configured and already imported.
 To use spark you can simply call `spark`.
 For example you could run in python `spark.sql("SELECT * FROM my_table")`.
 
-### 2.3. dbutils
+### dbutils
 
 **Databricks** comes with a class that has some utilities.
 This have 3 main functionalities:
@@ -195,22 +195,22 @@ This have 3 main functionalities:
 * Widgets (`dbutils.widgets`)
 * Package installer (`dbutils.library`)
 
-#### 2.3.1. dbutils.secrets
+#### dbutils.secrets
 
 This allows to interact with secrets.
 In Azure you will connect it to a Key Vault so that you can retrieve secrets from there.
 
-#### 2.3.2. dbutils.fs
+#### dbutils.fs
 
 This allows to write and read files.
 It is also used to mount external storage units such as a datalake or a blob.
 
-#### 2.3.3. dbutils.widgets
+#### dbutils.widgets
 
 You can create custom widgets that allow you to interact with the notebook.
 For example you can create and dropdown that sets the value of one python variable.
 
-#### 2.3.4. dbutils.library
+#### dbutils.library
 
 This allow you to install packages.
 I would advise to manage libraries with the `Libraries` section of the cluster configuration.
@@ -218,7 +218,7 @@ I would advise to manage libraries with the `Libraries` section of the cluster c
 > [!warning]
 > If you are using a **conda** environment `dbutils.library` won't work.
 
-### 2.4. display and displayHTML
+### display and displayHTML
 
 The `display` object is mainly used to show tables.
 You can pass a **spark** or **pandas** dataframe and it will be nicely displayed.
@@ -227,7 +227,7 @@ It also allows to create plots based on the dataframe.
 `displayHTML` as the name suggest allows to display HTML content.
 It is the equivalent of an `iframe` in HTML.
 
-## 3. Storing and reading data
+## Storing and reading data
 
 Databricks come with a folder where you can store data.
 It is under the path `/dbfs/FileStore`.
@@ -244,7 +244,7 @@ To read that in different languages you should:
 | spark    | dbfs:/mnt/blob/data.delta                    |
 | SQL      | SELECT * FROM delta.\`/mnt/blob/data.delta\` |
 
-## 4. Scheduling jobs
+## Scheduling jobs
 
 You can schedule jobs with the section `Jobs`.
 It works like the Linux **cron**.

@@ -1,59 +1,57 @@
 ---
-import config from "@/config/config.json";
-import BlogCard from "@/components/BlogCard.astro";
-import BlogCategories from "@/components/BlogCategories.astro";
-import Pagination from "@/components/Pagination.astro";
-import Base from "@/layouts/Base.astro";
-import { fetchAndSortPosts } from "@/lib/blogUtils.astro";
+import BlogListingLayout from "@/layouts/BlogListingLayout.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
-import { getEntry } from "astro:content";
+import { sortByDate } from "@/lib/utils/sortFunctions";
+import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
+import config from "@/config/config.json";
+import { getCollection } from "astro:content";
 
-const { blog_folder } = config.settings;
-
-const { slug } = Astro.params;
-const postIndex = await getEntry(blog_folder, "-index");
-const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
-const { currentPosts, totalPages } = await fetchAndSortPosts(blog_folder, currentPage, config.settings.pagination);
+const { blog_folder, pagination } = config.settings;
 
 export async function getStaticPaths() {
-  const { blog_folder } = (await import('@/config/config.json')).settings;
+  const { blog_folder, pagination } = (await import("@/config/config.json")).settings;
   const posts = await getSinglePage(blog_folder);
-  const totalPages = Math.ceil(posts.length / config.settings.pagination);
-  const paths = Array.from({ length: totalPages }, (_, i) => ({
+  const totalPages = Math.ceil(posts.length / pagination);
+  return Array.from({ length: totalPages }, (_, i) => ({
     params: { slug: (i + 1).toString() },
   }));
-
-  return paths;
 }
+
+const { slug } = Astro.params;
+const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
+
+const allPosts    = await getSinglePage(blog_folder);
+const sorted      = sortByDate(allPosts);
+const totalPages  = Math.ceil(sorted.length / pagination);
+const start       = (currentPage - 1) * pagination;
+const currentPosts = sorted.slice(start, start + pagination);
+
+const { postCount, categories } = getCategoryRibbonData(sorted);
+const yearsWriting = getYearsWriting();
+
+const allBlogEntries = await getCollection("blog");
+const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
 ---
 
-<Base
-  title={postIndex.data.title}
-  meta_title={postIndex.data.meta_title}
-  image={postIndex.data.image}
-  description={postIndex.data.description}
->
-  <section class="section pt-6 md:pt-14">
-    <div class="container pt-6 pb-12 text-center">
-      <h1>All Posts - Page {currentPage}</h1>
-    </div>
-
-    <BlogCategories />
-
-    <!-- Posts -->
-    <div class="container">
-      <div class="row">
-        {currentPosts.map((item, index) => (
-          <div class="mb-14 sm:col-6 lg:col-4" key={index}>
-            <BlogCard data={item} loading={index < 6 ? "eager" : "lazy"} />
-          </div>
-        ))}
-      </div>
-      <Pagination
-        section={blog_folder}
-        currentPage={currentPage}
-        totalPages={totalPages}
-      />
-    </div>
-  </section>
-</Base>
+<BlogListingLayout
+  title={`Blog — Page ${currentPage} — Villoro`}
+  description={bi.description}
+  breadcrumbs={[
+    { href: "/",     label: "Villoro" },
+    { href: "/blog", label: "Blog" },
+    { label: `Page ${currentPage}` },
+  ]}
+  postCount={postCount}
+  yearsWriting={yearsWriting}
+  heroH1={bi.hero?.h1}
+  heroLede={bi.hero?.lede}
+  heroCountLabel={bi.hero?.count_label}
+  categories={categories}
+  activeCategory="all"
+  sectionTitle={bi.section?.title}
+  sectionMeta={`Page ${currentPage} of ${totalPages} · newest first`}
+  currentPosts={currentPosts}
+  currentPage={currentPage}
+  totalPages={totalPages}
+  paginationSection={blog_folder}
+/>

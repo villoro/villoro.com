@@ -10,7 +10,7 @@ tags: [AWS, ECS, Docker, uv, DE, Fargate]
 draft: false
 ---
 
-## 0. Why Another ECS Setup?
+## Why Another ECS Setup?
 
 Running Python on ECS is easy until **cold starts** and **rebuild churn** show up. On Fargate every task pulls the image from scratch; when your image includes big dependencies, startup time balloons and short‑lived jobs pay that cost on every run.
 
@@ -19,11 +19,11 @@ Running Python on ECS is easy until **cold starts** and **rebuild churn** show u
 > [!note]
 > This keeps startup fast and behavior consistent across versions—no image rebuilds just to try a change, no dependency drift between runs.
 
-## 1. The Strategy
+## The Strategy
 
 Run **small images** and **fetch the environment at runtime**. This plays to Fargate’s strengths (ephemeral tasks) and avoids paying the cold‑start penalty of large image pulls **every single run**.
 
-### 1.0. What Fargate Optimizes For
+### What Fargate Optimizes For
 
 * **No layer cache between tasks** → each task **pulls the full image** again.
 * **Pull time scales with image size** → big images = slow starts.
@@ -32,7 +32,7 @@ Run **small images** and **fetch the environment at runtime**. This plays to Far
 > [!tip]
 > Keep the image lean; move heavy Python deps out of the image. Treat S3 like a `layer store` for your virtualenv.
 
-### 1.1. Two Approaches (and why one wins on Fargate)
+### Two Approaches (and why one wins on Fargate)
 
 | Approach                                     | What it means                                                | Pros                                                                                                        | Cons                                                                    |
 | -------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -42,7 +42,7 @@ Run **small images** and **fetch the environment at runtime**. This plays to Far
 > [!tip]
 > For short‑lived/batch tasks, **B** consistently starts faster: pull a ~80–100 MB image, then download a compressed venv from S3. Net startup is typically **tens of seconds**, not minutes.
 
-### 1.2. The Pattern I Use (and this post documents)
+### The Pattern I Use (and this post documents)
 
 **One image, many jobs/versions.** The Docker image is generic and reusable. The `version` you pass selects what to run.
 
@@ -65,7 +65,7 @@ Run **small images** and **fetch the environment at runtime**. This plays to Far
 > [!tip]
 > Developers can iterate fast: compile a custom version, upload the four artifacts, and run it in prod with `-v <version>` with **no image rebuilds**. Roll forward/back by switching only the version.
 
-### 1.3. Files & Layout
+### Files & Layout
 
 ```plaintext
 deploy/
@@ -83,11 +83,11 @@ tests/
 > [!note]
 > Venv tarballs and lockfiles are **versioned** (e.g., `uv`, `0.7.1`). Run any version in prod with `-v <version>` which is great for hotfixes and A/B verification.
 
-## 2. Building venv and Publishing
+## Building venv and Publishing
 
 We use **`uv`** for speed and determinism: it resolves from a lock file (`uv.lock`), creates a clean in-project venv, installs **our code**, and then packages everything for production. The resulting `venv_<version>.tar.gz` is fully self-contained and versioned for autonomous deployment.
 
-### 2.1 Why two base images (uv + python)?
+### Why two base images (uv + python)?
 
 * **`ghcr.io/astral-sh/uv` stage (distroless)** → provides only the `uv` and `uvx` binaries. We *copy* them in, avoiding `curl`/`apt` installations and keeping the surface minimal.
 * **`python:3.12-slim-bookworm` builder** → provides a small Debian-based runtime with GNU `tar` and `gzip` for packaging. It’s slim, reproducible, and doesn’t need build tools.
@@ -95,7 +95,7 @@ We use **`uv`** for speed and determinism: it resolves from a lock file (`uv.loc
 > [!note]
 > Copying the `uv` binaries (instead of installing them dynamically) keeps the image **small**, **stable**, and **hermetic**. The Python slim base is used solely to build and compress the venv.
 
-### 2.2 Make the venv self-contained
+### Make the venv self-contained
 
 In addition to third-party dependencies, we **install `ecs_northius` into the venv** (non-editable). This means the `venv_<version>.tar.gz` already contains our package and can execute jobs directly in ECS.
 
@@ -105,7 +105,7 @@ In addition to third-party dependencies, we **install `ecs_northius` into the ve
 There are **two valid ways** to make your code importable in the venv.
 Both work but the **pyproject-driven approach** is usually better because it also lets you include non-Python assets (YAML, templates, etc.).
 
-#### 2.2.1 Option A — Classic packages (add `__init__.py`)
+#### Option A — Classic packages (add `__init__.py`)
 
 Add `__init__.py` to every package directory you want importable. Simple and explicit.
 
@@ -123,7 +123,7 @@ where = ["."]
 include = ["ecs_northius*"]
 ```
 
-#### 2.2.2. Option B — Pyproject-driven (recommended)
+#### Option B — Pyproject-driven (recommended)
 
 Skip `__init__.py` by using **namespace packages** (PEP 420) or keep them if you prefer — the key is that discovery and data inclusion are driven by `pyproject.toml`.
 
@@ -158,11 +158,11 @@ ecs_northius = [
 
 > With Option B you can manage both discovery **and** non-Python assets from one place.
 
-### 2.3 Dockerfile.venv
+### Dockerfile.venv
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/docker/Dockerfile.venv`
-</TerminalOutput>
+</FileName>
 ```bash
 # 0. Pull images
 ARG BUILD_FOR=linux/amd64
@@ -222,7 +222,7 @@ docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_V
 > [!note]
 > The resulting `venv_0.1.0.tar.gz` is portable — upload it to S3 and reuse it across ECS tasks.
 
-### 2.4 Extra optimizations & tricks
+### Extra optimizations & tricks
 
 * **`.dockerignore` aggressively**: exclude `.git`, `tests/`, build artifacts, local caches. Smaller build context = faster.
 * **Cache-friendly layering**: copy `pyproject.toml` + `uv.lock` before project sources to maximize `uv sync` cache hits.
@@ -233,14 +233,14 @@ docker build -f deploy/docker/Dockerfile.venv --output . . --build-arg PACKAGE_V
 > [!warning]
 > Avoid compilers and build tools unless you need to compile native deps. Prefer prebuilt manylinux wheels for portability.
 
-### 2.5 Publishing the artifacts
+### Publishing the artifacts
 
 Once built, we publish the venv and its companion files to S3. The **`upload_all.py`** script handles this automatically.
 It can also optionally upload the requested version as `latest`.
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/scripts/upload_all.py`
-</TerminalOutput>
+</FileName>
 ```python
 from time import time
 import boto3
@@ -294,16 +294,16 @@ if __name__ == "__main__":
 > [!tip]
 > This closes the loop: every artifact is versioned, uploaded, and retrievable by the runtime.
 
-## 3. The Runtime
+## The Runtime
 
 At runtime, **speed and simplicity** take priority; no compilers, no `uv`, no dependency resolution.
 The container just downloads, activates, and executes.
 
-### 3.1 Runtime Image
+### Runtime Image
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/docker/Dockerfile.runtime`
-</TerminalOutput>
+</FileName>
 ```bash
 ARG BUILD_FOR=linux/amd64
 FROM --platform=${BUILD_FOR} python:3.12-slim-bookworm AS runtime
@@ -326,13 +326,13 @@ The size can increase with big libraries such as awswrangler.
 > [!note]
 > The runtime image is lightweight — no compilers, no dependency resolution. It starts quickly and scales efficiently across short-lived ECS tasks.
 
-### 3.2 Runtime Bootstrap Script
+### Runtime Bootstrap Script
 
 Executed automatically when the container starts:
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/scripts/setup_and_run.sh`
-</TerminalOutput>
+</FileName>
 ```bash
 echo 1. Downloading venv and config
 python download_all.py "$@"
@@ -358,13 +358,13 @@ python entrypoint.py "$@"
 > [!note]
 > The bootstrap keeps tasks reproducible and fast — it only fetches what’s needed for the specified version.
 
-### 3.3 Download Script
+### Download Script
 
 This script fetches all necessary artifacts (venv, entrypoint, and config) from S3 and prepares the environment for execution.
 
-<TerminalOutput color="stone">
+<FileName>
   `deploy/scripts/download_all.py`
-</TerminalOutput>
+</FileName>
 ```python
 import pathlib
 import tarfile
@@ -418,7 +418,7 @@ if __name__ == "__main__":
 > [!warning]
 > Python 3.14+ tightens tar extraction security — use `filter="fully_trusted"` to avoid `AbsoluteLinkError` when unpacking symlinks.
 
-### 3.4 How this connects to entrypoints & params
+### How this connects to entrypoints & params
 
 This section focuses on **runtime packaging and activation**. For dynamic entrypoints (import-by-string), argument parsing via `click`, and typed params with `pydantic`, see <FancyLink linkText="Effortless EMR: A Guide to Seamlessly Running PySpark Coder" url="https://villoro.com/blog/effortless-emr-guide-running-pyspark/" dark="true"/>.
 The same entrypoint model integrates seamlessly here.
@@ -427,7 +427,7 @@ The same entrypoint model integrates seamlessly here.
 > Because `pyproject`, `uv.lock`, `venv`, and `entrypoint` are versioned together, each run is **fully autonomous** and reproducible.
 > Developers can safely test new jobs in production by uploading a custom version and running it with `-v <version>`.
 
-### 3.5 How It Runs in ECS
+### How It Runs in ECS
 
 Run tasks by passing a version at launch:
 
@@ -444,15 +444,15 @@ At runtime the container:
 > [!note]
 > You can run multiple versions in parallel (for example, `-v latest` for dev and `-v 0.7.1.villoro` for prod) without rebuilding Docker images.
 
-## 4. CI/CD Flow
+## CI/CD Flow
 
 We keep **testing**, **venv publishing**, and **runtime image pushes** as separate jobs. This speeds up iteration (you rarely need to rebuild the runtime docker image) and preserves reproducibility (each venv is versioned).
 
-### 4.1. CI: Tests with `uv`
+### CI: Tests with `uv`
 
-<TerminalOutput color="stone">
+<FileName>
   `.github/workflows/CI.yaml`
-</TerminalOutput>
+</FileName>
 ```yaml
 name: CI
 
@@ -486,13 +486,13 @@ jobs:
         run: uv run python -m pytest -q
 ```
 
-### 4.2. CD: Build & Publish venv to S3
+### CD: Build & Publish venv to S3
 
 Triggers when app code, dependency files, or deployment config changes. Produces a **versioned quartet**: `pyproject_<v>.toml`, `uv_<v>.lock`, `entrypoint_<v>.py`, `venv_<v>.tar.gz`.
 
-<TerminalOutput color="stone">
+<FileName>
   `.github/workflows/CD_venv.yaml`
-</TerminalOutput>
+</FileName>
 ```yaml
 name: CD Venv
 
@@ -542,13 +542,13 @@ jobs:
         run: python deploy/scripts/upload_all.py --version $VERSION_CURRENT --latest
 ```
 
-### 4.3. CD: Build & Push the Runtime Image to ECR
+### CD: Build & Push the Runtime Image to ECR
 
 This job changes infrequently (scripts or the runtime Dockerfile). It tags with the version from `pyproject.toml` and with `latest`.
 
-<TerminalOutput color="stone">
+<FileName>
   `.github/workflows/CD_docker.yaml`
-</TerminalOutput>
+</FileName>
 ```yaml
 name: CD Docker
 
@@ -611,21 +611,21 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 ```
 
-### 4.4. Deployment workflow summary:
+### Deployment workflow summary:
 
 1. **CI** runs tests on every PR as a mandatory step.
 2. On merge to `main`, **CD Venv** builds `venv_<version>.tar.gz` and uploads all versioned artifacts to S3.
 3. **CD Docker** rebuilds and pushes the runtime image to ECR (only if there are changes).
 4. **ECS tasks** start containers using the latest runtime image, fetching the desired venv version dynamically with `-v <version>`.
 
-### 4.5. Practical tips
+### Practical tips
 
 * **Pin Python versions**: keep GitHub Action Python versions aligned with Dockerfiles.
 * **Cache `uv`**: already included; it makes PR validation fast.
 * **S3/ECR VPC endpoints**: set them to avoid NAT costs in private subnets.
 * **Immutable versions + `latest`**: publish both; production can point at `latest` while you can roll forward/back with a version flag.
 
-## 5. Wrapping Up
+## Wrapping Up
 
 You now have a **fast, versioned, and reproducible** pattern for running Python on ECS:
 

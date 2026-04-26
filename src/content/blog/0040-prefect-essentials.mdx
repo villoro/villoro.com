@@ -13,7 +13,7 @@ draft: false
 <script type="module" src="/js/posts/0040-plots-prefect.js"></script>
 import prefectDeploymentsParams from "../../images/posts/2024/0040-prefect-deployments-parameters.png";
 
-## 0. Why Prefect?
+## Why Prefect?
 
 Five years ago (in 2019), I created a pipeline to automate tasks (more info in <FancyLink linkText="Vtasks" url="https://github.com/villoro/vtasks" dark="true"/>).
 Initially, I used <FancyLink linkText="Airflow" url="https://airflow.apache.org/" company="airflow"/> (see how in <FancyLink linkText="Setting up Airflow" url="https://villoro.com/blog/setting-up-airflow/" dark="true"/>) since it was the industry standard at the time.
@@ -35,7 +35,7 @@ You might be hesitant to use a new tool without substantial support. However, Pr
 > GitHub Stars extracted using <FancyLink linkText="Daily Stars explorer" url="https://github.com/emanuelef/daily-stars-explorer"/>.
 > To quickly see the star history of a repo, you can use <FancyLink linkText="Stars History" url="https://star-history.com/"/>.
 
-## 1. Prefect Basics
+## Prefect Basics
 
 > [!tip]
 > If you want a more in-depth introduction to **Prefect** basics, you can read <FancyLink linkText="Prefect Quickstart" url="https://docs.prefect.io/latest/getting-started/quickstart/" dark="true"/> instead.
@@ -45,13 +45,13 @@ The first step is to install prefect with:
 pip install prefect
 ```
 
-### 1.1. First `flow` (aka `DAG`)
+### First `flow` (aka `DAG`)
 
 Now, you're ready to create your first `flow` (this is how `Prefect` refers to a `DAG`) using a simple decorator:
 
-<TerminalOutput color="stone">
+<FileName>
   /main.py
-</TerminalOutput>
+</FileName>
 ```python
 from prefect import flow
 
@@ -69,14 +69,14 @@ To run the `flow`, execute the following command:
 python main.py
 ```
 
-### 1.2. Adding `tasks` and `subflows`
+### Adding `tasks` and `subflows`
 
 In Prefect, you can add `tasks` to be run inside a `flow`.
 `Tasks` work similarly to `flows` since they are also defined with a decorator:
 
-<TerminalOutput color="stone">
+<FileName>
   /main.py
-</TerminalOutput>
+</FileName>
 ```python
 from prefect import flow
 from prefect import task
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 > [!warning]
 > A `task` **cannot** call another `task` inside itself.
 
-### 1.3. Using `tags`
+### Using `tags`
 
 Adding `tags` in Prefect is quite straightforward:
 
@@ -134,7 +134,7 @@ with tags("env:pro", "type:greet"):
 In order to categorize, I like to use tags with `{key}:{value}` format, like `env:pro`.
 This helps me to later filter `flows`.
 
-### 1.4. Adding `logs`
+### Adding `logs`
 
 To add `logs` linked to `Prefect` you need to:
 
@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
 Also, notice that in this example, I defined a `name` for the `flow`.
 
-## 2. Connection to Prefect Cloud
+## Connection to Prefect Cloud
 
 With the example we did Prefect run locally with a local database it created.
 This is useful for testing but you shouldn't be running jobs in production without a server.
@@ -179,7 +179,7 @@ prefect cloud login -k your_token
 > In some cases, you might run into problems because Prefect is still using the default settings. To clean them out, go to `~/.prefect` and delete the files that are there.
 > **Important:** this will delete the local database with the information of the flows you just ran.
 
-## 3. Using Prefect Blocks
+## Using Prefect Blocks
 
 You can use <FancyLink linkText="Prefect Blocks" url="https://docs.prefect.io/latest/concepts/blocks/" dark="true"/> to set up connections to external tools.
 For example, you can use the Slack Block to store a Slack webhook.
@@ -192,7 +192,7 @@ slack_webhook_block = SlackWebhook.load("slack") # The name of the block you jus
 slack_webhook_block.notify("Hello from Prefect!")
 ```
 
-## 4. Naming conventions
+## Naming conventions
 
 When calling flows or tasks, I like to follow a naming convention where each unit inherits a prefix from its parent.
 In the example we used before, it would be:
@@ -231,7 +231,7 @@ They in turn have different tasks inside:
   └── ...
 ```
 
-## 5. Migrating to `prefect`
+## Migrating to `prefect`
 
 I think that migrating from another orchestrator to Prefect can be easily done in incremental steps:
 
@@ -242,7 +242,7 @@ I think that migrating from another orchestrator to Prefect can be easily done i
 
 The idea behind those steps is to be able to test Prefect and see if it indeed suits your needs better compared to other solutions.
 
-### 5.1. Track executions with `prefect`
+### Track executions with `prefect`
 
 This first step towards implementing Prefect is to add some flows in any Python code you have.
 The idea is to use Prefect only for observability purposes so that you have a centralized place from where you can:
@@ -270,14 +270,14 @@ For example you could have the following flows:
 
 This is just a dummy example but it helps to illustrate how you could add better observability.
 
-### 5.2. Set up a `Prefect server`
+### Set up a `Prefect server`
 
 At this point, you will need to decide if you want to set up your Prefect server.
 If you want to do so you can read how in <FancyLink linkText="Prefect Server Setup: Configuration and Deployment" url="https://villoro.com/blog/prefect-server-setup/" dark="true"/>.
 
 You can always start creating your Prefect server and then migrate to Prefect cloud or the other way around.
 
-### 5.3. Create `deployments` for running `flows`
+### Create `deployments` for running `flows`
 
 In this step, you will create `Deployments` for the `flows` you want to be able to trigger from Prefect.
 
@@ -316,7 +316,7 @@ def sf_export(
 
 In order to see how to create the `Deployments` themselves, read <FancyLink linkText="Prefect Server Setup: Configuration and Deployment | Deployments" url="https://villoro.com/blog/prefect-server-setup#2-deployments" dark="true"/>
 
-### 5.4. Schedule `flows` with `prefect`
+### Schedule `flows` with `prefect`
 
 The last step is to finally use Prefect for scheduling the  `flows`.
 
@@ -325,7 +325,7 @@ The last step is to finally use Prefect for scheduling the  `flows`.
 
 To see how to schedule `flows`, go to <FancyLink linkText="Prefect Server Setup: Configuration and Deployment | Deployments" url="https://villoro.com/blog/prefect-server-setup#2-deployments" dark="true"/>
 
-## 6. Using `prefect.client`
+## Using `prefect.client`
 
 We can use `prefect.client` to interact with the Prefect API.
 This allows us to do very powerful things like:
@@ -339,7 +339,7 @@ That means you will need to do one of the following:
 1. Defining `async` functions whenever interact with it
 2. Calling `asyncio.run()` (or `await` if you are in a Jupyter Notebook)
 
-### 6.1. Updating `tags` at runtime
+### Updating `tags` at runtime
 
 In general `tags` are defined prior to a `flow_run`.
 However, it is possible to modify those tags at runtime.
@@ -394,7 +394,7 @@ if __name__ == '__main__':
     good_morning("pro")
 ```
 
-### 6.2. Querying `prefect` for conditional `flows`
+### Querying `prefect` for conditional `flows`
 
 You can query any `prefect` entity with the `prefect.client` like:
 
@@ -465,7 +465,7 @@ if flow_runs:
 > [!tip]
 > This is very useful when you have a pipeline that executes multiple times a day and you don't want to run a `flow`/`task` each time but only once if it hasn't been done in less than a day.
 
-### 6.3. Cancelling Stuck Flow Runs
+### Cancelling Stuck Flow Runs
 
 Occasionally, flow runs may appear as `Running` even when they are not.
 This can happen, for example, when an EMR job times out.

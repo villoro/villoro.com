@@ -1,33 +1,73 @@
 ---
-import Base from "@/layouts/Base.astro";
-import PostSingle from "@/layouts/PostSingle.astro";
+import ArticleLayout from "@/layouts/ArticleLayout.astro";
+import { render } from "astro:content";
 import { getSinglePage } from "@/lib/contentParser.astro";
+import similarItems from "@/lib/utils/similarItems";
+import readingTime from "@/lib/utils/readingTime";
+import dateFormat from "@/lib/utils/dateFormat";
+import { categoryMetadata } from "@/lib/categoryMetadata";
+import { humanize } from "@/lib/utils/textConverter";
 import config from "@/config/config.json";
+import type { TocItem } from "@/components/ArticleTOC.astro";
 
 export async function getStaticPaths() {
   const { blog_folder } = config.settings;
-  const item = await getSinglePage(blog_folder);
-
-  const paths = item.map((post) => ({
-    params: {
-      single: post.data.slug || post.id,
-    },
+  const items = await getSinglePage(blog_folder);
+  return items.map((post) => ({
+    params: { single: post.data.slug || post.id },
     props: { post },
   }));
-  return paths;
 }
 
 const { post } = Astro.props;
-const { title, meta_title, description, image } = post.data;
+const { blog_folder, similar_items_length } = config.settings;
+const { title, description, image, date, tags = [], category } = post.data;
+const slug     = post.data.slug || post.id;
 const canonical = `${config.site.base_url}${Astro.url.pathname}`;
+
+const posts        = await getSinglePage(blog_folder);
+const similarPosts = similarItems(post, posts, similar_items_length);
+const { Content, headings } = await render(post);
+
+const catMeta  = categoryMetadata[category] || { name: humanize(category) };
+const catName  = catMeta.name;
+const catColor = catMeta.color ?? "var(--color-grey-500)";
+
+// Build numbered, hierarchical TOC (depth 2 + 3)
+const toc: TocItem[] = [];
+let h2Count = 0;
+let h3Count = 0;
+for (const h of headings) {
+  if (h.depth === 2) {
+    h2Count += 1;
+    h3Count = 0;
+    toc.push({ num: `${h2Count}.`, text: h.text, slug: h.slug, depth: 2 });
+  } else if (h.depth === 3 && h2Count > 0) {
+    h3Count += 1;
+    toc.push({ num: `${h2Count}.${h3Count}.`, text: h.text, slug: h.slug, depth: 3 });
+  }
+}
+
+const readTime     = (() => { try { return readingTime((post as any).body ?? ""); } catch { return ""; } })();
+const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
 ---
 
-<Base
+<ArticleLayout
   title={title}
-  meta_title={meta_title}
+  meta_title={post.data.meta_title}
   description={description}
   image={image}
   canonical={canonical}
+  category={category}
+  catName={catName}
+  catColor={catColor}
+  tags={tags}
+  formattedDate={formattedDate}
+  readTime={readTime}
+  slug={slug}
+  blogFolder={blog_folder}
+  toc={toc}
+  relatedPosts={similarPosts}
 >
-  <PostSingle post={post} />
-</Base>
+  <Content />
+</ArticleLayout>

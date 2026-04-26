@@ -1,0 +1,127 @@
+---
+/**
+ * CTAStrip — "Enjoyed this?" box with Buy-me-a-coffee + Subscribe buttons.
+ * Used at the end of every blog post.
+ */
+import config from "@/config/config.json";
+import IconArrow from "@/components/IconArrow.astro";
+
+const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`;
+---
+
+<div class="cta">
+  <div class="cta__text">
+    <div class="cta__kicker">Enjoyed this?</div>
+    <div class="cta__question">Support the blog or get the next one in your inbox.</div>
+  </div>
+  <div class="cta__buttons">
+    <a
+      href={coffeeUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="cta__coffee"
+      aria-label="Buy me a coffee"
+    >
+      <span class="cta__coffee-icon" aria-hidden="true">☕</span>
+      Buy me a coffee
+    </a>
+    <a
+      href={config.subscribe.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn btn-primary cta__subscribe"
+    >
+      {config.subscribe.title}
+      <IconArrow size={12} />
+    </a>
+  </div>
+</div>
+
+<style>
+  .cta {
+    margin: 56px 0 32px;
+    padding: 28px 32px;
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-card);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .cta__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .cta__kicker {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-grey-500);
+  }
+
+  .cta__question {
+    font-family: var(--font-ui);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-navy-900);
+  }
+
+  .cta__buttons {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+
+  .cta__coffee {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--radius-button, 6px);
+    background: var(--color-yellow-400);
+    color: var(--color-navy-900);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .cta__coffee:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+  .cta__coffee-icon { font-size: 18px; line-height: 1; }
+
+  /* Dark mode: yellow stays yellow, navy text remaps to white via tokens
+     — but we want dark text on yellow regardless. Pin the text colour. */
+  :global(.dark) .cta__coffee { color: #1a1a1a; }
+
+  .cta__subscribe {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    box-shadow: var(--shadow-cta);
+  }
+
+  /* No dark mode override needed — surface-card and border-card tokens
+     auto-remap (#2b2b2b bg / #3e3e3e border). navy-900 text and grey-500
+     kicker both remap correctly via tokens.css. */
+
+  @media (max-width: 767px) {
+    .cta { flex-direction: column; align-items: flex-start; padding: 22px; }
+    .cta__buttons { margin-left: 0; width: 100%; }
+    .cta__subscribe { flex: 1; justify-content: center; }
+  }
+</style>

@@ -16,7 +16,7 @@ draft: false
 > [!danger]
 > **DISCLAIMER:** A lot has changed since I wrote this. Even though `Poetry` still works, I suggest using `uv` instead. See <FancyLink linkText="Exploring Astral's Fast Python Tools: uv and ruff" url="https://villoro.com/blog/astral-tools-uv-and-ruff/" dark="true"/>. I'm keeping this here for reference.
 
-## 0. The problem
+## The problem
 
 Handling project version numbers is painful and can be tedious if not automated.
 To make matters worse, we often need to update the version in multiple files.
@@ -25,7 +25,7 @@ This post will explain how to simplify this process and how to automate it.
 It only focuses on how to manage it using `poetry` since it's the tool I recommend for handling virtual environments.
 If you need to set up **Poetry**, see: <FancyLink linkText="Poetry python package manager" url="https://villoro.com/blog/poetry-python-package-manager" dark="true"/>
 
-## 1. `poetry-bumpversion`
+## `poetry-bumpversion`
 
 With <FancyLink linkText="Poetry-bumpversion" url="https://pypi.org/project/poetry-bumpversion/"/>, we can easily update the package version.
 
@@ -40,7 +40,7 @@ In short with `semver` the version consists of three numbers (`M.m.p`) where:
 * `m`: minor version. Represents relevant changes
 * `p`: patch version. For fixes without new functionality
 
-### 1.1. Installing `poetry-bumpversion`
+### Installing `poetry-bumpversion`
 
 You can do it with:
 
@@ -55,7 +55,7 @@ poetry self add poetry-bumpversion
 poetry install
 ```
 
-### 1.2. Updating the version in `pyproject.toml`
+### Updating the version in `pyproject.toml`
 
 You can do it by running:
 
@@ -65,16 +65,16 @@ poetry version minor
 poetry version patch
 ```
 
-### 1.3. Updating other files
+### Updating other files
 
 Frequently you will have other files that declare the version.
 For example, you could have `dbt_project.yml` if you are using `dbt`.
 In that case, you will need to declare in `pyproject.toml` the files you want to update along with the format it should look for.
 As an example for dbt:
 
-<TerminalOutput color="stone">
+<FileName>
   /pyproject.toml
-</TerminalOutput>
+</FileName>
 ```toml
 [[tool.poetry_bumpversion.replacements]]
 files = ["dbt_project.yml"]
@@ -82,7 +82,7 @@ search = "version: '{current_version}'"
 replace = "version: '{new_version}'"
 ```
 
-## 2. Automatically validate versions
+## Automatically validate versions
 
 The idea is to create a GitHub action that automatically validates that the version is updated.
 This way you can decide if you want to increase the `major`, `minor`, or `patch` digit.
@@ -92,9 +92,9 @@ This way you can decide if you want to increase the `major`, `minor`, or `patch`
 
 The first thing you need is a simple script that reads the package version from `pyproject.toml`:
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/scripts/get_version.py
-</TerminalOutput>
+</FileName>
 ```python
 import click
 import toml
@@ -121,9 +121,9 @@ if __name__ == "__main__":
 This scripts uses the `set_output`  function to export the version as an environment variable in GitHub action.
 Since this is used in another `python` script, it is declared in a `utils.py` file:
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/scripts/utils.py
-</TerminalOutput>
+</FileName>
 ```python
 import os
 
@@ -143,9 +143,9 @@ def set_output(name, value):
 Then you will need a script that checks if the version needs to be updated.
 It will compare the version from `main` to the one in the current PR.
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/scripts/check_if_update_needed.py
-</TerminalOutput>
+</FileName>
 ```python
 import click
 
@@ -175,9 +175,9 @@ if __name__ == "__main__":
 
 And the last step is to create a GitHub action that validates the version:
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/workflow/fix_version.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 name: Fix Version
 
@@ -249,14 +249,14 @@ The way this works is by:
 2. Extracting the version from the current branch in the pull request
 3. If `current_version <= main_version`, then fail
 
-## 3. Automatically tag versions
+## Automatically tag versions
 
 In order to keep better tracking of the package version, we will be tagging all commits to `main` with their version.
 We can do that with the following GitHub action:
 
-<TerminalOutput color="stone">
+<FileName>
   /.github/workflow/tag_commits_on_main.yaml
-</TerminalOutput>
+</FileName>
 ```yaml
 name: Tag
 
@@ -295,11 +295,11 @@ jobs:
             })
 ```
 
-## 4. Environment variables in github actions
+## Environment variables in github actions
 
 One of the ways of passing information from one step in a GitHub action to another is by using environment variables.
 
-### 4.1. Storing data in an environment variable
+### Storing data in an environment variable
 
 There is a couple of ways of storing data in an environment variable.
 This first one would be with an `echo` like:
@@ -323,7 +323,7 @@ def set_output(name, value):
         print(f"{name}={value}", file=fh)
 ```
 
-### 4.2. Retrieving data from an environment variable
+### Retrieving data from an environment variable
 
 To retrieve the environment variable, simply use `$ENV_VAR_NAME` like:
 

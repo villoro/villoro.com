@@ -1,0 +1,195 @@
+---
+/**
+ * ArticleTOC — numbered hierarchical table-of-contents sidebar.
+ *
+ * - Depth-2 headings: "1.", "2.", …
+ * - Depth-3 headings: "1.1.", "1.2.", …  (indented)
+ * - Active section highlighted via IntersectionObserver scroll-spy
+ *   (observer is registered here; `.article-content section` targets
+ *   come from @hbsnow/rehype-sectionize in astro.config.mjs).
+ *
+ * Renders nothing when toc is empty.
+ */
+
+export type TocItem = {
+  num: string;
+  text: string;
+  slug: string;
+  depth: 2 | 3;
+};
+
+interface Props {
+  toc: TocItem[];
+}
+
+const { toc } = Astro.props;
+if (toc.length === 0) return;
+---
+
+<aside class="at-wrap" id="toc-container">
+  <div class="at-label">Table of contents</div>
+  <nav class="toc at-nav" aria-label="Table of contents">
+    <ul>
+      {toc.map((item) => (
+        <li class:list={["at-item", `at-item--d${item.depth}`]}>
+          <a href={`#${item.slug}`}>
+            <span class="at-num">{item.num}</span>
+            <span class="at-text">{item.text}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</aside>
+
+<script>
+  function setupTOC() {
+    const tocContainer = document.querySelector('#toc-container');
+    if (!tocContainer) return;
+
+    const nav = document.querySelector('.sitenav') as HTMLElement | null;
+    const headerHeight = nav?.offsetHeight ?? 74;
+    const extraMargin  = 24;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const heading = entry.target.querySelector('h2, h3, h4, h5');
+        if (!heading) return;
+        const id = heading.getAttribute('id');
+        if (!id) return;
+        document.querySelectorAll(`nav.toc li a[href="#${id}"]`).forEach((link) => {
+          const li = link.closest('li');
+          if (entry.isIntersecting) {
+            link.classList.add('active');
+            li?.classList.add('is-active');
+          } else {
+            link.classList.remove('active');
+            li?.classList.remove('is-active');
+          }
+        });
+      });
+    }, {
+      rootMargin: `-${headerHeight}px 0px -60% 0px`,
+      threshold: 0.01,
+    });
+
+    if (window.innerWidth >= 1024) {
+      document.querySelectorAll('.article-content section').forEach((s) => observer.observe(s));
+    }
+
+    // Smooth-scroll with sticky-nav offset
+    document.querySelectorAll('nav.toc').forEach((tocNav) => {
+      tocNav.addEventListener('click', (event) => {
+        const anchor = (event.target as HTMLElement).closest('a') as HTMLAnchorElement | null;
+        if (!anchor) return;
+        const href = anchor.getAttribute('href');
+        if (!href?.startsWith('#')) return;
+        const el = document.getElementById(href.substring(1));
+        if (!el) return;
+        event.preventDefault();
+        window.scrollTo({
+          top: el.getBoundingClientRect().top + window.scrollY - headerHeight - extraMargin,
+          behavior: 'smooth',
+        });
+        history.pushState(null, '', href);
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load',  setupTOC);
+  document.addEventListener('astro:after-swap', setupTOC);
+</script>
+
+<style>
+  .at-wrap {
+    position: sticky;
+    top: 100px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+
+  .at-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-blue-500);
+    margin-bottom: 16px;
+  }
+
+  .at-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .at-item a {
+    display: flex;
+    gap: 10px;
+    padding: 4px 0;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-ink-800);
+    text-decoration: none;
+    line-height: 1.35;
+    transition: color 0.15s;
+  }
+  .at-item a:hover { color: var(--color-blue-500); }
+
+  /* Depth-3 indented + smaller */
+  .at-item--d3 { padding-left: 16px; }
+  .at-item--d3 a { font-size: 14px; color: var(--color-grey-500); }
+
+  .at-num {
+    font-family: var(--font-mono);
+    color: var(--color-grey-500);
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+    min-width: 32px;
+  }
+
+  /* Active state (set by scroll-spy) */
+  .at-item.is-active > a .at-text,
+  .at-item > a.active .at-text {
+    color: var(--color-navy-900);
+    font-weight: 700;
+  }
+  .at-item.is-active > a .at-num,
+  .at-item > a.active .at-num { color: var(--color-blue-500); }
+
+  /* Collapsed on tablet — rendered as a card above the article */
+  @media (max-width: 1023px) {
+    .at-wrap {
+      position: static;
+      height: fit-content;
+      align-self: start;
+      max-height: none;
+      overflow: visible;
+      padding: 16px 22px 0px;
+      background: #fff;
+      border: 1px solid var(--color-grey-100);
+      border-radius: 12px;
+    }
+    .at-nav {
+      margin: 0;
+      padding: 0;
+    }
+    .at-nav ul {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .at-nav li:last-child a {
+      padding-bottom: 16px;
+    }
+    :global(.dark) .at-wrap {
+      background: var(--color-grey-100);
+      border-color: var(--color-grey-300);
+    }
+  }
+</style>

@@ -12,7 +12,7 @@ draft: false
 
 <script type="module" src="/js/posts/0054-plots-s3-costs.js"></script>
 
-## 0. Motivation
+## Motivation
 
 Amazon S3 is a powerful, scalable storage solution integral to many workflows. However, storage costs can quickly accumulate, especially when managing large datasets. After migrating some of our jobs from EMR to ECS, S3 storage emerged as our largest expense.
 
@@ -23,9 +23,9 @@ By analyzing our storage usage and implementing targeted strategies, we successf
 > [!tip]
 > This guide outlines how to export an S3 Inventory and implement Lifecycle Policies to track and optimize your storage expenses effectively.
 
-## 1. Categorizing S3 Costs
+## Categorizing S3 Costs
 
-### 1.1 Discover S3 Costs with Cost Explorer
+### Discover S3 Costs with Cost Explorer
 
 The first step is to examine your AWS costs by service using the **Cost Explorer**. This allows you to identify which service to target for cost reduction. In our case, after optimizing EMR costs, S3 became the next clear objective:
 
@@ -47,11 +47,11 @@ In our case, most costs stemmed from storage. However, in some organizations, hi
 > [!tip]
 > If you’re incurring high S3 request costs, check out <FancyLink linkText="Solving the Problem with Small Files in the Data Lake" url="https://villoro.com/blog/solving-problem-small-files-data-lake/" dark="true" /> for strategies to address this issue.
 
-### 1.2 Create an S3 Inventory Configuration
+### Create an S3 Inventory Configuration
 
 **S3 Inventory** is a feature in Amazon S3 that generates scheduled reports containing a comprehensive list of objects in a bucket, along with their metadata. This helps you analyze and manage storage efficiently.
 
-#### 1.2.1. Steps to Set Up S3 Inventory:
+#### Steps to Set Up S3 Inventory:
 
 1. **Access the S3 Console:**
    Log in to the AWS Management Console and navigate to the S3 service.
@@ -76,14 +76,14 @@ In our case, most costs stemmed from storage. However, in some organizations, hi
    * Review your configuration.
    * Save it by clicking **Create**.
 
-#### 1.2.2. Notes on Destination Path:
+#### Notes on Destination Path:
 
 The destination path will include additional folders automatically. For example, if your destination path is `s3://villoro/s3_inventory` for a bucket named `villoro` and inventory name `villoro_inventory`, the final path will be `s3://villoro/s3_inventory/villoro/villoro_inventory/`.
 
 > [!note]
 > The first report will be available within 48 hours, and subsequent reports will be generated based on the frequency you selected.
 
-### 1.3 Accessing the S3 Inventory
+### Accessing the S3 Inventory
 
 The S3 Inventory follows a unique structure. Reports are stored at `destination_path/bucket_name/inventory_name/`. The structure includes:
 
@@ -91,7 +91,7 @@ The S3 Inventory follows a unique structure. Reports are stored at `destination_
 - **Data Folder:** Contains the data files from all exports.
 - **Hive Folder:** Includes symlinks to the timestamped folders for easier querying.
 
-#### 1.3.1. Example Structure:
+#### Example Structure:
 
 ```plaintext
 - s3://villoro/s3_inventory/villoro/villoro_inventory/
@@ -112,7 +112,7 @@ The S3 Inventory follows a unique structure. Reports are stored at `destination_
           └──symlink.txt
 ```
 
-#### 1.3.2. Example Manifest File:
+#### Example Manifest File:
 
 ```json
 {
@@ -130,11 +130,11 @@ The S3 Inventory follows a unique structure. Reports are stored at `destination_
 }
 ```
 
-## 2. Extracting Data from the Inventory
+## Extracting Data from the Inventory
 
 To create a standard Iceberg table from the non-conventional folder structure of the S3 inventory, we need to process the manifest files, extract the corresponding Parquet data, and then structure it into a usable table. Removing source data after processing is also recommended to optimize storage.
 
-### 2.1 Creating an S3 Inventory Table
+### Creating an S3 Inventory Table
 
 The main steps involve:
 
@@ -279,7 +279,7 @@ if __name__ == "__main__":
 
 ```
 
-### 2.2 Cleaning the Data with dbt
+### Cleaning the Data with dbt
 
 Below are the four models used to structure and clean the inventory data:
 
@@ -289,9 +289,9 @@ Below are the four models used to structure and clean the inventory data:
 4. **`stg_metadata__s3_inventory.sql`:** Final staging model to remove temporary columns and select clean fields.
 
 <Accordion client:load title="base_metadata__s3_inventory.sql">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/base/base_metadata__s3_inventory.sql
-  </TerminalOutput>
+  </FileName>
   ```sql
   WITH source AS (
       SELECT *
@@ -326,9 +326,9 @@ Below are the four models used to structure and clean the inventory data:
 </Accordion>
 
 <Accordion client:load title="clean_metadata__s3_inventory.sql">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/clean/clean_metadata__s3_inventory.sql
-  </TerminalOutput>
+  </FileName>
   ```sql
   WITH source AS (
       SELECT *
@@ -359,9 +359,9 @@ Below are the four models used to structure and clean the inventory data:
 </Accordion>
 
 <Accordion client:load title="int_metadata__s3_inventory.sql">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/internal/int_metadata__s3_inventory.sql
-  </TerminalOutput>
+  </FileName>
   ```sql
   -- Here we are categorizing differents paths with the `CASE WHEN s3_id LIKE pattern` so that we can better explore files.
   -- Together with the `folders` columns they provide an excelent way to dig further into the costs.
@@ -407,9 +407,9 @@ Below are the four models used to structure and clean the inventory data:
 </Accordion>
 
 <Accordion client:load title="stg_metadata__s3_inventory.sql">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/stg/stg_metadata__s3_inventory.sql
-  </TerminalOutput>
+  </FileName>
   ```sql
   WITH source AS (
       SELECT *
@@ -449,9 +449,9 @@ Below are the four models used to structure and clean the inventory data:
 </Accordion>
 
 <Accordion client:load title="stg_metadata__s3_inventory.yml">
-  <TerminalOutput color="stone">
+  <FileName>
     /models/staging/metadata/stg/stg_metadata__s3_inventory.yml
-  </TerminalOutput>
+  </FileName>
   ```yaml
   version: 2
   models:
@@ -494,7 +494,7 @@ Below are the four models used to structure and clean the inventory data:
   ```
 </Accordion>
 
-### 2.3 Analyzing the Inventory
+### Analyzing the Inventory
 
 Once the data is consolidated in an Iceberg table, analysis can be customized based on your needs. Examples of what we analyzed:
 
@@ -502,14 +502,14 @@ Once the data is consolidated in an Iceberg table, analysis can be customized ba
 2. **Exploring Folders:** Dive into folder-level details for high-priority categories.
 3. **Comparing Layers:** Compare `bronze` and `silver` layers for the same entities to identify discrepancies.
 
-#### 2.3.1. Insights Gained
+#### Insights Gained
 
 1. **Ineffective File Deletion:** We found that files in our largest bucket were not being deleted effectively.
 2. **Append-Only Tables:** Some `bronze` tables were only appending data without deletions, leading to unnecessary storage costs.
 
 The first issue was addressed with an S3 Lifecycle Policy (details in the next section). The second issue, while significant, is beyond the scope of this post.
 
-## 3. Implement S3 Lifecycle Policies
+## Implement S3 Lifecycle Policies
 
 S3 Lifecycle Policies automate object management to reduce costs. For instance, you can transition objects to cheaper storage classes or delete non-current versions. Here’s how to set them up:
 

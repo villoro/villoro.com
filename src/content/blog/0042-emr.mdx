@@ -13,7 +13,7 @@ tags: [AWS, Tutorial]
 draft: false
 ---
 
-## 0. Intro
+## Intro
 
 Tired of wrestling with complex setups when trying to get PySpark up and running on EMR? You're not alone!
 This guide was created out of frustration with overly convoluted configurations.
@@ -25,14 +25,14 @@ Whether you're new to PySpark or just tired of the headache, I've got your back.
 > This post breaks down multiple concepts step by step.
 > If you prefer to see the final result, head to the last section where you can find everything consolidated.
 
-## 1. Running a script in EMR
+## Running a script in EMR
 
 The simplest way to execute PySpark code on EMR is by storing a Python file in S3.
 For example, let's suppose we have a `main.py` file in a bucket named `your-bucket`:
 
-<TerminalOutput color="stone">
+<FileName>
   s3://your-bucket/main.py
-</TerminalOutput>
+</FileName>
 ```python
 from pyspark.sql import SparkSession
 
@@ -60,11 +60,11 @@ Next, you submit a job using the specified file (`s3://your-bucket/main.py`) as 
 A common solution is to create a Python package so you can import code from other files. Let's explore how to do this next.
 
 
-## 2. Using packages
+## Using packages
 
 In general, you'll need to use two different types of packages: `Java` packages and `Python` packages.
 
-### 2.1 Java packages
+### Java packages
 
 Adding Java packages is quite straightforward:
 
@@ -78,7 +78,7 @@ Adding Java packages is quite straightforward:
 
 With that, you should be able to use that package.
 
-### 2.2. Python packages
+### Python packages
 
 The simplest way of adding a Python package is by <FancyLink linkText="Setting up a bootstrap action" url="https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-bootstrap.html" company="aws"/> (as recommended in <FancyLink linkText="QA: EMR install python libraries" url="https://repost.aws/knowledge-center/emr-install-python-libraries" company="aws"/>)
 
@@ -86,13 +86,13 @@ The main problem with that is that you'll be downloading the package at runtime.
 
 The way to overcome those problems is to **create a docker image**.
 
-## 3. Creating an environment with Docker
+## Creating an environment with Docker
 
 According to <FancyLink linkText="EMR spark docker" url="https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-spark-docker.html" company="aws"/> by AWS, you can create a Docker image and later use it to run EMR. However, I think it's better to create a virtual environment using Docker and export it as a `tar.gz` file.
 
 With that, you can simply export the file to S3 and later use it.
 
-### 3.1. Add external packages
+### Add external packages
 
 The overall idea is to follow <FancyLink linkText="EMR serverless samples" url="https://github.com/aws-samples/emr-serverless-samples/tree/main/examples/pyspark/dependencies" dark="true"/>.
 In this example I'm using <FancyLink linkText="Poetry python package manager" url="https://villoro.com/blog/poetry-python-package-manager" dark="true"/> since I think it's better than regular `pip`.
@@ -105,9 +105,9 @@ The steps I follow are:
 5. Create a `tar.gz` with the virtual environment
 6. Export the `tar.gz`
 
-<TerminalOutput color="stone">
+<FileName>
   Dockerfile
-</TerminalOutput>
+</FileName>
 ```sh
 FROM --platform=linux/amd64 amazonlinux:2023 AS base
 
@@ -159,7 +159,7 @@ Then you can set up an `EMR` cluster to use that environment with:
 > [!warning]
 > Make sure to adapt the path (`s3:/your-bucket/venv/my_package-latest.tar.gz` in the example) to the file you created.
 
-### 3.2. Create a 'Package' for Adding Code
+### Create a 'Package' for Adding Code
 
 Now that we know how to add external packages, we can reuse it to also be able to import our own code.
 As stated in  <FancyLink linkText="How to run a Python project (package) on AWS EMR serverless?" url="https://stackoverflow.com/questions/74193417/how-to-run-a-python-project-package-on-aws-emr-serverless"/>, the idea is to create a Python package and then install it.
@@ -174,9 +174,9 @@ RUN poetry build && \
 Another thing I added is the ability to pass the `version` as an argument.
 The final `Dockerfile` code would be:
 
-<TerminalOutput color="stone">
+<FileName>
   Dockerfile
-</TerminalOutput>
+</FileName>
 ```sh
 FROM --platform=linux/amd64 amazonlinux:2023 AS base
 
@@ -224,7 +224,7 @@ And it is compiled with:
 docker build --output . . --build-arg PACKAGE_VERSION=2.1.7 # Any version you want
 ```
 
-### 3.3. Export the environment with CD
+### Export the environment with CD
 
 Here, the idea is to have a GitHub action that uploads the virtual environment whenever there is a commit to `main`.
 
@@ -238,7 +238,7 @@ One thing that I find very useful is to always export the real version, such as 
 
 You might want to read <FancyLink linkText="Managing package versions with Poetry" url="https://villoro.com/blog/managing-package-versions-with-poetry" dark="true"/> for more information about how to manage versions with Poetry.
 
-## 4. Generic entrypoint
+## Generic entrypoint
 
 You've seen how to add external packages and how to install your own code as a package. However, you still need an entrypoint for running EMR jobs.
 
@@ -264,9 +264,9 @@ Let's imagine we have:
 Some of those files will be prepared to be an entrypoint.
 The only important part is that it has a `main` function.
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/salesforce/main.py
-</TerminalOutput>
+</FileName>
 ```python
 # Other code
 
@@ -292,22 +292,22 @@ module.main()
 > [!note]
 > This does exactly the same as before.
 
-## 5. Handling Parameters
+## Handling Parameters
 
 Now that you have a unique entrypoint, you could use `sys.argv` or `argparse` to catch the entrypoint from the arguments, as explained in <FancyLink linkText="How do I access command line arguments?" url="https://stackoverflow.com/questions/4033723/how-do-i-access-command-line-arguments"/>.
 One way of doing that would be to always use the first parameter for the entrypoint and the rest of the parameters as the actual script parameters.
 
 But there is a better way with `click`.
 
-### 5.1. Catching Generic Parameters with `click`
+### Catching Generic Parameters with `click`
 
 The idea here is to define the entrypoint as a parameter in `click` and then catch the rest of the parameters as explained in <FancyLink linkText="Add unspecified options to cli command using python-click" url="https://stackoverflow.com/a/32946412/3488853"/>.
 
 The basic code for that would be:
 
-<TerminalOutput color="stone">
+<FileName>
   entrypoint.py
-</TerminalOutput>
+</FileName>
 ```python
 import click
 from loguru import logger
@@ -348,9 +348,9 @@ if __name__ == "__main__":
 
 Then you can define the parameters in each file as usual:
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/salesforce/main.py
-</TerminalOutput>
+</FileName>
 ```python
 # Other code
 
@@ -362,15 +362,15 @@ def main(name, num):
 > [!warning]
 > Notice that all parameters are as `strings`.
 
-### 5.2. Define Script Parameters with `pydantic`
+### Define Script Parameters with `pydantic`
 
 One way to improve the previous code is to define the parameters with <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/"/>. This way you don't need to handle the castings and can use the powerful validators from pydantic.
 
 You would do that with:
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/salesforce/main.py
-</TerminalOutput>
+</FileName>
 ```python
 from pydantic import BaseModel
 
@@ -384,23 +384,23 @@ def main(**kwargs):
     print(f"Hello {args.name} with {args.num=}")
 ```
 
-## 6. Track Executions with Prefect
+## Track Executions with Prefect
 
 One really good way of having better observability on EMR jobs is to add Prefect.
 If you are not familiar with Prefect I suggest you read <FancyLink linkText="Prefect Essentials" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/> first.
 
 Also make sure you connect EMR to Prefect by following <FancyLink linkText="Connect EMR | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#32-connect-emr" dark="true"/>.
 
-### 6.1. Jobs as Flows
+### Jobs as Flows
 
 The idea here is to create a flow at the entrypoint so that you can see each run.
 The idea is to create a flow dynamically with  `flow(name="flow_name")(function)(*args, **kwargs)`.
 
 So the modified lines look like as follows:
 
-<TerminalOutput color="stone">
+<FileName>
   entrypoint.py
-</TerminalOutput>
+</FileName>
 ```python
 from prefect import flow
 
@@ -410,7 +410,7 @@ def main(ctx, entrypoint):
     flow(name=entrypoint)(module.main)(**kwargs)
 ```
 
-### 6.2. Adding Tasks and/or Subflows
+### Adding Tasks and/or Subflows
 
 You can follow the same approach to add different tasks and/or subflows.
 For example, let's imagine you are extracting multiple tables from somewhere. Here you could create a Prefect task for each table.
@@ -425,12 +425,12 @@ for table in tables:
     task(name=name)(process_one_table)(name=table.name, **any_other_arguments)
 ```
 
-## 7. Putting it All Together
+## Putting it All Together
 
 We have seen multiple code snippets explaining the different parts.
 Here, I'm adding the final code so that it's easier to see the final outcome.
 
-### 7.1. Entrypoint
+### Entrypoint
 
 This takes care of:
 
@@ -438,9 +438,9 @@ This takes care of:
 * Catching parameters as a `dict`
 * Adding `prefect.tags`
 
-<TerminalOutput color="stone">
+<FileName>
   entrypoint.py
-</TerminalOutput>
+</FileName>
 ```python
 import importlib
 import sys
@@ -506,15 +506,15 @@ if __name__ == "__main__":
     main()
 ```
 
-### 7.2. Arguments code
+### Arguments code
 
 Here we define:
 * `BaseParams`  to be extended in each module
 * A decorator that catches the `Params` and creates a `prefect.flow`
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/common/parameters.py
-</TerminalOutput>
+</FileName>
 ```python
 from time import time
 
@@ -578,13 +578,13 @@ def catch_params(ParamsClass):
     return decorator
 ```
 
-### 7.3. Sample module
+### Sample module
 
 Here is an example of how to define a job:
 
-<TerminalOutput color="stone">
+<FileName>
   my_package/salesforce/main.py
-</TerminalOutput>
+</FileName>
 ```python
 from datetime import datetime
 

@@ -1,0 +1,349 @@
+---
+/**
+ * BlogListingLayout — full-page layout for blog, category, and tag listing pages.
+ *
+ * Variant "full"   — big "Notes from production." hero with lede + post count.
+ *                    Used for: blog index, category pages.
+ * Variant "simple" — compact hero with a custom h1 + short lede.
+ *                    Used for: tag pages.
+ *
+ * The layout includes BaseRedesign (head/meta), SiteNav, hero, optional
+ * CategoryRibbon, post grid, pagination, and SiteFooter so pages only need
+ * to prepare data and call this component.
+ */
+import BaseRedesign from "@/layouts/BaseRedesign.astro";
+import SiteNav from "@/components/SiteNav.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import PostCard from "@/components/PostCard.astro";
+import Pagination from "@/components/Pagination.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import CategoryRibbon from "@/components/CategoryRibbon.astro";
+import readingTime from "@/lib/utils/readingTime";
+import type { CollectionEntry } from "astro:content";
+import type { CategoryItem } from "@/lib/listingData";
+
+type BreadcrumbItem = { href?: string; label: string };
+
+interface Props {
+  // ── SEO ──────────────────────────────────────────────
+  title: string;
+  description?: string;
+
+  // ── Hero ─────────────────────────────────────────────
+  breadcrumbs: BreadcrumbItem[];
+  heroVariant?: "full" | "simple";
+  // "full" variant:
+  postCount?: number;
+  yearsWriting?: number;
+  heroH1?: string[];
+  heroLede?: string;
+  heroCountLabel?: string;
+  // "simple" variant — plain h1 with optional accent span:
+  simpleH1?: string;       // e.g. "Tag:"
+  simpleAccent?: string;   // e.g. "#python"  (rendered in blue)
+  simpleLede?: string;     // e.g. "42 posts with this tag."
+
+  // ── Category ribbon (optional) ───────────────────────
+  categories?: CategoryItem[];
+  activeCategory?: string; // slug, or "all"
+
+  // ── Grid section ─────────────────────────────────────
+  sectionTitle?: string;
+  sectionMeta?: string;
+  currentPosts: CollectionEntry<"blog">[];
+
+  // ── Pagination ───────────────────────────────────────
+  currentPage: number;
+  totalPages: number;
+  paginationSection: string;
+}
+
+const {
+  title,
+  description,
+  breadcrumbs,
+  heroVariant = "full",
+  postCount = 0,
+  yearsWriting = 0,
+  heroH1,
+  heroLede,
+  heroCountLabel,
+  simpleH1 = "",
+  simpleAccent = "",
+  simpleLede = "",
+  categories,
+  activeCategory = "all",
+  sectionTitle,
+  sectionMeta,
+  currentPosts,
+  currentPage,
+  totalPages,
+  paginationSection,
+} = Astro.props;
+
+const getReadTime = (post: CollectionEntry<"blog">) => {
+  try { return readingTime((post as any).body ?? ""); } catch { return ""; }
+};
+---
+
+<BaseRedesign title={title} description={description}>
+  <div class="bl">
+    <SiteNav />
+
+    <!-- ═══════════════════════════ HERO ════════════════════════════ -->
+    <section class="bl-hero">
+      {heroVariant === "full" && (
+        <span class="bl-hero__bg" aria-hidden="true">blog.</span>
+      )}
+      <div class="bl-wrap">
+        <Breadcrumb items={breadcrumbs} class="bl-hero__crumb" />
+
+        {heroVariant === "full" ? (
+          <>
+            <h1 class="bl-hero__h1">
+              {heroH1![0]}<br />
+              <span class="bl-blue">{heroH1![1]}</span>
+            </h1>
+            <div class="bl-hero__row">
+              <p class="bl-hero__lede" set:html={heroLede!.replace('{years}', String(yearsWriting))} />
+              <div class="bl-hero__count">
+                <div class="bl-hero__count-num">
+                  <span class="bl-hero__count-bg" aria-hidden="true"></span>
+                  <span class="bl-hero__count-val">{postCount}</span>
+                </div>
+                <div class="bl-hero__count-label">{heroCountLabel}</div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 class="bl-hero__h1--simple">
+              {simpleH1}{simpleAccent && (
+                <> <span class="bl-blue">{simpleAccent}</span></>
+              )}
+            </h1>
+            {simpleLede && <p class="bl-hero__lede--simple">{simpleLede}</p>}
+          </>
+        )}
+      </div>
+    </section>
+
+    <!-- ═════════════════════ CATEGORY RIBBON ═══════════════════════ -->
+    {categories && categories.length > 0 && (
+      <CategoryRibbon categories={categories} activeKey={activeCategory} />
+    )}
+
+    <!-- ══════════════════════ POSTS GRID ════════════════════════════ -->
+    <section class="bl-grid-sec">
+      <div class="bl-wrap">
+        <div class="bl-grid-head">
+          <h2 class="bl-grid-title">{sectionTitle}</h2>
+          <span class="bl-grid-meta">{sectionMeta}</span>
+        </div>
+
+        <div class="bl-grid">
+          {currentPosts.map((post, i) => (
+            <PostCard
+              post={post}
+              variant="small"
+              readTime={getReadTime(post)}
+              loading={i < 6 ? "eager" : "lazy"}
+            />
+          ))}
+        </div>
+
+        {(totalPages > 1 || currentPage > 1) && (
+          <div class="bl-pagination">
+            <Pagination
+              section={paginationSection}
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
+          </div>
+        )}
+      </div>
+    </section>
+
+    <SiteFooter />
+  </div>
+</BaseRedesign>
+
+<style>
+  .bl {
+    background: var(--color-grey-50);
+    color: var(--color-navy-900);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    --container-px: 64px;
+  }
+
+  .bl-wrap {
+    max-width: 1312px;
+    margin: 0 auto;
+    padding: 0 var(--container-px);
+  }
+
+  .bl-blue { color: var(--color-blue-500); }
+
+  /* ── Hero ─────────────────────────────────────────────── */
+  .bl-hero {
+    position: relative;
+    padding: 40px 0 48px;
+    overflow: hidden;
+  }
+
+  .bl-hero__bg {
+    position: absolute;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 320px;
+    color: rgba(58, 118, 255, 0.05);
+    letter-spacing: -0.06em;
+    bottom: -80px;
+    right: -30px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Breadcrumb spacing override (component adds its own margin via class) */
+  .bl-hero :global(.bl-hero__crumb) { margin-bottom: 20px; }
+
+  .bl-hero__h1 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: clamp(3.5rem, 7vw, 96px);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    margin: 0;
+    position: relative;
+    z-index: 2;
+    color: var(--color-navy-900);
+  }
+
+  /* Simple (tag) hero h1 */
+  .bl-hero__h1--simple {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 5vw, 64px);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin: 0 0 16px;
+    color: var(--color-navy-900);
+  }
+
+  .bl-hero__row {
+    margin-top: 32px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .bl-hero__lede {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--color-navy-900);
+    max-width: 620px;
+    margin: 0;
+    opacity: 0.75;
+  }
+
+  .bl-hero__lede--simple {
+    font-size: 17px;
+    color: var(--color-navy-900);
+    opacity: 0.65;
+    margin: 0;
+  }
+
+  .bl-hero__count {
+    font-family: var(--font-ui);
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .bl-hero__count-num {
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--color-navy-900);
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    position: relative;
+    display: inline-block;
+  }
+
+  .bl-hero__count-bg {
+    position: absolute;
+    inset: -2px -10px;
+    background: var(--color-yellow-400);
+    border-radius: 6px;
+    z-index: 0;
+  }
+
+  .bl-hero__count-val {
+    position: relative;
+    z-index: 1;
+  }
+
+  .bl-hero__count-label {
+    font-size: 13px;
+    color: var(--color-grey-500);
+    margin-top: 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* ── Posts grid ────────────────────────────────────────── */
+  .bl-grid-sec { padding: 56px 0 80px; }
+
+  .bl-grid-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 36px;
+    font-family: var(--font-ui);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bl-grid-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--color-navy-900);
+  }
+
+  .bl-grid-meta {
+    font-size: 14px;
+    color: var(--color-grey-500);
+    font-weight: 500;
+  }
+
+  .bl-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+
+  .bl-pagination { margin-top: 48px; }
+
+  /* ── Responsive ────────────────────────────────────────── */
+  @media (max-width: 1023px) {
+    .bl { --container-px: 32px; }
+    .bl-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 767px) {
+    .bl { --container-px: 20px; }
+    .bl-hero__h1  { font-size: clamp(2.5rem, 10vw, 56px); }
+    .bl-hero__row { flex-direction: column; align-items: flex-start; gap: 24px; }
+    .bl-hero__count { text-align: left; }
+    .bl-hero__bg  { display: none; }
+    .bl-grid      { grid-template-columns: 1fr; }
+  }
+</style>

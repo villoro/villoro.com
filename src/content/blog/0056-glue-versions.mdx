@@ -12,7 +12,7 @@ draft: false
 
 <script type="module" src="/js/posts/0056-glue-versions.js"></script>
 
-## 0. What happened?
+## What happened?
 
 We hit a strange issue with dbt Athena where no queries were running:
 
@@ -27,7 +27,7 @@ Until then, I was totally unaware that:
 > [!danger]
 > Glue has a **hard limit** of **1 000 000 schema versions** across the **entire Glue catalog**.
 
-## 1. Glue versions
+## Glue versions
 
 Almost all the tables we write are **Iceberg**, which manages schema evolution more effectively under the hood. From an Iceberg perspective, we **don’t need Glue versioning at all** — it’s a side effect of using Glue as a catalog.
 
@@ -49,7 +49,7 @@ In our case:
 
 The version bloat was entirely invisible... until it wasn’t.
 
-### 1.1. Glue versions in dbt
+### Glue versions in dbt
 
 On the dbt side, the impact was smaller — but not zero.
 
@@ -68,7 +68,7 @@ In our case, it's not needed because we use `materialized = table`, so our table
 
 So while dbt wasn't the main contributor to version bloat, **it still affected our total version count through view models.**
 
-## 2. How to clean old versions
+## How to clean old versions
 
 I wrote a script that:
 * Iterates over all databases
@@ -108,7 +108,7 @@ You might wonder why we still have an average of ~100 versions per table. That�
 
 Here's the full code we used, broken down in sections:
 
-### 2.1. Getting database and tables info
+### Getting database and tables info
 
 ```python
 from datetime import datetime, timedelta, timezone
@@ -142,7 +142,7 @@ def get_versions(database, table, client=None):
     return out
 ```
 
-### 2.2. Cleaning versions of a table with batches
+### Cleaning versions of a table with batches
 
 ```python
 def _chunked(iterable, size):
@@ -192,7 +192,7 @@ def clean_old_glue_table_versions(database, table, min_versions, retention_days)
     return len(version_ids)
 ```
 
-### 2.3. Cleaning the whole catalog
+### Cleaning the whole catalog
 
 ```python
 def clean_one_database(database, min_versions, retention_days):
@@ -221,7 +221,7 @@ def process(min_versions=MIN_VERSIONS, retention_days=RETENTION_DAYS):
     logger.info(f"{len(databases)} databases proccessed with {total_deletes=}")
 ```
 
-## 3. Performance gains
+## Performance gains
 
 What surprised us the most was that **Athena performance improved dramatically**, even though dbt wasn’t contributing much to the version bloat.
 
@@ -238,7 +238,7 @@ Our main pipelines became faster:
 > Even if you use dbt and aren’t generating many Glue versions, it’s worth checking.
 > After reducing the catalog size, we saw up to **4× faster** execution in Athena.
 
-## 4. Takeaways
+## Takeaways
 
 * Be aware of the **1 000 000-version hard limit** in the Glue Catalog — it's not just theoretical.
 * If you're using **Spark, or AWS Wrangler** to write tables, version bloat is almost guaranteed.

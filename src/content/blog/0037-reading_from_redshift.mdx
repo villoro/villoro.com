@@ -16,7 +16,7 @@ draft: false
 
 <script type="module" src="/js/posts/0037-plots-reading-from-redshift.js"></script>
 
-## 0. The problem
+## The problem
 
 One of the best ways to start analyzing business data is by using a **datawarehouse** (dwh).
 For companies using the AWS stack **redshift** is the default option for a dwh.
@@ -37,7 +37,7 @@ In this post we will focus on how to consume data efficiently as **pandas** data
 This is because in our case a lot of bots are doing this.
 The biggest example here might be jobs that are running Machine Learning (ML) pipelines.
 
-## 1. Using direct queries
+## Using direct queries
 
 The most basic option for reading data from redshift is to connect directly to the database.
 As an example this can be done with **SQL alchemy**: <FancyLink linkText="SQL Alchemy with python" url="https://villoro.com/blog/sql-alchemy-python" dark="true"/>
@@ -49,7 +49,7 @@ The problem with such options is that it puts some pressure on **redshift** sinc
 * handle the queue of queries (which could become quite big)
 * execute the query and deliver the data
 
-## 2. Unloading to parquets
+## Unloading to parquets
 
 One alternative to doing direct queries is to **unload data from redshift**.
 This is done by passing a query to the `UNLOAD` command so that redshift can export the result to **S3**.
@@ -63,9 +63,9 @@ But by doing that the export will be slower and more computationally costly for 
 
 So, if we end up with multiple parquet files, how should we read them?
 
-## 3. Reading parquets as pandas dataframes
+## Reading parquets as pandas dataframes
 
-### 3.1. Using pandas read parquet (`pandas_read`)
+### Using pandas read parquet (`pandas_read`)
 
 The first option is to simply use `pandas.read_parquet` function and read all files in a loop.
 This can be done with:
@@ -89,7 +89,7 @@ df = pd.concat(dfs)
 
 If we need to filter based on a column with this option we would do it after creating the pandas dataframe.
 
-### 3.2. Using pyarrow read table (`pyarrow_single_read`)
+### Using pyarrow read table (`pyarrow_single_read`)
 
 Another option is to read each file with **pyarrow** instead.
 This would by done by:
@@ -112,7 +112,7 @@ df = pd.concat(dfs)
 
 If we need to filter based on a column with this option we would do it after creating the pandas dataframe.
 
-### 3.3. Using pyarrow parquet dataset (`pyarrow_parquet_ds_read`)
+### Using pyarrow parquet dataset (`pyarrow_parquet_ds_read`)
 
 Another option is to use the `ParquetDataset` from **pyarrow**.
 With this we only need to specify the folder where the parquets are stored and **pyarrow** will pick all the files.
@@ -140,7 +140,7 @@ mfilters = [
 dataset = pq.ParquetDataset(path, validate_schema=False, filter=mfilters)
 ```
 
-### 3.4. Using pyarrow dataset (`pyarrow_ds_read`)
+### Using pyarrow dataset (`pyarrow_ds_read`)
 
 With the release of <FancyLink linkText="Pyarrow 3.0.0" url="https://arrow.apache.org/release/3.0.0.html" company="arrow" dark="true"/> (released on 2021-01-26) a new way of reading parquets was introduced.
 The idea is to use the new `pyarrow.dataset` to create a table which can then be transformed into a **pandas** dataframe.
@@ -167,7 +167,7 @@ As an example this can be done with:
 table = dataset.to_table(filter=ds.field("p_creation_date") >= "2021-04-29")
 ```
 
-## 4. Datasets for testing
+## Datasets for testing
 
 For testing the different options we are going to use <FancyLink linkText="US accidents dataset" url="https://www.kaggle.com/sobhanmoosavi/us-accidents"/> from kaggle.
 This is a 1 GB dataset (stored as `csv`).
@@ -178,12 +178,12 @@ In order to test different set ups we are going to store this dataset in 3 diffe
 1. One parquet by month
 2. Multiple parquets by month
 
-### 4.1. Dataset 0 (single parquet)
+### Dataset 0 (single parquet)
 
 This first dataset is created by exporting all the data as **one single parquet file**.
 This is the kind of dataset we would have if we were to do only one export with all the data we want to consume.
 
-### 4.2. Dataset 1 (One parquet by month)
+### Dataset 1 (One parquet by month)
 
 This dataset contains only one parquet per month.
 Those parquets are stored in subfolders following the **hive** partitioning:
@@ -202,7 +202,7 @@ Those parquets are stored in subfolders following the **hive** partitioning:
 This represents a partitioned dataset that doesn't have a lot of files.
 This is what we would have if we were doing periodical unloads into each subfolder and then later combining the output into fewer files.
 
-### 4.3. Dataset 2 (Multiple parquets by month)
+### Dataset 2 (Multiple parquets by month)
 
 This last dataset is similar to the previous one but with multiple files per partition.
 We used the `state` column to easily create around 50 files per partition.
@@ -210,9 +210,9 @@ We used the `state` column to easily create around 50 files per partition.
 This represents a dataset with a lot of files.
 This is what we would have if we were doing periodical unloads into each subfolder
 
-## 5. Testing all options
+## Testing all options
 
-### 5.1. Reading from a single parquet (dataset 0)
+### Reading from a single parquet (dataset 0)
 
 The first test is to compare the reading of one single file using the different methods.
 
@@ -220,7 +220,7 @@ The first test is to compare the reading of one single file using the different 
 
 We see that the the **pyarrow** datasets options performs a little bit better.
 
-### 5.2. Reading from data paritioned (datasets 1 and 2)
+### Reading from data paritioned (datasets 1 and 2)
 
 In this case we are comparing what would happen if we were reading partitioned data.
 There are 2 different readings that we are testing:
@@ -241,7 +241,7 @@ Here the differences are even bigger.
 
 <canvas id="dataset_1" style="width:100%;height:400px;"></canvas>
 
-### 5.3. Comparing best options
+### Comparing best options
 
 Let's zoom in and compare the best options (`pyarrow_ds_read` and `pyarrow_parquet_ds_read`) and compare both partitioned datasets.
 
@@ -250,7 +250,7 @@ Let's zoom in and compare the best options (`pyarrow_ds_read` and `pyarrow_parqu
 Here it seems like the new `pyarrow.dataset` only performs better with a dataset with a lot of files.
 If we have a small number of files it performs slightly worse.
 
-### 5.4. Reading using row groups
+### Reading using row groups
 
 In this case we want to do another test where we apply 2 filters at the same time:
 
@@ -269,7 +269,7 @@ That means that **pyarrow** is only retrieving some `row_groups` and therefore l
 
 You can find more info about how parquet files are written in <FancyLink linkText="How Parquet Files are Written" url="http://cloudsqale.com/2020/05/29/how-parquet-files-are-written-row-groups-pages-required-memory-and-flush-operations/" company="default" dark="true"/>.
 
-## 6. Conclusions
+## Conclusions
 
 To sum it up doing unloads is a more efficient way of consuming large quantities of data from redshift.
 

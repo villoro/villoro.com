@@ -12,12 +12,12 @@ draft: false
 
 <script type="module" src="/js/posts/0019-plots-numba.js"></script>
 
-## 0. Intro
+## Intro
 
 This is the first post about python performance.
 This post will be of how to make python code go faster.
 
-## 1. Exploring python compilers
+## Exploring python compilers
 The first way to improve the python performance is by using different compilers. The most famous ones are:
 
 <div class="flex justify-center">
@@ -28,7 +28,7 @@ The first way to improve the python performance is by using different compilers.
 
 **Numba** and **cython** are similar in terms of speed and **pypy** is a little bit slower. You can read more at <FancyLink linkText="How to use Cython, Numba and Pypy" url="https://www.quora.com/How-do-Cython-Numba-and-PyPy-compare-in-terms-of-performance-ease-of-use-and-restrictions"/>.
 
-### 1.1. Cython overview
+### Cython overview
 **Cython** is an optimising static compiler for both the Python programming language and the extended Cython programming language (based on Pyrex).
 
 When using cython you will need to specify variables classes so the code will look slightly different. For example:
@@ -42,9 +42,9 @@ print(a)
 
 You can also cythonize python code. So for example you can create a file to compute Fibonacci series:
 
-<TerminalOutput color="stone">
+<FileName>
   fib.pyx
-</TerminalOutput>
+</FileName>
 ```python
 def fib(n):
     """Print the Fibonacci series up to n."""
@@ -69,7 +69,7 @@ setup(
 
 Even though cython is fast I don't like having to change the code to adapt it to cython.
 
-### 1.2. Pypy overview
+### Pypy overview
 
 **PyPy** is a fast, compliant alternative implementation of the Python language (2.7.13 and 3.5.3, 3.6). It has several advantages and distinct features:
 
@@ -80,7 +80,7 @@ Even though cython is fast I don't like having to change the code to adapt it to
 
 When using **pypy** you can write regular python code. The main disadvantage of pypy is that you can't use other libraries out of the box. So if for example you wan to use **pandas** you will need a **pypy** implementation of it. This makes using pypy along common python packages unconvinient. 
 
-### 1.3. Numba overview
+### Numba overview
 
 **Numba** translates Python functions to optimized machine code at runtime using the industry-standard LLVM compiler library. Numba-compiled numerical algorithms in Python can approach the speeds of C or FORTRAN.
 
@@ -88,7 +88,7 @@ You don't need to replace the Python interpreter, run a separate compilation ste
 
 So you can use python code without modifications and you won't have compatibility problems with other packages when using numba. This is the reason I prefer **numba** over **cython** and **pypy** and it is also one of the faster of the three.
 
-## 2. Using numba
+## Using numba
 
 **Numba** provides some decorators that will transform functions to `C`. This way the execution times will be faster.
 
@@ -111,7 +111,7 @@ m_sum([1, 2, 3])
   \> 6
 </TerminalOutput>
 
-### 2.1. `jit` vs `njit` decorators
+### `jit` vs `njit` decorators
 
 The default **numba** decorator is `jit`. It is possible to pass use nopython mode with `@jit(nopython=True)` or with the decorator `njit` which is equivalent.
 `njit` decorator is faster than `jit` but supports less features than jit.
@@ -119,7 +119,7 @@ The default **numba** decorator is `jit`. It is possible to pass use nopython mo
 For example you can't cast to string (with for example `str(10)`) inside a `njit` decorated function.
 So you should try to use `njit` decorator if possible specialy for numerical calculations.
 
-### 2.2. `vectorize` decorator
+### `vectorize` decorator
 
 Using the `vectorize` decorator, you write your function as operating over input scalars, rather than arrays. **Numba** will generate the surrounding loop (or kernel) allowing efficient iteration over the actual inputs.
 
@@ -160,15 +160,15 @@ square(mlist)
 
 The format for declaring the `dtypes` is `[output(input1, input2, ...)]`.
 
-## 3. Test numba performance
+## Test numba performance
 
-### 3.1. Test `sum` function
+### Test `sum` function
 
 First we will time the execution of different `sum` functions. The first option will be a for loop in python:
 
-<TerminalOutput color="stone">
+<FileName>
   iter_and_sum
-</TerminalOutput>
+</FileName>
 ```python
 def iter_and_sum(data):
     """ Sums each element in an iterable """
@@ -181,9 +181,9 @@ def iter_and_sum(data):
 
 And we will test both `jit` and `njit` **numba** decorators. As an example this is how the `jit` version would be defined:
 
-<TerminalOutput color="stone">
+<FileName>
   jit
-</TerminalOutput>
+</FileName>
 ```python
 @jit
 def jit_iter_and_sum(data):
@@ -226,7 +226,7 @@ In all cases using the raw loop `iter_and_sum` or the default python `sum` gives
 > [!success]
 > **numba** can be **400x** better than a python loop
 
-### 3.2. Test fix time
+### Test fix time
 
 At one of the projects I was working at my company I found an interesting problem.
 I had a huge dataframe (650 milion rows) and among other columns there was one for the `date` and one for `time`.
@@ -240,13 +240,13 @@ The original format was `hhmmsscc` (`c` for centiseconds) and instead of being a
 |  9051137 | 09:05:11.37   |
 |      712 | 00:00:07.12   |
 
-#### 3.2.1. The functions
+#### The functions
 
 So to fix that I transformed the values to string, then added 0 until I had 8 chars and finally split and add `:` and `.` so that then it could be transformed.
 
 Let's use this problem for testing **numba**. First let's see all different options I came up.
 
-##### 3.2.1.1. zfill
+##### zfill
 
 This was my first approach which was good enough. The idea is to transform the `time` column to string and then apply `zfill(8)`. After that I created a string with the appropiate format and transform the whole `datetime` with `pd.to_datetime`.
 
@@ -263,7 +263,7 @@ def zfill(df):
     return pd.to_datetime(df["date"] + " " + aux[:2] + ":" + aux[2:4] + ":" + aux[4:6] + "." + aux[6:])
 ```
 
-##### 3.2.1.2. fix_time_individual
+##### fix_time_individual
 
 The idea in this option is to create a function decorated with `jit` that transform one element of the `time` column and apply the function to the column.
 
@@ -285,7 +285,7 @@ def fix_time_individual(df):
     return (df["date"] + " " + df["time"].apply(_fix_time)).astype(np.datetime64)
 ```
 
-##### 3.2.1.3. fix_time_np_string
+##### fix_time_np_string
 
 With this solution I created and empty `numpy` array and filled with a loop inside the `jit` decorated function.
 
@@ -314,7 +314,7 @@ def fix_time_np_string(df):
     return (df["date"].values + " " + _fix_time(df["time"].values)).astype(np.datetime64)
 ```
 
-##### 3.2.1.4. fix_time_np_datetime
+##### fix_time_np_datetime
 
 In this case the I also create an empty `numpy` array but with `datetime64[s]` dtype. This way I can iterate over both `time` and `date` at the same time.
 
@@ -346,7 +346,7 @@ def fix_time_np_datetime(df):
     return _fix_date(df["date"].values, df["time"].values)
 ```
 
-##### 3.2.1.5. np_divmod_jit
+##### np_divmod_jit
 
 In this solution I process the `time` column as number and with the `np.divmod` function I create a value that represents a **timedelta**. After transforming the `time` column I change the dtype to `timedelta64[ms]` and sum it to the `date` column as a `datetime64`.
 
@@ -376,7 +376,7 @@ def np_divmod_jit(df):
     return _fix_date(df["date"].values, df["time"].values)
 ```
 
-##### 3.2.1.6. divmod_njit
+##### divmod_njit
 
 It is the same as the previous example but after changing `np.divmod` to the python `divmod` function I can use the `njit` decorator for the first time.
 
@@ -408,7 +408,7 @@ def divmod_njit(df):
     ).astype("timedelta64[ms]")
 ```
 
-##### 3.2.1.7. divmod_vectorize
+##### divmod_vectorize
 
 This case is exactly the same as the previous one but instead of doing the `for` loop I use the **numba** `vectorize` decorator.
 
@@ -434,7 +434,7 @@ def divmod_vectorize(df):
     ).astype("timedelta64[ms]")
 ```
 
-#### 3.2.2. The results
+#### The results
 
 | size |    zfill | fix_time_individual | fix_time_np_string | fix_time_np_datetime | np_divmod_jit | divmod_njit | divmod_vectorize |
 |-----:|---------:|--------------------:|-------------------:|---------------------:|--------------:|------------:|-----------------:|
@@ -453,7 +453,7 @@ Both `divmod_njit` and `divmod_vectorize` performs really well compared to the o
 > [!success]
 > Working with numbers in numba is really fast.
 
-#### 3.2.3. Speed with different machines
+#### Speed with different machines
 
 I did this test with up to `10^7` elements with my computer. I was not able to increase the number of elements due to an **out of memory error** (not enough RAM).
 
@@ -484,7 +484,7 @@ If we take a look at the results we can see that they both perform similar.
 
 It is important to remember that **pandas only work with one core** so I am not using the full potential of the machines. **Having more RAM allows to work with more data** but it does not increase the speed. With the **numba** vectorize the azure machine performs better as the size increases.
 
-## 4. More info
+## More info
 
 You can read the <FancyLink linkText="Numba documentation" url="http://numba.pydata.org/numba-doc/latest/index.html" company="numba"/>.
 Some examples of **numba** form their web page at <FancyLink linkText="Numba examples" url="http://numba.pydata.org/numba-doc/0.21.0/user/examples.html" company="numba"/>.

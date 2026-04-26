@@ -1,0 +1,294 @@
+---
+/**
+ * SiteNav — redesign 3.0 top navigation.
+ * Replaces the legacy Header for pages in the new design system.
+ * Wiring: same search trigger (data-search-trigger) and ThemeSwitcher
+ * as the old Header so existing JS continues to work.
+ */
+import Logo from "@/components/Logo.astro";
+import ThemeSwitcher from "@/components/ThemeSwitcher.astro";
+import IconArrow from "@/components/IconArrow.astro";
+import config from "@/config/config.json";
+
+const { pathname } = Astro.url;
+const { settings } = config;
+
+const isHome   = pathname === "/" || pathname === "";
+const isAbout  = pathname.startsWith("/about");
+const isBlog   = pathname.startsWith("/blog")
+              || pathname.startsWith("/categories")
+              || pathname.startsWith("/tags");
+---
+
+<header class="sitenav">
+  <nav class="sitenav__inner">
+    <!-- Logo -->
+    <div class="sitenav__logo">
+      <Logo />
+    </div>
+
+    <!-- Always-visible utilities: search + theme switcher.
+         On desktop they sit between nav links and Subscribe;
+         on mobile they stay visible next to the hamburger so users
+         can search / switch theme without opening the menu first. -->
+    <div class="sitenav__utils">
+      {settings.search && (
+        <button
+          class="sitenav__icon-btn"
+          aria-label="Open search"
+          data-search-trigger
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </button>
+      )}
+      <div class="sitenav__theme-wrap">
+        <ThemeSwitcher />
+      </div>
+    </div>
+
+    <!-- Mobile hamburger (CSS-only toggle) -->
+    <input id="sitenav-toggle" type="checkbox" class="sitenav__checkbox" />
+    <label for="sitenav-toggle" class="sitenav__hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </label>
+
+    <!-- Collapsible menu: nav links + Subscribe.
+         display:contents on desktop so its children flow as direct
+         flex children of .sitenav__inner; becomes a real dropdown
+         column on mobile when the hamburger is checked. -->
+    <div class="sitenav__menu">
+      <ul class="sitenav__links" role="list">
+        <li>
+          <a href="/" class:list={["sitenav__link", { "is-active": isHome }]}>Home</a>
+        </li>
+        <li>
+          <a href="/about" class:list={["sitenav__link", { "is-active": isAbout }]}>About</a>
+        </li>
+        <li>
+          <a href="/blog" class:list={["sitenav__link", { "is-active": isBlog }]}>Blog</a>
+        </li>
+      </ul>
+
+      <a
+        href={config.subscribe.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-primary sitenav__subscribe"
+      >
+        Subscribe
+        <IconArrow size={12} />
+      </a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  /* ------------------------------------------------------------------ *
+   * SiteNav — scoped styles
+   * All color/spacing values reference tokens.css custom properties.
+   * ------------------------------------------------------------------ */
+
+  .sitenav {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--color-grey-50);
+    box-shadow: 0 1px 0 var(--color-grey-100);
+  }
+
+  .sitenav__inner {
+    display: flex;
+    align-items: center;
+    padding: 22px var(--container-px);
+    max-width: 1312px;
+    margin: 0 auto;
+  }
+
+  .sitenav__logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-right: auto; /* push everything else to the right */
+  }
+
+  /* Hidden checkbox powering the mobile toggle */
+  .sitenav__checkbox {
+    display: none;
+  }
+
+  .sitenav__hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .sitenav__hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-navy-900);
+    border-radius: 2px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  /* Always-visible utilities cluster (search + theme).
+     Desktop: sits between nav links (order 1) and Subscribe (order 3),
+     separated from the links by a thin left border. */
+  .sitenav__utils {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-left: 20px;
+    margin-left: 20px;
+    border-left: 1px solid var(--color-grey-100);
+    order: 2;
+  }
+
+  /* Collapsible menu — display:contents on desktop so its children
+     (links + subscribe) flow directly into the .sitenav__inner flex row.
+     Becomes a real container on mobile (see media query). */
+  .sitenav__menu {
+    display: contents;
+  }
+
+  /* Nav link list */
+  .sitenav__links {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    order: 1;
+  }
+
+  .sitenav__link {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-navy-900);
+    text-decoration: none;
+    letter-spacing: -0.005em;
+    transition: color 0.15s ease;
+  }
+
+  .sitenav__link:hover,
+  .sitenav__link.is-active {
+    color: var(--color-blue-500);
+  }
+
+  /* Icon buttons (search, etc.) */
+  .sitenav__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-navy-900);
+    padding: 6px;
+    border-radius: 6px;
+    transition: color 0.15s ease;
+  }
+
+  .sitenav__icon-btn:hover {
+    color: var(--color-blue-500);
+  }
+
+  .sitenav__theme-wrap {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Subscribe CTA — uses global .btn-primary class */
+  .sitenav__subscribe {
+    gap: 8px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    padding: 10px 18px;
+    margin-left: 20px;
+    white-space: nowrap;
+    box-shadow: var(--shadow-cta);
+    order: 3;
+  }
+
+
+  /* ---- Mobile (≤ 767px) ---- */
+  @media (max-width: 767px) {
+    .sitenav__inner {
+      padding: 16px 20px;
+      flex-wrap: wrap;
+    }
+
+    /* Utilities stay visible next to the hamburger.
+       Reset desktop spacing/border. */
+    .sitenav__utils {
+      order: 1;
+      gap: 12px;
+      padding-left: 0;
+      margin-left: 0;
+      border-left: 0;
+    }
+
+    .sitenav__hamburger {
+      display: flex;
+      order: 2;
+      margin-left: 8px;
+    }
+
+    /* Menu collapses by default, expands on checkbox toggle.
+       Note: input precedes .sitenav__menu in DOM, so `~` works. */
+    .sitenav__menu {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 0 8px;
+      border-top: 1px solid var(--color-grey-100);
+      margin-top: 12px;
+      order: 3;
+    }
+    .sitenav__checkbox:checked ~ .sitenav__menu {
+      display: flex;
+    }
+
+    /* Animate hamburger to X */
+    .sitenav__checkbox:checked ~ .sitenav__hamburger span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .sitenav__checkbox:checked ~ .sitenav__hamburger span:nth-child(2) {
+      opacity: 0;
+    }
+    .sitenav__checkbox:checked ~ .sitenav__hamburger span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .sitenav__links {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .sitenav__subscribe {
+      margin-left: 0;
+    }
+  }
+</style>
+
+<style is:global>
+  .sitenav__subscribe {
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    gap: 8px !important;
+  }
+</style>

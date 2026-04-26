@@ -1,0 +1,477 @@
+---
+/**
+ * PostCard — redesign 3.0 post card component.
+ *
+ * Variants:
+ *   "big"    — full-width dark featured card with 16:9 image overlay (latest post).
+ *   "medium" — dark navy card with image on top and body below (hero side-card).
+ *   "small"  — white bordered card with 16:9 thumbnail and meta row (3-col grid).
+ *
+ * Every thumbnail is forced to 16:9 via aspect-ratio + object-fit: cover.
+ */
+import type { CollectionEntry } from "astro:content";
+import ImageMod from "@/components/ImageMod.astro";
+import IconArrow from "@/components/IconArrow.astro";
+import { categoryMetadata } from "@/lib/categoryMetadata";
+import { humanize } from "@/lib/utils/textConverter";
+import dateFormat from "@/lib/utils/dateFormat";
+import config from "@/config/config.json";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+  variant?: "big" | "medium" | "small";
+  /** Override badge text shown on the card (e.g. "Latest", "Most read", "READ NEXT") */
+  badge?: string;
+  /** Optional pre-computed reading time string e.g. "7 min" */
+  readTime?: string;
+  loading?: "eager" | "lazy";
+}
+
+const {
+  post,
+  variant = "small",
+  badge,
+  readTime,
+  loading = "lazy",
+} = Astro.props;
+
+const { blog_folder } = config.settings;
+const { title, image, description, date, category } = post.data;
+const slug = post.data.slug || post.id;
+const href = `/${blog_folder}/${slug}`;
+
+const catMeta = categoryMetadata[category] || { name: humanize(category) };
+const catName = catMeta.name;
+const catColor = catMeta.color ?? "var(--color-grey-500)";
+
+const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
+---
+
+{variant === "big" && (
+  <article class="pc-big">
+    <a href={href} class="pc-big__link" tabindex="-1" aria-hidden="true">
+      {image && (
+        <div class="pc-big__img-wrap">
+          <ImageMod
+            src={image}
+            alt={title}
+            width={1280}
+            height={720}
+            format="webp"
+            loading={loading}
+            class="pc-big__img"
+          />
+          <div class="pc-big__overlay"></div>
+        </div>
+      )}
+    </a>
+    <div class="pc-big__body">
+      <div class="pc-big__meta-row">
+        {badge && <span class="pc-chip">{badge}</span>}
+        <span class="pc-big__meta-text">
+          <span style={`color: ${catColor}`}>{catName}</span>
+          {formattedDate && <> · {formattedDate}</>}
+          {readTime && <> · {readTime}</>}
+        </span>
+      </div>
+      <h3 class="pc-big__title">
+        <a href={href} class="pc-big__title-link">{title}</a>
+      </h3>
+      {description && <p class="pc-big__excerpt">{description}</p>}
+      <a href={href} class="pc-cta-link">
+        Read the post
+        <IconArrow size={14} />
+      </a>
+    </div>
+  </article>
+)}
+
+{variant === "medium" && (
+  <article class="pc-med">
+    <a href={href} class="pc-med__img-wrap">
+      {image && (
+        <ImageMod
+          src={image}
+          alt={title}
+          width={640}
+          height={360}
+          format="webp"
+          loading={loading}
+          class="pc-med__img"
+        />
+      )}
+      {badge && (
+        <span class="pc-chip pc-med__badge">{badge}</span>
+      )}
+      <div class="pc-med__img-footer">
+        <span class="pc-med__img-meta">{catName} · {readTime}</span>
+      </div>
+    </a>
+    <div class="pc-med__body">
+      <h3 class="pc-med__title">
+        <a href={href} class="pc-med__title-link">{title}</a>
+      </h3>
+      {description && <p class="pc-med__excerpt">{description}</p>}
+      <a href={href} class="pc-cta-link">
+        Read the post
+        <IconArrow size={12} />
+      </a>
+    </div>
+  </article>
+)}
+
+{variant === "small" && (
+  <article class="card pc-small">
+    <a href={href} class="pc-small__img-wrap">
+      {image && (
+        <ImageMod
+          src={image}
+          alt={title}
+          width={480}
+          height={270}
+          format="webp"
+          loading={loading}
+          class="pc-small__img"
+        />
+      )}
+    </a>
+    <div class="pc-small__body">
+      <span class="pc-small__cat" style={`color: ${catColor}`}>{catName}</span>
+      <h4 class="pc-small__title">
+        <a href={href} class="pc-small__title-link">{title}</a>
+      </h4>
+      <div class="pc-small__meta">
+        {formattedDate}
+        {readTime && <> · {readTime}</>}
+      </div>
+    </div>
+  </article>
+)}
+
+<style is:global>
+  /* Badge chip: token-yellow → blue in dark; ensure dark text stays readable */
+  .dark .pc-chip { background: var(--color-yellow-400); color: var(--color-on-accent); }
+
+  .pc-big__img,
+  .pc-med__img,
+  .pc-small__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .pc-big__img {
+    transition: transform 0.4s ease;
+  }
+  .pc-big:hover .pc-big__img {
+    transform: scale(1.03);
+  }
+  .pc-med__img {
+    opacity: 0.7;
+  }
+  .pc-small__img {
+    transition: transform 0.35s ease;
+  }
+  .pc-small:hover .pc-small__img {
+    transform: scale(1.04);
+  }
+</style>
+
+<style>
+  /* ------------------------------------------------------------------ *
+   * PostCard — scoped styles (all three variants)
+   * ------------------------------------------------------------------ */
+
+  /* ---- Shared: yellow "Read the post →" CTA link ---- */
+  .pc-cta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-yellow-400);
+    text-decoration: none;
+    transition: gap 0.15s ease;
+  }
+
+  .pc-cta-link:hover {
+    gap: 12px;
+  }
+
+  /* ---- Shared: category / badge chip ---- */
+  .pc-chip {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: var(--text-chip);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--color-yellow-400);
+    color: var(--color-navy-900);
+    padding: 4px 10px;
+    border-radius: var(--radius-chip);
+    white-space: nowrap;
+  }
+
+  /* ================================================================== *
+   * variant="big" — full-width featured dark card
+   * ================================================================== */
+
+  .pc-big {
+    position: relative;
+    border-radius: var(--radius-hero-card);
+    overflow: hidden;
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
+    cursor: pointer;
+  }
+
+  .pc-big__link {
+    display: block;
+    text-decoration: none;
+  }
+
+  .pc-big__img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 620px;
+    overflow: hidden;
+  }
+
+  .pc-big__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(var(--color-surface-dark-rgb), 0)    30%,
+      rgba(var(--color-surface-dark-rgb), 0.55) 65%,
+      rgba(var(--color-surface-dark-rgb), 0.95) 100%
+    );
+    pointer-events: none;
+  }
+
+  .pc-big__body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 36px 48px 44px;
+    z-index: 2;
+  }
+
+  .pc-big__meta-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .pc-big__meta-text {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-on-dark-secondary);
+  }
+
+  .pc-big__title {
+    font-family: var(--font-ui);
+    font-size: var(--text-featured-title);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+    max-width: 900px;
+  }
+
+  .pc-big__title-link {
+    color: var(--color-on-dark);
+    text-decoration: none;
+  }
+
+  .pc-big__excerpt {
+    font-size: 17px;
+    color: var(--color-on-dark-body);
+    max-width: 720px;
+    line-height: 1.5;
+    margin: 0 0 22px;
+  }
+
+  /* On mobile, the .pc-big "featured" card switches to the same
+     image-on-top / white-body layout used by the small grid cards
+     so the homepage feed reads as one consistent stack. */
+  @media (max-width: 767px) {
+    .pc-big {
+      background: var(--color-surface-card);
+      color: var(--color-navy-900);
+      border: 1px solid var(--color-border-card);
+      border-radius: 12px;
+    }
+    .pc-big__img-wrap {
+      aspect-ratio: 16 / 9;
+      max-height: none;
+    }
+    .pc-big__overlay { display: none; }
+    .pc-big__body {
+      position: static;
+      padding: 20px 22px 22px;
+    }
+    .pc-big__meta-text { color: var(--color-grey-500); }
+    .pc-big__title {
+      font-size: var(--text-card-title);
+      line-height: 1.2;
+      margin: 4px 0 10px;
+    }
+    .pc-big__title-link { color: var(--color-navy-900); }
+    .pc-big__excerpt {
+      font-size: 15px;
+      color: var(--color-ink-800);
+      margin: 0 0 16px;
+    }
+  }
+
+  /* ================================================================== *
+   * variant="medium" — dark side-card (hero right column)
+   * ================================================================== */
+
+  .pc-med {
+    background: var(--color-surface-dark);
+    color: var(--color-on-dark);
+    border-radius: var(--radius-hero-card);
+    overflow: hidden;
+    box-shadow: var(--shadow-hero-card);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pc-med__img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    display: block;
+    text-decoration: none;
+    flex-shrink: 0;
+    background: var(--color-navy-800);
+  }
+
+  .pc-med__badge {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 2;
+  }
+
+  .pc-med__img-footer {
+    position: absolute;
+    bottom: 14px;
+    left: 20px;
+    right: 20px;
+    z-index: 2;
+  }
+
+  .pc-med__img-meta {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-on-dark-secondary);
+  }
+
+  .pc-med__body {
+    padding: 26px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pc-med__title {
+    font-family: var(--font-ui);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .pc-med__title-link {
+    color: var(--color-on-dark);
+    text-decoration: none;
+  }
+
+  .pc-med__excerpt {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--color-on-dark-secondary);
+    margin: 0;
+    flex: 1;
+  }
+
+  /* ================================================================== *
+   * variant="small" — white grid card
+   * Uses global .card base class for border, background, and hover shadow.
+   * This section handles card-specific layout and image sizing.
+   * ================================================================== */
+
+  .pc-small {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pc-small__img-wrap {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--color-grey-100);
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .pc-small__body {
+    padding: 20px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .pc-small__cat {
+    font-family: var(--font-ui);
+    font-size: var(--text-chip);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .pc-small__title {
+    font-family: var(--font-ui);
+    font-size: var(--text-card-title);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 4px 0 0;
+  }
+
+  .pc-small__title-link {
+    color: var(--color-navy-900);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .pc-small__title-link:hover {
+    color: var(--color-blue-500);
+  }
+
+  .pc-small__meta {
+    font-size: var(--text-meta);
+    color: var(--color-grey-500);
+    margin-top: 2px;
+  }
+</style>

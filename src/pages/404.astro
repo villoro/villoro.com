@@ -1,25 +1,90 @@
 ---
-import Base from "@/layouts/Base.astro";
+import BaseRedesign from "@/layouts/BaseRedesign.astro";
+import SiteNav from "@/components/SiteNav.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import IconArrow from "@/components/IconArrow.astro";
 ---
 
-<Base title="Page Not Found">
-  <section class="section-sm text-center">
-    <div class="container">
-      <div class="row justify-center">
-        <div class="sm:col-10 md:col-8 lg:col-6">
-          <span class="text-[8rem] block font-bold text-dark dark:text-darkmode-dark">
-            404
-          </span>
-          <h1 class="h2 mb-4">Page not found</h1>
-          <div class="content">
-            <p>
-              The page you are looking for might have been removed, had its name
-              changed, or is temporarily unavailable.
-            </p>
-          </div>
-          <a href="/" class="btn btn-primary mt-8">Back to home</a>
+<BaseRedesign title="Page not found — Villoro">
+  <div class="nf">
+    <SiteNav />
+
+    <section class="nf-sec">
+      <div class="nf-wrap">
+        <span class="nf-big" aria-hidden="true">404</span>
+        <h1 class="nf-h1">Page not found.</h1>
+        <p class="nf-lede">
+          The page you were looking for was moved, renamed, or never existed.
+        </p>
+        <div class="nf-actions">
+          <a href="/" class="nf-btn nf-btn--blue">
+            Back to home
+            <IconArrow size={12} />
+          </a>
+          <a href="/blog" class="nf-btn nf-btn--ghost">Browse the blog</a>
         </div>
       </div>
-    </div>
-  </section>
-</Base>
+    </section>
+
+    <SiteFooter />
+  </div>
+</BaseRedesign>
+
+<style>
+  .nf {
+    background: var(--color-grey-50);
+    color: var(--color-navy-900);
+    font-family: var(--font-body);
+    --container-px: 64px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .nf-sec { flex: 1; display: flex; align-items: center; padding: 80px 0; }
+  .nf-wrap {
+    max-width: 1312px;
+    margin: 0 auto;
+    padding: 0 var(--container-px);
+    text-align: center;
+  }
+  .nf-big {
+    display: block;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: clamp(6rem, 22vw, 220px);
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    color: rgba(58, 118, 255, 0.08);
+    margin-bottom: 8px;
+  }
+  .nf-h1 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 5vw, 56px);
+    letter-spacing: -0.03em;
+    margin: 0 0 16px;
+    color: var(--color-navy-900);
+  }
+  .nf-lede {
+    font-size: 18px;
+    color: var(--color-navy-900);
+    opacity: 0.7;
+    max-width: 520px;
+    margin: 0 auto 32px;
+  }
+  .nf-actions { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .nf-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-ui); font-size: 14px; font-weight: 700;
+    padding: 12px 20px; border-radius: 10px;
+    text-decoration: none; transition: opacity 0.15s;
+  }
+  .nf-btn--blue { background: var(--color-blue-500); color: #fff; box-shadow: var(--shadow-cta); }
+  .nf-btn--ghost {
+    background: transparent;
+    color: var(--color-navy-900);
+    border: 1px solid var(--color-grey-100);
+  }
+  .nf-btn:hover { opacity: 0.88; }
+  @media (max-width: 767px) { .nf { --container-px: 20px; } }
+</style>
