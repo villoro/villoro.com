@@ -216,8 +216,15 @@ const breadcrumbs = [
   }
 
   /* ── Headings with CSS counters ──────────────────────── */
-  /* H2 → "1."  H3 → "1.1"  H4 → "1.1.1"  H5 → "1.1.1.1"  TOC shows H2+H3 only. */
+  /* H2 → "1."  H3 → "1.1"  H4 → "1.1.1"  H5 → "1.1.1.1"  TOC shows H2+H3 only.
+     rehype-sectionize wraps each heading + its body in a <section>, so sub-headings
+     live in *sibling* sections, not inside the heading element. counter-reset has
+     to live on the wrapping section (not the heading) so that sibling sections
+     inherit the reset. */
   .al-body .article-content { counter-reset: al-h2 al-h3 al-h4 al-h5; }
+  .al-body .article-content section:has(> h2) { counter-reset: al-h3 al-h4 al-h5; }
+  .al-body .article-content section:has(> h3) { counter-reset: al-h4 al-h5; }
+  .al-body .article-content section:has(> h4) { counter-reset: al-h5; }
 
   .al-body .article-content :is(h2, h3, h4, h5) {
     font-family: var(--font-ui);
@@ -233,7 +240,6 @@ const breadcrumbs = [
 
   .al-body .article-content h2 {
     counter-increment: al-h2;
-    counter-reset: al-h3 al-h4 al-h5;
     font-size: 34px;
     letter-spacing: -0.02em;
     line-height: 1.15;
@@ -247,7 +253,6 @@ const breadcrumbs = [
 
   .al-body .article-content h3 {
     counter-increment: al-h3;
-    counter-reset: al-h4 al-h5;
     font-size: 22px;
     letter-spacing: -0.015em;
     line-height: 1.25;
@@ -261,7 +266,6 @@ const breadcrumbs = [
 
   .al-body .article-content h4 {
     counter-increment: al-h4;
-    counter-reset: al-h5;
     font-size: 18px;
     margin: 28px 0 10px;
   }
