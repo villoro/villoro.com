@@ -95,7 +95,7 @@ With that, you can simply export the file to S3 and later use it.
 ### Add external packages
 
 The overall idea is to follow <FancyLink linkText="EMR serverless samples" url="https://github.com/aws-samples/emr-serverless-samples/tree/main/examples/pyspark/dependencies" dark="true"/>.
-In this example I'm using <FancyLink linkText="Poetry python package manager" url="https://villoro.com/blog/poetry-python-package-manager" dark="true"/> since I think it's better than regular `pip`.
+In this example I'm using <FancyInternalLink slug="poetry-python-package-manager"/> since I think it's better than regular `pip`.
 
 The steps I follow are:
 1. Get `pip`
@@ -236,7 +236,7 @@ The general steps are:
 
 One thing that I find very useful is to always export the real version, such as `2.1.7`, and then also create one called `latest`. With this, I can easily point to the `latest.tar.gz` in `production` and/or point to a specific version if I need to.
 
-You might want to read <FancyLink linkText="Managing package versions with Poetry" url="https://villoro.com/blog/managing-package-versions-with-poetry" dark="true"/> for more information about how to manage versions with Poetry.
+You might want to read <FancyInternalLink slug="managing-package-versions-with-poetry"/> for more information about how to manage versions with Poetry.
 
 ## Generic entrypoint
 
@@ -387,9 +387,9 @@ def main(**kwargs):
 ## Track Executions with Prefect
 
 One really good way of having better observability on EMR jobs is to add Prefect.
-If you are not familiar with Prefect I suggest you read <FancyLink linkText="Prefect Essentials" url="https://villoro.com/blog/prefect-essentials-setup-and-migration/" dark="true"/> first.
+If you are not familiar with Prefect I suggest you read <FancyInternalLink slug="prefect-essentials-setup-and-migration"/> first.
 
-Also make sure you connect EMR to Prefect by following <FancyLink linkText="Connect EMR | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#32-connect-emr" dark="true"/>.
+Also make sure you connect EMR to Prefect by following <FancyInternalLink slug="prefect-server-setup-configuration-deployment" anchor="32-connect-emr"/>.
 
 ### Jobs as Flows
 

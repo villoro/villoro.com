@@ -13,7 +13,7 @@ draft: false
 ## Intro
 
 In our previous post, we discussed how to self-host dbt on AWS ECS (Fargate) for cost-effective scalability and better control over data transformation processes.
-If you haven't read that post, see <FancyLink linkText="Running dbt with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
+If you haven't read that post, see <FancyInternalLink slug="running-dbt-with-aws-ecs-fargate"/>.
 This time, we'll take it a step further by diving into testing dbt projects with DuckDB, ensuring the quality and consistency of your SQL code.
 
 <FancyLink linkText="DuckDB" url="https://duckdb.org/" dark="true"/>, an embedded analytical database, offers a fast, lightweight SQL engine, perfect for testing dbt models.
@@ -77,7 +77,7 @@ If needed, you can exclude some paths using the `.sqlfluffignore` file as mentio
 ### Automatic testing with pre-commit
 
 With pre-commit, you can run the linter before each commit.
-More info about it in <FancyLink linkText="pre-commit" url="https://villoro.com/blog/pre-commit/" dark="true"/>.
+More info about it in <FancyInternalLink slug="pre-commit"/>.
 
 > [!warning]
 > The linting job takes between a few seconds to a few minutes. You must decide if you are willing to spend that time prior to each commit to ensure properly linted SQL code. If not, do not set `pre-commit`.
@@ -396,7 +396,7 @@ if __name__ == "__main__":
 ## Running dbt-duckdb
 
 To do the smoke test, you can run dbt the same way you run it in production.
-That could be `dbt build --select xx --exclude yy` or using a Python script as described in <FancyLink linkText="Running dbt with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>.
+That could be `dbt build --select xx --exclude yy` or using a Python script as described in <FancyInternalLink slug="running-dbt-with-aws-ecs-fargate"/>.
 
 There might be some models or tests that you don't want to test during CI (such as testing data freshness).
 To handle that, I use the `no_test` tag and pass `--exclude tag:no_test` when running dbt.
@@ -442,7 +442,7 @@ dbt_northius:
 ### Duckdb filename
 
 You might wonder why the duckdb file is called `awsdatacatalog.duckdb`, and behind that name, there is a very interesting trick.
-In production, I'm using Athena (see <FancyLink linkText="Running dbt with AWS ECS (Fargate)" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/" dark="true"/>) and there the default catalog is called `awsdatacatalog`.
+In production, I'm using Athena (see <FancyInternalLink slug="running-dbt-with-aws-ecs-fargate"/>) and there the default catalog is called `awsdatacatalog`.
 If you want to query the table `athena_history` inside the `bronze__metadata` schema you can either do:
 
 ```sql

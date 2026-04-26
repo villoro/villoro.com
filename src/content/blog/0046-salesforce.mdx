@@ -222,7 +222,7 @@ After extracting data from Salesforce for several months, I've discovered a coup
 2. Splitting the query into batches.
 
 Additionally, I've found it beneficial to always query only the data that has been updated.
-You can find more information about this approach in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
+You can find more information about this approach in <FancyInternalLink slug="self-healing-pipelines"/>.
 
 ### Chunks
 
@@ -467,7 +467,7 @@ WHERE (LastModifiedDate >= {min_date} AND LastModifiedDate < {max_date})
 #### Deciding Date Ranges
 
 In regular runs, I query data from the last extraction (`max(LastUpdateDate)` from the table where the export will be stored) up until the current datetime (`datetime.now()`).
-More information about this approach can be found in <FancyLink linkText="Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/" dark="True"/>.
+More information about this approach can be found in <FancyInternalLink slug="self-healing-pipelines"/>.
 
 > [!warning]
 > Between the query creation and the execution, some time may pass.

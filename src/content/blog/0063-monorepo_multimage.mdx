@@ -38,7 +38,7 @@ In the initial phase of a project, having a single workspace is ideal:
 * One venv (via `uv venv`) to manage everything
 * Easy to run tests, build, or deploy
 
-This is the setup described in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true"/>.
+This is the setup described in <FancyInternalLink slug="fast-python-ecs-with-uv"/>.
 
 But as the codebase expands to include APIs, ML pipelines, or connectors, the single workspace model starts to break down—dependency conflicts emerge (e.g., `prefect` needing `package_x<3` while `pandas` needs `package_x>=4`), and even simple jobs end up dragging massive venvs due to heavyweight libraries.
 
@@ -237,7 +237,7 @@ strategy:
       # Add new packages here
 ```
 
-You can read more about this at <FancyLink linkText="Scalable GitHub Actions for Modern Repos" url="https://villoro.com/blog/github-hooks/" dark="true"/>.
+You can read more about this at <FancyInternalLink slug="github-hooks"/>.
 
 ### Generic `Dockerfile.venv`
 
@@ -272,7 +272,7 @@ Ensure your `upload_all.py` or similar code respects the naming convention so ea
 
 ## Closing Thoughts
 
-Starting with a single workspace and a simple `uv`-based setup (as shown in <FancyLink linkText="Fast and Reproducible Python Deployments on ECS with uv" url="https://villoro.com/blog/fast-python-ecs-with-uv/" dark="true"/>) is the most efficient way to bootstrap a project. It keeps complexity low and lets you move fast.
+Starting with a single workspace and a simple `uv`-based setup (as shown in <FancyInternalLink slug="fast-python-ecs-with-uv"/>) is the most efficient way to bootstrap a project. It keeps complexity low and lets you move fast.
 
 But as your project grows—adding new modules, APIs, scrapers, ML pipelines, or connectors—the overhead of maintaining everything in one workspace starts to show. Splitting into multiple workspaces allows better isolation of dependencies, targeted CI/CD, and smaller deployable units.
 

@@ -64,7 +64,7 @@ While skipping failed upstream tasks with option 1 might seem like a resource op
 > [!warning]
 > Avoid relying on `--exclude` unless you're fully confident about the implications.
 
-For example, I have a job that transcribes audios (see <FancyLink linkText="Process Calls with Open AI" url="https://villoro.com/blog/transcribe-audios-whisper-extract-structured-data-chatgpt/" dark="true"/>).
+For example, I have a job that transcribes audios (see <FancyInternalLink slug="transcribe-audios-whisper-extract-structured-data-chatgpt"/>).
 This job can partially succeed — transcribing some files but failing others due to server timeouts. To avoid redundant processing, I use a LEFT ANTI JOIN with the dbt-generated transcriptions table.
 
 However, when the transcription job partially failed and I excluded its tag in the dbt run, the corresponding models weren’t updated. This led to reprocessing already-transcribed files, inflating compute costs and duplicating results.
@@ -127,7 +127,7 @@ def get_flow_run_id():
 
 ##### Exporting dbt Run Results
 
-I already described this in a previous post. You can read it at <FancyLink linkText="Running dbt with AWS ECS (Fargate) | 8.2. dbt run results" url="https://villoro.com/blog/running-dbt-with-aws-ecs-fargate/#82-dbt-run-results" dark="true"/>.
+I already described this in a previous post. You can read it at <FancyInternalLink slug="running-dbt-with-aws-ecs-fargate" anchor="82-dbt-run-results"/>.
 
 The important part is to pass the `flow_run_id` to dbt so that it can be added as a column. This will allow us to filter later the run results we want.
 

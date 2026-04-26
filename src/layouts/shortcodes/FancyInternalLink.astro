@@ -1,0 +1,48 @@
+---
+import { getCollection } from "astro:content";
+import config from "@/config/config.json";
+
+interface Props {
+  slug: string;
+  linkText?: string;
+  anchor?: string;
+}
+
+const { slug, linkText, anchor } = Astro.props;
+const { blog_folder } = config.settings;
+
+const posts = await getCollection("blog");
+const post = posts.find((p) => (p.data.slug || p.id) === slug);
+
+if (!post) {
+  throw new Error(
+    `FancyInternalLink: no blog post found with slug "${slug}". ` +
+      `Check the frontmatter "slug" field or filename of the target post.`,
+  );
+}
+
+const href = anchor
+  ? `/${blog_folder}/${slug}#${anchor.replace(/^#/, "")}`
+  : `/${blog_folder}/${slug}`;
+const text = linkText ?? post.data.title;
+---
+
+<a href={href} role="button" class="fancy-link">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    style="width: 14px; height: 14px; flex-shrink: 0;"
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+    <polyline points="14 2 14 8 20 8"></polyline>
+    <line x1="8" y1="13" x2="16" y2="13"></line>
+    <line x1="8" y1="17" x2="13" y2="17"></line>
+  </svg>
+  <span>{text}</span>
+</a>

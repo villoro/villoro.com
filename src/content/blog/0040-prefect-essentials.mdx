@@ -16,8 +16,8 @@ import prefectDeploymentsParams from "../../images/posts/2024/0040-prefect-deplo
 ## Why Prefect?
 
 Five years ago (in 2019), I created a pipeline to automate tasks (more info in <FancyLink linkText="Vtasks" url="https://github.com/villoro/vtasks" dark="true"/>).
-Initially, I used <FancyLink linkText="Airflow" url="https://airflow.apache.org/" company="airflow"/> (see how in <FancyLink linkText="Setting up Airflow" url="https://villoro.com/blog/setting-up-airflow/" dark="true"/>) since it was the industry standard at the time.
-However, I found Airflow to be overly complex for my needs. This led me to switch to <FancyLink linkText="Luigi" url="https://github.com/spotify/luigi" dark="true"/> (see how in <FancyLink linkText="Luigi orchestrator" url="https://villoro.com/blog/luigi-orchestrator/" dark="true"/>).
+Initially, I used <FancyLink linkText="Airflow" url="https://airflow.apache.org/" company="airflow"/> (see how in <FancyInternalLink slug="setting-up-airflow"/>) since it was the industry standard at the time.
+However, I found Airflow to be overly complex for my needs. This led me to switch to <FancyLink linkText="Luigi" url="https://github.com/spotify/luigi" dark="true"/> (see how in <FancyInternalLink slug="luigi-orchestrator"/>).
 
 While Luigi worked better for me, I still lacked features such as dynamic DAG creation based on input parameters.
 Fortunately, I discovered <FancyLink linkText="Prefect" url="https://www.prefect.io/" dark="true"/>, which offered the simplicity and flexibility I desired:
@@ -273,7 +273,7 @@ This is just a dummy example but it helps to illustrate how you could add better
 ### Set up a `Prefect server`
 
 At this point, you will need to decide if you want to set up your Prefect server.
-If you want to do so you can read how in <FancyLink linkText="Prefect Server Setup: Configuration and Deployment" url="https://villoro.com/blog/prefect-server-setup/" dark="true"/>.
+If you want to do so you can read how in <FancyInternalLink slug="prefect-server-setup-configuration-deployment"/>.
 
 You can always start creating your Prefect server and then migrate to Prefect cloud or the other way around.
 
@@ -314,7 +314,7 @@ def sf_export(
 ):
 ```
 
-In order to see how to create the `Deployments` themselves, read <FancyLink linkText="Prefect Server Setup: Configuration and Deployment | Deployments" url="https://villoro.com/blog/prefect-server-setup#2-deployments" dark="true"/>
+In order to see how to create the `Deployments` themselves, read <FancyInternalLink slug="prefect-server-setup-configuration-deployment" anchor="2-deployments"/>
 
 ### Schedule `flows` with `prefect`
 
@@ -323,7 +323,7 @@ The last step is to finally use Prefect for scheduling the  `flows`.
 > [!warning]
 > Now is the time to finally switch to `Prefect` and to deprecate any other orchestrator you might have.
 
-To see how to schedule `flows`, go to <FancyLink linkText="Prefect Server Setup: Configuration and Deployment | Deployments" url="https://villoro.com/blog/prefect-server-setup#2-deployments" dark="true"/>
+To see how to schedule `flows`, go to <FancyInternalLink slug="prefect-server-setup-configuration-deployment" anchor="2-deployments"/>
 
 ## Using `prefect.client`
 

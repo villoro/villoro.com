@@ -30,6 +30,7 @@ export default defineConfig({
         "@/shortcodes/Button",
         "@/shortcodes/FileName",
         "@/shortcodes/FancyLink",
+        "@/shortcodes/FancyInternalLink",
         "@/shortcodes/Notice",
         "@/shortcodes/Tab",
         "@/shortcodes/Tabs",
