@@ -2,6 +2,7 @@
 import BaseRedesign from "@/layouts/BaseRedesign.astro";
 import SiteNav from "@/components/SiteNav.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
+import IconArrow from "@/components/IconArrow.astro";
 ---
 
 <BaseRedesign title="Page not found — Villoro">
@@ -18,7 +19,7 @@ import SiteFooter from "@/components/SiteFooter.astro";
         <div class="nf-actions">
           <a href="/" class="nf-btn nf-btn--blue">
             Back to home
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            <IconArrow size={12} />
           </a>
           <a href="/blog" class="nf-btn nf-btn--ghost">Browse the blog</a>
         </div>

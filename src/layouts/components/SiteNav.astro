@@ -7,6 +7,7 @@
  */
 import Logo from "@/components/Logo.astro";
 import ThemeSwitcher from "@/components/ThemeSwitcher.astro";
+import IconArrow from "@/components/IconArrow.astro";
 import config from "@/config/config.json";
 
 const { pathname } = Astro.url;
@@ -21,46 +22,22 @@ const isBlog   = pathname.startsWith("/blog")
 
 <header class="sitenav">
   <nav class="sitenav__inner">
-    <!-- Logo (Logo.astro renders its own <a>, so we use a wrapper div) -->
+    <!-- Logo -->
     <div class="sitenav__logo">
       <Logo />
     </div>
 
-    <!-- Mobile hamburger (CSS-only toggle) -->
-    <input id="sitenav-toggle" type="checkbox" class="sitenav__checkbox" />
-    <label for="sitenav-toggle" class="sitenav__hamburger" aria-label="Toggle menu">
-      <span></span><span></span><span></span>
-    </label>
-
-    <!-- Right-side group: links + utilities -->
-    <div class="sitenav__right">
-      <ul class="sitenav__links" role="list">
-        <li>
-          <a href="/" class:list={["sitenav__link", { "is-active": isHome }]}>
-            Home
-          </a>
-        </li>
-        <li>
-          <a href="/about" class:list={["sitenav__link", { "is-active": isAbout }]}>
-            About
-          </a>
-        </li>
-        <li>
-          <a href="/blog" class:list={["sitenav__link", { "is-active": isBlog }]}>
-            Blog
-          </a>
-        </li>
-      </ul>
-
-      <div class="sitenav__divider" aria-hidden="true"></div>
-
+    <!-- Always-visible utilities: search + theme switcher.
+         On desktop they sit between nav links and Subscribe;
+         on mobile they stay visible next to the hamburger so users
+         can search / switch theme without opening the menu first. -->
+    <div class="sitenav__utils">
       {settings.search && (
         <button
           class="sitenav__icon-btn"
           aria-label="Open search"
           data-search-trigger
         >
-          <!-- search icon -->
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -69,10 +46,33 @@ const isBlog   = pathname.startsWith("/blog")
           </svg>
         </button>
       )}
-
       <div class="sitenav__theme-wrap">
         <ThemeSwitcher />
       </div>
+    </div>
+
+    <!-- Mobile hamburger (CSS-only toggle) -->
+    <input id="sitenav-toggle" type="checkbox" class="sitenav__checkbox" />
+    <label for="sitenav-toggle" class="sitenav__hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </label>
+
+    <!-- Collapsible menu: nav links + Subscribe.
+         display:contents on desktop so its children flow as direct
+         flex children of .sitenav__inner; becomes a real dropdown
+         column on mobile when the hamburger is checked. -->
+    <div class="sitenav__menu">
+      <ul class="sitenav__links" role="list">
+        <li>
+          <a href="/" class:list={["sitenav__link", { "is-active": isHome }]}>Home</a>
+        </li>
+        <li>
+          <a href="/about" class:list={["sitenav__link", { "is-active": isAbout }]}>About</a>
+        </li>
+        <li>
+          <a href="/blog" class:list={["sitenav__link", { "is-active": isBlog }]}>Blog</a>
+        </li>
+      </ul>
 
       <a
         href={config.subscribe.link}
@@ -81,12 +81,7 @@ const isBlog   = pathname.startsWith("/blog")
         class="btn btn-primary sitenav__subscribe"
       >
         Subscribe
-        <!-- arrow icon -->
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M5 12h14M13 5l7 7-7 7"/>
-        </svg>
+        <IconArrow size={12} />
       </a>
     </div>
   </nav>
@@ -109,7 +104,6 @@ const isBlog   = pathname.startsWith("/blog")
   .sitenav__inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 22px var(--container-px);
     max-width: 1312px;
     margin: 0 auto;
@@ -119,6 +113,7 @@ const isBlog   = pathname.startsWith("/blog")
     display: flex;
     align-items: center;
     flex-shrink: 0;
+    margin-right: auto; /* push everything else to the right */
   }
 
   /* Hidden checkbox powering the mobile toggle */
@@ -143,11 +138,24 @@ const isBlog   = pathname.startsWith("/blog")
     transition: transform 0.2s ease, opacity 0.2s ease;
   }
 
-  /* Right-side group */
-  .sitenav__right {
+  /* Always-visible utilities cluster (search + theme).
+     Desktop: sits between nav links (order 1) and Subscribe (order 3),
+     separated from the links by a thin left border. */
+  .sitenav__utils {
     display: flex;
     align-items: center;
-    gap: 0;
+    gap: 16px;
+    padding-left: 20px;
+    margin-left: 20px;
+    border-left: 1px solid var(--color-grey-100);
+    order: 2;
+  }
+
+  /* Collapsible menu — display:contents on desktop so its children
+     (links + subscribe) flow directly into the .sitenav__inner flex row.
+     Becomes a real container on mobile (see media query). */
+  .sitenav__menu {
+    display: contents;
   }
 
   /* Nav link list */
@@ -158,6 +166,7 @@ const isBlog   = pathname.startsWith("/blog")
     list-style: none;
     margin: 0;
     padding: 0;
+    order: 1;
   }
 
   .sitenav__link {
@@ -173,15 +182,6 @@ const isBlog   = pathname.startsWith("/blog")
   .sitenav__link:hover,
   .sitenav__link.is-active {
     color: var(--color-blue-500);
-  }
-
-  /* Divider between links and utilities */
-  .sitenav__divider {
-    width: 1px;
-    height: 18px;
-    background: var(--color-grey-100);
-    margin: 0 20px;
-    flex-shrink: 0;
   }
 
   /* Icon buttons (search, etc.) */
@@ -202,9 +202,9 @@ const isBlog   = pathname.startsWith("/blog")
     color: var(--color-blue-500);
   }
 
-  /* ThemeSwitcher wrapper spacing */
   .sitenav__theme-wrap {
-    margin: 0 20px;
+    display: inline-flex;
+    align-items: center;
   }
 
   /* Subscribe CTA — uses global .btn-primary class */
@@ -216,6 +216,7 @@ const isBlog   = pathname.startsWith("/blog")
     margin-left: 20px;
     white-space: nowrap;
     box-shadow: var(--shadow-cta);
+    order: 3;
   }
 
 
@@ -224,26 +225,38 @@ const isBlog   = pathname.startsWith("/blog")
     .sitenav__inner {
       padding: 16px 20px;
       flex-wrap: wrap;
-      gap: 0;
+    }
+
+    /* Utilities stay visible next to the hamburger.
+       Reset desktop spacing/border. */
+    .sitenav__utils {
+      order: 1;
+      gap: 12px;
+      padding-left: 0;
+      margin-left: 0;
+      border-left: 0;
     }
 
     .sitenav__hamburger {
       display: flex;
+      order: 2;
+      margin-left: 8px;
     }
 
-    .sitenav__right {
+    /* Menu collapses by default, expands on checkbox toggle.
+       Note: input precedes .sitenav__menu in DOM, so `~` works. */
+    .sitenav__menu {
       display: none;
       width: 100%;
       flex-direction: column;
       align-items: flex-start;
-      padding: 16px 0 8px;
       gap: 16px;
+      padding: 16px 0 8px;
       border-top: 1px solid var(--color-grey-100);
       margin-top: 12px;
+      order: 3;
     }
-
-    /* Show when checkbox is checked */
-    .sitenav__checkbox:checked ~ .sitenav__right {
+    .sitenav__checkbox:checked ~ .sitenav__menu {
       display: flex;
     }
 
@@ -265,8 +278,8 @@ const isBlog   = pathname.startsWith("/blog")
       width: 100%;
     }
 
-    .sitenav__divider {
-      display: none;
+    .sitenav__subscribe {
+      margin-left: 0;
     }
   }
 </style>

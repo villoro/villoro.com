@@ -4,6 +4,7 @@
  * Used at the end of every blog post.
  */
 import config from "@/config/config.json";
+import IconArrow from "@/components/IconArrow.astro";
 
 const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`;
 ---
@@ -31,11 +32,7 @@ const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`
       class="btn btn-primary cta__subscribe"
     >
       {config.subscribe.title}
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.5"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M5 12h14M13 5l7 7-7 7"/>
-      </svg>
+      <IconArrow size={12} />
     </a>
   </div>
 </div>
