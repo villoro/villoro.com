@@ -2,6 +2,8 @@
 import config from "@/config/config.json";
 import social from "@/config/social.json";
 import SocialIcon from "@/components/SocialIcon.astro";
+
+const writingSinceYear = new Date(config.settings.writing_since).getFullYear();
 ---
 
 <footer class="site-footer">
@@ -11,7 +13,7 @@ import SocialIcon from "@/components/SocialIcon.astro";
       <a href={`mailto:${config.footer.email}`} class="site-footer__email">
         {config.footer.email}
       </a>
-      &nbsp;· Barcelona · © 2018
+      &nbsp;· Barcelona · © {writingSinceYear}
     </div>
     <div class="site-footer__social">
       {social.main.map((s) => (
