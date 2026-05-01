@@ -21,7 +21,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { blog_folder, similar_items_length } = config.settings;
-const { title, description, image, date, tags = [], category } = post.data;
+const { title, description, image, date, updatedDate, tags = [], category } = post.data;
 const slug     = post.data.slug || post.id;
 const canonical = `${config.site.base_url}${Astro.url.pathname}`;
 
@@ -58,6 +58,7 @@ const jsonLd = {
   description,
   image: image ? `${config.site.base_url}${image}` : undefined,
   datePublished: date ? new Date(date).toISOString() : undefined,
+  dateModified: updatedDate ? new Date(updatedDate).toISOString() : (date ? new Date(date).toISOString() : undefined),
   author: {
     "@type": "Person",
     name: post.data.author || config.metadata.meta_author,

@@ -57,14 +57,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - Ensure no skipped levels (h1 → h3) on listing pages and articles.
 - **Effort:** Low / **Impact:** Low
 
-### S9. `rel="next"` / `rel="prev"` on pagination
-- Complement to S3 (already implemented). Add sequence hints to listing pages.
-- **Effort:** Low / **Impact:** Low
-
-### S10. Extend JSON-LD with `dateModified`
-- S1 implemented base `BlogPosting`. Once M1 (updatedDate) lands, add `dateModified` to the JSON-LD.
-- **Effort:** Trivial
-
 ---
 
 ## Code Quality & Architecture
@@ -101,10 +93,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ### D4. Lighthouse / Unlighthouse CI step on previews
 - **Effort:** Medium / **Impact:** Medium
 
-### D5. Simplify npm scripts
-- `dev` and `build` both call `npm run generate-json`. Move into an Astro hook (`astro:build:start`) or `prebuild`/`predev`.
-- **Effort:** Low
-
 ### D6. Use `npm ci` in Netlify/CI instead of `npm install`
 - Reproducible builds, fewer surprises. (Note: Netlify currently has no explicit build command in `netlify.toml` — uses package.json default. May need a `[build]` block.)
 - **Effort:** Trivial
@@ -113,9 +101,9 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## Content & Collections
 
-### M1. Optional `updatedDate` in blog schema
-- Display "Updated: …" when present. Helps SEO and reader trust. Pair with S10.
-- **Effort:** Low
+### M1b. Display `updatedDate` in article UI
+- Schema field now exists (M1 implemented). Add "Updated: …" label in `ArticleLayout.astro` when present.
+- **Effort:** Trivial
 
 ### M2. Precompute reading time
 - Optional `readingTime` field; compute at build, runtime fallback.
@@ -150,3 +138,7 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **C5** — N/A (`SearchModal.tsx` has no `.map()` calls).
 - **C6** — Color system docstring added in `src/styles/main.css`.
 - **C7** — `readingTimeForPost` helper centralizes the try/catch; 3 call sites simplified.
+- **D5** — npm scripts now use `predev`/`prebuild` instead of `&&`.
+- **M1** — `updatedDate` optional field added to blog schema.
+- **S9** — `rel="prev"` / `rel="next"` link tags on paginated listings.
+- **S10** — JSON-LD now includes `dateModified` (falls back to `datePublished`).

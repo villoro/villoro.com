@@ -19,6 +19,7 @@ import Pagination from "@/components/Pagination.astro";
 import Breadcrumb from "@/components/Breadcrumb.astro";
 import CategoryRibbon from "@/components/CategoryRibbon.astro";
 import { readingTimeForPost } from "@/lib/utils/readingTime";
+import config from "@/config/config.json";
 import type { CollectionEntry } from "astro:content";
 import type { CategoryItem } from "@/lib/listingData";
 
@@ -82,9 +83,22 @@ const {
 } = Astro.props;
 
 const getReadTime = readingTimeForPost;
+
+const pageHref = (page: number) => {
+  if (page === 1) return paginationSection ? `/${paginationSection}` : "/";
+  return `${paginationSection ? "/" + paginationSection : ""}/${config.settings.page_name}/${page}`;
+};
+const prevHref = currentPage > 1 ? pageHref(currentPage - 1) : undefined;
+const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefined;
 ---
 
-<BaseRedesign title={title} description={description} noindex={currentPage > 1}>
+<BaseRedesign
+  title={title}
+  description={description}
+  noindex={currentPage > 1}
+  prevHref={prevHref}
+  nextHref={nextHref}
+>
   <div class="bl">
     <SiteNav />
 
