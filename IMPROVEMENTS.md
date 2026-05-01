@@ -6,16 +6,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ---
 
-## Quick Wins (do first)
-
-1. **Remove dead `@/partials/*` alias** in `tsconfig.json` (folder was removed in redesign 3.0). _Trivial._
-2. **Add `noindex` to pagination pages > 1** (`/blog/page/2+`) to consolidate SEO. _Low / Medium impact._
-3. **Add JSON-LD `BlogPosting` schema** to `ArticleLayout.astro` for rich snippets. _Low / High impact._
-4. **Generate RSS feed** via `@astrojs/rss`, link in `<head>`. _Low / Medium impact._
-5. **Remove obsolete Sharp/Squoosh comment** in `astro.config.mjs`. _Trivial._
-
----
-
 ## Performance
 
 ### P1. Optimize font loading
@@ -38,40 +28,22 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Change:** Add a size budget (e.g. <200KB) to CI, batch-compress existing images.
 - **Effort:** Medium / **Impact:** Medium
 
-### P5. Ensure lazy loading on below-fold images
-- **Current:** `RelatedPostsGrid.astro` may not always pass `loading="lazy"` to `PostCard`.
-- **Change:** Always pass `loading="lazy"` for non-hero images.
-- **Effort:** Trivial / **Impact:** Low
-
 ### P6. Move prose styles out of `ArticleLayout.astro`
 - **Current:** ~420 lines of `<style is:global>` in the layout file.
 - **Change:** Extract to `src/styles/prose.css`, import where needed.
 - **Effort:** Medium / **Impact:** Low (mostly maintainability)
 
-### P7. Remove obsolete Squoosh comment
-- **Current:** `astro.config.mjs` has commented-out Sharp/Squoosh config block.
-- **Change:** Delete it (Sharp is default in Astro 5+).
-- **Effort:** Trivial
-
 ---
 
 ## SEO & Accessibility
-
-### S1. JSON-LD structured data for articles
-- Add `BlogPosting` schema (author, datePublished, dateModified, image, headline) in `ArticleLayout.astro`.
-- **Effort:** Low / **Impact:** High
 
 ### S2. RSS feed
 - Add `@astrojs/rss`, route at `/rss.xml`, `<link rel="alternate">` in `<head>`.
 - **Effort:** Low / **Impact:** Medium
 
-### S3. `noindex` on paginated pages
-- Add `noindex` for `/blog/page/N` where N > 1, plus `rel="next"` / `rel="prev"`.
-- **Effort:** Low / **Impact:** Medium
-
 ### S4. Skip-to-content link
-- Add visually hidden `<a href="#main">Skip to main content</a>` before nav.
-- **Effort:** Trivial / **Impact:** Low
+- Add visually hidden `<a href="#main">Skip to main content</a>` before nav, plus `id="main"` on the main wrapper of each layout (BlogListingLayout, ArticleLayout, index, about, 404).
+- **Effort:** Low / **Impact:** Low
 
 ### S5. Audit `aria-label` on icon-only buttons
 - Check `ShareRow.astro`, theme switcher, social icons.
@@ -85,17 +57,17 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - Ensure no skipped levels (h1 → h3) on listing pages and articles.
 - **Effort:** Low / **Impact:** Low
 
-### S8. Add `.github/FUNDING.yml`
-- Enables GitHub Sponsors button using existing config links.
+### S9. `rel="next"` / `rel="prev"` on pagination
+- Complement to S3 (already implemented). Add sequence hints to listing pages.
+- **Effort:** Low / **Impact:** Low
+
+### S10. Extend JSON-LD with `dateModified`
+- S1 implemented base `BlogPosting`. Once M1 (updatedDate) lands, add `dateModified` to the JSON-LD.
 - **Effort:** Trivial
 
 ---
 
 ## Code Quality & Architecture
-
-### C1. Remove dead tsconfig alias
-- Delete `@/partials/*` mapping in `tsconfig.json`.
-- **Effort:** Trivial
 
 ### C2. Type `config.json` with Zod or interfaces
 - **Current:** Untyped imports across components.
@@ -103,25 +75,12 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Effort:** Low / **Impact:** Low (DX)
 
 ### C3. Wrap unsafe `(post as any).body` casts
-- Centralize in a `getPostBody(entry)` helper.
+- Centralize remaining occurrences in a `getPostBody(entry)` helper. (Reading-time call sites already cleaned up via C7.)
 - **Effort:** Low / **Impact:** Low
 
 ### C4. Extract `SearchModal.tsx` keyboard logic
 - Move 100+ lines of useEffect into a `useSearchKeyboard` hook.
 - **Effort:** Low / **Impact:** Low (testability)
-
-### C5. Add React `key` props in `SearchModal`
-- Map output currently missing `key={item.slug}`.
-- **Effort:** Trivial
-
-### C6. Document the two color systems
-- `tokens.css` vs `generated-theme.css` coexistence (per AGENTS.md).
-- Add a short note in `main.css` explaining when to use each.
-- **Effort:** Low
-
-### C7. Simplify reading-time utility
-- Remove repeated try/catch around `.body` at call sites; handle in helper.
-- **Effort:** Trivial
 
 ---
 
@@ -143,11 +102,11 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Effort:** Medium / **Impact:** Medium
 
 ### D5. Simplify npm scripts
-- `dev` and `build` both call `npm run generate-json`. Move into an Astro hook (`astro:build:start`) or `prebuild`.
+- `dev` and `build` both call `npm run generate-json`. Move into an Astro hook (`astro:build:start`) or `prebuild`/`predev`.
 - **Effort:** Low
 
 ### D6. Use `npm ci` in Netlify/CI instead of `npm install`
-- Reproducible builds, fewer surprises.
+- Reproducible builds, fewer surprises. (Note: Netlify currently has no explicit build command in `netlify.toml` — uses package.json default. May need a `[build]` block.)
 - **Effort:** Trivial
 
 ---
@@ -155,7 +114,7 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ## Content & Collections
 
 ### M1. Optional `updatedDate` in blog schema
-- Display "Updated: …" when present. Helps SEO and reader trust.
+- Display "Updated: …" when present. Helps SEO and reader trust. Pair with S10.
 - **Effort:** Low
 
 ### M2. Precompute reading time
@@ -180,15 +139,14 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ---
 
-## Summary
+## Implemented (for reference)
 
-| Category | Items | Notes |
-|---|---|---|
-| Performance | 7 | Fonts + image formats are biggest wins |
-| SEO/A11y | 8 | JSON-LD + RSS + noindex pagination = highest ROI |
-| Code Quality | 7 | Mostly cleanup, low risk |
-| DX/Tooling | 6 | Linting + tests are the foundation |
-| Content | 3 | Schema enrichments |
-| Dependencies | 2 | Hygiene |
-
-**Recommended order:** Quick Wins → S1/S2/S3 (SEO trio) → P1/P2 (perf) → D1/D2 (lint + tests) → everything else.
+- **C1** — Removed dead `@/partials/*` alias.
+- **P5** — Already correct (`RelatedPostsGrid` passes `loading="lazy"`).
+- **P7** — Removed obsolete Squoosh comment.
+- **S1** — JSON-LD `BlogPosting` schema added in `src/pages/blog/[single].astro`.
+- **S3** — `noindex` on paginated listing pages > 1.
+- **S8** — `.github/FUNDING.yml` added.
+- **C5** — N/A (`SearchModal.tsx` has no `.map()` calls).
+- **C6** — Color system docstring added in `src/styles/main.css`.
+- **C7** — `readingTimeForPost` helper centralizes the try/catch; 3 call sites simplified.

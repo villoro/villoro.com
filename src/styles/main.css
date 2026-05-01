@@ -3,6 +3,12 @@
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Two color systems coexist intentionally (see AGENTS.md):
+ * - generated-theme.css: Tailwind @theme block, used by utility classes (legacy components).
+ * - tokens.css: semantic CSS custom properties, preferred by redesign 3.0 components.
+ * Do not merge them. New components should consume tokens.css variables.
+ */
 @import "./generated-theme.css";
 @import "./tokens.css";
 

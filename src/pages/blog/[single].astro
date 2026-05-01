@@ -50,7 +50,24 @@ for (const h of headings) {
 
 const readTime     = readingTimeForPost(post);
 const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: title,
+  description,
+  image: image ? `${config.site.base_url}${image}` : undefined,
+  datePublished: date ? new Date(date).toISOString() : undefined,
+  author: {
+    "@type": "Person",
+    name: post.data.author || config.metadata.meta_author,
+  },
+  mainEntityOfPage: canonical,
+  keywords: tags.join(", ") || undefined,
+};
 ---
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
 
 <ArticleLayout
   title={title}
