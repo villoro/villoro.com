@@ -50,6 +50,7 @@ for (const h of headings) {
 
 const readTime     = readingTimeForPost(post);
 const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
+const formattedUpdatedDate = updatedDate ? dateFormat(updatedDate, "MMMM d, yyyy") : "";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -81,6 +82,7 @@ const jsonLd = {
   catColor={catColor}
   tags={tags}
   formattedDate={formattedDate}
+  formattedUpdatedDate={formattedUpdatedDate}
   readTime={readTime}
   slug={slug}
   blogFolder={blog_folder}

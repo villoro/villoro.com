@@ -45,10 +45,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - Add visually hidden `<a href="#main">Skip to main content</a>` before nav, plus `id="main"` on the main wrapper of each layout (BlogListingLayout, ArticleLayout, index, about, 404).
 - **Effort:** Low / **Impact:** Low
 
-### S5. Audit `aria-label` on icon-only buttons
-- Check `ShareRow.astro`, theme switcher, social icons.
-- **Effort:** Trivial / **Impact:** Medium
-
 ### S6. Enforce alt text in content schema
 - Require `alt` field on post images (or fail build).
 - **Effort:** Trivial / **Impact:** Medium
@@ -65,10 +61,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Current:** Untyped imports across components.
 - **Change:** `src/types/config.ts` with schema + parse on load.
 - **Effort:** Low / **Impact:** Low (DX)
-
-### C3. Wrap unsafe `(post as any).body` casts
-- Centralize remaining occurrences in a `getPostBody(entry)` helper. (Reading-time call sites already cleaned up via C7.)
-- **Effort:** Low / **Impact:** Low
 
 ### C4. Extract `SearchModal.tsx` keyboard logic
 - Move 100+ lines of useEffect into a `useSearchKeyboard` hook.
@@ -100,10 +92,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ---
 
 ## Content & Collections
-
-### M1b. Display `updatedDate` in article UI
-- Schema field now exists (M1 implemented). Add "Updated: …" label in `ArticleLayout.astro` when present.
-- **Effort:** Trivial
 
 ### M2. Precompute reading time
 - Optional `readingTime` field; compute at build, runtime fallback.
@@ -142,3 +130,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **M1** — `updatedDate` optional field added to blog schema.
 - **S9** — `rel="prev"` / `rel="next"` link tags on paginated listings.
 - **S10** — JSON-LD now includes `dateModified` (falls back to `datePublished`).
+- **C3** — N/A (only remaining `.body` cast is inside the `readingTimeForPost` helper itself — that's the centralization point).
+- **M1b** — `ArticleLayout` displays "Updated …" when `updatedDate` is present in frontmatter.
+- **S5** — ThemeSwitcher accessible name improved ("Toggle dark mode" instead of generic "theme switcher"). Other icon-only buttons already labeled.
