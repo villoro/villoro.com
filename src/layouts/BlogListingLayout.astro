@@ -18,7 +18,7 @@ import PostCard from "@/components/PostCard.astro";
 import Pagination from "@/components/Pagination.astro";
 import Breadcrumb from "@/components/Breadcrumb.astro";
 import CategoryRibbon from "@/components/CategoryRibbon.astro";
-import readingTime from "@/lib/utils/readingTime";
+import { readingTimeForPost } from "@/lib/utils/readingTime";
 import type { CollectionEntry } from "astro:content";
 import type { CategoryItem } from "@/lib/listingData";
 
@@ -81,9 +81,7 @@ const {
   paginationSection,
 } = Astro.props;
 
-const getReadTime = (post: CollectionEntry<"blog">) => {
-  try { return readingTime((post as any).body ?? ""); } catch { return ""; }
-};
+const getReadTime = readingTimeForPost;
 ---
 
 <BaseRedesign title={title} description={description}>

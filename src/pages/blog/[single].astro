@@ -3,7 +3,7 @@ import ArticleLayout from "@/layouts/ArticleLayout.astro";
 import { render } from "astro:content";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import similarItems from "@/lib/utils/similarItems";
-import readingTime from "@/lib/utils/readingTime";
+import { readingTimeForPost } from "@/lib/utils/readingTime";
 import dateFormat from "@/lib/utils/dateFormat";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 import { humanize } from "@/lib/utils/textConverter";
@@ -48,7 +48,7 @@ for (const h of headings) {
   }
 }
 
-const readTime     = (() => { try { return readingTime((post as any).body ?? ""); } catch { return ""; } })();
+const readTime     = readingTimeForPost(post);
 const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
 ---
 

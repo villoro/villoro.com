@@ -6,7 +6,7 @@ import SiteFooter from "@/components/SiteFooter.astro";
 import IconArrow from "@/components/IconArrow.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
-import readingTime from "@/lib/utils/readingTime";
+import { readingTimeForPost } from "@/lib/utils/readingTime";
 import config from "@/config/config.json";
 import { getCollection } from "astro:content";
 
@@ -40,10 +40,7 @@ const yearsWriting  = Math.floor(
 const latestDate = latestPost?.data?.date ? new Date(latestPost.data.date) : today;
 const daysAgo    = Math.max(0, Math.round((today.getTime() - latestDate.getTime()) / 86_400_000));
 
-// Reading times — body is available on glob-loaded entries as a string
-const getReadTime = (post: typeof sortedPosts[0]) => {
-  try { return readingTime((post as any).body ?? ""); } catch { return ""; }
-};
+const getReadTime = readingTimeForPost;
 
 ---
 
