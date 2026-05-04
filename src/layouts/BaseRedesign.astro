@@ -101,7 +101,6 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
     {canonical && <link rel="canonical" href={canonical} item-prop="url" />}
     {prevHref && <link rel="prev" href={prevHref} />}
     {nextHref && <link rel="next" href={nextHref} />}
-    <link rel="alternate" type="application/rss+xml" href="/rss.xml" />}
     {noindex && <meta name="robots" content="noindex,nofollow" />}
     <meta name="description" content={plainify(description ? description : config.metadata.meta_description)} />
     <ClientRouter />
