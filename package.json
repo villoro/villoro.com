@@ -13,8 +13,6 @@
     "dev": "astro dev",
     "prebuild": "npm run generate-json",
     "build": "astro build",
-    "postbuild": "size-limit",
-    "size": "size-limit",
     "preview": "astro preview",
     "format": "prettier -w ./src",
     "generate-json": "node scripts/jsonGenerator.js",

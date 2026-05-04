@@ -37,6 +37,10 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## SEO & Accessibility
 
+### S2. RSS feed
+- Add `@astrojs/rss`, route at `/rss.xml`, `<link rel="alternate">` in `<head>`.
+- **Effort:** Low / **Impact:** Medium
+
 ### S7. Audit heading hierarchy
 - Ensure no skipped levels (h1 → h3) on listing pages and articles.
 - **Effort:** Low / **Impact:** Low
