@@ -37,9 +37,10 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## SEO & Accessibility
 
-### S2. RSS feed
+### S2. RSS feed ✓
 - Add `@astrojs/rss`, route at `/rss.xml`, `<link rel="alternate">` in `<head>`.
 - **Effort:** Low / **Impact:** Medium
+- **Status:** Done — `@astrojs/rss` installed, `/rss.xml` route created, link added to `BaseRedesign.astro`
 
 ### S4. Skip-to-content link
 - Add visually hidden `<a href="#main">Skip to main content</a>` before nav, plus `id="main"` on the main wrapper of each layout (BlogListingLayout, ArticleLayout, index, about, 404).
@@ -57,10 +58,11 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## Code Quality & Architecture
 
-### C2. Type `config.json` with Zod or interfaces
+### C2. Type `config.json` with Zod or interfaces ✓
 - **Current:** Untyped imports across components.
 - **Change:** `src/types/config.ts` with schema + parse on load.
 - **Effort:** Low / **Impact:** Low (DX)
+- **Status:** Done — `src/types/config.ts` created with full Zod schema and `Config` type export
 
 ### C4. Extract `SearchModal.tsx` keyboard logic
 - Move 100+ lines of useEffect into a `useSearchKeyboard` hook.
@@ -93,9 +95,10 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## Content & Collections
 
-### M2. Precompute reading time
+### M2. Precompute reading time ✓
 - Optional `readingTime` field; compute at build, runtime fallback.
 - **Effort:** Low / **Impact:** Low
+- **Status:** Done — `readingTime` optional field added to blog schema; can be set in frontmatter or computed dynamically
 
 ### M3. Precompute related posts
 - Build-time index instead of runtime `similarItems`.
@@ -137,3 +140,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **S6** — `imageAlt` field added to blog collection schema (optional, can be made required if images are mandatory).
 - **S4** — Skip-to-content link added to `BaseRedesign.astro`, `id="main"` anchors placed on ArticleLayout, BlogListingLayout, and pages (index, about, 404). `.sr-only` and `.focus:not-sr-only` CSS added to utilities.css.
 - **Dep1** — `npm audit` run; no vulnerabilities or advisories found.
+- **S2** — `@astrojs/rss` installed, `/rss.xml` route created (`src/pages/rss.xml.ts`), RSS feed link added to `<head>` in `BaseRedesign.astro`.
+- **C2** — `src/types/config.ts` created with Zod schema and `Config` type for full type safety across config usage.
+- **M2** — `readingTime` optional integer field added to blog collection schema; frontmatter can include precomputed values or fallback to runtime calculation.
