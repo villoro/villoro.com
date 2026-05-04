@@ -11,6 +11,7 @@ interface Props {
   loading?: "eager" | "lazy" | null | undefined;
   decoding?: "async" | "auto" | "sync" | null | undefined;
   format?: "auto" | "avif" | "jpeg" | "png" | "svg" | "webp";
+  sizes?: string;
   class?: string;
   style?: any;
 }
@@ -25,6 +26,7 @@ let {
   decoding,
   class: className,
   format,
+  sizes,
   style,
 } = Astro.props;
 
@@ -51,6 +53,7 @@ const isValidPath = images[src] ? true : false;
     height={height}
     loading={loading}
     decoding={decoding}
+    sizes={sizes}
     class={className}
     format={format}
     style={style}
