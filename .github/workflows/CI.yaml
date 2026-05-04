@@ -84,4 +84,4 @@ jobs:
         run: npm run build
 
       - name: Check bundle size
-        run: npm run size -- --why
+        run: npm run size
