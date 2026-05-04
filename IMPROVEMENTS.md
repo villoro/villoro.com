@@ -133,3 +133,7 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **C3** — N/A (only remaining `.body` cast is inside the `readingTimeForPost` helper itself — that's the centralization point).
 - **M1b** — `ArticleLayout` displays "Updated …" when `updatedDate` is present in frontmatter.
 - **S5** — ThemeSwitcher accessible name improved ("Toggle dark mode" instead of generic "theme switcher"). Other icon-only buttons already labeled.
+- **D6** — netlify.toml now uses `npm ci && npm run build` with explicit `[build]` section.
+- **S6** — `imageAlt` field added to blog collection schema (optional, can be made required if images are mandatory).
+- **S4** — Skip-to-content link added to `BaseRedesign.astro`, `id="main"` anchors placed on ArticleLayout, BlogListingLayout, and pages (index, about, 404). `.sr-only` and `.focus:not-sr-only` CSS added to utilities.css.
+- **Dep1** — `npm audit` run; no vulnerabilities or advisories found.
