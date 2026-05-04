@@ -12,7 +12,7 @@ import {
   FaBug,
   FaListOl,
   FaQuoteLeft,
-} from "react-icons/fa";
+} from "./icons";
 
 const TYPE_ALIASES: Record<string, string> = {
   summary: "abstract",
