@@ -19,11 +19,11 @@
     "remove-darkmode": "node scripts/removeDarkmode.js && npm run format"
   },
   "dependencies": {
-    "@astrojs/mdx": "^5.0.3",
-    "@astrojs/react": "^5.0.3",
+    "@astrojs/mdx": "^5.0.4",
+    "@astrojs/react": "^5.0.4",
     "@astrojs/sitemap": "^3.7.2",
     "@tailwindcss/vite": "^4.2.4",
-    "astro": "^6.1.8",
+    "astro": "^6.2.1",
     "astro-auto-import": "^0.5.1",
     "astro-font": "^0.0.77",
     "date-fns": "^3.3.1",
