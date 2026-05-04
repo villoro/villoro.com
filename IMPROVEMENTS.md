@@ -8,10 +8,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## Performance
 
-### P1. Optimize font loading
-- **Current:** `BaseRedesign.astro` loads 7 Google Fonts via synchronous `<link>` plus AstroFont for Heebo/Signika.
-- **Change:** Preload primary fonts, defer/swap secondary, consider `font-display: optional` for decorative.
-- **Effort:** Low / **Impact:** High (faster FCP, less CLS)
 
 ### P2. AVIF + WebP with `<picture>` fallback
 - **Current:** `ImageMod.astro` only emits `format="webp"`.
@@ -37,17 +33,11 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## SEO & Accessibility
 
-### S7. Audit heading hierarchy
-- Ensure no skipped levels (h1 → h3) on listing pages and articles.
-- **Effort:** Low / **Impact:** Low
 
 ---
 
 ## Code Quality & Architecture
 
-### C4. Extract `SearchModal.tsx` keyboard logic
-- Move 100+ lines of useEffect into a `useSearchKeyboard` hook.
-- **Effort:** Low / **Impact:** Low (testability)
 
 ---
 
