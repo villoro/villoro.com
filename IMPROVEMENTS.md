@@ -75,4 +75,7 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## Dependencies
 
+### Dep2. Consider replacing `react-icons`
+- Switch to inline SVGs or Tabler Icons for smaller bundle / fewer transitive deps.
+- **Effort:** Medium / **Impact:** Low
 
