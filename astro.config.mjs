@@ -15,9 +15,6 @@ export default defineConfig({
   base: config.site.base_path ? config.site.base_path : "/",
   trailingSlash: config.site.trailing_slash ? "always" : "never",
 
-  // Remove this entire "image" block: Sharp is the default in Astro 5
-  // image: { service: squooshImageService() },
-
   vite: {
     plugins: [tailwindcss()],
   },

@@ -3,7 +3,7 @@ import ArticleLayout from "@/layouts/ArticleLayout.astro";
 import { render } from "astro:content";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import similarItems from "@/lib/utils/similarItems";
-import readingTime from "@/lib/utils/readingTime";
+import { readingTimeForPost } from "@/lib/utils/readingTime";
 import dateFormat from "@/lib/utils/dateFormat";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 import { humanize } from "@/lib/utils/textConverter";
@@ -21,7 +21,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { blog_folder, similar_items_length } = config.settings;
-const { title, description, image, date, tags = [], category } = post.data;
+const { title, description, image, date, updatedDate, tags = [], category } = post.data;
 const slug     = post.data.slug || post.id;
 const canonical = `${config.site.base_url}${Astro.url.pathname}`;
 
@@ -48,9 +48,28 @@ for (const h of headings) {
   }
 }
 
-const readTime     = (() => { try { return readingTime((post as any).body ?? ""); } catch { return ""; } })();
+const readTime     = readingTimeForPost(post);
 const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
+const formattedUpdatedDate = updatedDate ? dateFormat(updatedDate, "MMMM d, yyyy") : "";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: title,
+  description,
+  image: image ? `${config.site.base_url}${image}` : undefined,
+  datePublished: date ? new Date(date).toISOString() : undefined,
+  dateModified: updatedDate ? new Date(updatedDate).toISOString() : (date ? new Date(date).toISOString() : undefined),
+  author: {
+    "@type": "Person",
+    name: post.data.author || config.metadata.meta_author,
+  },
+  mainEntityOfPage: canonical,
+  keywords: tags.join(", ") || undefined,
+};
 ---
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
 
 <ArticleLayout
   title={title}
@@ -63,6 +82,7 @@ const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
   catColor={catColor}
   tags={tags}
   formattedDate={formattedDate}
+  formattedUpdatedDate={formattedUpdatedDate}
   readTime={readTime}
   slug={slug}
   blogFolder={blog_folder}

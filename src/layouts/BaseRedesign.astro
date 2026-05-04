@@ -35,9 +35,11 @@ export interface Props {
   image?: string;
   noindex?: boolean;
   canonical?: string;
+  prevHref?: string;
+  nextHref?: string;
 }
 
-const { title, meta_title, description, image, noindex, canonical } = Astro.props;
+const { title, meta_title, description, image, noindex, canonical, prevHref, nextHref } = Astro.props;
 ---
 
 <!doctype html>
@@ -96,6 +98,8 @@ const { title, meta_title, description, image, noindex, canonical } = Astro.prop
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <title>{plainify(meta_title ? meta_title : title ? title : config.site.title)}</title>
     {canonical && <link rel="canonical" href={canonical} item-prop="url" />}
+    {prevHref && <link rel="prev" href={prevHref} />}
+    {nextHref && <link rel="next" href={nextHref} />}
     {noindex && <meta name="robots" content="noindex,nofollow" />}
     <meta name="description" content={plainify(description ? description : config.metadata.meta_description)} />
     <ClientRouter />

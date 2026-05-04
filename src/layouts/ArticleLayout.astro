@@ -43,6 +43,7 @@ interface Props {
   catColor: string;
   tags: string[];
   formattedDate: string;
+  formattedUpdatedDate?: string;
   readTime: string;
   slug: string;
   blogFolder: string;
@@ -65,6 +66,7 @@ const {
   catColor,
   tags,
   formattedDate,
+  formattedUpdatedDate,
   readTime,
   slug,
   blogFolder,
@@ -128,6 +130,9 @@ const breadcrumbs = [
           <span class="al-hero__author">Arnau Villoro</span>
           {formattedDate && (
             <><span class="al-hero__dot">·</span><span>{formattedDate}</span></>
+          )}
+          {formattedUpdatedDate && (
+            <><span class="al-hero__dot">·</span><span>Updated {formattedUpdatedDate}</span></>
           )}
           {readTime && (
             <><span class="al-hero__dot">·</span><span>{readTime}</span></>

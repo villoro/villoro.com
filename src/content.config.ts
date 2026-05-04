@@ -8,6 +8,7 @@ const blogCollection = defineCollection({
     meta_title: z.string().optional(),
     description: z.string().optional(),
     date: z.date().optional(),
+    updatedDate: z.date().optional(),
     image: z.string().optional(),
     slug: z.string().optional(),
     author: z.string().default("Admin"),
