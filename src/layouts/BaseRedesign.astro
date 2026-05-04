@@ -66,6 +66,7 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
     <!-- Fraunces, Instrument Serif, JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=swap"
@@ -76,7 +77,7 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
       config={[
         {
           src: [],
-          preload: false,
+          preload: true,
           display: "swap",
           name: fontPrimary!,
           fallback: "sans-serif",
@@ -86,11 +87,11 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
         {
           src: [],
           preload: false,
-          display: "swap",
+          display: "optional",
           name: fontSecondary!,
           fallback: "sans-serif",
           cssVariable: "font-secondary",
-          googleFontsURL: `https://fonts.googleapis.com/css2?family=${sf}&display=swap`,
+          googleFontsURL: `https://fonts.googleapis.com/css2?family=${sf}&display=optional`,
         },
       ]}
     />
@@ -115,6 +116,7 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
+    <a href="#main" class="sr-only focus:not-sr-only">Skip to main content</a>
     <TwSizeIndicator />
     <SearchModal client:load />
     <slot />

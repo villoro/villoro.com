@@ -90,3 +90,37 @@
   background-color: var(--color-blue-500);
 }
 
+/* ────────────────────────────────────────────────────────────────
+   SCREEN READER ONLY — Visually hidden but accessible to screen readers.
+   Becomes visible on focus for keyboard navigation.
+   ──────────────────────────────────────────────────────────────── */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus,
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 8px 12px;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background: var(--color-navy-900);
+  color: var(--color-on-dark);
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+}
+

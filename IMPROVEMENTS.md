@@ -41,14 +41,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - Add `@astrojs/rss`, route at `/rss.xml`, `<link rel="alternate">` in `<head>`.
 - **Effort:** Low / **Impact:** Medium
 
-### S4. Skip-to-content link
-- Add visually hidden `<a href="#main">Skip to main content</a>` before nav, plus `id="main"` on the main wrapper of each layout (BlogListingLayout, ArticleLayout, index, about, 404).
-- **Effort:** Low / **Impact:** Low
-
-### S6. Enforce alt text in content schema
-- Require `alt` field on post images (or fail build).
-- **Effort:** Trivial / **Impact:** Medium
-
 ### S7. Audit heading hierarchy
 - Ensure no skipped levels (h1 → h3) on listing pages and articles.
 - **Effort:** Low / **Impact:** Low
@@ -56,11 +48,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ---
 
 ## Code Quality & Architecture
-
-### C2. Type `config.json` with Zod or interfaces
-- **Current:** Untyped imports across components.
-- **Change:** `src/types/config.ts` with schema + parse on load.
-- **Effort:** Low / **Impact:** Low (DX)
 
 ### C4. Extract `SearchModal.tsx` keyboard logic
 - Move 100+ lines of useEffect into a `useSearchKeyboard` hook.
@@ -85,17 +72,9 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ### D4. Lighthouse / Unlighthouse CI step on previews
 - **Effort:** Medium / **Impact:** Medium
 
-### D6. Use `npm ci` in Netlify/CI instead of `npm install`
-- Reproducible builds, fewer surprises. (Note: Netlify currently has no explicit build command in `netlify.toml` — uses package.json default. May need a `[build]` block.)
-- **Effort:** Trivial
-
 ---
 
 ## Content & Collections
-
-### M2. Precompute reading time
-- Optional `readingTime` field; compute at build, runtime fallback.
-- **Effort:** Low / **Impact:** Low
 
 ### M3. Precompute related posts
 - Build-time index instead of runtime `similarItems`.
@@ -105,31 +84,7 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## Dependencies
 
-### Dep1. `npm audit` + lockfile discipline
-- Run `npm audit`, fix or document advisories. Use `npm ci` in CI.
-- **Effort:** Trivial
-
 ### Dep2. Consider replacing `react-icons`
 - Switch to inline SVGs or Tabler Icons for smaller bundle / fewer transitive deps.
 - **Effort:** Medium / **Impact:** Low
 
----
-
-## Implemented (for reference)
-
-- **C1** — Removed dead `@/partials/*` alias.
-- **P5** — Already correct (`RelatedPostsGrid` passes `loading="lazy"`).
-- **P7** — Removed obsolete Squoosh comment.
-- **S1** — JSON-LD `BlogPosting` schema added in `src/pages/blog/[single].astro`.
-- **S3** — `noindex` on paginated listing pages > 1.
-- **S8** — `.github/FUNDING.yml` added.
-- **C5** — N/A (`SearchModal.tsx` has no `.map()` calls).
-- **C6** — Color system docstring added in `src/styles/main.css`.
-- **C7** — `readingTimeForPost` helper centralizes the try/catch; 3 call sites simplified.
-- **D5** — npm scripts now use `predev`/`prebuild` instead of `&&`.
-- **M1** — `updatedDate` optional field added to blog schema.
-- **S9** — `rel="prev"` / `rel="next"` link tags on paginated listings.
-- **S10** — JSON-LD now includes `dateModified` (falls back to `datePublished`).
-- **C3** — N/A (only remaining `.body` cast is inside the `readingTimeForPost` helper itself — that's the centralization point).
-- **M1b** — `ArticleLayout` displays "Updated …" when `updatedDate` is present in frontmatter.
-- **S5** — ThemeSwitcher accessible name improved ("Toggle dark mode" instead of generic "theme switcher"). Other icon-only buttons already labeled.
