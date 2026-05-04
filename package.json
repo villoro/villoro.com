@@ -33,6 +33,7 @@
     "marked": "^12.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-icons": "^5.0.1",
     "remark-collapse": "^0.1.2",
     "remark-toc": "^9.0.0",
     "sharp": "^0.33.1"
