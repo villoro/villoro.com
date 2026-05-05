@@ -64,7 +64,7 @@ The small margin (1 minute here) covers clock skew and late writes. You can read
 > If `updated_at` is missing, the data team has only two bad options: re-extract the entire table every run (slow and expensive), or miss updates entirely (silent data quality bug). Neither scales.
 
 > [!warning]
-> An `updated_at` that does **not** change when relevant fields change is worse than no `updated_at` at all — it gives a false sense of correctness. Make sure your ORM, triggers, or application code actually bump it on every meaningful update.
+> An `updated_at` that does **not** change when relevant fields change is worse than no `updated_at` at all. It gives a false sense of correctness. Make sure your ORM, triggers, or application code actually bump it on every meaningful update.
 
 For immutable records (e.g. an `events` table where rows are never modified), `created_at` alone is enough. For everything else, expose both.
 
@@ -87,8 +87,8 @@ WHERE id = 42;
 
 Common patterns:
 
-* `deleted_at TIMESTAMP NULL` — null means active, a timestamp means deleted (and when).
-* `is_deleted BOOLEAN` — simpler, but loses the "when".
+* `deleted_at TIMESTAMP NULL`: null means active, a timestamp means deleted (and when).
+* `is_deleted BOOLEAN`: simpler, but loses the "when".
 * A `status` enum with a `deleted` value.
 
 > [!tip]
@@ -130,10 +130,10 @@ Good IDs are:
 ```
 
 > [!warning]
-> Using emails, names, or phone numbers as primary keys is a classic trap. They look stable until the day a user changes them — and then your historical joins silently break.
+> Using emails, names, or phone numbers as primary keys is a classic trap. They look stable until the day a user changes them, and then your historical joins silently break.
 
 > [!tip]
-> If you are choosing a UUID format for new tables, prefer <FancyLink linkText="UUIDv7" url="https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-7" company="default"/> over UUIDv4. It embeds a timestamp prefix, so IDs are roughly time-ordered. This gives much better index locality, faster inserts, and natural sortability by creation time — all of which matter when the data lands in a warehouse.
+> If you are choosing a UUID format for new tables, prefer <FancyLink linkText="UUIDv7" url="https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-7" company="default"/> over UUIDv4. It embeds a timestamp prefix, so IDs are roughly time-ordered. This gives much better index locality, faster inserts, and natural sortability by creation time. All of these matter when the data lands in a warehouse.
 > The tradeoff: UUIDv7 leaks the creation time of the row. That is usually fine internally, but worth knowing if the ID is exposed to external users.
 
 ### Think about history, not only current state
@@ -147,7 +147,7 @@ If the source only stores the current state, that history is lost forever. A few
 * **Audit log**: a generic table that records every change to any row.
 
 > [!note]
-> If keeping history at the source is too expensive, the data team can often reconstruct it from `updated_at` snapshots — *as long as* the extraction runs frequently enough and `updated_at` is reliable. This is another reason why the previous sections matter.
+> If keeping history at the source is too expensive, the data team can often reconstruct it from `updated_at` snapshots, *as long as* the extraction runs frequently enough and `updated_at` is reliable. This is another reason why the previous sections matter.
 
 ## Requests and communication
 
@@ -163,7 +163,7 @@ Compare:
 >
 > ✅ "I need to monitor conversion rate daily because we are testing a new onboarding flow. I want to spot drops within 24 hours."
 
-The second framing opens the door to a dashboard with alerts, a Slack notification, or a self-serve metric — any of which might be cheaper and more useful than a daily email.
+The second framing opens the door to a dashboard with alerts, a Slack notification, or a self-serve metric. Any of these might be cheaper and more useful than a daily email.
 
 > [!tip]
 > A good rule: describe the **decision** you need to make and the **frequency** at which you need to make it. Let the data team choose the format.
@@ -173,7 +173,7 @@ The second framing opens the door to a dashboard with alerts, a Slack notificati
 A good data request answers, at minimum:
 
 * **What** is the question or metric?
-* **Why** does it matter — what decision does it support?
+* **Why** does it matter? What decision does it support?
 * **Who** will use it?
 * **How often** is it needed (one-off, daily, real-time)?
 * **By when** do you need it?
@@ -194,7 +194,7 @@ Instead, explain *why* it is urgent, like:
 
 > Without this segmentation we cannot launch the campaign, and the media budget (€300k) is already committed for next month.
 
-> A regulatory deadline on the 15th — missing it exposes us to fines of up to €X.
+> A regulatory deadline on the 15th. Missing it exposes us to fines of up to €X.
 
 > The CEO is presenting to the board on Thursday and needs the Q1 retention numbers.
 
@@ -250,11 +250,11 @@ Examples of changes worth announcing:
 
 ## Ownership and responsibility
 
-Good data is not just a pipeline problem — it is a culture problem. The habits below are about treating data as a **shared asset**, not as someone else's job.
+Good data is not just a pipeline problem, it is a culture problem. The habits below are about treating data as a **shared asset**, not as someone else's job.
 
 ### Do not use spreadsheets as hidden databases
 
-Spreadsheets are great for ad-hoc analysis. They are **terrible** as operational systems — yet companies routinely let them become the source of truth for commissions, active clients, country-to-region mappings, or discount eligibility rules.
+Spreadsheets are great for ad-hoc analysis. They are **terrible** as operational systems, yet companies routinely let them become the source of truth for commissions, active clients, country-to-region mappings, or discount eligibility rules.
 
 The rule is simple: 
 
@@ -268,10 +268,10 @@ Warning signs a spreadsheet has crossed the line:
 * No schema, validation, or version control.
 * "Don't touch row 47, it has a special formula."
 
-Spreadsheets have no referential integrity, no audit log, no real access controls, and no review process. One accidental sort or hidden filter can silently corrupt everything — and you will find out weeks later, when the numbers stop adding up.
+Spreadsheets have no referential integrity, no audit log, no real access controls, and no review process. One accidental sort or hidden filter can silently corrupt everything, and you will find out weeks later, when the numbers stop adding up.
 
 > [!danger]
-> Every "critical spreadsheet" is a future incident waiting to happen. Use a proper database, an application, or at least a versioned config file in a repo — not a shared sheet anyone can break with one click.
+> Every "critical spreadsheet" is a future incident waiting to happen. Use a proper database, an application, or at least a versioned config file in a repo. Not a shared sheet anyone can break with one click.
 
 > [!info]
 > If a spreadsheet is truly unavoidable, treat it like a data source: a single owner, a fixed schema, a clear contract with the data team, and an automated check that flags broken rows.
@@ -292,7 +292,7 @@ Categories worth flagging explicitly:
 
 ### Data quality is a shared responsibility
 
-The data team can clean, model, test, and document data — but they cannot fully compensate for problems at the source. No amount of dbt tests will fix:
+The data team can clean, model, test, and document data, but they cannot fully compensate for problems at the source. No amount of dbt tests will fix:
 
 * Missing or unreliable timestamps.
 * Unstable or recycled IDs.
