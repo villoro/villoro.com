@@ -132,6 +132,10 @@ Good IDs are:
 > [!warning]
 > Using emails, names, or phone numbers as primary keys is a classic trap. They look stable until the day a user changes them — and then your historical joins silently break.
 
+> [!tip]
+> If you are choosing a UUID format for new tables, prefer <FancyLink linkText="UUIDv7" url="https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-7" company="default"/> over UUIDv4. It embeds a timestamp prefix, so IDs are roughly time-ordered. This gives much better index locality, faster inserts, and natural sortability by creation time — all of which matter when the data lands in a warehouse.
+> The tradeoff: UUIDv7 leaks the creation time of the row. That is usually fine internally, but worth knowing if the ID is exposed to external users.
+
 ### Think about history, not only current state
 
 Operational systems often care about *what is true now*: what is this user's current plan, what is this order's current status. Analytics often needs to know *how things changed*: when did the user upgrade, how long was the order in `pending`, what was the price last quarter.
@@ -147,17 +151,55 @@ If the source only stores the current state, that history is lost forever. A few
 
 ## Requests and communication
 
+Even with perfect source data, a vague request can waste a week. The way you frame what you need has a huge impact on how fast and how well the data team can deliver.
+
 ### Ask for outcomes, not solutions
 
-Instead of asking for a specific format like “I need this Excel every day,” explain the business need: “I need to monitor CVR daily because we are testing a new onboarding flow.” This helps the data team choose the right solution.
+It is tempting to ask for a specific deliverable, like "I need this Excel every morning at 9am", because it feels concrete. But the data team can usually offer a better solution if they understand the **underlying need**.
+
+Compare:
+
+> ❌ "I need an Excel with all orders from yesterday emailed to me every morning."
+>
+> ✅ "I need to monitor conversion rate daily because we are testing a new onboarding flow. I want to spot drops within 24 hours."
+
+The second framing opens the door to a dashboard with alerts, a Slack notification, or a self-serve metric — any of which might be cheaper and more useful than a daily email.
+
+> [!tip]
+> A good rule: describe the **decision** you need to make and the **frequency** at which you need to make it. Let the data team choose the format.
 
 ### Bring context with every request
 
-A good data request should explain the decision it supports, who will use it, how often it is needed, the deadline, and whether it is exploratory or production-critical. More context usually means a better and faster solution.
+A good data request answers, at minimum:
+
+* **What** is the question or metric?
+* **Why** does it matter — what decision does it support?
+* **Who** will use it?
+* **How often** is it needed (one-off, daily, real-time)?
+* **By when** do you need it?
+* **How critical** is it (exploratory analysis vs. production dashboard vs. regulatory report)?
+
+> [!note]
+> "Exploratory" and "production-critical" require very different levels of rigor. A throwaway query for a hypothesis can be done in an hour. A number that goes to the board needs reviews, tests, and documentation.
 
 ### Explain urgency with business impact
 
-“ASAP” is not enough. If something is urgent, explain why: a client meeting, a launch decision, an experiment rollback, a regulatory deadline, or an executive review. This helps prioritize fairly.
+`ASAP` is not a priority, it is a wish. Every requester thinks their request is urgent, and the data team has no way to triage between them.
+
+Instead, explain *why* it is urgent, like:
+
+> This will help us improve churn, we estimate a recovered revenue of around €1M/year if we ship the fix this quarter.
+
+> We are deciding whether to roll back an experiment that is currently costing us ~€20k/week in lost conversions.
+
+> Without this segmentation we cannot launch the campaign, and the media budget (€300k) is already committed for next month.
+
+> A regulatory deadline on the 15th — missing it exposes us to fines of up to €X.
+
+> The CEO is presenting to the board on Thursday and needs the Q1 retention numbers.
+
+> [!tip]
+> Concrete urgency lets the data team negotiate fairly.
 
 ## Definitions, quality, and trust
 
