@@ -146,6 +146,8 @@ Listed in `astro.config.mjs` under `AutoImport.imports` — available in any `.m
 
 Source files are `src/layouts/shortcodes/*.tsx`. To add a new shortcode: drop a `.tsx` in that folder and add `"@/shortcodes/Name"` to the `AutoImport` list.
 
+**`FancyLink` `company` prop:** the component picks a favicon based on `company`. When linking to a site without a dedicated favicon mapping, set `company="default"` (used for generic links like RFCs, IETF, MDN, etc.). Existing `company="..."` values in posts (e.g. `iceberg`) map to specific brand icons.
+
 ## Custom callout syntax (remark-callouts)
 
 Defined in `src/plugins/remark-callouts.mjs`. Usable in markdown without shortcodes:
