@@ -1,0 +1,306 @@
+---
+slug: be-nice-to-data-team
+title: How to Be Nice to the Data Team
+meta_title: How to Be Nice to the Data Team
+description: A practical guide for product, engineering, ops, and business teams on how to design source systems and frame requests so the data team can deliver faster and more reliably.
+date: 2026-05-05
+image: /images/blog/0068-traffic-police.jpg
+category: DE
+tags: [Data Engineering, Best Practices]
+draft: false
+---
+
+## Introduction: Data teams are not magicians
+
+Data teams can do many things: clean messy data, build pipelines, model business concepts, create dashboards, and investigate discrepancies. But they cannot reliably work with data they do not know exists, fields that change without warning, missing timestamps, silent deletions, or vague requests.
+
+Being nice to the data team does not mean doing their job for them. It means making the data **easier to understand, extract, trust, and use**. A few small habits from product, engineering, operations, and business teams can prevent hours of debugging and make the whole company move faster.
+
+> [!abstract]
+> This post is a checklist of the habits that, in my experience, make the biggest difference.
+
+## Source systems and data structure
+
+Most data problems are born upstream. The way operational systems store and expose their data shapes everything that happens downstream: pipelines, models, dashboards, and even the trust people place in the numbers.
+
+### Tell the data team when something new exists
+
+Data teams usually want **all relevant data**, not only what is already being reported. If a new feature, field, workflow, event, status, integration, or entity is added, let the data team know so they can decide whether it should be extracted, modeled, documented, or monitored.
+
+A few examples of changes worth flagging:
+
+* A new `subscription_status` value like `paused` is introduced.
+* A new table `referrals` is added to support a growth experiment.
+* A third-party integration starts writing rows into an existing table.
+* A previously optional field becomes mandatory (or vice versa).
+
+> [!tip]
+> A 30-second message in Slack is much cheaper than a week of debugging "why did the numbers drop on Monday?".
+
+> [!warning]
+> Silent additions are almost as harmful as silent removals. A new enum value that nobody flagged can break dashboards, models, and tests downstream.
+
+### Make your data extractable
+
+Extracting data is rarely a one-shot job. Pipelines run **incrementally**: instead of pulling the whole table every time, we pull only the rows that are new or have changed since the last successful run. This keeps extractions cheap, fast, and friendly to the source system.
+
+For that to work, the source needs to expose **a reliable signal of "what changed"**. The minimum viable contract is:
+
+* `created_at`: when the row was first inserted. Required for immutable records (events, logs, transactions).
+* `updated_at`: when the row was last modified. Required for any entity that changes over time. **Any change in a relevant field must update this timestamp.**
+* A primary key that is stable and unique (more on this below).
+
+A typical incremental extraction looks like this:
+
+```sql
+SELECT *
+FROM orders
+WHERE updated_at >= :last_watermark - INTERVAL '1 minute'
+```
+
+The small margin (1 minute here) covers clock skew and late writes. You can read more about this pattern at <FancyLink linkText="Processing new data | Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/#processing-new-data" dark="true"/>.
+
+> [!note]
+> If `updated_at` is missing, the data team has only two bad options: re-extract the entire table every run (slow and expensive), or miss updates entirely (silent data quality bug). Neither scales.
+
+> [!warning]
+> An `updated_at` that does **not** change when relevant fields change is worse than no `updated_at` at all. It gives a false sense of correctness. Make sure your ORM, triggers, or application code actually bump it on every meaningful update.
+
+For immutable records (e.g. an `events` table where rows are never modified), `created_at` alone is enough. For everything else, expose both.
+
+### Never hard delete without a previous soft delete
+
+Hard deletes (removing rows from a table) are invisible to incremental pipelines. The row was there yesterday, it is gone today, and the data team has no way to detect it without comparing full snapshots, which is a slow and costly process.
+
+Prefer **soft deletes**: mark the row as deleted, keep it in the table, and let the consumer decide what to do with it.
+
+```sql
+-- Bad: hard delete
+DELETE FROM users WHERE id = 42;
+
+-- Good: soft delete
+UPDATE users
+SET deleted_at = NOW(),
+    updated_at = NOW()
+WHERE id = 42;
+```
+
+Common patterns:
+
+* `deleted_at TIMESTAMP NULL`: null means active, a timestamp means deleted (and when).
+* `is_deleted BOOLEAN`: simpler, but loses the "when".
+* A `status` enum with a `deleted` value.
+
+> [!tip]
+> Combine soft deletes with `updated_at`: bumping `updated_at` on deletion lets the incremental pipeline pick up the deletion automatically.
+
+> [!danger]
+> Hard deletes break historical analysis, reconciliation, and audits. If you must hard delete (GDPR, compliance), do it as a **two-step process**: soft delete first, give the data team time to propagate the deletion, then hard delete.
+
+### Treat schemas as contracts
+
+Tables, fields, types, enums, and meanings are dependencies for downstream data models, dashboards, and reports. A column rename that takes 5 minutes upstream can take days to fix downstream.
+
+A few rules of thumb:
+
+* **Additive changes are safe**: adding a new column or a new enum value rarely breaks anything.
+* **Renames and removals are breaking**: announce them in advance, ideally with a deprecation window.
+* **Type changes are sneaky**: changing `amount` from `INT` (cents) to `DECIMAL` (euros) silently breaks every downstream calculation.
+* **Meaning changes are the worst**: if `active_user` starts meaning something different, dashboards keep working but tell a different story.
+
+> [!warning]
+> "We just renamed a column" is one of the most common causes of broken dashboards. If you must rename, keep the old column as a view or alias for at least one release cycle.
+
+### Use stable identifiers
+
+Reliable IDs are essential for joining, deduplicating, tracking history, and reconciling data across systems. Bad ID hygiene is one of the hardest problems to fix downstream.
+
+Good IDs are:
+
+* **Stable**: a row's ID never changes for its lifetime.
+* **Unique**: no two rows ever share the same ID.
+* **Non-recyclable**: when a row is deleted, its ID is never reused.
+* **Immutable in meaning**: the ID itself doesn't encode business logic that might change.
+
+```text
+✅ Good:  user_id = 8f3a-... (UUID) or 12345 (auto-increment)
+❌ Bad:   user_id = email           (changes when users update it)
+❌ Bad:   user_id = "ACME-2024-01"  (changes if the company is renamed)
+❌ Bad:   reused IDs after deletion
+```
+
+> [!warning]
+> Using emails, names, or phone numbers as primary keys is a classic trap. They look stable until the day a user changes them, and then your historical joins silently break.
+
+> [!tip]
+> If you are choosing a UUID format for new tables, prefer <FancyLink linkText="UUIDv7" url="https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-7" company="default"/> over UUIDv4. It embeds a timestamp prefix, so IDs are roughly time-ordered. This gives much better index locality, faster inserts, and natural sortability by creation time. All of these matter when the data lands in a warehouse.
+> The tradeoff: UUIDv7 leaks the creation time of the row. That is usually fine internally, but worth knowing if the ID is exposed to external users.
+
+### Think about history, not only current state
+
+Operational systems often care about *what is true now*: what is this user's current plan, what is this order's current status. Analytics often needs to know *how things changed*: when did the user upgrade, how long was the order in `pending`, what was the price last quarter.
+
+If the source only stores the current state, that history is lost forever. A few options to preserve it:
+
+* **Event log**: every state change writes a row to an append-only table (`subscription_changes`, `order_status_history`).
+* **Slowly Changing Dimensions (SCD Type 2)**: keep multiple versions of the row with `valid_from` / `valid_to` columns.
+* **Audit log**: a generic table that records every change to any row.
+
+> [!note]
+> If keeping history at the source is too expensive, the data team can often reconstruct it from `updated_at` snapshots, *as long as* the extraction runs frequently enough and `updated_at` is reliable. This is another reason why the previous sections matter.
+
+## Requests and communication
+
+Even with perfect source data, a vague request can waste a week. The way you frame what you need has a huge impact on how fast and how well the data team can deliver.
+
+### Ask for outcomes, not solutions
+
+It is tempting to ask for a specific deliverable, like "I need this Excel every morning at 9am", because it feels concrete. But the data team can usually offer a better solution if they understand the **underlying need**.
+
+Compare:
+
+> ❌ "I need an Excel with all orders from yesterday emailed to me every morning."
+>
+> ✅ "I need to monitor conversion rate daily because we are testing a new onboarding flow. I want to spot drops within 24 hours."
+
+The second framing opens the door to a dashboard with alerts, a Slack notification, or a self-serve metric. Any of these might be cheaper and more useful than a daily email.
+
+> [!tip]
+> A good rule: describe the **decision** you need to make and the **frequency** at which you need to make it. Let the data team choose the format.
+
+### Bring context with every request
+
+A good data request answers, at minimum:
+
+* **What** is the question or metric?
+* **Why** does it matter? What decision does it support?
+* **Who** will use it?
+* **How often** is it needed (one-off, daily, real-time)?
+* **By when** do you need it?
+* **How critical** is it (exploratory analysis vs. production dashboard vs. regulatory report)?
+
+> [!note]
+> "Exploratory" and "production-critical" require very different levels of rigor. A throwaway query for a hypothesis can be done in an hour. A number that goes to the board needs reviews, tests, and documentation.
+
+### Explain urgency with business impact
+
+`ASAP` is not a priority, it is a wish. Every requester thinks their request is urgent, and the data team has no way to triage between them.
+
+Instead, explain *why* it is urgent, like:
+
+> This will help us improve churn, we estimate a recovered revenue of around 1 M€/year if we ship the fix this quarter.
+
+> We are deciding whether to roll back an experiment that is currently costing us ~20 k€/week in lost conversions.
+
+> Without this segmentation we cannot launch the campaign, and the media budget (300 k€) is already committed for next month.
+
+> A regulatory deadline on the 15th. Missing it exposes us to fines of up to 500 k€.
+
+> The CEO is presenting to the board on Thursday and needs the Q1 retention numbers.
+
+> [!tip]
+> Concrete urgency lets the data team negotiate fairly.
+
+## Definitions, quality, and trust
+
+Numbers don't speak for themselves. Two correct queries can return different results because they answer slightly different questions. Most "the data is wrong" tickets are actually definition mismatches.
+
+### Agree on definitions before comparing numbers
+
+Before saying "the numbers don't match", check that everyone is computing the same thing. Common sources of confusion:
+
+* **Conversion rate**: visitors to signups? signups to paid? in what time window?
+* **Active user**: logged in this month? performed a key action? has an active subscription?
+* **Revenue**: gross or net? booked or recognized? including refunds?
+* **Booking date vs. payment date**: the same order can fall in different months depending on which one you use.
+* **Exclusions**: do internal accounts, test users, and refunded orders count?
+
+> [!warning]
+> "The marketing dashboard says 1,200 signups but the product dashboard says 1,150" is almost never a bug. It is almost always a definition difference (timezone, deduplication, exclusion of test accounts, etc.).
+
+> [!tip]
+> Maintain a shared **metrics glossary** (even a simple Notion page) with the canonical definition of each key metric and the SQL or dbt model that implements it.
+
+### Report problems with reproducible examples
+
+When something looks wrong, a vague report ("the numbers are broken") forces the data team to play detective. A good bug report includes:
+
+* The **dashboard or query** you were looking at.
+* The **filters** applied (date range, segment, country, etc.).
+* What you **expected** to see and **why**.
+* What you **actually** saw.
+* A **concrete example**: "Order #12345 should be in the `paid` bucket but appears as `pending`."
+
+> [!note]
+> A single concrete example is worth more than ten paragraphs of description. It turns "investigate everything" into "investigate this specific row".
+
+### Communicate incidents, fixes, and backfills
+
+If historical data is corrected, reprocessed, duplicated, deleted, or changed retroactively, the data team needs to know **before** dashboards start showing weird numbers.
+
+Examples of changes worth announcing:
+
+* A bug in the checkout flow created duplicate orders for two days, and they were just cleaned up.
+* A backfill is being run to recompute historical commissions.
+* A migration moved data from one table to another, with possible row-count differences.
+* A retroactive policy change is updating old records.
+
+> [!danger]
+> Silent backfills are one of the fastest ways to destroy trust in dashboards. A metric that quietly shifts overnight makes everyone wonder which other numbers they can trust.
+
+## Ownership and responsibility
+
+Good data is not just a pipeline problem, it is a culture problem. The habits below are about treating data as a **shared asset**, not as someone else's job.
+
+### Do not use spreadsheets as hidden databases
+
+Spreadsheets are great for ad-hoc analysis. They are **terrible** as operational systems, yet companies routinely let them become the source of truth for commissions, active clients, country-to-region mappings, or discount eligibility rules.
+
+> [!important]
+> If something is important enough that the business depends on it, it belongs in an operational system, not in a spreadsheet.
+
+Warning signs a spreadsheet has crossed the line:
+
+* No clear owner, but multiple editors.
+* Pipelines, reports, or business processes depend on it.
+* No schema, validation, or version control.
+* "Don't touch row 47, it has a special formula."
+
+Spreadsheets have no referential integrity, no audit log, no real access controls, and no review process. One accidental sort or hidden filter can silently corrupt everything, and you will find out weeks later, when the numbers stop adding up.
+
+> [!danger]
+> Every "critical spreadsheet" is a future incident waiting to happen. Use a proper database, an application, or at least a versioned config file in a repo. Not a shared sheet anyone can break with one click.
+
+> [!info]
+> If a spreadsheet is truly unavoidable, treat it like a data source: a single owner, a fixed schema, a clear contract with the data team, and an automated check that flags broken rows.
+
+### Be explicit about sensitive data
+
+If a source contains personal, financial, health, or otherwise sensitive data, **say it clearly and early**. The data team can then apply the right controls from the start: access restrictions, masking, encryption at rest, retention policies, audit logs.
+
+Categories worth flagging explicitly:
+
+* **PII**: names, emails, phone numbers, addresses, IDs.
+* **Financial**: card numbers, bank accounts, salary information.
+* **Health**: medical records, diagnoses.
+* **Authentication**: passwords (which should never be in analytics anyway), tokens, secrets.
+
+> [!danger]
+> Discovering sensitive data *after* it has been copied into a data warehouse, a dashboard, or a CSV export is an expensive incident. Flag it before extraction, not after.
+
+### Data quality is a shared responsibility
+
+The data team can clean, model, test, and document data, but they cannot fully compensate for problems at the source. No amount of dbt tests will fix:
+
+* Missing or unreliable timestamps.
+* Unstable or recycled IDs.
+* Silent hard deletions.
+* Undocumented schema changes.
+* Ambiguous business definitions.
+
+> [!note]
+> Good data starts at the source. The data team's job is to **amplify** good data into insights, not to **rescue** bad data into something usable.
+
+---
+
+If the habits in this post become part of how product, engineering, and business teams work, the data team can spend less time firefighting and more time doing what they are actually good at: turning data into decisions.
