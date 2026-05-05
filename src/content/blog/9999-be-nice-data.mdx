@@ -250,14 +250,59 @@ Examples of changes worth announcing:
 
 ## Ownership and responsibility
 
+Good data is not just a pipeline problem — it is a culture problem. The habits below are about treating data as a **shared asset**, not as someone else's job.
+
 ### Do not use spreadsheets as hidden databases
 
-Spreadsheets are useful, but they become risky when they are treated as operational systems without ownership, validation, audit trail, or stable structure. If a spreadsheet feeds reporting or processes, it should be designed like a data source.
+Spreadsheets are great for ad-hoc analysis. They are **terrible** as operational systems — yet companies routinely let them become the source of truth for commissions, active clients, country-to-region mappings, or discount eligibility rules.
+
+The rule is simple: 
+
+> [!important]
+> If something is important enough that the business depends on it, it belongs in an operational system, not in a spreadsheet.
+
+Warning signs a spreadsheet has crossed the line:
+
+* No clear owner, but multiple editors.
+* Pipelines, reports, or business processes depend on it.
+* No schema, validation, or version control.
+* "Don't touch row 47, it has a special formula."
+
+Spreadsheets have no referential integrity, no audit log, no real access controls, and no review process. One accidental sort or hidden filter can silently corrupt everything — and you will find out weeks later, when the numbers stop adding up.
+
+> [!danger]
+> Every "critical spreadsheet" is a future incident waiting to happen. Use a proper database, an application, or at least a versioned config file in a repo — not a shared sheet anyone can break with one click.
+
+> [!info]
+> If a spreadsheet is truly unavoidable, treat it like a data source: a single owner, a fixed schema, a clear contract with the data team, and an automated check that flags broken rows.
 
 ### Be explicit about sensitive data
 
-If a source contains personal, financial, health, or otherwise sensitive data, say it clearly. This helps the data team apply the right access controls, masking, retention rules, and documentation from the start.
+If a source contains personal, financial, health, or otherwise sensitive data, **say it clearly and early**. The data team can then apply the right controls from the start: access restrictions, masking, encryption at rest, retention policies, audit logs.
+
+Categories worth flagging explicitly:
+
+* **PII**: names, emails, phone numbers, addresses, IDs.
+* **Financial**: card numbers, bank accounts, salary information.
+* **Health**: medical records, diagnoses.
+* **Authentication**: passwords (which should never be in analytics anyway), tokens, secrets.
+
+> [!danger]
+> Discovering sensitive data *after* it has been copied into a data warehouse, a dashboard, or a CSV export is an expensive incident. Flag it before extraction, not after.
 
 ### Data quality is a shared responsibility
 
-The data team can clean, model, test, and document data, but they cannot fully compensate for missing timestamps, unstable IDs, silent deletions, unclear definitions, or undocumented source changes. Good data starts at the source.
+The data team can clean, model, test, and document data — but they cannot fully compensate for problems at the source. No amount of dbt tests will fix:
+
+* Missing or unreliable timestamps.
+* Unstable or recycled IDs.
+* Silent hard deletions.
+* Undocumented schema changes.
+* Ambiguous business definitions.
+
+> [!note]
+> Good data starts at the source. The data team's job is to **amplify** good data into insights, not to **rescue** bad data into something usable.
+
+---
+
+If the habits in this post become part of how product, engineering, and business teams work, the data team can spend less time firefighting and more time doing what they are actually good at: turning data into decisions.
