@@ -10,66 +10,76 @@ tags: [Data Engineering, Best Practices]
 draft: false
 ---
 
+# How to Be Nice to the Data Team
+
 ## Introduction: Data teams are not magicians
 
 Most data problems are not caused by SQL, dashboards, or pipelines. They usually come from missing context, unclear definitions, unstable sources, or silent changes. This post explains small habits that make data work smoother for everyone.
 
-## Tell the data team when something new exists
+## Source systems and data structure
+
+### Tell the data team when something new exists
 
 Data teams usually want all relevant data, not only what is already being reported. If a new feature, field, workflow, event, status, integration, or entity is added, let the data team know so they can decide whether it should be extracted, modeled, documented, or monitored.
 
-## Make your data extractable
+### Make your data extractable
 
 Every entity that changes over time should have an `updated_at` field so data can be extracted incrementally. For immutable records, `created_at` may be enough. Any change in a relevant field should also update `updated_at`.
 
-## Never hard delete without a previous soft delete
+### Never hard delete without a previous soft delete
 
 Hard deletes make it difficult to detect removals, reconcile numbers, or preserve historical analysis. Mark records as deleted first using fields like `deleted_at`, `is_deleted`, or a deletion status, and only hard delete later if truly necessary.
 
-## Treat schemas as contracts
+### Treat schemas as contracts
 
 Tables, fields, types, enums, and meanings are dependencies for downstream data models and reports. Breaking changes should be communicated in advance. Prefer additive changes when possible, and document any renames, removals, or meaning changes.
 
-## Use stable identifiers
+### Use stable identifiers
 
 Reliable IDs are essential for joining, deduplicating, tracking history, and reconciling data across systems. Avoid recycling IDs, changing IDs, or using mutable values like names or emails as primary identifiers.
 
-## Think about history, not only current state
+### Think about history, not only current state
 
 Operational systems often care about what is true now, but analytics often needs to know how things changed. Status changes, ownership changes, price changes, subscription changes, and attribution changes should be traceable over time.
 
-## Ask for outcomes, not solutions
+## Requests and communication
+
+### Ask for outcomes, not solutions
 
 Instead of asking for a specific format like “I need this Excel every day,” explain the business need: “I need to monitor CVR daily because we are testing a new onboarding flow.” This helps the data team choose the right solution.
 
-## Bring context with every request
+### Bring context with every request
 
 A good data request should explain the decision it supports, who will use it, how often it is needed, the deadline, and whether it is exploratory or production-critical. More context usually means a better and faster solution.
 
-## Agree on definitions before comparing numbers
-
-Many data discrepancies are actually definition discrepancies. Before comparing numbers, align on concepts like conversion, revenue, active user, cancellation, booking date, payment date, or which records should be excluded.
-
-## Report problems with reproducible examples
-
-When something looks wrong, include the dashboard, query, filters, expected result, actual result, and a small concrete example. This makes the issue easier to investigate and avoids vague reports like “the numbers are broken.”
-
-## Do not use spreadsheets as hidden databases
-
-Spreadsheets are useful, but they become risky when they are treated as operational systems without ownership, validation, audit trail, or stable structure. If a spreadsheet feeds reporting or processes, it should be designed like a data source.
-
-## Communicate incidents, fixes, and backfills
-
-If historical data is corrected, reprocessed, duplicated, deleted, or changed retroactively, the data team needs to know. Silent backfills can create unexplained changes in dashboards, metrics, and downstream models.
-
-## Be explicit about sensitive data
-
-If a source contains personal, financial, health, or otherwise sensitive data, say it clearly. This helps the data team apply the right access controls, masking, retention rules, and documentation from the start.
-
-## Explain urgency with business impact
+### Explain urgency with business impact
 
 “ASAP” is not enough. If something is urgent, explain why: a client meeting, a launch decision, an experiment rollback, a regulatory deadline, or an executive review. This helps prioritize fairly.
 
-## Data quality is a shared responsibility
+## Definitions, quality, and trust
+
+### Agree on definitions before comparing numbers
+
+Many data discrepancies are actually definition discrepancies. Before comparing numbers, align on concepts like conversion, revenue, active user, cancellation, booking date, payment date, or which records should be excluded.
+
+### Report problems with reproducible examples
+
+When something looks wrong, include the dashboard, query, filters, expected result, actual result, and a small concrete example. This makes the issue easier to investigate and avoids vague reports like “the numbers are broken.”
+
+### Communicate incidents, fixes, and backfills
+
+If historical data is corrected, reprocessed, duplicated, deleted, or changed retroactively, the data team needs to know. Silent backfills can create unexplained changes in dashboards, metrics, and downstream models.
+
+## Ownership and responsibility
+
+### Do not use spreadsheets as hidden databases
+
+Spreadsheets are useful, but they become risky when they are treated as operational systems without ownership, validation, audit trail, or stable structure. If a spreadsheet feeds reporting or processes, it should be designed like a data source.
+
+### Be explicit about sensitive data
+
+If a source contains personal, financial, health, or otherwise sensitive data, say it clearly. This helps the data team apply the right access controls, masking, retention rules, and documentation from the start.
+
+### Data quality is a shared responsibility
 
 The data team can clean, model, test, and document data, but they cannot fully compensate for missing timestamps, unstable IDs, silent deletions, unclear definitions, or undocumented source changes. Good data starts at the source.
