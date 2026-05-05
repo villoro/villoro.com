@@ -203,17 +203,50 @@ Instead, explain *why* it is urgent, like:
 
 ## Definitions, quality, and trust
 
+Numbers don't speak for themselves. Two correct queries can return different results because they answer slightly different questions. Most "the data is wrong" tickets are actually definition mismatches.
+
 ### Agree on definitions before comparing numbers
 
-Many data discrepancies are actually definition discrepancies. Before comparing numbers, align on concepts like conversion, revenue, active user, cancellation, booking date, payment date, or which records should be excluded.
+Before saying "the numbers don't match", check that everyone is computing the same thing. Common sources of confusion:
+
+* **Conversion rate**: visitors to signups? signups to paid? in what time window?
+* **Active user**: logged in this month? performed a key action? has an active subscription?
+* **Revenue**: gross or net? booked or recognized? including refunds?
+* **Booking date vs. payment date**: the same order can fall in different months depending on which one you use.
+* **Exclusions**: do internal accounts, test users, and refunded orders count?
+
+> [!warning]
+> "The marketing dashboard says 1,200 signups but the product dashboard says 1,150" is almost never a bug. It is almost always a definition difference (timezone, deduplication, exclusion of test accounts, etc.).
+
+> [!tip]
+> Maintain a shared **metrics glossary** (even a simple Notion page) with the canonical definition of each key metric and the SQL or dbt model that implements it.
 
 ### Report problems with reproducible examples
 
-When something looks wrong, include the dashboard, query, filters, expected result, actual result, and a small concrete example. This makes the issue easier to investigate and avoids vague reports like “the numbers are broken.”
+When something looks wrong, a vague report ("the numbers are broken") forces the data team to play detective. A good bug report includes:
+
+* The **dashboard or query** you were looking at.
+* The **filters** applied (date range, segment, country, etc.).
+* What you **expected** to see and **why**.
+* What you **actually** saw.
+* A **concrete example**: "Order #12345 should be in the `paid` bucket but appears as `pending`."
+
+> [!note]
+> A single concrete example is worth more than ten paragraphs of description. It turns "investigate everything" into "investigate this specific row".
 
 ### Communicate incidents, fixes, and backfills
 
-If historical data is corrected, reprocessed, duplicated, deleted, or changed retroactively, the data team needs to know. Silent backfills can create unexplained changes in dashboards, metrics, and downstream models.
+If historical data is corrected, reprocessed, duplicated, deleted, or changed retroactively, the data team needs to know **before** dashboards start showing weird numbers.
+
+Examples of changes worth announcing:
+
+* A bug in the checkout flow created duplicate orders for two days, and they were just cleaned up.
+* A backfill is being run to recompute historical commissions.
+* A migration moved data from one table to another, with possible row-count differences.
+* A retroactive policy change is updating old records.
+
+> [!danger]
+> Silent backfills are one of the fastest ways to destroy trust in dashboards. A metric that quietly shifts overnight makes everyone wonder which other numbers they can trust.
 
 ## Ownership and responsibility
 
