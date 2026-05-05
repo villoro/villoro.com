@@ -99,15 +99,51 @@ Common patterns:
 
 ### Treat schemas as contracts
 
-Tables, fields, types, enums, and meanings are dependencies for downstream data models and reports. Breaking changes should be communicated in advance. Prefer additive changes when possible, and document any renames, removals, or meaning changes.
+Tables, fields, types, enums, and meanings are dependencies for downstream data models, dashboards, and reports. A column rename that takes 5 minutes upstream can take days to fix downstream.
+
+A few rules of thumb:
+
+* **Additive changes are safe**: adding a new column or a new enum value rarely breaks anything.
+* **Renames and removals are breaking**: announce them in advance, ideally with a deprecation window.
+* **Type changes are sneaky**: changing `amount` from `INT` (cents) to `DECIMAL` (euros) silently breaks every downstream calculation.
+* **Meaning changes are the worst**: if `active_user` starts meaning something different, dashboards keep working but tell a different story.
+
+> [!warning]
+> "We just renamed a column" is one of the most common causes of broken dashboards. If you must rename, keep the old column as a view or alias for at least one release cycle.
 
 ### Use stable identifiers
 
-Reliable IDs are essential for joining, deduplicating, tracking history, and reconciling data across systems. Avoid recycling IDs, changing IDs, or using mutable values like names or emails as primary identifiers.
+Reliable IDs are essential for joining, deduplicating, tracking history, and reconciling data across systems. Bad ID hygiene is one of the hardest problems to fix downstream.
+
+Good IDs are:
+
+* **Stable**: a row's ID never changes for its lifetime.
+* **Unique**: no two rows ever share the same ID.
+* **Non-recyclable**: when a row is deleted, its ID is never reused.
+* **Immutable in meaning**: the ID itself doesn't encode business logic that might change.
+
+```text
+✅ Good:  user_id = 8f3a-... (UUID) or 12345 (auto-increment)
+❌ Bad:   user_id = email           (changes when users update it)
+❌ Bad:   user_id = "ACME-2024-01"  (changes if the company is renamed)
+❌ Bad:   reused IDs after deletion
+```
+
+> [!warning]
+> Using emails, names, or phone numbers as primary keys is a classic trap. They look stable until the day a user changes them — and then your historical joins silently break.
 
 ### Think about history, not only current state
 
-Operational systems often care about what is true now, but analytics often needs to know how things changed. Status changes, ownership changes, price changes, subscription changes, and attribution changes should be traceable over time.
+Operational systems often care about *what is true now*: what is this user's current plan, what is this order's current status. Analytics often needs to know *how things changed*: when did the user upgrade, how long was the order in `pending`, what was the price last quarter.
+
+If the source only stores the current state, that history is lost forever. A few options to preserve it:
+
+* **Event log**: every state change writes a row to an append-only table (`subscription_changes`, `order_status_history`).
+* **Slowly Changing Dimensions (SCD Type 2)**: keep multiple versions of the row with `valid_from` / `valid_to` columns.
+* **Audit log**: a generic table that records every change to any row.
+
+> [!note]
+> If keeping history at the source is too expensive, the data team can often reconstruct it from `updated_at` snapshots — *as long as* the extraction runs frequently enough and `updated_at` is reliable. This is another reason why the previous sections matter.
 
 ## Requests and communication
 
