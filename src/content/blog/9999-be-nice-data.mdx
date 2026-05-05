@@ -2,7 +2,7 @@
 slug: be-nice-to-data-team
 title: How to Be Nice to the Data Team
 meta_title: How to Be Nice to the Data Team
-description: xxx
+description: A practical guide for product, engineering, ops, and business teams on how to design source systems and frame requests so the data team can deliver faster and more reliably.
 date: 2026-05-05
 image: /images/blog/9999-bad-goblin.jpg
 category: DE
@@ -14,21 +14,88 @@ draft: false
 
 Data teams can do many things: clean messy data, build pipelines, model business concepts, create dashboards, and investigate discrepancies. But they cannot reliably work with data they do not know exists, fields that change without warning, missing timestamps, silent deletions, or vague requests.
 
-Being nice to the data team does not mean doing their job for them. It means making the data easier to understand, extract, trust, and use. A few small habits from product, engineering, operations, and business teams can prevent hours of debugging and make the whole company move faster.
+Being nice to the data team does not mean doing their job for them. It means making the data **easier to understand, extract, trust, and use**. A few small habits from product, engineering, operations, and business teams can prevent hours of debugging and make the whole company move faster.
+
+> [!abstract]
+> This post is a checklist of the habits that, in my experience, make the biggest difference.
 
 ## Source systems and data structure
 
+Most data problems are born upstream. The way operational systems store and expose their data shapes everything that happens downstream: pipelines, models, dashboards, and even the trust people place in the numbers.
+
 ### Tell the data team when something new exists
 
-Data teams usually want all relevant data, not only what is already being reported. If a new feature, field, workflow, event, status, integration, or entity is added, let the data team know so they can decide whether it should be extracted, modeled, documented, or monitored.
+Data teams usually want **all relevant data**, not only what is already being reported. If a new feature, field, workflow, event, status, integration, or entity is added, let the data team know so they can decide whether it should be extracted, modeled, documented, or monitored.
+
+A few examples of changes worth flagging:
+
+* A new `subscription_status` value like `paused` is introduced.
+* A new table `referrals` is added to support a growth experiment.
+* A third-party integration starts writing rows into an existing table.
+* A previously optional field becomes mandatory (or vice versa).
+
+> [!tip]
+> A 30-second message in Slack is much cheaper than a week of debugging "why did the numbers drop on Monday?".
+
+> [!warning]
+> Silent additions are almost as harmful as silent removals. A new enum value that nobody flagged can break dashboards, models, and tests downstream.
 
 ### Make your data extractable
 
-Every entity that changes over time should have an `updated_at` field so data can be extracted incrementally. For immutable records, `created_at` may be enough. Any change in a relevant field should also update `updated_at`.
+Extracting data is rarely a one-shot job. Pipelines run **incrementally**: instead of pulling the whole table every time, we pull only the rows that are new or have changed since the last successful run. This keeps extractions cheap, fast, and friendly to the source system.
+
+For that to work, the source needs to expose **a reliable signal of "what changed"**. The minimum viable contract is:
+
+* `created_at`: when the row was first inserted. Required for immutable records (events, logs, transactions).
+* `updated_at`: when the row was last modified. Required for any entity that changes over time. **Any change in a relevant field must update this timestamp.**
+* A primary key that is stable and unique (more on this below).
+
+A typical incremental extraction looks like this:
+
+```sql
+SELECT *
+FROM orders
+WHERE updated_at >= :last_watermark - INTERVAL '1 minute'
+```
+
+The small margin (1 minute here) covers clock skew and late writes. You can read more about this pattern at <FancyLink linkText="Processing new data | Self-Healing Pipelines" url="https://villoro.com/blog/self-healing-pipelines/#processing-new-data" dark="true"/>.
+
+> [!note]
+> If `updated_at` is missing, the data team has only two bad options: re-extract the entire table every run (slow and expensive), or miss updates entirely (silent data quality bug). Neither scales.
+
+> [!warning]
+> An `updated_at` that does **not** change when relevant fields change is worse than no `updated_at` at all — it gives a false sense of correctness. Make sure your ORM, triggers, or application code actually bump it on every meaningful update.
+
+For immutable records (e.g. an `events` table where rows are never modified), `created_at` alone is enough. For everything else, expose both.
 
 ### Never hard delete without a previous soft delete
 
-Hard deletes make it difficult to detect removals, reconcile numbers, or preserve historical analysis. Mark records as deleted first using fields like `deleted_at`, `is_deleted`, or a deletion status, and only hard delete later if truly necessary.
+Hard deletes (removing rows from a table) are invisible to incremental pipelines. The row was there yesterday, it is gone today, and the data team has no way to detect it without comparing full snapshots, which is a slow and costly process.
+
+Prefer **soft deletes**: mark the row as deleted, keep it in the table, and let the consumer decide what to do with it.
+
+```sql
+-- Bad: hard delete
+DELETE FROM users WHERE id = 42;
+
+-- Good: soft delete
+UPDATE users
+SET deleted_at = NOW(),
+    updated_at = NOW()
+WHERE id = 42;
+```
+
+Common patterns:
+
+* `deleted_at TIMESTAMP NULL` — null means active, a timestamp means deleted (and when).
+* `is_deleted BOOLEAN` — simpler, but loses the "when".
+* A `status` enum with a `deleted` value.
+
+> [!tip]
+> Combine soft deletes with `updated_at`: bumping `updated_at` on deletion lets the incremental pipeline pick up the deletion automatically.
+
+> [!danger]
+> Hard deletes break historical analysis, reconciliation, and audits. If you must hard delete (GDPR, compliance), do it as a **two-step process**: soft delete first, give the data team time to propagate the deletion, then hard delete.
 
 ### Treat schemas as contracts
 
