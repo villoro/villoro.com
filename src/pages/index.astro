@@ -20,10 +20,9 @@ const posts = await getSinglePage(blog_folder);
 const sortedPosts = sortByDate(posts);
 
 const latestPost   = sortedPosts[0];
-const featuredPost = sortedPosts[0];  // big card
-const gridPosts    = sortedPosts.slice(1, 7); // 3×2 grid
-// Pick a "most read" post outside the featured 7 so no duplication
-const heroPost     = sortedPosts[7] ?? sortedPosts[0];
+const featuredPost = latestPost;
+const gridPosts    = sortedPosts.filter(p => p !== featuredPost).slice(0, 6);
+const heroPost     = sortedPosts.find(p => p.data.highlight);
 
 // Stats — all derived at build time, no magic constants
 const postCount    = sortedPosts.length;

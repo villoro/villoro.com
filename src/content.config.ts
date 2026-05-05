@@ -17,6 +17,7 @@ const blogCollection = defineCollection({
     category: z.string().default("Others"),
     tags: z.array(z.string()).default(["Others"]),
     draft: z.boolean().optional(),
+    highlight: z.boolean().optional(),
 
     hero: z
       .object({
