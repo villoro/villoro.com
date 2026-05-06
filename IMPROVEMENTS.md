@@ -8,16 +8,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## Performance
 
-### P1. Optimize font loading
-- **Current:** `BaseRedesign.astro` loads 7 Google Fonts via synchronous `<link>` plus AstroFont for Heebo/Signika.
-- **Change:** Preload primary fonts, defer/swap secondary, consider `font-display: optional` for decorative.
-- **Effort:** Low / **Impact:** High (faster FCP, less CLS)
-
-### P2. AVIF + WebP with `<picture>` fallback
-- **Current:** `ImageMod.astro` only emits `format="webp"`.
-- **Change:** Emit AVIF + WebP using Astro's multi-format support.
-- **Effort:** Low / **Impact:** Medium
-
 ### P4. Audit/compress blog images
 - **Current:** CI verifies aspect ratio only, not size.
 - **Change:** Add a size budget (e.g. <200KB) to CI, batch-compress existing images.
@@ -27,26 +17,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Current:** ~420 lines of `<style is:global>` in the layout file.
 - **Change:** Extract to `src/styles/prose.css`, import where needed.
 - **Effort:** Medium / **Impact:** Low (mostly maintainability)
-
----
-
-## SEO & Accessibility
-
-### S2. RSS feed
-- Add `@astrojs/rss`, route at `/rss.xml`, `<link rel="alternate">` in `<head>`.
-- **Effort:** Low / **Impact:** Medium
-
-### S7. Audit heading hierarchy
-- Ensure no skipped levels (h1 → h3) on listing pages and articles.
-- **Effort:** Low / **Impact:** Low
-
----
-
-## Code Quality & Architecture
-
-### C4. Extract `SearchModal.tsx` keyboard logic
-- Move 100+ lines of useEffect into a `useSearchKeyboard` hook.
-- **Effort:** Low / **Impact:** Low (testability)
 
 ---
 
@@ -78,4 +48,3 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ### Dep2. Consider replacing `react-icons`
 - Switch to inline SVGs or Tabler Icons for smaller bundle / fewer transitive deps.
 - **Effort:** Medium / **Impact:** Low
-
