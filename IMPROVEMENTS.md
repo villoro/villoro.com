@@ -64,11 +64,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Change:** Run axe DevTools on `/` and `/blog`, identify each failing pair, and bump the muted greys one shade darker (or adjust `--color-grey-500`). Verify against `tokens.css`.
 - **Effort:** Low / **Impact:** Medium
 
-### A3. Don't rely on color alone for links
-- **Current:** PSI flags "Links rely on color to be distinguishable" — body-copy links inside articles likely have no underline.
-- **Change:** Add `text-decoration: underline` (or a persistent border-bottom) to links in prose / cards. Already fine for nav-style links with affordances.
-- **Effort:** Low / **Impact:** Medium
-
 ---
 
 ## SEO

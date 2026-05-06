@@ -52,10 +52,15 @@ const writingSinceYear = new Date(config.settings.writing_since).getFullYear();
 
   .site-footer__email {
     color: var(--color-blue-500);
-    text-decoration: none;
-    transition: opacity 0.15s;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-blue-500) 45%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s, opacity 0.15s;
   }
-  .site-footer__email:hover { opacity: 0.8; }
+  .site-footer__email:hover {
+    text-decoration-color: var(--color-blue-500);
+    opacity: 0.9;
+  }
 
   .site-footer__social {
     display: flex;
