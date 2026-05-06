@@ -24,6 +24,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
+      - run: npm run generate-json
       - run: npm run lint
       - run: npm run typecheck
 
@@ -43,6 +44,10 @@ jobs:
       - uses: villoro/vhooks/check_version@1.2.0
         with:
           file: package.json
+          path: version
+      - uses: villoro/vhooks/check_version@1.2.0
+        with:
+          file: package-lock.json
           path: version
 
 
