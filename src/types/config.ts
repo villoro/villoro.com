@@ -1,9 +1,9 @@
-import { z } from "astro/zod";
+import { z } from "zod";
 
 export const configSchema = z.object({
   site: z.object({
     title: z.string(),
-    base_url: z.string().url(),
+    base_url: z.url(),
     base_path: z.string(),
     trailing_slash: z.boolean(),
     favicon: z.string(),
@@ -27,7 +27,7 @@ export const configSchema = z.object({
   }),
 
   subscribe: z.object({
-    link: z.string().url(),
+    link: z.url(),
     title: z.string(),
   }),
 
@@ -41,7 +41,7 @@ export const configSchema = z.object({
   }),
 
   footer: z.object({
-    email: z.string().email(),
+    email: z.email(),
   }),
 
   giscus: z.object({
