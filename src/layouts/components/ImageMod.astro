@@ -10,6 +10,7 @@ interface Props {
   height: number;
   loading?: "eager" | "lazy" | null | undefined;
   decoding?: "async" | "auto" | "sync" | null | undefined;
+  fetchpriority?: "high" | "low" | "auto";
   sizes?: string;
   class?: string;
   style?: any;
@@ -23,6 +24,7 @@ let {
   height,
   loading,
   decoding,
+  fetchpriority,
   class: className,
   sizes,
   style,
@@ -51,6 +53,7 @@ if (!isValidPath) {
     height={height}
     loading={loading}
     decoding={decoding}
+    fetchpriority={fetchpriority}
     sizes={sizes}
     class={className}
     formats={["avif", "webp"]}

@@ -134,7 +134,7 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
   <body>
     <a href="#main" class="sr-only focus:not-sr-only">Skip to main content</a>
     <TwSizeIndicator />
-    <SearchModal client:load />
+    <SearchModal client:idle />
     <slot />
     <script>
       import { registerSW } from "virtual:pwa-register";

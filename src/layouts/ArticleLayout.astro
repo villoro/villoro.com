@@ -142,10 +142,10 @@ const breadcrumbs = [
     </section>
 
     <!-- ═══════════════════ ARTICLE ═════════════════════════ -->
-    <section class="al-article">
+    <main class="al-article" id="main">
       {toc.length > 0 && <ArticleTOC toc={toc} />}
 
-      <article class="al-body" id="main">
+      <article class="al-body">
         <div class="article-content">
           <slot />
         </div>
@@ -156,7 +156,7 @@ const breadcrumbs = [
           <GiscusComments />
         </div>
       </article>
-    </section>
+    </main>
 
     <RelatedPostsGrid posts={relatedPosts} />
     <SiteFooter />

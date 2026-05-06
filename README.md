@@ -36,6 +36,15 @@ To run the website locally, use the following commands:
     npm run build
     ```
 
+## Version Management
+To update the package version, use the npm version command:
+
+```bash
+npm version patch    # 1.0.0 → 1.0.1
+npm version minor    # 1.0.0 → 1.1.0
+npm version major    # 1.0.0 → 2.0.0
+```
+
 ## Project Structure
 The project is organized as follows:
 

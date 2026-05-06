@@ -25,6 +25,7 @@ interface Props {
   /** Optional pre-computed reading time string e.g. "7 min" */
   readTime?: string;
   loading?: "eager" | "lazy";
+  fetchpriority?: "high" | "low" | "auto";
 }
 
 const {
@@ -33,6 +34,7 @@ const {
   badge,
   readTime,
   loading = "lazy",
+  fetchpriority,
 } = Astro.props;
 
 const { blog_folder } = config.settings;
@@ -58,6 +60,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
             width={1280}
             height={720}
             loading={loading}
+            fetchpriority={fetchpriority}
             class="pc-big__img"
           />
           <div class="pc-big__overlay"></div>
@@ -95,6 +98,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
           width={640}
           height={360}
           loading={loading}
+          fetchpriority={fetchpriority}
           class="pc-med__img"
         />
       )}
