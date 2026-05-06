@@ -8,6 +8,8 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## Performance
 
+> PageSpeed Insights baseline (May 2026, homepage): **Mobile 66 / Desktop 86**. Mobile LCP **5.1s** (target ≤2.5s), FCP **3.0s**, Speed Index **12.7s**. Desktop LCP **1.3s**, Speed Index **6.1s**. CrUX field data: not enough traffic yet — these are lab numbers only. The PSI items below cite the report estimates; re-run PSI after each fix to confirm impact.
+
 ### P4. Audit/compress blog images
 - **Current:** CI verifies aspect ratio only, not size.
 - **Change:** Add a size budget (e.g. <200KB) to CI, batch-compress existing images.
@@ -17,6 +19,31 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Current:** ~420 lines of `<style is:global>` in the layout file.
 - **Change:** Extract to `src/styles/prose.css`, import where needed.
 - **Effort:** Medium / **Impact:** Low (mostly maintainability)
+
+### P7. Prioritize the LCP image (hero post card)
+- **Current:** The "Most read" hero `PostCard medium` image renders via `<Picture>` with `loading="eager"` but no `fetchpriority="high"` or `<link rel="preload">`. PSI flags ~75 KiB savings under "Improve image delivery" and lists LCP at 5.1s on mobile (LCP element appears to be this image).
+- **Change:** Add `fetchpriority="high"` to the hero image in `ImageMod.astro`/`PostCard.astro` (only on the eager hero). Optionally emit a `<link rel="preload" as="image" imagesrcset=…>` in `index.astro`'s head for the resolved AVIF.
+- **Effort:** Low / **Impact:** High (directly improves LCP)
+
+### P8. Defer SearchModal hydration
+- **Current:** `BaseRedesign.astro:137` mounts `<SearchModal client:load />` on every page — React + the search index JSON ships and hydrates immediately even though the modal is invisible until Cmd/Ctrl-K. PSI reports ~81 KiB unused JS and 4 long main-thread tasks.
+- **Change:** Switch to `client:idle` (or `client:visible` on a hidden trigger), and consider lazy-loading `search.json` only when the modal opens.
+- **Effort:** Low / **Impact:** High (cuts main-thread work + initial JS)
+
+### P9. Audit render-blocking requests
+- **Current:** PSI: ~150 ms mobile, ~40 ms desktop. Tailwind's compiled CSS is the main suspect; the GA `gtag/js` tag is `async` so it shouldn't block.
+- **Change:** Run a Lighthouse trace, identify the blocking resources, and either inline critical CSS or defer the rest. If `main.css` is the blocker, evaluate Astro's `inlineStylesheets: 'auto'`.
+- **Effort:** Medium / **Impact:** Medium
+
+### P10. Fix forced reflow (desktop only)
+- **Current:** PSI flags one forced reflow on desktop. Likely `ThemeSwitcher.astro` reading `localStorage` then synchronously toggling `documentElement.classList` before paint, or AstroFont's fallback metrics shim.
+- **Change:** Profile in DevTools Performance panel to pinpoint the script, then batch reads/writes (use `requestAnimationFrame` for the class toggle, or inline a small theme-init blocking script in `<head>` before stylesheets so there's no class change after layout).
+- **Effort:** Low / **Impact:** Low–Medium
+
+### P11. Replace non-composited animation
+- **Current:** PSI: "1 animated element found" — animating a layout property (top/left/width/height/margin) instead of `transform`/`opacity`.
+- **Change:** Locate the offending CSS animation/transition (likely a hover or reveal in homepage cards) and switch to `transform: translate(...)` + `opacity`.
+- **Effort:** Low / **Impact:** Low
 
 ---
 
@@ -44,3 +71,30 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ### Dep2. Consider replacing `react-icons`
 - Switch to inline SVGs or Tabler Icons for smaller bundle / fewer transitive deps.
 - **Effort:** Medium / **Impact:** Low
+
+---
+
+## Accessibility (PSI: 87 mobile / 90 desktop)
+
+### A1. Use a `<main>` landmark instead of `id="main"` on `<section>`
+- **Current:** Five pages put `id="main"` on a `<section>` (`index.astro:143`, `BlogListingLayout.astro:149`, `ArticleLayout.astro:148`, `about.astro:94`, `404.astro:12`). PSI flags "Document does not have a main landmark."
+- **Change:** Replace each with `<main id="main">…</main>` (or add `role="main"`). The skip-link target keeps working unchanged.
+- **Effort:** Low / **Impact:** Low
+
+### A2. Fix color contrast on flagged elements
+- **Current:** PSI flags "Background and foreground colors do not have a sufficient contrast ratio." Likely culprits: muted greys for meta text (`pc-*__meta`, `bl-grid-meta`, `hp-stats__label`) and the yellow chip on light backgrounds.
+- **Change:** Run axe DevTools on `/` and `/blog`, identify each failing pair, and bump the muted greys one shade darker (or adjust `--color-grey-500`). Verify against `tokens.css`.
+- **Effort:** Low / **Impact:** Medium
+
+### A3. Don't rely on color alone for links
+- **Current:** PSI flags "Links rely on color to be distinguishable" — body-copy links inside articles likely have no underline.
+- **Change:** Add `text-decoration: underline` (or a persistent border-bottom) to links in prose / cards. Already fine for nav-style links with affordances.
+- **Effort:** Low / **Impact:** Medium
+
+---
+
+## SEO
+
+### SEO1. Confirm robots.txt is reachable in production
+- **Current:** Desktop PSI run reported "robots.txt is not valid — Lighthouse was unable to download a robots.txt file" (mobile run passed). The file exists at `public/robots.txt` and is valid, so this is likely a transient fetch from Lighthouse — but worth verifying after next deploy that `https://villoro.com/robots.txt` returns 200 with the expected body.
+- **Effort:** Low / **Impact:** Low (verification only)
