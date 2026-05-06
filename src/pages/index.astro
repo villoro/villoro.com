@@ -458,18 +458,26 @@ const getReadTime = readingTimeForPost;
   }
 
   .hp-ribbon__dot {
+    position: relative;
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: var(--color-yellow-400);
-    box-shadow: 0 0 0 4px rgba(255, 195, 58, 0.25);
     flex-shrink: 0;
+  }
+  .hp-ribbon__dot::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: rgba(255, 195, 58, 0.25);
     animation: pulse 2s ease infinite;
+    will-change: transform, opacity;
   }
 
   @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 4px rgba(255, 195, 58, 0.25); }
-    50%       { box-shadow: 0 0 0 8px rgba(255, 195, 58, 0.1); }
+    0%, 100% { transform: scale(1);   opacity: 1; }
+    50%       { transform: scale(1.5); opacity: 0.4; }
   }
 
   .hp-ribbon__sep {
@@ -689,7 +697,9 @@ const getReadTime = readingTimeForPost;
   /* Pulse dot: on yellow ribbon the token-blue dot looks odd; use a dark dot */
   :global(.dark) .hp-ribbon__dot {
     background: rgba(0, 0, 0, 0.45);
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.12);
+  }
+  :global(.dark) .hp-ribbon__dot::after {
+    background: rgba(0, 0, 0, 0.12);
     animation: none;
   }
 </style>

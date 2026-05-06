@@ -28,16 +28,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Change:** Run a Lighthouse trace, identify the blocking resources, and either inline critical CSS or defer the rest. If `main.css` is the blocker, evaluate Astro's `inlineStylesheets: 'auto'`.
 - **Effort:** Medium / **Impact:** Medium
 
-### P10. Fix forced reflow (desktop only)
-- **Current:** PSI flags one forced reflow on desktop. Likely `ThemeSwitcher.astro` reading `localStorage` then synchronously toggling `documentElement.classList` before paint, or AstroFont's fallback metrics shim.
-- **Change:** Profile in DevTools Performance panel to pinpoint the script, then batch reads/writes (use `requestAnimationFrame` for the class toggle, or inline a small theme-init blocking script in `<head>` before stylesheets so there's no class change after layout).
-- **Effort:** Low / **Impact:** Low–Medium
-
-### P11. Replace non-composited animation
-- **Current:** PSI: "1 animated element found" — animating a layout property (top/left/width/height/margin) instead of `transform`/`opacity`.
-- **Change:** Locate the offending CSS animation/transition (likely a hover or reveal in homepage cards) and switch to `transform: translate(...)` + `opacity`.
-- **Effort:** Low / **Impact:** Low
-
 ---
 
 ## DX & Tooling
