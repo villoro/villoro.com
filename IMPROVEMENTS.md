@@ -3,6 +3,8 @@
 Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by category with current state, suggested change, and rough effort/impact.
 
 > Note: Proposals reference paths discovered during audit. Verify each against current code before implementing — some may already be partially addressed.
+> 
+> **When an improvement is implemented, remove it from this file.** Keep the list current and actionable.
 
 ---
 
@@ -20,15 +22,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Change:** Extract to `src/styles/prose.css`, import where needed.
 - **Effort:** Medium / **Impact:** Low (mostly maintainability)
 
-### P7. Prioritize the LCP image (hero post card)
-- **Current:** The "Most read" hero `PostCard medium` image renders via `<Picture>` with `loading="eager"` but no `fetchpriority="high"` or `<link rel="preload">`. PSI flags ~75 KiB savings under "Improve image delivery" and lists LCP at 5.1s on mobile (LCP element appears to be this image).
-- **Change:** Add `fetchpriority="high"` to the hero image in `ImageMod.astro`/`PostCard.astro` (only on the eager hero). Optionally emit a `<link rel="preload" as="image" imagesrcset=…>` in `index.astro`'s head for the resolved AVIF.
-- **Effort:** Low / **Impact:** High (directly improves LCP)
-
-### P8. Defer SearchModal hydration
-- **Current:** `BaseRedesign.astro:137` mounts `<SearchModal client:load />` on every page — React + the search index JSON ships and hydrates immediately even though the modal is invisible until Cmd/Ctrl-K. PSI reports ~81 KiB unused JS and 4 long main-thread tasks.
-- **Change:** Switch to `client:idle` (or `client:visible` on a hidden trigger), and consider lazy-loading `search.json` only when the modal opens.
-- **Effort:** Low / **Impact:** High (cuts main-thread work + initial JS)
 
 ### P9. Audit render-blocking requests
 - **Current:** PSI: ~150 ms mobile, ~40 ms desktop. Tailwind's compiled CSS is the main suspect; the GA `gtag/js` tag is `async` so it shouldn't block.
@@ -75,11 +68,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ---
 
 ## Accessibility (PSI: 87 mobile / 90 desktop)
-
-### A1. Use a `<main>` landmark instead of `id="main"` on `<section>`
-- **Current:** Five pages put `id="main"` on a `<section>` (`index.astro:143`, `BlogListingLayout.astro:149`, `ArticleLayout.astro:148`, `about.astro:94`, `404.astro:12`). PSI flags "Document does not have a main landmark."
-- **Change:** Replace each with `<main id="main">…</main>` (or add `role="main"`). The skip-link target keeps working unchanged.
-- **Effort:** Low / **Impact:** Low
 
 ### A2. Fix color contrast on flagged elements
 - **Current:** PSI flags "Background and foreground colors do not have a sufficient contrast ratio." Likely culprits: muted greys for meta text (`pc-*__meta`, `bl-grid-meta`, `hp-stats__label`) and the yellow chip on light backgrounds.
