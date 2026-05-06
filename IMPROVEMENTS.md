@@ -17,26 +17,10 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 - **Change:** Add a size budget (e.g. <200KB) to CI, batch-compress existing images.
 - **Effort:** Medium / **Impact:** Medium
 
-### P6. Move prose styles out of `ArticleLayout.astro`
-- **Current:** ~420 lines of `<style is:global>` in the layout file.
-- **Change:** Extract to `src/styles/prose.css`, import where needed.
-- **Effort:** Medium / **Impact:** Low (mostly maintainability)
-
-
 ### P9. Audit render-blocking requests
 - **Current:** PSI: ~150 ms mobile, ~40 ms desktop. Tailwind's compiled CSS is the main suspect; the GA `gtag/js` tag is `async` so it shouldn't block.
 - **Change:** Run a Lighthouse trace, identify the blocking resources, and either inline critical CSS or defer the rest. If `main.css` is the blocker, evaluate Astro's `inlineStylesheets: 'auto'`.
 - **Effort:** Medium / **Impact:** Medium
-
-### P10. Fix forced reflow (desktop only)
-- **Current:** PSI flags one forced reflow on desktop. Likely `ThemeSwitcher.astro` reading `localStorage` then synchronously toggling `documentElement.classList` before paint, or AstroFont's fallback metrics shim.
-- **Change:** Profile in DevTools Performance panel to pinpoint the script, then batch reads/writes (use `requestAnimationFrame` for the class toggle, or inline a small theme-init blocking script in `<head>` before stylesheets so there's no class change after layout).
-- **Effort:** Low / **Impact:** Low–Medium
-
-### P11. Replace non-composited animation
-- **Current:** PSI: "1 animated element found" — animating a layout property (top/left/width/height/margin) instead of `transform`/`opacity`.
-- **Change:** Locate the offending CSS animation/transition (likely a hover or reveal in homepage cards) and switch to `transform: translate(...)` + `opacity`.
-- **Effort:** Low / **Impact:** Low
 
 ---
 
@@ -72,11 +56,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ### A2. Fix color contrast on flagged elements
 - **Current:** PSI flags "Background and foreground colors do not have a sufficient contrast ratio." Likely culprits: muted greys for meta text (`pc-*__meta`, `bl-grid-meta`, `hp-stats__label`) and the yellow chip on light backgrounds.
 - **Change:** Run axe DevTools on `/` and `/blog`, identify each failing pair, and bump the muted greys one shade darker (or adjust `--color-grey-500`). Verify against `tokens.css`.
-- **Effort:** Low / **Impact:** Medium
-
-### A3. Don't rely on color alone for links
-- **Current:** PSI flags "Links rely on color to be distinguishable" — body-copy links inside articles likely have no underline.
-- **Change:** Add `text-decoration: underline` (or a persistent border-bottom) to links in prose / cards. Already fine for nav-style links with affordances.
 - **Effort:** Low / **Impact:** Medium
 
 ---

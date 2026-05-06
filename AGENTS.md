@@ -35,7 +35,7 @@ npm run generate-json  # only regenerate scripts/jsonGenerator.js outputs
 npm run format         # prettier on src/
 ```
 
-`scripts/jsonGenerator.js` writes `.json/posts.json` and `.json/search.json` (gitignored) — these are the search-modal index. They get rebuilt at every `dev`/`build`.
+`scripts/jsonGenerator.js` writes `.json/posts.json` and `public/search.json` (both gitignored). The latter is served as a static asset and lazy-fetched by `SearchModal` on first open. Both rebuild on every `dev`/`build`.
 
 ## Path aliases (`tsconfig.json`)
 
@@ -95,7 +95,7 @@ src/
 └── env.d.ts
 
 scripts/
-├── jsonGenerator.js                builds .json/posts.json + .json/search.json
+├── jsonGenerator.js                builds .json/posts.json + public/search.json
 └── removeDarkmode.js               one-off utility (rarely used)
 
 .github/

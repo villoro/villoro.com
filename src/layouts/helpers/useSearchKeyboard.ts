@@ -1,6 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-export const useSearchKeyboard = () => {
+export const useSearchKeyboard = (onOpen?: () => void) => {
+  const onOpenRef = useRef(onOpen);
+  onOpenRef.current = onOpen;
+
   useEffect(() => {
     const searchModal = document.getElementById("searchModal");
     const searchInput = document.getElementById("searchInput");
@@ -30,6 +33,7 @@ export const useSearchKeyboard = () => {
     const openModal = () => {
       searchModal?.classList.add("show");
       searchInput?.focus();
+      onOpenRef.current?.();
     };
 
     const closeModal = () => {

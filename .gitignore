@@ -45,6 +45,9 @@ dist/
 .output/
 .json/
 
+# generated search index (built by scripts/jsonGenerator.js)
+public/search.json
+
 # dependencies
 node_modules/
 

@@ -1,10 +1,11 @@
-import searchData from ".json/search.json";
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import SearchResult, { type ISearchItem } from "./SearchResult";
 import { useSearchKeyboard } from "./useSearchKeyboard";
 
 const SearchModal = () => {
   const [searchString, setSearchString] = useState("");
+  const [searchData, setSearchData] = useState<ISearchItem[] | null>(null);
+  const loadingRef = useRef(false);
 
   // handle input change
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -12,29 +13,35 @@ const SearchModal = () => {
   };
 
   // generate search result
-  const doSearch = (searchData: ISearchItem[]) => {
+  const doSearch = (data: ISearchItem[] | null) => {
+    if (!data || searchString === "") return [];
     const regex = new RegExp(`${searchString}`, "gi");
-    if (searchString === "") {
-      return [];
-    } else {
-      const searchResult = searchData.filter((item) => {
-        const title = item.frontmatter.title.toLowerCase().match(regex);
-        const description = item.frontmatter.description
-          ?.toLowerCase()
-          .match(regex);
-        const categories = item.frontmatter.categories
-          ?.join(" ")
-          .toLowerCase()
-          .match(regex);
-        const content = item.content.toLowerCase().match(regex);
+    return data.filter((item) => {
+      const title = item.frontmatter.title.toLowerCase().match(regex);
+      const description = item.frontmatter.description
+        ?.toLowerCase()
+        .match(regex);
+      const categories = item.frontmatter.categories
+        ?.join(" ")
+        .toLowerCase()
+        .match(regex);
+      const content = item.content.toLowerCase().match(regex);
 
-        if (title || content || description || categories) {
-          return item;
-        }
-      });
-      return searchResult;
-    }
+      return Boolean(title || content || description || categories);
+    });
   };
+
+  // Lazy-load the ~800KB search index on first modal open.
+  const loadSearchData = useCallback(() => {
+    if (searchData || loadingRef.current) return;
+    loadingRef.current = true;
+    fetch("/search.json")
+      .then((r) => r.json())
+      .then((data: ISearchItem[]) => setSearchData(data))
+      .catch(() => {
+        loadingRef.current = false;
+      });
+  }, [searchData]);
 
   // get search result
   const startTime = performance.now();
@@ -42,7 +49,7 @@ const SearchModal = () => {
   const endTime = performance.now();
   const totalTime = ((endTime - startTime) / 1000).toFixed(3);
 
-  useSearchKeyboard();
+  useSearchKeyboard(loadSearchData);
 
   return (
     <div id="searchModal" className="search-modal">
