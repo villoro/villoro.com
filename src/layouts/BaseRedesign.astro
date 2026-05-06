@@ -60,11 +60,11 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
     {/* Inline theme init — runs before stylesheets to avoid a post-paint class flip / forced reflow. */}
     <script is:inline define:vars={{ defaultTheme: config.settings?.default_theme ?? "system" }}>
       try {
-        var stored = localStorage.getItem("theme");
-        var sysDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        var effective = stored || (defaultTheme === "system" ? (sysDark ? "dark" : "light") : defaultTheme);
+        const stored = localStorage.getItem("theme");
+        const sysDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const effective = stored || (defaultTheme === "system" ? (sysDark ? "dark" : "light") : defaultTheme);
         if (effective === "dark") document.documentElement.classList.add("dark");
-      } catch (e) {}
+      } catch {}
     </script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-08V17G7ZDD"></script>
