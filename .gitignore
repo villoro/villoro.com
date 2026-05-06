@@ -66,3 +66,4 @@ pnpm-debug.log*
 
 .claude
 claude_design/**
+dev-dist/**
