@@ -4,6 +4,7 @@ const matter = require("gray-matter");
 
 const CONTENT_DEPTH = 2;
 const JSON_FOLDER = "./.json";
+const PUBLIC_FOLDER = "./public";
 const BLOG_FOLDER = "src/content/blog";
 
 // get data from markdown
@@ -59,10 +60,11 @@ try {
     JSON.stringify(getData(BLOG_FOLDER, 2)),
   );
 
-  // merger json files for search
+  // search.json is served from /public so it can be fetched lazily by the
+  // SearchModal (only on first open) instead of bundled into the initial JS.
   const posts = require(`../${JSON_FOLDER}/posts.json`);
   const search = [...posts];
-  fs.writeFileSync(`${JSON_FOLDER}/search.json`, JSON.stringify(search));
+  fs.writeFileSync(`${PUBLIC_FOLDER}/search.json`, JSON.stringify(search));
 } catch (err) {
   console.error(err);
 }
