@@ -88,6 +88,7 @@ const getReadTime = readingTimeForPost;
                 badge={hp.hero.badge_most_read}
                 readTime={getReadTime(heroPost)}
                 loading="eager"
+                fetchpriority="high"
               />
             </div>
           )}
@@ -140,7 +141,7 @@ const getReadTime = readingTimeForPost;
     </div>
 
     <!-- ══════════════════ LATEST WRITING ═════════════════════ -->
-    <section class="hp-posts" id="main">
+    <main class="hp-posts" id="main">
       <div class="hp-wrap">
       <div class="hp-posts__head">
         <div>
@@ -179,7 +180,7 @@ const getReadTime = readingTimeForPost;
         ))}
       </div>
       </div>
-    </section>
+    </main>
 
     <!-- ════════════════════ FOOTER ═══════════════════════════ -->
     <SiteFooter />
