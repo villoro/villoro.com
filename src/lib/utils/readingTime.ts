@@ -12,7 +12,7 @@ const readingTime = (content: string): string => {
       return regex.test(word);
     }).length;
 
-  let imageAdjust = images * 4;
+  const imageAdjust = images * 4;
   let imageSecs = 0;
   let imageFactor = 12;
 

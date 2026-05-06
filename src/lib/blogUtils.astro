@@ -2,7 +2,7 @@
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 
-export async function fetchAndSortPosts(folder, page, pagination) {
+export async function fetchAndSortPosts(folder: string, page: number, pagination: number) {
   const posts = await getSinglePage(folder);
   const sortedPosts = sortByDate(posts);
   const totalPages = Math.ceil(posts.length / pagination);

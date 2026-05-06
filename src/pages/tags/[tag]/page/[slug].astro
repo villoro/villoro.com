@@ -29,12 +29,13 @@ const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
 
 const items = await getSinglePage(blog_folder);
 
-let originalTag = tag;
-const normalizedTag = tag.toLowerCase();
+let originalTag = tag!;
+const normalizedTag = tag!.toLowerCase();
 const filtered = items.filter((item) => {
   const itemTags = item.data.tags;
   if (itemTags?.some((t: string) => slugify(t).toLowerCase() === normalizedTag)) {
-    originalTag = itemTags.find((t: string) => slugify(t).toLowerCase() === normalizedTag);
+    const match = itemTags.find((t: string) => slugify(t).toLowerCase() === normalizedTag);
+    if (match) originalTag = match;
     return true;
   }
   return false;

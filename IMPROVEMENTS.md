@@ -22,10 +22,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## DX & Tooling
 
-### D1. Add ESLint (or Biome) + `tsc --noEmit` in pre-commit
-- **Current:** Pre-commit only runs ast/yaml/json/merge-conflict checks.
-- **Effort:** Medium / **Impact:** High
-
 ### D2. Add a test harness (Vitest)
 - Start with utilities (`textConverter`, `readingTime`, `similarItems`).
 - **Effort:** High / **Impact:** High

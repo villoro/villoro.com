@@ -33,7 +33,7 @@ const similarItems = (
     tags = currentItem.data.tags;
   }
 
-  let scoredItems: { item: any; score: number }[] = [];
+  const scoredItems: { item: any; score: number }[] = [];
 
   allItems.forEach((item: any) => {
     if ((item.data?.slug || item.id) === (currentItem.data?.slug || currentItem.id)) return;

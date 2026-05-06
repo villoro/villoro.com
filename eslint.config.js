@@ -15,6 +15,7 @@ export default [
       "public/**",
       "src/content/**",
       "scripts/**",
+      "images/**",
       "src/.json/**",
     ],
   },
@@ -32,7 +33,18 @@ export default [
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
+      "@typescript-eslint/triple-slash-reference": "off",
       "no-empty": ["error", { allowEmptyCatch: true }],
+    },
+  },
+  {
+    files: ["**/*.cjs", "tailwind.config.js"],
+    languageOptions: {
+      globals: { ...globals.node },
+      sourceType: "commonjs",
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
   {
@@ -46,6 +58,8 @@ export default [
       ...reactHooks.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/set-state-in-effect": "warn",
     },
     settings: { react: { version: "detect" } },
   },

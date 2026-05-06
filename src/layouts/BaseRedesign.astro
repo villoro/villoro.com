@@ -58,10 +58,11 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-08V17G7ZDD"></script>
-    <script>
+    <script is:inline>
       if (window.location.host === "villoro.com" || window.location.host === "www.villoro.com") {
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+        // eslint-disable-next-line prefer-rest-params
+        function gtag(){window.dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-08V17G7ZDD');
       }
@@ -126,8 +127,8 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
     <meta property="og:url" content={`${config.site.base_url}/${Astro.url.pathname.replace("/", "")}`} />
     <meta name="twitter:title" content={plainify(meta_title ? meta_title : title ? title : config.site.title)} />
     <meta name="twitter:description" content={plainify(description ? description : config.metadata.meta_description)} />
-    <meta property="og:image" content={`${config.site.base_url}${image ? image : config.metadata.meta_image}`} />
-    <meta name="twitter:image" content={`${config.site.base_url}${image ? image : config.metadata.meta_image}`} />
+    <meta property="og:image" content={`${config.site.base_url}${image ? image : (config.metadata as { meta_image?: string }).meta_image ?? ""}`} />
+    <meta name="twitter:image" content={`${config.site.base_url}${image ? image : (config.metadata as { meta_image?: string }).meta_image ?? ""}`} />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>

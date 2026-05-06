@@ -6,7 +6,7 @@ export const getTaxonomy = async (collection: any, name: string, slugifyTags: bo
   const singlePages = await getSinglePage(collection);
 
   let taxonomies: string[] = [];
-  singlePages.forEach((page) => {
+  singlePages.forEach((page: any) => {
     const category = page.data[name];
     if (Array.isArray(category)) {
       category.forEach((item) => {
@@ -24,7 +24,7 @@ export const getAllTaxonomy = async (collection: any, name: string, slugifyTags:
   const singlePages = await getSinglePage(collection);
 
   let taxonomies: string[] = [];
-  singlePages.forEach((page) => {
+  singlePages.forEach((page: any) => {
     const category = page.data[name];
     if (Array.isArray(category)) {
       category.forEach((item) => {

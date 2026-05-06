@@ -8,7 +8,7 @@ export const slugify = (content: string): string => {
 
 // markdownify
 export const markdownify = (content: string, div?: boolean): string => {
-  return div ? marked.parse(content) : marked.parseInline(content);
+  return (div ? marked.parse(content) : marked.parseInline(content)) as string;
 };
 
 // humanize
