@@ -47,6 +47,7 @@ const { title, meta_title, description, image, noindex, canonical, prevHref, nex
 <html lang="en">
   <head>
     <link rel="shortcut icon" href={config.site.favicon} />
+    <link rel="alternate" type="application/rss+xml" title={config.site.title} href={`${config.site.base_url}/rss.xml`} />
     <link rel="apple-touch-icon" href="/pwa/pwa-192x192.png" />
     {pwaInfo && <Fragment set:html={pwaInfo.webManifest.linkTag} />}
     <meta name="theme-name" content="astroplate" />
