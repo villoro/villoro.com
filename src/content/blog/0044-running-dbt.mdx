@@ -164,7 +164,7 @@ COPY --from=base /usr/app/dbt/dist/*.tar.gz /dist/
 ### Docker.ecs
 
 This image runs in `Fargate`.
-Here, I set up the connection to `prefect` (more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>).
+Here, I set up the connection to `prefect` (more info at <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#connect-docker/" dark="true"/>).
 I also export all the needed scripts to download all dbt code.
 
 <FileName>
@@ -553,7 +553,7 @@ dbtRunner().invoke(args)
 ## Integrating with Prefect
 
 > [!note]
-> Remember that you need to connect to Prefect. For more information, visit <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#31-connect-docker/" dark="true"/>
+> Remember that you need to connect to Prefect. For more information, visit <FancyLink linkText="Connect Docker | Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment#connect-docker/" dark="true"/>
 
 ### Tasks
 
