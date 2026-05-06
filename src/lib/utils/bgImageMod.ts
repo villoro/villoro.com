@@ -18,7 +18,7 @@ const bgImageMod = async (
     try {
       const imageData = (await images[image]()) as any;
       return imageData;
-    } catch (error) {
+    } catch {
       return `Image not found - ${src}. Make sure the image is in the /public/images folder.`;
     }
   };

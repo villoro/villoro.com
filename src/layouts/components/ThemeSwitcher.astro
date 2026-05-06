@@ -1,10 +1,7 @@
 ---
 import config from "@/config/config.json";
 
-const {
-  theme_switcher,
-  default_theme,
-} = config.settings;
+const { theme_switcher } = config.settings;
 ---
 
 {theme_switcher && (
@@ -87,20 +84,20 @@ const {
   import { settings } from "@/config/config.json";
   const matchMedia = window.matchMedia("(prefers-color-scheme: dark)");
   
-  matchMedia.addEventListener('change', () => toggleTheme(document.querySelectorAll("[data-theme-switcher]")));
+  matchMedia.addEventListener('change', () => toggleTheme(document.querySelectorAll<HTMLInputElement>("[data-theme-switcher]")));
 
-  function toggleTheme(themeSwitch) {
+  function toggleTheme(themeSwitch: NodeListOf<HTMLInputElement>) {
     const defaultTheme = settings.default_theme === "system" ? (matchMedia.matches ? "dark" : "light") : settings.default_theme;
     const currentTheme = localStorage.getItem("theme") || defaultTheme;
     const isDarkTheme = currentTheme === "dark";
-    themeSwitch.forEach((sw) => (sw.checked = isDarkTheme));
+    themeSwitch.forEach((sw: HTMLInputElement) => (sw.checked = isDarkTheme));
     document.documentElement.classList.toggle("dark", isDarkTheme);
   }
 
   const setDarkMode = () => {
-    const themeSwitch = document.querySelectorAll("[data-theme-switcher]");
+    const themeSwitch = document.querySelectorAll<HTMLInputElement>("[data-theme-switcher]");
     toggleTheme(themeSwitch);
-    themeSwitch.forEach((sw) => {
+    themeSwitch.forEach((sw: HTMLInputElement) => {
       sw.addEventListener("click", function () {
         const defaultTheme = settings.default_theme === "system" ? (matchMedia.matches ? "dark" : "light") : settings.default_theme;
         const currentTheme = localStorage.getItem("theme") || defaultTheme;

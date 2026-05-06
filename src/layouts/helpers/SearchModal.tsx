@@ -1,5 +1,5 @@
 import searchData from ".json/search.json";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import SearchResult, { type ISearchItem } from "./SearchResult";
 import { useSearchKeyboard } from "./useSearchKeyboard";
 
@@ -49,10 +49,7 @@ const SearchModal = () => {
       <div id="searchModalOverlay" className="search-modal-overlay" />
       <div className="search-wrapper">
         <div className="search-wrapper-header">
-          <div
-            htmlFor="searchInput"
-            className="absolute left-7 top-[calc(50%-7px)]"
-          >
+          <div className="absolute left-7 top-[calc(50%-7px)]">
             <span className="sr-only">search icon</span>
             {searchString ? (
               <svg
