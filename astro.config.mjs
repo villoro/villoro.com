@@ -16,6 +16,10 @@ export default defineConfig({
   base: config.site.base_path ? config.site.base_path : "/",
   trailingSlash: config.site.trailing_slash ? "always" : "never",
 
+  build: {
+    inlineStylesheets: "auto",
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },

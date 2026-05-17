@@ -51,6 +51,9 @@ for (const h of headings) {
 const readTime     = readingTimeForPost(post);
 const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
 const formattedUpdatedDate = updatedDate ? dateFormat(updatedDate, "MMMM d, yyyy") : "";
+const publishedTime = date ? new Date(date).toISOString() : undefined;
+const modifiedTime = updatedDate ? new Date(updatedDate).toISOString() : undefined;
+const author = post.data.author || config.metadata.meta_author;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -77,6 +80,9 @@ const jsonLd = {
   description={description}
   image={image}
   canonical={canonical}
+  publishedTime={publishedTime}
+  modifiedTime={modifiedTime}
+  author={author}
   category={category}
   catName={catName}
   catColor={catColor}

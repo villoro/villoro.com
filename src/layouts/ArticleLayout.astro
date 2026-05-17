@@ -38,6 +38,9 @@ interface Props {
   description?: string;
   image?: string;
   canonical?: string;
+  publishedTime?: string;
+  modifiedTime?: string;
+  author?: string;
 
   // Post metadata (for hero)
   category: string;
@@ -63,6 +66,9 @@ const {
   description,
   image,
   canonical,
+  publishedTime,
+  modifiedTime,
+  author,
   category,
   catName,
   catColor,
@@ -91,6 +97,10 @@ const breadcrumbs = [
   description={description}
   image={image}
   canonical={canonical}
+  ogType="article"
+  publishedTime={publishedTime}
+  modifiedTime={modifiedTime}
+  author={author}
 >
   <div class="al">
     <SiteNav />
