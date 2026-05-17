@@ -35,9 +35,10 @@ const yearsWriting  = Math.floor(
   (today.getTime() - writingSince.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
 );
 
-// Days since latest non-draft post
-const latestDate = latestPost?.data?.date ? new Date(latestPost.data.date) : today;
-const daysAgo    = Math.max(0, Math.round((today.getTime() - latestDate.getTime()) / 86_400_000));
+// Latest post date as ISO — days-ago is computed client-side so it stays fresh
+const latestDateISO = latestPost?.data?.date
+  ? new Date(latestPost.data.date).toISOString()
+  : today.toISOString();
 
 const getReadTime = readingTimeForPost;
 
@@ -133,7 +134,7 @@ const getReadTime = readingTimeForPost;
       <div class="hp-ribbon__right">
         <span class="hp-ribbon__dot" aria-hidden="true"></span>
         <span>
-          Latest: <strong>{daysAgo} days ago</strong>
+          Latest: <strong data-latest-days-ago data-latest-date={latestDateISO}>…</strong>
           {latestPost?.data?.category && <> · <strong>{latestPost.data.category}</strong></>}
         </span>
       </div>
@@ -185,6 +186,15 @@ const getReadTime = readingTimeForPost;
     <!-- ════════════════════ FOOTER ═══════════════════════════ -->
     <SiteFooter />
   </div>
+
+  <script>
+    const el = document.querySelector<HTMLElement>('[data-latest-days-ago]');
+    if (el?.dataset.latestDate) {
+      const diff = Date.now() - new Date(el.dataset.latestDate).getTime();
+      const days = Math.max(0, Math.round(diff / 86_400_000));
+      el.textContent = `${days} day${days === 1 ? '' : 's'} ago`;
+    }
+  </script>
 </BaseRedesign>
 
 <style>
