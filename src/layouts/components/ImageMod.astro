@@ -12,6 +12,7 @@ interface Props {
   decoding?: "async" | "auto" | "sync" | null | undefined;
   fetchpriority?: "high" | "low" | "auto";
   sizes?: string;
+  widths?: number[];
   class?: string;
   style?: any;
 }
@@ -27,6 +28,7 @@ let {
   fetchpriority,
   class: className,
   sizes,
+  widths,
   style,
 } = Astro.props;
 
@@ -55,6 +57,7 @@ if (!isValidPath) {
     decoding={decoding}
     fetchpriority={fetchpriority}
     sizes={sizes}
+    widths={widths}
     class={className}
     formats={["avif", "webp"]}
     style={style}

@@ -28,6 +28,8 @@ import ShareRow from "@/components/ShareRow.astro";
 import RelatedPostsGrid from "@/components/RelatedPostsGrid.astro";
 import GiscusComments from "@/components/GiscusComments.astro";
 import { slugify } from "@/lib/utils/textConverter";
+import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
 import type { CollectionEntry } from "astro:content";
 import type { TocItem } from "@/components/ArticleTOC.astro";
 
@@ -89,6 +91,29 @@ const breadcrumbs = [
   { href: "/blog", label: "Blog" },
   { href: `/categories/${catSlug}`, label: catName },
 ];
+
+// Hero LCP preload — mirrors the Picture in ImageMod so the browser
+// can start fetching the hero before parsing the body. Same widths +
+// format are passed to the Picture below so the generated URLs match
+// the preload's imagesrcset.
+const heroWidths = [640, 1024, 1920];
+const heroSizes = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px";
+const heroImages = import.meta.glob<{ default: ImageMetadata }>(
+  "/public/images/**/*.{jpeg,jpg,png,gif}"
+);
+let heroPreloadSrcset: string | null = null;
+if (image) {
+  const loader = heroImages[`/public${image}`];
+  if (loader) {
+    const mod = await loader();
+    const result = await getImage({
+      src: mod.default,
+      widths: heroWidths,
+      format: "avif",
+    });
+    heroPreloadSrcset = result.srcSet.attribute;
+  }
+}
 ---
 
 <BaseRedesign
@@ -102,6 +127,17 @@ const breadcrumbs = [
   modifiedTime={modifiedTime}
   author={author}
 >
+  {heroPreloadSrcset && (
+    <link
+      slot="head"
+      rel="preload"
+      as="image"
+      type="image/avif"
+      imagesrcset={heroPreloadSrcset}
+      imagesizes={heroSizes}
+      fetchpriority="high"
+    />
+  )}
   <div class="al">
     <SiteNav />
 
@@ -113,8 +149,10 @@ const breadcrumbs = [
           alt={title}
           width={1920}
           height={1080}
-          sizes="(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px"
+          widths={heroWidths}
+          sizes={heroSizes}
           loading="eager"
+          fetchpriority="high"
           class="al-hero__img"
         />
       )}

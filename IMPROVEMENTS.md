@@ -73,12 +73,3 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ---
 
-## Performance (LCP focus)
-
-### P10. Preload the article hero image (LCP)
-- **Current:** Mobile LCP is 5.1s; the hero `<img>` in `ArticleLayout.astro` is almost certainly the LCP element. It loads via `astro:assets` with `loading="eager"` but is not preloaded, so the browser only discovers it after parsing the body.
-- **Change:** Emit `<link rel="preload" as="image" href={image} imagesrcset=… imagesizes=…>` in the `<head>` for article pages. Either thread the image through `BaseRedesign` props or use a named slot.
-- **Effort:** Low / **Impact:** High (direct LCP win)
-
----
-

@@ -172,6 +172,7 @@ const resolvedCanonical = canonical ?? `${config.site.base_url}${Astro.url.pathn
     <meta property="og:image" content={`${config.site.base_url}${image ? image : (config.metadata as { meta_image?: string }).meta_image ?? ""}`} />
     <meta name="twitter:image" content={`${config.site.base_url}${image ? image : (config.metadata as { meta_image?: string }).meta_image ?? ""}`} />
     <meta name="twitter:card" content="summary_large_image" />
+    <slot name="head" />
   </head>
   <body>
     <a href="#main" class="sr-only focus:not-sr-only">Skip to main content</a>
