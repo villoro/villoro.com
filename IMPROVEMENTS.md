@@ -26,10 +26,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## DX & Tooling
 
-### D2. Add a test harness (Vitest)
-- Start with utilities (`textConverter`, `readingTime`, `similarItems`).
-- **Effort:** High / **Impact:** High
-
 ### D4. Lighthouse / Unlighthouse CI step on previews
 - **Effort:** Medium / **Impact:** Medium
 
