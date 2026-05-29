@@ -18,6 +18,8 @@
     "format": "prettier -w ./src",
     "lint": "eslint .",
     "typecheck": "astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "generate-json": "node scripts/jsonGenerator.js",
     "remove-darkmode": "node scripts/removeDarkmode.js && npm run format"
   },
@@ -63,6 +65,7 @@
     "size-limit": "^11.1.4",
     "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.2"
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.7"
   }
 }
