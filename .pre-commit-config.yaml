@@ -3,9 +3,15 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-    - id: check-ast
-    - id: check-yaml
-    - id: check-json
-    - id: check-toml
-    - id: check-merge-conflict
-    - id: no-commit-to-branch
+      - id: check-ast
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: no-commit-to-branch
+
+  # YAML formatter
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.16.0
+    hooks:
+      - id: yamlfmt
