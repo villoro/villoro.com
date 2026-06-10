@@ -3,11 +3,11 @@ slug: one-environment-prod
 title: One Environment to Rule Them All
 meta_title: One Environment to Rule Them All - Rethinking Dev, Test, and Prod
 description: Do we really need dev, test, and sandbox? Explore the case for a single prod environment, how dbt handles it, how to run Python this way, and the pros and cons of going prod-only.
-date: 2025-09-01
-image: /images/blog/9999-glass-bridge.jpg
+date: 2026-06-10
+image: /images/blog/0069-glass-bridge.jpg
 category: DE
 tags: [Python, dbt, DE, Environments]
-draft: true
+draft: false
 ---
 
 ## Why multiple environments exist
@@ -16,7 +16,7 @@ draft: true
 
 In software and data engineering, it’s common to separate work into multiple environments. Code is built in **dev**, validated in **test/staging**, sometimes explored in a **sandbox**, and only then deployed to **prod**. The idea is simple: keep experiments and errors away from the systems that matter.
 
-![Traditional Environments](../../images/posts/2025/9999-traditional-environments.jpg)
+![Traditional Environments](../../images/posts/2026/0069-traditional-environments.jpg)
 
 This layering reduces risk by catching problems earlier and isolating them from production.
 
@@ -91,7 +91,7 @@ Many teams use this approach:
 * Production jobs write only to `prod_salesforce`.
 * CI/CD pipelines create temporary schemas for validation, then clean them up.
 
-![dbt custom schemas](../../images/posts/2025/9999-dbt-custom-schemas.jpg)
+![dbt custom schemas](../../images/posts/2026/0069-dbt-custom-schemas.jpg)
 
 ## Pros and cons
 
