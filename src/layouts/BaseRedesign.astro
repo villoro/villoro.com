@@ -8,6 +8,8 @@ import TwSizeIndicator from "@/components/TwSizeIndicator.astro";
 import config from "@/config/config.json";
 import theme from "@/config/theme.json";
 import { plainify } from "@/lib/utils/textConverter";
+import { resolveImage } from "@/lib/utils/blogImages";
+import { getImage } from "astro:assets";
 import "@/styles/main.css";
 import { AstroFont } from "astro-font";
 import { ClientRouter } from "astro:transitions";
@@ -60,6 +62,18 @@ const {
 } = Astro.props;
 
 const resolvedCanonical = canonical ?? `${config.site.base_url}${Astro.url.pathname}`;
+
+// OG/Twitter image must be an absolute URL to a real served file. Blog images
+// live in src/images/blog (not served verbatim), so resolve through the image
+// pipeline; public/ paths (e.g. a future meta_image) pass through unchanged.
+const rawOgImage = image ?? (config.metadata as { meta_image?: string }).meta_image ?? "";
+let ogImageUrl = rawOgImage ? `${config.site.base_url}${rawOgImage}` : "";
+const ogLoader = rawOgImage ? resolveImage(rawOgImage) : undefined;
+if (ogLoader) {
+  const mod = await ogLoader();
+  const og = await getImage({ src: mod.default, width: 1200 });
+  ogImageUrl = `${config.site.base_url}${og.src}`;
+}
 ---
 
 <!doctype html>
@@ -169,8 +183,8 @@ const resolvedCanonical = canonical ?? `${config.site.base_url}${Astro.url.pathn
     <meta property="og:url" content={resolvedCanonical} />
     <meta name="twitter:title" content={plainify(meta_title ? meta_title : title ? title : config.site.title)} />
     <meta name="twitter:description" content={plainify(description ? description : config.metadata.meta_description)} />
-    <meta property="og:image" content={`${config.site.base_url}${image ? image : (config.metadata as { meta_image?: string }).meta_image ?? ""}`} />
-    <meta name="twitter:image" content={`${config.site.base_url}${image ? image : (config.metadata as { meta_image?: string }).meta_image ?? ""}`} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta name="twitter:image" content={ogImageUrl} />
     <meta name="twitter:card" content="summary_large_image" />
     <slot name="head" />
   </head>
