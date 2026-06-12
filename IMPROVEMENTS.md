@@ -8,20 +8,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind 4, Netlify). Proposals are grouped by
 
 ---
 
-## Bugs & Correctness
-
-### B1. Search crashes on regex special characters
-- **Current:** `SearchModal.tsx` builds `new RegExp(searchString, "gi")` from raw user input (only `\` is stripped), and `SearchResult.tsx` does the same in `matchMarker`/`matchUnderline`. Typing `(`, `c++`, or `[` throws and breaks the search UI.
-- **Change:** Escape the input (`searchString.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")`) before constructing any `RegExp`, or switch to plain `String.includes` matching.
-- **Effort:** Low / **Impact:** Medium (user-visible breakage)
-
-### B2. Search filters/renders `frontmatter.categories`, which never exists
-- **Current:** The blog schema uses `category` (singular, string). `SearchModal.doSearch` and the `SearchResult` taxonomy block reference `frontmatter.categories` (plural array) — always `undefined`, so category matching and the category chips in results are dead code.
-- **Change:** Either index `category` (and `tags`) in `scripts/jsonGenerator.js` and match on those, or delete the dead branches.
-- **Effort:** Low / **Impact:** Low–Medium
-
----
-
 ## Performance
 
 > PageSpeed Insights baseline (May 2026, homepage): **Mobile 66 / Desktop 86**. Mobile LCP **5.1s** (target ≤2.5s), FCP **3.0s**, Speed Index **12.7s**. Desktop LCP **1.3s**, Speed Index **6.1s**. CrUX field data: not enough traffic yet — these are lab numbers only. Re-run PSI after each fix to confirm impact.
@@ -36,11 +22,6 @@ Audit of `villoro.com` (Astro 6 + Tailwind 4, Netlify). Proposals are grouped by
 - **Change:** Move blog hero images to `src/images/` (where post-body images already live) and update `ImageMod`'s glob + the CI aspect-ratio path. Keeps only optimized variants in `dist`. Coordinate with P4.
 - **Effort:** Medium / **Impact:** Medium (build output size, deploy time, precache size)
 
-### P13. Shrink the search index
-- **Current:** `public/search.json` is **792 KB** and contains the raw MDX body of every post — including `import` statements and JSX shortcode markup — which the client then `plainify`s at render time. The whole file is fetched on first search open.
-- **Change:** In `scripts/jsonGenerator.js`, strip frontmatter-irrelevant fields and store plain text (run the markdown→plain conversion at generation time, truncate body to a few KB per post). Longer term, consider Pagefind for proper static search. Pairs with B2.
-- **Effort:** Low–Medium / **Impact:** Medium
-
 ### P9. Audit render-blocking requests
 - **Current:** PSI: ~150 ms mobile, ~40 ms desktop. Note `inlineStylesheets: "auto"` is **already enabled** in `astro.config.mjs`, so the original suggestion is partially done. Remaining suspects: the Google Fonts stylesheets + AstroFont (five font families total: Heebo, Signika, Fraunces, Instrument Serif, JetBrains Mono).
 - **Change:** Run a Lighthouse trace to identify remaining blockers. Consider self-hosting the fonts (fontsource) and trimming the family/weight set — five families is a lot for a blog.
@@ -51,7 +32,7 @@ Audit of `villoro.com` (Astro 6 + Tailwind 4, Netlify). Proposals are grouped by
 ## DX & Tooling
 
 ### D2. Add a test harness (Vitest)
-- Start with utilities (`textConverter`, `readingTime`, `similarItems`) and `scripts/jsonGenerator.js` (slug fallback logic is subtle). The regex-escape fix in B1 is a perfect first test case.
+- Start with utilities (`textConverter`, `readingTime`, `similarItems`) and `scripts/jsonGenerator.js` (slug fallback + MDX plainify logic is subtle and currently untested).
 - **Effort:** High / **Impact:** High
 
 ### D4. Lighthouse / Unlighthouse CI step on previews

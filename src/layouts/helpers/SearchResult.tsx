@@ -1,4 +1,3 @@
-import { plainify, titleify } from "@/lib/utils/textConverter";
 import React from "react";
 
 export interface ISearchItem {
@@ -8,23 +7,28 @@ export interface ISearchItem {
     title: string;
     image?: string;
     description?: string;
-    categories?: string[];
+    category?: string;
+    tags?: string[];
   };
+  // plain text, pre-converted from MDX by scripts/jsonGenerator.js — do NOT
+  // import markdown helpers here, they would pull `marked` into the bundle
   content: string;
 }
 
+// local title-case helper (intentionally not imported from textConverter,
+// which transitively imports `marked`)
+const titleify = (content: string): string => {
+  return content
+    .replace(/^[\s_-]+|[\s_-]+$/g, "")
+    .replace(/[_\s-]+/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 export interface ISearchGroup {
   group: string;
-  groupItems: {
-    slug: string;
-    frontmatter: {
-      title: string;
-      image?: string;
-      description?: string;
-      categories?: string[];
-    };
-    content: string;
-  }[];
+  groupItems: ISearchItem[];
 }
 
 // search result component
@@ -45,20 +49,10 @@ const SearchResult = ({
         if (groupIndex === -1) {
           groupItems.push({
             group: item.group,
-            groupItems: [
-              {
-                frontmatter: { ...item.frontmatter },
-                slug: item.slug,
-                content: item.content,
-              },
-            ],
+            groupItems: [item],
           });
         } else {
-          groupItems[groupIndex].groupItems.push({
-            frontmatter: { ...item.frontmatter },
-            slug: item.slug,
-            content: item.content,
-          });
+          groupItems[groupIndex].groupItems.push(item);
         }
 
         return groupItems;
@@ -69,9 +63,14 @@ const SearchResult = ({
   };
   const finalResult = generateSearchGroup(searchResult);
 
+  // escape user input before building a RegExp from it — raw input like
+  // "c++" or "(" is an invalid pattern and would throw
+  const escapeRegExp = (text: string) =>
+    text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
   // match marker
   const matchMarker = (text: string, substring: string) => {
-    const parts = text.split(new RegExp(`(${substring})`, "gi"));
+    const parts = text.split(new RegExp(`(${escapeRegExp(substring)})`, "gi"));
     return parts.map((part, index) =>
       part.toLowerCase() === substring.toLowerCase() ? (
         <mark key={index}>{part}</mark>
@@ -83,7 +82,9 @@ const SearchResult = ({
 
   // match underline
   const matchUnderline = (text: string, substring: string) => {
-    const parts = text?.split(new RegExp(`(${substring})`, "gi"));
+    const parts = text?.split(
+      new RegExp(`(${escapeRegExp(substring)})`, "gi")
+    );
     return parts?.map((part, index) =>
       part.toLowerCase() === substring.toLowerCase() ? (
         <span key={index} className="underline">
@@ -95,24 +96,23 @@ const SearchResult = ({
     );
   };
 
-  // match content
+  // match content — show a snippet around the first occurrence, or the start
+  // of the post when the match was on title/description/taxonomy only
   const matchContent = (content: string, substring: string) => {
-    const plainContent = plainify(content);
-    const position = plainContent
-      .toLowerCase()
-      .indexOf(substring.toLowerCase());
+    const position = content.toLowerCase().indexOf(substring.toLowerCase());
+
+    if (position === -1) {
+      return <>{content.substring(0, 80)}</>;
+    }
 
     // Find the start of the word containing the substring
     let wordStart = position;
-    while (wordStart > 0 && plainContent[wordStart - 1] !== " ") {
+    while (wordStart > 0 && content[wordStart - 1] !== " ") {
       wordStart--;
     }
 
-    const matches = plainContent.substring(
-      wordStart,
-      substring.length + position
-    );
-    const matchesAfter = plainContent.substring(
+    const matches = content.substring(wordStart, substring.length + position);
+    const matchesAfter = content.substring(
       substring.length + position,
       substring.length + position + 80
     );
@@ -170,7 +170,7 @@ const SearchResult = ({
                         </p>
                       )}
                       <div className="search-result-item-taxonomies">
-                        {item.frontmatter.categories && (
+                        {item.frontmatter.category && (
                           <div className="mr-2">
                             <svg
                               width="14"
@@ -180,20 +180,27 @@ const SearchResult = ({
                             >
                               <path d="M11 0H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2 2 2 0 0 0 2-2V4a2 2 0 0 0-2-2 2 2 0 0 0-2-2zm2 3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1V3zM2 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2z"></path>
                             </svg>
-                            {item.frontmatter.categories.map(
-                              (category, index) => (
-                                <span key={category}>
-                                  {matchUnderline(category, searchString)}
-                                  {item.frontmatter.categories &&
-                                    index !==
-                                      item.frontmatter.categories.length - 1 && (
-                                      <>, </>
-                                    )}
-                                </span>
-                              )
-                            )}
+                            <span>
+                              {matchUnderline(
+                                item.frontmatter.category,
+                                searchString
+                              )}
+                            </span>
                           </div>
                         )}
+                        {item.frontmatter.tags &&
+                          item.frontmatter.tags.length > 0 && (
+                            <div className="mr-2">
+                              {item.frontmatter.tags.map((tag, index) => (
+                                <span key={tag}>
+                                  #{matchUnderline(tag, searchString)}
+                                  {index !==
+                                    (item.frontmatter.tags?.length ?? 0) -
+                                      1 && <> </>}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
