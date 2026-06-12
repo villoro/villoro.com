@@ -59,8 +59,35 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,jpg,jpeg,webp,woff,woff2}"],
-        navigateFallback: "/",
+        // Precache only the app shell (JS/CSS/HTML/SVG/fonts) and the PWA
+        // icons. Raster images are NOT precached — public/images alone is
+        // >20 MB of originals plus Sharp variants, which made first-visit
+        // installs download ~75 MB in the background. Images are cached
+        // lazily as they're viewed via the runtimeCaching rule below.
+        globPatterns: [
+          "**/*.{js,css,html,svg,woff,woff2}",
+          "pwa/*.png",
+          "images/favicon.png",
+        ],
+        // No navigateFallback: serving "/" for any uncached URL while
+        // offline masks real 404s and confuses deep links on a blog.
+        navigateFallback: null,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request, sameOrigin }) =>
+              sameOrigin && request.destination === "image",
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images",
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       devOptions: {
         enabled: true,

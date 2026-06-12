@@ -26,19 +26,14 @@ Audit of `villoro.com` (Astro 6 + Tailwind 4, Netlify). Proposals are grouped by
 
 > PageSpeed Insights baseline (May 2026, homepage): **Mobile 66 / Desktop 86**. Mobile LCP **5.1s** (target ≤2.5s), FCP **3.0s**, Speed Index **12.7s**. Desktop LCP **1.3s**, Speed Index **6.1s**. CrUX field data: not enough traffic yet — these are lab numbers only. Re-run PSI after each fix to confirm impact.
 
-### P11. Rein in the PWA precache (likely the biggest perf/bandwidth offender)
-- **Current:** `astro.config.mjs` workbox `globPatterns` includes `png,jpg,jpeg,webp` — `public/images/blog` alone is **21 MB** (74 images), plus Sharp-generated variants. On first visit the service worker precaches the entire image set in the background, competing with the page for bandwidth (plausibly contributing to the 12.7s mobile Speed Index). `navigateFallback: "/"` also serves the homepage for any uncached URL while offline, which is confusing for a blog.
-- **Change:** Drop raster images from `globPatterns` (keep `js,css,html,svg,woff2`), use a `runtimeCaching` rule (`CacheFirst`) for `/images/**` and `/_astro/**` instead, and reconsider `navigateFallback` (a dedicated offline page or none). Also worth questioning whether the PWA integration earns its keep on a static blog at all.
-- **Effort:** Low–Medium / **Impact:** High
-
 ### P4. Audit/compress blog images
 - **Current:** `public/images/blog` is 21 MB across 74 images (~290 KB average). CI verifies aspect ratio only, not size.
 - **Change:** Add a size budget (e.g. <200 KB) to `.github/scripts/` checks, batch-compress existing images.
 - **Effort:** Medium / **Impact:** Medium
 
 ### P12. Stop double-shipping original blog images
-- **Current:** `ImageMod.astro` imports images via `import.meta.glob("/public/images/**")`, so Astro generates optimized AVIF/WebP variants — but because the originals live in `public/`, all 21 MB also ship verbatim in `dist/` (and get precached, see P11).
-- **Change:** Move blog hero images to `src/images/` (where post-body images already live) and update `ImageMod`'s glob + the CI aspect-ratio path. Keeps only optimized variants in `dist`. Coordinate with P4/P11.
+- **Current:** `ImageMod.astro` imports images via `import.meta.glob("/public/images/**")`, so Astro generates optimized AVIF/WebP variants — but because the originals live in `public/`, all 21 MB also ship verbatim in `dist/`.
+- **Change:** Move blog hero images to `src/images/` (where post-body images already live) and update `ImageMod`'s glob + the CI aspect-ratio path. Keeps only optimized variants in `dist`. Coordinate with P4.
 - **Effort:** Medium / **Impact:** Medium (build output size, deploy time, precache size)
 
 ### P13. Shrink the search index
