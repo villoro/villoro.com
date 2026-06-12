@@ -28,14 +28,13 @@ Personal website/blog for Arnau Villoro (Data Engineer, Barcelona). Static Astro
 
 ```bash
 npm install
-npm run dev            # generates search index, then astro dev
-npm run build          # generates search index, then astro build
+npm run dev            # astro dev
+npm run build          # astro build
 npm run preview        # serve dist/ locally
-npm run generate-json  # only regenerate scripts/jsonGenerator.js outputs
 npm run format         # prettier on src/
 ```
 
-`scripts/jsonGenerator.js` writes `.json/posts.json` and `public/search.json` (both gitignored). The latter is served as a static asset and lazy-fetched by `SearchModal` on first open. Both rebuild on every `dev`/`build`.
+The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `dist/search.json`, lazy-fetched by `SearchModal` on first open. It stores plain text (capped per post) and 320px pipeline thumbnails.
 
 ## Path aliases (`tsconfig.json`)
 
@@ -82,7 +81,7 @@ src/
 │   ├── blogUtils.astro             blog-specific queries
 │   ├── taxonomyParser.astro        getTaxonomy() for tags/categories
 │   ├── listingData.ts              CategoryItem type + ribbon data
-│   └── utils/                      dateFormat, readingTime, similarItems, sortFunctions, taxonomyFilter, textConverter (humanize, slugify, plainify), bgImageMod
+│   └── utils/                      blogImages (resolveImage), dateFormat, readingTime, similarItems, sortFunctions, taxonomyFilter, textConverter (humanize, slugify, plainify)
 ├── config/
 │   ├── config.json                 site, settings (pagination=9, blog_folder="blog"), giscus, subscribe, buymeacoffee
 │   ├── theme.json                  legacy colors + fonts (consumed by generated-theme.css)
@@ -95,7 +94,6 @@ src/
 └── env.d.ts
 
 scripts/
-├── jsonGenerator.js                builds .json/posts.json + public/search.json
 └── removeDarkmode.js               one-off utility (rarely used)
 
 .github/
@@ -176,7 +174,7 @@ Blog post frontmatter (commonly used):
 title: string                  # required
 description: string            # optional, used in <meta> and cards
 date: ISO date                 # optional, used for sorting
-image: string                  # path under /images/posts/...
+image: string                  # "/images/blog/<file>" — file lives in src/images/blog/
 category: string               # MUST match a key in categoryMetadata.ts (else falls back to humanize(slug))
 tags: [string]                 # default ["Others"]
 draft: boolean                 # if true, filtered out of listings
@@ -237,7 +235,6 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 
 ## Build / deploy
 
-- `dev` and `build` always pre-run `generate-json`. Don't import or read the `.json/` folder during page rendering — it's only used by the search modal at runtime.
 - Netlify deploys from `main`. PR previews are configured.
 - CI (`.github/workflows/CI.yaml`) runs on every PR:
   - `pre_commit` (code quality)
@@ -248,8 +245,9 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 
 ## Image conventions
 
-- Blog post hero images: 16:9 (CI enforced). Place under `src/images/posts/<topic>/...` or `public/images/posts/...`.
-- `src/images/` → optimized via `astro:assets` (use `ImageMod` or `<Image>`). `public/` → served verbatim.
+- Blog post hero images: 16:9 (CI enforced), in `src/images/blog/`. Frontmatter keeps the `/images/blog/...` path; `resolveImage` (`src/lib/utils/blogImages.ts`) maps it to `src/images/blog` first, then `public/images` (logo, favicon).
+- Post-body images: `src/images/posts/<year>/...`, imported directly in the MDX.
+- `src/images/` → optimized via `astro:assets` (use `ImageMod` or `<Image>`); originals never ship in `dist`. `public/` → served verbatim.
 - Company logos: `src/images/companies/<name>.png` and `<name>_dark.png` for dark variant.
 
 ## Common task playbook
@@ -274,6 +272,5 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - **`description` is no longer a `ShareRow` prop** (cleaned up). Don't pass it.
 - **`ThemeSwitcher` takes no props** (`className` was removed; it was always undefined).
 - **Reading time** is computed in `[single].astro` and listing pages from `(post as any).body` — the `.body` cast is needed because Astro 6's collection types don't expose body publicly. If you see `try { ... } catch { return ""; }` patterns around reading time, that's why.
-- **`.json/` is gitignored** and rebuilt every dev/build. Don't commit it.
 - **Tailwind v4** — config is in `@theme` block (in `generated-theme.css`), not `tailwind.config.js`. The `tailwind.config.js` file at root is mostly inert under v4.
 - **Astro 6 requires Node 22.x.** If you see `Node.js v20.x is not supported`, that's a local env issue, not the repo.
