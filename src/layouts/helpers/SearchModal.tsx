@@ -9,25 +9,28 @@ const SearchModal = () => {
 
   // handle input change
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchString(e.currentTarget.value.replace("\\", "").toLowerCase());
+    setSearchString(e.currentTarget.value.toLowerCase());
   };
 
-  // generate search result
+  // generate search result — plain substring matching; the query is user
+  // text, never a regex (raw input like "c++" or "(" would throw in RegExp)
   const doSearch = (data: ISearchItem[] | null) => {
     if (!data || searchString === "") return [];
-    const regex = new RegExp(`${searchString}`, "gi");
     return data.filter((item) => {
-      const title = item.frontmatter.title.toLowerCase().match(regex);
+      const title = item.frontmatter.title.toLowerCase().includes(searchString);
       const description = item.frontmatter.description
         ?.toLowerCase()
-        .match(regex);
-      const categories = item.frontmatter.categories
+        .includes(searchString);
+      const category = item.frontmatter.category
+        ?.toLowerCase()
+        .includes(searchString);
+      const tags = item.frontmatter.tags
         ?.join(" ")
         .toLowerCase()
-        .match(regex);
-      const content = item.content.toLowerCase().match(regex);
+        .includes(searchString);
+      const content = item.content.toLowerCase().includes(searchString);
 
-      return Boolean(title || content || description || categories);
+      return Boolean(title || content || description || category || tags);
     });
   };
 
