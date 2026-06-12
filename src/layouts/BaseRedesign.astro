@@ -71,7 +71,8 @@ let ogImageUrl = rawOgImage ? `${config.site.base_url}${rawOgImage}` : "";
 const ogLoader = rawOgImage ? resolveImage(rawOgImage) : undefined;
 if (ogLoader) {
   const mod = await ogLoader();
-  const og = await getImage({ src: mod.default, width: 1200 });
+  // jpg, not the webp default — LinkedIn/WhatsApp scrapers don't render webp
+  const og = await getImage({ src: mod.default, width: 1200, format: "jpg" });
   ogImageUrl = `${config.site.base_url}${og.src}`;
 }
 ---
