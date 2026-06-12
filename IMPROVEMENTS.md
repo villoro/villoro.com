@@ -1,25 +1,54 @@
 # Improvement Proposals
 
-Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by category with current state, suggested change, and rough effort/impact.
+Audit of `villoro.com` (Astro 6 + Tailwind 4, Netlify). Proposals are grouped by category with current state, suggested change, and rough effort/impact.
 
 > Note: Proposals reference paths discovered during audit. Verify each against current code before implementing — some may already be partially addressed.
-> 
+>
 > **When an improvement is implemented, remove it from this file.** Keep the list current and actionable.
+
+---
+
+## Bugs & Correctness
+
+### B1. Search crashes on regex special characters
+- **Current:** `SearchModal.tsx` builds `new RegExp(searchString, "gi")` from raw user input (only `\` is stripped), and `SearchResult.tsx` does the same in `matchMarker`/`matchUnderline`. Typing `(`, `c++`, or `[` throws and breaks the search UI.
+- **Change:** Escape the input (`searchString.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")`) before constructing any `RegExp`, or switch to plain `String.includes` matching.
+- **Effort:** Low / **Impact:** Medium (user-visible breakage)
+
+### B2. Search filters/renders `frontmatter.categories`, which never exists
+- **Current:** The blog schema uses `category` (singular, string). `SearchModal.doSearch` and the `SearchResult` taxonomy block reference `frontmatter.categories` (plural array) — always `undefined`, so category matching and the category chips in results are dead code.
+- **Change:** Either index `category` (and `tags`) in `scripts/jsonGenerator.js` and match on those, or delete the dead branches.
+- **Effort:** Low / **Impact:** Low–Medium
 
 ---
 
 ## Performance
 
-> PageSpeed Insights baseline (May 2026, homepage): **Mobile 66 / Desktop 86**. Mobile LCP **5.1s** (target ≤2.5s), FCP **3.0s**, Speed Index **12.7s**. Desktop LCP **1.3s**, Speed Index **6.1s**. CrUX field data: not enough traffic yet — these are lab numbers only. The PSI items below cite the report estimates; re-run PSI after each fix to confirm impact.
+> PageSpeed Insights baseline (May 2026, homepage): **Mobile 66 / Desktop 86**. Mobile LCP **5.1s** (target ≤2.5s), FCP **3.0s**, Speed Index **12.7s**. Desktop LCP **1.3s**, Speed Index **6.1s**. CrUX field data: not enough traffic yet — these are lab numbers only. Re-run PSI after each fix to confirm impact.
+
+### P11. Rein in the PWA precache (likely the biggest perf/bandwidth offender)
+- **Current:** `astro.config.mjs` workbox `globPatterns` includes `png,jpg,jpeg,webp` — `public/images/blog` alone is **21 MB** (74 images), plus Sharp-generated variants. On first visit the service worker precaches the entire image set in the background, competing with the page for bandwidth (plausibly contributing to the 12.7s mobile Speed Index). `navigateFallback: "/"` also serves the homepage for any uncached URL while offline, which is confusing for a blog.
+- **Change:** Drop raster images from `globPatterns` (keep `js,css,html,svg,woff2`), use a `runtimeCaching` rule (`CacheFirst`) for `/images/**` and `/_astro/**` instead, and reconsider `navigateFallback` (a dedicated offline page or none). Also worth questioning whether the PWA integration earns its keep on a static blog at all.
+- **Effort:** Low–Medium / **Impact:** High
 
 ### P4. Audit/compress blog images
-- **Current:** CI verifies aspect ratio only, not size.
-- **Change:** Add a size budget (e.g. <200KB) to CI, batch-compress existing images.
+- **Current:** `public/images/blog` is 21 MB across 74 images (~290 KB average). CI verifies aspect ratio only, not size.
+- **Change:** Add a size budget (e.g. <200 KB) to `.github/scripts/` checks, batch-compress existing images.
 - **Effort:** Medium / **Impact:** Medium
 
+### P12. Stop double-shipping original blog images
+- **Current:** `ImageMod.astro` imports images via `import.meta.glob("/public/images/**")`, so Astro generates optimized AVIF/WebP variants — but because the originals live in `public/`, all 21 MB also ship verbatim in `dist/` (and get precached, see P11).
+- **Change:** Move blog hero images to `src/images/` (where post-body images already live) and update `ImageMod`'s glob + the CI aspect-ratio path. Keeps only optimized variants in `dist`. Coordinate with P4/P11.
+- **Effort:** Medium / **Impact:** Medium (build output size, deploy time, precache size)
+
+### P13. Shrink the search index
+- **Current:** `public/search.json` is **792 KB** and contains the raw MDX body of every post — including `import` statements and JSX shortcode markup — which the client then `plainify`s at render time. The whole file is fetched on first search open.
+- **Change:** In `scripts/jsonGenerator.js`, strip frontmatter-irrelevant fields and store plain text (run the markdown→plain conversion at generation time, truncate body to a few KB per post). Longer term, consider Pagefind for proper static search. Pairs with B2.
+- **Effort:** Low–Medium / **Impact:** Medium
+
 ### P9. Audit render-blocking requests
-- **Current:** PSI: ~150 ms mobile, ~40 ms desktop. Tailwind's compiled CSS is the main suspect; the GA `gtag/js` tag is `async` so it shouldn't block.
-- **Change:** Run a Lighthouse trace, identify the blocking resources, and either inline critical CSS or defer the rest. If `main.css` is the blocker, evaluate Astro's `inlineStylesheets: 'auto'`.
+- **Current:** PSI: ~150 ms mobile, ~40 ms desktop. Note `inlineStylesheets: "auto"` is **already enabled** in `astro.config.mjs`, so the original suggestion is partially done. Remaining suspects: the Google Fonts stylesheets + AstroFont (five font families total: Heebo, Signika, Fraunces, Instrument Serif, JetBrains Mono).
+- **Change:** Run a Lighthouse trace to identify remaining blockers. Consider self-hosting the fonts (fontsource) and trimming the family/weight set — five families is a lot for a blog.
 - **Effort:** Medium / **Impact:** Medium
 
 ---
@@ -27,18 +56,30 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ## DX & Tooling
 
 ### D2. Add a test harness (Vitest)
-- Start with utilities (`textConverter`, `readingTime`, `similarItems`).
+- Start with utilities (`textConverter`, `readingTime`, `similarItems`) and `scripts/jsonGenerator.js` (slug fallback logic is subtle). The regex-escape fix in B1 is a perfect first test case.
 - **Effort:** High / **Impact:** High
 
 ### D4. Lighthouse / Unlighthouse CI step on previews
+- Netlify deploy previews exist; wire a Lighthouse assertion (LCP budget) against them so the recently-landed hero-preload work doesn't regress.
 - **Effort:** Medium / **Impact:** Medium
+
+### D5. Dead-config cleanup
+- **Current:** Several inert leftovers confirmed in the repo:
+  - `tailwind.config.js` at root — inert under Tailwind v4 (`@theme` lives in `generated-theme.css`).
+  - `@/partials/*` alias in `tsconfig.json` — `src/layouts/partials/` no longer exists.
+  - `<meta name="theme-name" content="astroplate" />` in `BaseRedesign.astro` — theme-vendor leftover.
+  - `item-prop="url"` on the canonical `<link>` in `BaseRedesign.astro` — invalid attribute (itemprop misspelled, and pointless on a `<link rel=canonical>`).
+  - `<meta http-equiv="Content-Type" …>` — redundant; charset comes from the HTTP header/doctype.
+  - `scripts/removeDarkmode.js` — one-off utility; delete or move out of `scripts/`.
+- **Change:** Remove all of the above; update `AGENTS.md` gotchas accordingly.
+- **Effort:** Low / **Impact:** Low (hygiene, less confusion for the next agent/dev)
 
 ---
 
 ## Content & Collections
 
-### M3. Precompute related posts
-- Build-time index instead of runtime `similarItems`.
+### M3. Precompute related posts (and fix their randomness)
+- Build-time index instead of runtime `similarItems`. Note: `similarItems` currently takes the top-N scored posts and then **shuffles them with `Math.random()`** — so "related posts" change on every build and the scoring order is discarded. Decide if that's intentional; if not, drop `getRandomElements` (one-line fix, independent of the precompute).
 - **Effort:** Medium / **Impact:** Low (until corpus grows)
 
 ---
@@ -46,8 +87,9 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 ## Dependencies
 
 ### Dep2. Consider replacing `react-icons`
-- Switch to inline SVGs or Tabler Icons for smaller bundle / fewer transitive deps.
-- **Effort:** Medium / **Impact:** Low
+- **Current:** Only two consumers remain: `helpers/DynamicIcon.tsx` and `shortcodes/Notice.tsx`. Everything else already uses inline SVGs (`IconArrow`, `SocialIcon`), per the AGENTS.md convention.
+- **Change:** Inline the handful of icons those two files use, drop the dependency.
+- **Effort:** Low–Medium / **Impact:** Low–Medium (bundle + dep tree)
 
 ---
 
@@ -62,14 +104,17 @@ Audit of `villoro.com` (Astro 6 + Tailwind, Netlify). Proposals are grouped by c
 
 ## SEO
 
-### SEO1. Confirm robots.txt is reachable in production
-- **Current:** Desktop PSI run reported "robots.txt is not valid — Lighthouse was unable to download a robots.txt file" (mobile run passed). The file exists at `public/robots.txt` and is valid, so this is likely a transient fetch from Lighthouse — but worth verifying after next deploy that `https://villoro.com/robots.txt` returns 200 with the expected body.
-- **Effort:** Low / **Impact:** Low (verification only)
+### SEO1. Tidy robots.txt and reference the sitemap
+- **Current:** `public/robots.txt` exists and is valid (the desktop-PSI "unable to download" report was likely transient — still worth a post-deploy spot check). But it contains `Disallow: /api/*` (there is no `/api` on this static site) and does **not** reference the sitemap generated by `@astrojs/sitemap`.
+- **Change:** Add `Sitemap: https://villoro.com/sitemap-index.xml`, drop the `/api` rule, end with a newline.
+- **Effort:** Low / **Impact:** Low
 
 ### SEO4. Per-page OG image
-- **Current:** Home, blog index, about, tag, and category pages all fall back to `config.metadata.meta_image` for OG/Twitter cards. Sharing any of these gives the same card.
+- **Current:** Home, blog index, about, tag, and category pages all fall back to `config.metadata.meta_image` for OG/Twitter cards. Sharing any of these gives the same card. (`BaseRedesign` already accepts an `image` prop — only article pages use it.)
 - **Change:** Pass an `image` prop from `index.astro`, `BlogListingLayout` (with a distinct hero per variant), `about.astro` so each surface has a recognizable preview.
 - **Effort:** Low / **Impact:** Low
 
----
-
+### SEO5. Add JSON-LD structured data
+- **Current:** No `<script type="application/ld+json">` anywhere. Articles already pass `publishedTime`/`modifiedTime`/`author` to `BaseRedesign` for OG tags, so the data is at hand.
+- **Change:** Emit `BlogPosting` (headline, image, dates, author) on article pages and `Person`/`WebSite` on the homepage, inside `BaseRedesign` driven by the existing props.
+- **Effort:** Low / **Impact:** Medium (rich results eligibility)
