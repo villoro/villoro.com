@@ -250,6 +250,15 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - `src/images/` → optimized via `astro:assets` (use `ImageMod` or `<Image>`); originals never ship in `dist`. `public/` → served verbatim.
 - Company logos: `src/images/companies/<name>.png` and `<name>_dark.png` for dark variant.
 
+## Workflow preferences (how Arnau wants agents to work)
+
+- **Branch from fresh `origin/main`.** Always `git fetch` first and base new branches on `origin/main` — never on local `main` (often stale) or another unmerged branch. PRs here squash-merge quickly, so re-check `origin/main` between tasks.
+- **Incremental commits, like a developer.** Don't squash a whole task into one commit. Commit each logical step as you complete it (e.g. "move the files" → commit, "add the resolver" → commit, "fix the consumers" → commit, "update docs + version bump" → commit). Each commit message explains the why, not just the what.
+- **Bump the version** (`package.json` + `package-lock.json`, e.g. `npm version X.Y.Z --no-git-tag-version`) in every site-affecting PR — CI's `check_version` fails otherwise. Fold it into the final docs/cleanup commit.
+- **Keep `IMPROVEMENTS.md` current.** When implementing an item from it, remove that item (and fix cross-references) in the same PR.
+- **Verify before opening a PR.** Build + typecheck + lint, and check the actual behavior in a browser against the built site (`npm run preview`), not just that the build passes.
+- **PRs:** push the branch and open the PR; the repo owner reviews/merges. No `gh` CLI on this machine — open the prefilled GitHub compare URL in the browser instead.
+
 ## Common task playbook
 
 | Task                                        | Touch                                                                                       |
