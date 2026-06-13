@@ -13,14 +13,9 @@ Audit of `villoro.com` (Astro 6 + Tailwind 4, Netlify). Proposals are grouped by
 > PageSpeed Insights baseline (May 2026, homepage): **Mobile 66 / Desktop 86**. Mobile LCP **5.1s** (target ≤2.5s), FCP **3.0s**, Speed Index **12.7s**. Desktop LCP **1.3s**, Speed Index **6.1s**. CrUX field data: not enough traffic yet — these are lab numbers only. Re-run PSI after each fix to confirm impact.
 
 ### P4. Audit/compress blog images
-- **Current:** `public/images/blog` is 21 MB across 74 images (~290 KB average). CI verifies aspect ratio only, not size.
+- **Current:** `src/images/blog` is 21 MB across 74 images (~290 KB average). CI verifies aspect ratio only, not size. Originals no longer ship in `dist`, but smaller sources still mean smaller optimized variants and faster builds.
 - **Change:** Add a size budget (e.g. <200 KB) to `.github/scripts/` checks, batch-compress existing images.
 - **Effort:** Medium / **Impact:** Medium
-
-### P12. Stop double-shipping original blog images
-- **Current:** `ImageMod.astro` imports images via `import.meta.glob("/public/images/**")`, so Astro generates optimized AVIF/WebP variants — but because the originals live in `public/`, all 21 MB also ship verbatim in `dist/`.
-- **Change:** Move blog hero images to `src/images/` (where post-body images already live) and update `ImageMod`'s glob + the CI aspect-ratio path. Keeps only optimized variants in `dist`. Coordinate with P4.
-- **Effort:** Medium / **Impact:** Medium (build output size, deploy time, precache size)
 
 ### P9. Audit render-blocking requests
 - **Current:** PSI: ~150 ms mobile, ~40 ms desktop. Note `inlineStylesheets: "auto"` is **already enabled** in `astro.config.mjs`, so the original suggestion is partially done. Remaining suspects: the Google Fonts stylesheets + AstroFont (five font families total: Heebo, Signika, Fraunces, Instrument Serif, JetBrains Mono).
@@ -32,7 +27,7 @@ Audit of `villoro.com` (Astro 6 + Tailwind 4, Netlify). Proposals are grouped by
 ## DX & Tooling
 
 ### D2. Add a test harness (Vitest)
-- Start with utilities (`textConverter`, `readingTime`, `similarItems`) and `scripts/jsonGenerator.js` (slug fallback + MDX plainify logic is subtle and currently untested).
+- Start with utilities (`textConverter`, `readingTime`, `similarItems`) and the MDX plainify logic in `src/pages/search.json.ts` (subtle and currently untested).
 - **Effort:** High / **Impact:** High
 
 ### D4. Lighthouse / Unlighthouse CI step on previews

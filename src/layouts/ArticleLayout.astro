@@ -28,8 +28,8 @@ import ShareRow from "@/components/ShareRow.astro";
 import RelatedPostsGrid from "@/components/RelatedPostsGrid.astro";
 import GiscusComments from "@/components/GiscusComments.astro";
 import { slugify } from "@/lib/utils/textConverter";
+import { resolveImage } from "@/lib/utils/blogImages";
 import { getImage } from "astro:assets";
-import type { ImageMetadata } from "astro";
 import type { CollectionEntry } from "astro:content";
 import type { TocItem } from "@/components/ArticleTOC.astro";
 
@@ -98,12 +98,9 @@ const breadcrumbs = [
 // the preload's imagesrcset.
 const heroWidths = [640, 1024, 1920];
 const heroSizes = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px";
-const heroImages = import.meta.glob<{ default: ImageMetadata }>(
-  "/public/images/**/*.{jpeg,jpg,png,gif}"
-);
 let heroPreloadSrcset: string | null = null;
 if (image) {
-  const loader = heroImages[`/public${image}`];
+  const loader = resolveImage(image);
   if (loader) {
     const mod = await loader();
     const result = await getImage({
