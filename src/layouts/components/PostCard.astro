@@ -26,6 +26,10 @@ interface Props {
   readTime?: string;
   loading?: "eager" | "lazy";
   fetchpriority?: "high" | "low" | "auto";
+  /** Responsive srcset widths — defaults per variant; override to match a preload. */
+  widths?: number[];
+  /** `sizes` attribute — defaults per variant; override to match a preload. */
+  sizes?: string;
 }
 
 const {
@@ -35,7 +39,30 @@ const {
   readTime,
   loading = "lazy",
   fetchpriority,
+  widths,
+  sizes,
 } = Astro.props;
+
+// Responsive image hints per variant. Without these the pipeline assumes
+// 100vw and over-serves on multi-column desktop layouts. The medium (hero)
+// card's defaults must mirror the LCP preload computed in index.astro.
+const imageDefaults = {
+  big: {
+    widths: [640, 960, 1280, 1920],
+    sizes: "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) calc(100vw - 64px), 1184px",
+  },
+  medium: {
+    widths: [320, 480, 640, 768, 1080],
+    sizes: "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) 42vw, 500px",
+  },
+  small: {
+    widths: [240, 360, 480, 768],
+    sizes: "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) calc((100vw - 88px) / 2), 380px",
+  },
+};
+
+const imgWidths = widths ?? imageDefaults[variant].widths;
+const imgSizes = sizes ?? imageDefaults[variant].sizes;
 
 const { blog_folder } = config.settings;
 const { title, image, description, date, category } = post.data;
@@ -59,6 +86,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
             alt={title}
             width={1280}
             height={720}
+            widths={imgWidths}
+            sizes={imgSizes}
             loading={loading}
             fetchpriority={fetchpriority}
             class="pc-big__img"
@@ -97,6 +126,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
           alt={title}
           width={640}
           height={360}
+          widths={imgWidths}
+          sizes={imgSizes}
           loading={loading}
           fetchpriority={fetchpriority}
           class="pc-med__img"
@@ -131,6 +162,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
           alt={title}
           width={480}
           height={270}
+          widths={imgWidths}
+          sizes={imgSizes}
           loading={loading}
           class="pc-small__img"
         />
