@@ -9,6 +9,8 @@ import { sortByDate } from "@/lib/utils/sortFunctions";
 import { readingTimeForPost } from "@/lib/utils/readingTime";
 import config from "@/config/config.json";
 import { getCollection } from "astro:content";
+import { getImage } from "astro:assets";
+import { resolveImage } from "@/lib/utils/blogImages";
 
 // ---- Content ----
 const [homepageEntry] = await getCollection("homepage");
@@ -23,6 +25,28 @@ const latestPost   = sortedPosts[0];
 const featuredPost = latestPost;
 const gridPosts    = sortedPosts.filter(p => p !== featuredPost).slice(0, 6);
 const heroPost     = sortedPosts.find(p => p.data.highlight);
+
+// Hero LCP preload — the "Most read" side-card image is the mobile LCP
+// element. Mirror ArticleLayout: precompute the avif srcset so the browser
+// can start fetching from <head> (before CSS), and feed the SAME widths +
+// sizes to the PostCard below so the preload and the rendered <source>
+// resolve to one URL (otherwise the image is fetched twice).
+const heroCardWidths = [320, 480, 640, 768, 1080];
+const heroCardSizes =
+  "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) 42vw, 500px";
+let heroPreloadSrcset: string | null = null;
+if (heroPost?.data?.image) {
+  const loader = resolveImage(heroPost.data.image);
+  if (loader) {
+    const mod = await loader();
+    const result = await getImage({
+      src: mod.default,
+      widths: heroCardWidths,
+      format: "avif",
+    });
+    heroPreloadSrcset = result.srcSet.attribute;
+  }
+}
 
 // Stats — all derived at build time, no magic constants
 const postCount    = sortedPosts.length;
@@ -45,6 +69,17 @@ const getReadTime = readingTimeForPost;
 ---
 
 <BaseRedesign title={hp.meta.title}>
+  {heroPreloadSrcset && (
+    <link
+      slot="head"
+      rel="preload"
+      as="image"
+      type="image/avif"
+      imagesrcset={heroPreloadSrcset}
+      imagesizes={heroCardSizes}
+      fetchpriority="high"
+    />
+  )}
   <div class="hp">
 
     <!-- ═══════════════════════ NAV ═══════════════════════ -->
@@ -90,6 +125,8 @@ const getReadTime = readingTimeForPost;
                 readTime={getReadTime(heroPost)}
                 loading="eager"
                 fetchpriority="high"
+                widths={heroCardWidths}
+                sizes={heroCardSizes}
               />
             </div>
           )}
@@ -165,7 +202,7 @@ const getReadTime = readingTimeForPost;
             variant="big"
             badge={hp.latest.badge}
             readTime={getReadTime(featuredPost)}
-            loading="eager"
+            loading="lazy"
           />
         </div>
       )}
