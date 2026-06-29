@@ -104,3 +104,53 @@ git clone git@github.com:username/repo_name.git
 ```
 
 After doing all that you can use git without needing to worry about passwords or passphrases anymore.
+
+## Troubleshooting slow SSH connections
+
+Sometimes the SSH connection works correctly, but cloning or fetching from GitHub is extremely slow. For example, you may see transfer speeds around a few KiB/s.
+
+This can happen if your network, VPN, firewall, or ISP handles SSH traffic on port `22` badly. GitHub also supports SSH over port `443`, which is usually treated like normal HTTPS traffic. Another possible cause is bad IPv6 routing.
+
+To fix both, create or edit this file:
+
+<FileName>
+  `~/.ssh/config`
+</FileName>
+
+```sshconfig
+Host github.com
+  HostName ssh.github.com
+  Port 443
+  User git
+  AddressFamily inet
+```
+
+Then test the connection:
+
+```sh
+ssh -T git@github.com
+```
+
+You should still see:
+
+```txt
+Hi XXXX! You've successfully authenticated
+```
+
+You can verify that the configuration is being used with:
+
+```sh
+ssh -vT git@github.com
+```
+
+Look for something like:
+
+```txt
+Connecting to ssh.github.com [...] port 443
+```
+
+After this, your normal GitHub SSH commands still work as usual:
+
+```sh
+git clone git@github.com:username/repo_name.git
+```
