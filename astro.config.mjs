@@ -5,6 +5,7 @@ import AstroPWA from "@vite-pwa/astro";
 import tailwindcss from "@tailwindcss/vite";
 import AutoImport from "astro-auto-import";
 import { defineConfig } from "astro/config";
+import { unified } from "@astrojs/markdown-remark";
 import remarkCallouts from "./src/plugins/remark-callouts.mjs";
 import remarkCollapse from "remark-collapse";
 import remarkToc from "remark-toc";
@@ -109,15 +110,19 @@ export default defineConfig({
     mdx(),
   ],
   markdown: {
-    remarkPlugins: [
-      remarkCallouts,
-      remarkToc,
-      [remarkCollapse, { test: "Table of contents" }],
-    ],
-    rehypePlugins: [sectionize],
-    shikiConfig: {
-      theme: "monokai",
-      wrap: true,
-    },
+    // Astro 7 defaults to the native Sätteri pipeline; keep the unified
+    // (remark/rehype) processor so our custom plugins keep working.
+    processor: unified({
+      remarkPlugins: [
+        remarkCallouts,
+        remarkToc,
+        [remarkCollapse, { test: "Table of contents" }],
+      ],
+      rehypePlugins: [sectionize],
+      shikiConfig: {
+        theme: "monokai",
+        wrap: true,
+      },
+    }),
   },
 });
