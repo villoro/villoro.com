@@ -1,0 +1,196 @@
+---
+slug: data-engineering-hero-agent-stage-1
+title: The Hero Agent, Stage 1 - Structured Failure Triage
+meta_title: Building a Data Engineering Hero Agent - Stage 1 Ingestion and Alerting
+description: A hands-on walkthrough of Stage 1 of the DE hero agent - a FastAPI service that ingests structured failure events, deduplicates Prefect-vs-ECS alerts, and posts clean Slack messages while failing safe.
+date: 2026-07-07
+image: /images/blog/9999-de-hero-agent-stage-1.jpg
+category: DE
+tags: [DE, Python, FastAPI, Prefect, Best Practices]
+draft: true
+---
+
+## Motivation
+
+In the <FancyLink linkText="Building a Data Engineering Hero Agent" url="https://villoro.com/blog/data-engineering-hero-agent-vision/" dark="true"/> post I described the vision: a centralized service that takes over the manual on-call "hero" work, designed to gain autonomy in stages. This post is about **Stage 1 — Report**: the part that's actually running.
+
+Stage 1 has no AI yet, and that's on purpose. Before a model summarizes anything, the plumbing around it has to be solid: structured ingestion, sane deduplication, clean alerts, and — most importantly — a service that **never drops a failure**, even when parts of it are broken.
+
+> [!note]
+> The AI (via AWS Bedrock) is a *later* stage. The interesting engineering in Stage 1 is everything around where the model will eventually plug in.
+
+## The shape of the service
+
+It's a small <FancyLink linkText="FastAPI" url="https://fastapi.tiangolo.com/" company="fastapi"/> service. Jobs stop posting their own Slack alerts and instead `POST /failures` with a structured event. The service decides whether to alert, posts to Slack, and stores the event.
+
+The whole thing is deliberately tiny — a handful of modules, each with one job:
+
+| Module         | Responsibility                                          |
+| -------------- | ------------------------------------------------------- |
+| `schemas.py`   | The `FailureEvent` payload jobs send (Pydantic).        |
+| `decisions.py` | *Should* this event alert? (deterministic dedup policy) |
+| `context.py`   | Build the Slack message.                                |
+| `slack.py`     | Post it.                                                 |
+| `main.py`      | Wire it together, and never crash the alerting path.    |
+
+## The structured event
+
+The core of the whole design is that jobs send **structured data**, not a pre-formatted Slack string. This is the payload:
+
+<FileName>
+  de_hero/schemas.py
+</FileName>
+```python
+class FailureEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    app: SourceApp = Field(description="System the job ran in: ecs or prefect.")
+    job_name: str = Field(min_length=1)
+    owner: str = Field(min_length=1, description="Used to @-mention on the alert.")
+
+    prefect_flow_id: str | None = None
+    parent_flow_run_id: str | None = None
+    failed_tasks: list[FailedTask] = Field(default_factory=list)
+
+    exception_type: str | None = None
+    error_message: str | None = None
+    traceback: str | None = None
+    exit_code: int | None = None
+
+    occurred_at: datetime = Field(default_factory=_now_utc)
+    metadata: dict[str, str] = Field(default_factory=dict)
+```
+
+A couple of decisions worth calling out:
+
+- **`extra="forbid"`** — an unexpected field is a `422`, not a silently swallowed typo. If a producer sends the wrong shape, we want to know.
+- **`owner`** is first-class — because the single most useful thing an alert can do is ping the *right* person automatically.
+- Both a **top-level failure** (a single ECS task) and a list of **`failed_tasks`** (several failed Prefect tasks in one run) are supported, because a flow-level alert usually fires once at the end of a run and may carry several failures.
+
+## The tricky part: who sends the alert?
+
+Here's the problem that makes this more than a glorified webhook. A single logical failure can be reported **twice**:
+
+1. A Prefect **worker flow** triggers an **ECS child** task.
+2. The ECS task fails and reports its own failure.
+3. The worker flow sees the child failed and *also* reports.
+
+If both alert, the hero gets two Slack messages for one problem. If we naively silence the worker, we lose the alert entirely when the ECS task dies *before* it can report (say, an OOM kill).
+
+The rule that resolves this lives in its own module, because these decisions are **deterministic and application-owned** — never the model's:
+
+<FileName>
+  de_hero/decisions.py
+</FileName>
+```python
+def should_notify(event: FailureEvent, session_factory) -> bool:
+    # ECS always alerts — it has the richest context.
+    if event.app is SourceApp.ecs:
+        return True
+
+    # No DB or nothing to correlate on → alert rather than risk dropping.
+    if session_factory is None or not event.prefect_flow_id:
+        return True
+
+    # A Prefect worker alerts only if its ECS child hasn't already.
+    try:
+        return not _ecs_already_notified(session_factory, event.prefect_flow_id)
+    except SQLAlchemyError as error:
+        logger.error("alert-dedup lookup failed, notifying anyway: {}", error)
+        return True
+```
+
+The correlation trick: the worker passes its own `prefect_flow_id` down to the child, and the child echoes it back as `parent_flow_run_id`. So "did ECS already alert for this run?" is just a lookup for a **notified** event whose `parent_flow_run_id` matches this worker's flow id.
+
+> [!tip]
+> Notice the bias in every branch: **when unsure, alert.** No database, no flow id, a failed query — all fall through to notifying. A duplicate alert is annoying; a dropped failure is a production incident.
+
+## Fail-safe on the alerting path
+
+This is the rule that shapes `main.py`. The service sits **in the production alerting path**. If it's down, the database is unreachable, or Slack times out — the failure still has to surface. So the guiding principle is **degrade, never swallow**.
+
+That shows up in three places:
+
+- **No database?** Accept and log the event anyway, skip storing it.
+- **Storage fails?** Still send the alert — and post an *internal* alert so the hero knows the audit trail is missing a row.
+- **Slack post fails?** Record the event as *not notified*, so a later worker event can still be the fallback.
+
+Here's the ingestion handler, trimmed to the essentials:
+
+<FileName>
+  de_hero/main.py
+</FileName>
+```python
+@app.post("/failures", status_code=202, dependencies=[Depends(require_ingest_token)])
+def submit_failure(event: FailureEvent) -> FailureAccepted:
+    failure_id = uuid7()  # time-sortable id
+
+    notify = should_notify(event, app.state.session_factory)
+
+    # Alert BEFORE persisting, and record whether Slack actually accepted it.
+    delivered = False
+    if notify:
+        delivered = _alert(failure_id, event, app.state.slack_webhook_url, ...)
+
+    persisted = _persist(failure_id, event, delivered, app.state.session_factory)
+
+    # A configured DB that fails to store → the audit trail is silently
+    # losing rows. Surface that in Slack, not just the logs.
+    if not persisted and app.state.session_factory is not None:
+        _alert_internal_error(failure_id, event, ...)
+
+    return FailureAccepted(id=failure_id, job_name=event.job_name)
+```
+
+Two subtle points hide in that order of operations:
+
+- We **alert before we persist**. If the process crashed between the two, we could double-alert — and that's the *correct* failure mode. Duplicates over dropped alerts.
+- The stored `notified` flag records whether Slack **actually accepted** the post, not just whether we *decided* to send it. A later worker event reads that flag to decide whether to stay quiet — so a failed post must never suppress the fallback.
+
+And `_persist` itself is written to never raise:
+
+<FileName>
+  de_hero/main.py
+</FileName>
+```python
+def _persist(failure_id, event, notified, session_factory) -> bool:
+    """Store an event; return True if actually stored. Never raises."""
+    if session_factory is None:
+        logger.warning("no database configured; not persisted (id={})", failure_id)
+        return False
+
+    record = FailureEventRecord(
+        id=failure_id,
+        occurred_at=event.occurred_at,
+        prefect_flow_id=event.prefect_flow_id,
+        parent_flow_run_id=event.parent_flow_run_id,
+        notified=notified,
+        payload=event.model_dump(mode="json"),
+    )
+    try:
+        with session_factory() as session:
+            session.add(record)
+            session.commit()
+    except SQLAlchemyError as error:
+        logger.error("failed to persist (id={}): {}", failure_id, error)
+        return False
+    return True
+```
+
+> [!warning]
+> A database outage must not turn a failure report into a `500` and a lost alert. Every path that touches storage or Slack either degrades gracefully or is caught — the only deliberate exception is a bad ingest token, which returns `401`.
+
+## What gets stored
+
+The event is persisted with a **UUIDv7** primary key (time-sortable, so ordering ids also orders them chronologically) and the full payload as JSON. Only the fields we actually query on — `occurred_at`, the two Prefect flow ids, and `notified` — are broken out into columns and indexed. Everything else lives in the JSON blob.
+
+This is the start of the **audit trail** from the vision post. Right now it just records what failed. Once Stage 2 adds human actions on top, this same store becomes the evidence base for deciding what's safe to automate.
+
+## Where this leaves us
+
+Stage 1 is intentionally boring where it matters: no AI, no clever autonomy, just structured events, correct deduplication, clean Slack alerts, and a hard guarantee that failures reach a human. That's the foundation everything else sits on.
+
+Next in the series: **Stage 2 — acting on human decisions from Slack**, where the hero can rerun, reassign, or resolve a failure straight from the thread, and every decision gets recorded. That's when the audit trail starts to earn its keep.
+
+> [!note]
+> The pattern here echoes an earlier post, <FancyLink linkText="Handling pipeline failures" url="https://villoro.com/blog/handling-pipeline-failures/" dark="true"/> — the hero agent is, in a sense, that philosophy pulled out of every job and into one service.
