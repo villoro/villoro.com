@@ -1,0 +1,58 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <style>
+    .ttl { fill: #3a76ff; }
+    .mut { fill: #6a6e82; }
+    .gln { stroke: #6a6e82; }
+    @media (prefers-color-scheme: dark) {
+      .ttl { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .gln { stroke: #9aa0b5; }
+    }
+  </style>
+  <defs>
+    <marker id="arrRed" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L10 6 L1 11 z" fill="#e5484d"/>
+    </marker>
+    <marker id="arrGrey" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L10 6 L1 11 z" fill="#6a6e82"/>
+    </marker>
+  </defs>
+
+  <text x="800" y="92" text-anchor="middle" font-size="40" font-weight="700" class="ttl">Where a failure can be reported</text>
+  <text x="800" y="134" text-anchor="middle" font-size="24" class="mut">The same failure can surface from two independent places</text>
+
+  <!-- Orchestrator (solid blue) -->
+  <rect x="120" y="255" width="380" height="150" rx="16" fill="#3a76ff"/>
+  <text x="310" y="317" text-anchor="middle" font-size="28" font-weight="700" fill="#fff">Prefect</text>
+  <text x="310" y="355" text-anchor="middle" font-size="21" fill="#d7e2ff">orchestrator</text>
+
+  <!-- ECS task (solid navy) -->
+  <rect x="120" y="565" width="380" height="150" rx="16" fill="#0b1026"/>
+  <text x="310" y="627" text-anchor="middle" font-size="28" font-weight="700" fill="#fff">ECS task</text>
+  <text x="310" y="665" text-anchor="middle" font-size="21" fill="#a6accb">isolated container</text>
+
+  <!-- triggers arrow -->
+  <path d="M310 405 L310 565" fill="none" class="gln" stroke-width="3" marker-end="url(#arrGrey)"/>
+  <text x="330" y="493" font-size="20" class="mut">triggers</text>
+
+  <!-- Slack (centered vertically at 485) -->
+  <rect x="1120" y="410" width="360" height="150" rx="16" fill="#4A154B"/>
+  <text x="1300" y="475" text-anchor="middle" font-size="30" font-weight="700" fill="#fff">Slack</text>
+  <text x="1300" y="515" text-anchor="middle" font-size="21" fill="#d5d9ee">failure alert channel</text>
+
+  <!-- both alerts converge to the same point on Slack's left edge (1120, 485) -->
+  <path d="M500 330 C 780 340, 900 470, 1120 485" fill="none" stroke="#e5484d" stroke-width="3.5" marker-end="url(#arrRed)"/>
+  <path d="M500 640 C 780 630, 900 500, 1120 485" fill="none" stroke="#e5484d" stroke-width="3.5" marker-end="url(#arrRed)"/>
+
+  <!-- orchestrator alert annotation (green: safety net) -->
+  <rect x="560" y="175" width="470" height="120" rx="12" fill="#e7f8f0" stroke="#10b981" stroke-width="2"/>
+  <text x="580" y="217" font-size="21" font-weight="700" fill="#0b1026">Orchestrator alert</text>
+  <text x="580" y="249" font-size="19" fill="#6a6e82">less detail about what actually broke</text>
+  <text x="580" y="275" font-size="19" fill="#0a8f63">but always alive: the safety net</text>
+
+  <!-- task alert annotation (red: rich but fragile) -->
+  <rect x="560" y="710" width="470" height="120" rx="12" fill="#fdecec" stroke="#e5484d" stroke-width="2"/>
+  <text x="580" y="752" font-size="21" font-weight="700" fill="#0b1026">Task alert</text>
+  <text x="580" y="784" font-size="19" fill="#6a6e82">rich context: exception, traceback, exit code</text>
+  <text x="580" y="810" font-size="19" fill="#c0362f">but may die before reporting (e.g. OOM kill)</text>
+</svg>
