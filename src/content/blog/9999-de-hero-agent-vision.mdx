@@ -2,7 +2,7 @@
 slug: data-engineering-hero-agent-vision
 title: Building a Data Engineering Hero Agent
 meta_title: Building a Data Engineering Hero Agent - From Manual Triage to Autonomy
-description: The vision behind a service that automates the on-call "hero" work in data engineering. Why I want to centralize failure handling, why the model should advise but never act, and how the system is designed to gain autonomy in stages.
+description: The vision behind a service that automates the on-call "hero" work in data engineering. Why I want to centralize failure handling, how the model earns the right to act on its own, and how the system is designed to gain autonomy in stages.
 date: 2026-07-07
 image: /images/blog/9999-de-hero-agent-vision.jpg
 category: DE
@@ -73,15 +73,36 @@ The whole project is built around one idea: the service should gain autonomy **g
 
 ### Stage 1 - Report
 
-The service receives structured failure events, stores them, deduplicates them, and posts a clear Slack alert. No actions yet. The goal here is simply to make failures easier to understand.
+The first stage doesn't touch anything in production. It only changes how a failure is reported, and its whole job is to make a failure easier to understand.
+
+When a job fails, it sends a structured event to the service instead of posting to Slack itself. The event carries the useful context: which job failed, who owns it, the exception type, the traceback, the exit code, and whatever metadata the job wants to attach. The service then does a few things with it:
+
+* **Stores** the event, so there's a permanent record of the failure.
+* **Deduplicates** it, so a failure reported from two places (the task and the orchestrator) only produces one alert.
+* **Enriches** it. This is where the LLM comes in. Instead of dumping a raw traceback into a channel, the model reads it and writes a short summary of what went wrong and a likely cause.
+* **Posts** one clean Slack message that pings the right owner and puts the important details up front.
+
+The difference in practice is going from "here is a 60-line stack trace, good luck" to "the Salesforce extraction failed because the API returned a 429, this is probably rate limiting". Same failure, but the hero starts from a much better place.
+
+This is the stage that's actually being built. It has no ability to change anything, which makes it safe to roll out and a good place to learn what a useful alert looks like.
 
 ### Stage 2 - Act on human decisions
 
-The hero can interact with the Slack thread to rerun the job, ask the owner, mark it as fixed by hand, or mark it as solved. The service only acts when a human asks it to, and it records every decision.
+Once the alerts are good, the next step is to let the hero act on them without leaving Slack.
+
+The idea is to add buttons to the alert. The hero can rerun the job, mark it as something they already fixed by hand, ask the owner to look at it, or close it as solved. The service performs the action, updates the status of the failure, and posts the result back into the thread so everyone can see what happened.
+
+The important rule is that the service only acts when a human tells it to. It's not deciding anything on its own yet. What it *is* doing is **recording every one of those decisions**: which failure, what the hero chose, and whether it worked. Over time this builds a history of "this kind of failure, this action, this outcome".
+
+That history is the whole point of the stage. It's not just convenience for the hero, it's the dataset that makes the next stage possible.
 
 ### Stage 3 - Act on its own
 
-Once the history shows which actions are consistently safe, for example a type of failure that is always fixed by a rerun, the service can start proposing those actions and eventually doing them automatically, only asking a human when it's unsure.
+The last stage is where the service starts to take work off the hero's plate, but only for the cases where the history says it's safe.
+
+If the record shows that a certain kind of failure has been fixed by a rerun twenty times in a row, with no bad side effects, that's a strong signal that a rerun is the right move. The service can start by **proposing** it ("this looks like the usual transient timeout, I'd rerun, do you agree?") and, once there's enough evidence, **doing it automatically** and just reporting what it did.
+
+Anything that doesn't match a known-safe pattern still goes to a human, exactly like today. The goal isn't to remove the hero, it's to stop waking them up for the failures that always have the same boring answer.
 
 > [!info]
 > Only stages 1 and 2 are in scope for now. But I'm making every decision with stage 3 in mind. That's the reason I store the failures and the human actions from the very beginning: that history is what will let me safely automate things later.
@@ -90,16 +111,18 @@ Once the history shows which actions are consistently safe, for example a type o
 
 There are a few choices that keep this from turning into a scary "AI reruns my production pipelines" project.
 
-### The model advises, it never acts
+### The model earns the right to act
 
-This is the most important rule. I want to use an LLM (through AWS Bedrock) for what it's actually good at: reading a messy error and writing a short summary and a likely cause. That output is only a suggestion shown to the hero.
+I do want the service to act on its own eventually. That's the whole point of stage 3. But it shouldn't start there, and when it does act, it shouldn't be the model deciding on a whim.
 
-Whether an action is actually allowed, like rerunning a job, is decided by plain code that I own, never by the model.
+So the rule is about *how* actions get promoted, not about banning them forever. At the beginning the LLM only advises. I use it for what it's actually good at: reading a messy error and writing a short summary and a likely cause. That output is a suggestion shown to the hero, and a human decides what to do.
+
+An action only becomes automatic once the history shows it's consistently safe, and even then it runs through plain code that I own, not through the model choosing freely. The model can suggest "this looks like the usual timeout, I'd rerun", but whether a rerun is *allowed* to happen without a human is a decision made by explicit rules, based on what the recorded history says.
 
 > [!warning]
-> Letting a model decide on its own to rerun production jobs is exactly the kind of thing that destroys trust fast. Keeping the model on the "advise" side of a clear line is what makes the rest of the plan reasonable.
+> Letting a model rerun production jobs on day one, just because it sounds confident, is exactly the kind of thing that destroys trust fast. The point isn't that it never acts. It's that it has to earn each action with evidence, and every action stays behind rules I control.
 
-This line is also what makes stage 3 possible. Because the rules are code, I can look at the history, add a rule, and know exactly what will and won't happen.
+This is also what keeps the whole thing auditable. Because the rules are code and the history is stored, I can always explain why an action was or wasn't taken, and I can promote a new action deliberately instead of hoping the model gets it right.
 
 ### It has to fail safe
 
