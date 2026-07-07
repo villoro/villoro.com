@@ -38,6 +38,8 @@ These two places are not equivalent:
 
 So I want alerts from both. The task gives me the good context most of the time, and the orchestrator acts as a safety net for when the task can't say anything before dying.
 
+![Where a failure can be reported](../../images/posts/2026/9999-de-hero-two-alert-sources.svg)
+
 The problem is that today each of these places sends its own Slack alert directly from its own code. That leads to a few issues:
 
 * **The alert logic is duplicated** everywhere, both in the orchestrator and in every task.
