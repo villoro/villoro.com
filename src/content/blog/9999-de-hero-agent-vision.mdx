@@ -1,0 +1,107 @@
+---
+slug: data-engineering-hero-agent-vision
+title: Building a Data Engineering Hero Agent
+meta_title: Building a Data Engineering Hero Agent - From Manual Triage to Autonomy
+description: The vision behind a service that automates the on-call "hero" work in data engineering. Why we centralize failure triage, why the model advises but never acts, and how the system is designed to gain autonomy in stages.
+date: 2026-07-07
+image: /images/blog/9999-de-hero-agent-vision.jpg
+category: DE
+tags: [DE, AI, Best Practices, Prefect]
+draft: true
+---
+
+## Motivation
+
+Every data team has a **hero**: the person on rotation who deals with production failures. When an ECS job or a Prefect flow breaks, the hero reads the raw stack trace, guesses the likely cause, decides what to do, and — more often than not — reruns the job by hand.
+
+It works, but it is slow, repetitive, and it depends entirely on who is on call that week. The same OOM error gets diagnosed from scratch every time. Context about *which owner to ping* or *whether this job is safe to rerun* lives in people's heads.
+
+This post is the first in a series about a project I've been building to change that: a **failure triage service** — internally, the "DE hero agent" — that takes on the manual toil of the hero, and is designed to take on *more* of it over time.
+
+> [!note]
+> This is a vision post. It describes where the project is going and the decisions that shape it. Later posts in the series cover the actual implementation as each milestone ships.
+
+## The problem with alerts today
+
+Right now, each job sends its own Slack alert directly from the job code. That has three consequences:
+
+- **Alert logic is duplicated** across every ECS job and Prefect flow.
+- **Alerts are raw**: a stack trace dumped into a channel, with no summary, no classification, and no clear next step.
+- **Nothing is stored**. Once the hero fixes the problem, all the context — what broke, why, what they did — is gone. There is no history to learn from.
+
+The last point is the important one. If we ever want to automate any of this, we need a record of what failures look like and how humans respond to them. Alerts-as-Slack-messages give us none of that.
+
+## The core idea: a centralized triage service
+
+Instead of each job shouting into Slack, jobs emit a **structured failure event** to a single service. That service owns everything that happens next:
+
+| Responsibility        | What it does                                                         |
+| --------------------- | -------------------------------------------------------------------- |
+| **Store**             | Persist every failure (and later, every human action) as a record.  |
+| **Enrich & classify** | Turn a raw error into a summary and a likely cause.                  |
+| **Alert**             | Post one clean, consistent Slack message with the right owner ping.  |
+| **Interact**          | Let the hero act from the Slack thread — and record what they chose. |
+
+Jobs get dumber; the service gets smarter. All the failure-handling logic lives in one place, and — crucially — every failure and every decision is now written down.
+
+## Direction: increasing autonomy in stages
+
+The whole project is built around one idea: **it should gain autonomy gradually, and only where we can prove it's safe.** I think of it as three stages.
+
+### Stage 1 — Report
+
+The service receives structured failure events, stores them, summarizes and classifies them, and posts a clear Slack alert. No actions yet — it just makes failures *easier to understand*.
+
+### Stage 2 — Act on human decision
+
+The hero interacts with the Slack thread: rerun the job, ask the owner, mark it as manually fixed, mark it as solved. The service performs the action **only when a human asks**, and it records every decision as an audit trail.
+
+### Stage 3 — Act autonomously
+
+Once the audit trail shows which actions are *consistently* safe — "this class of failure is always fixed by a rerun" — the service starts proposing those actions, and eventually performing them on its own, escalating to a human only when it's unsure.
+
+> [!info]
+> Only stages 1 and 2 are in scope right now. But every decision is made with stage 3 in mind. That's why we store state and human actions from day one: **the audit trail is the evidence base that lets us safely promote automation later.**
+
+## The decisions that make this work
+
+A few design choices are what keep this from becoming a scary "AI runs my production pipelines" project.
+
+### The model advises, it never acts
+
+This is the single most important rule. We use an LLM (via AWS Bedrock) for what LLMs are good at: **summarizing** a messy error and **classifying** the likely cause. That output is a *suggestion*, shown to the hero.
+
+Whether an action is actually allowed — can this job be rerun? — is decided by **deterministic, application-owned code**, never by the model.
+
+> [!warning]
+> Letting a model decide to rerun production jobs is exactly the kind of thing that erodes trust fast. Keeping the model on the "advise" side of a hard boundary is what makes the rest of the roadmap defensible.
+
+This boundary is also what makes stage 3 possible. Because the policy is code, we can look at the audit trail, add a rule, and know *exactly* what will and won't happen.
+
+### It must fail safe
+
+The service sits **in the production alerting path**. If it's down, or the database is unreachable, or the AI call times out — failures still need to reach a human.
+
+So the guiding rule is: **degrade, never swallow**. If AI enrichment fails, fall back to a plain alert. If storage fails, still send the alert. A failure event should never disappear just because part of the triage stack had a bad day.
+
+### Store everything now, automate later
+
+We persist two things: **failure events** (what broke) and, later, **actions** (what the hero decided). This is deliberately more than stage 1 needs. It's the training/evidence base for stage 3 — and it's why the data is relational and queryable rather than a pile of Slack messages.
+
+## Why not just...?
+
+A few alternatives I considered and set aside:
+
+- **Keep alerts in each job** — no history, no central logic, no path to automation.
+- **A pure rule-based classifier** — brittle, and misses the "summarize this ugly trace" win that LLMs are genuinely good at.
+- **Let an AI agent framework own the whole workflow** — hands the model control over production actions, which is exactly the line we don't want to cross yet.
+- **Analyze Slack messages after the fact** — makes Slack the source of truth, which it should never be.
+
+The through-line: keep orchestration and policy in our own code, use AI only where it clearly helps, and never give up auditability.
+
+## What's next
+
+That's the vision. In the next post I'll get concrete and walk through **Stage 1**: the actual FastAPI service that ingests structured failure events, decides which side sends the alert (there's a genuinely tricky Prefect-vs-ECS deduplication problem in there), and posts to Slack — all while failing safe.
+
+> [!tip]
+> The interesting engineering isn't the AI. It's everything *around* the AI that makes it safe to trust — the boundaries, the fallbacks, and the audit trail.
