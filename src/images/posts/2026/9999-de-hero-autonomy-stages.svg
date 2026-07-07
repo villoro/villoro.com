@@ -1,0 +1,50 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="aR" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L10 6 L1 11 z" fill="#6a6e82"/>
+    </marker>
+  </defs>
+
+  <rect x="2" y="2" width="1596" height="896" rx="24" fill="#fbfbfd" stroke="#eaedf2" stroke-width="2"/>
+
+  <text x="800" y="95" text-anchor="middle" font-size="40" font-weight="700" fill="#0b1026">Gaining autonomy in stages</text>
+  <text x="800" y="137" text-anchor="middle" font-size="23" fill="#6a6e82">each stage earns the trust for the next</text>
+
+  <!-- badges -->
+  <rect x="170" y="205" width="430" height="58" rx="29" fill="#e7f8f0" stroke="#10b981" stroke-width="2.5"/>
+  <circle cx="210" cy="234" r="8" fill="#10b981"/>
+  <text x="234" y="242" font-size="21" font-weight="600" fill="#0a8f63">In scope now: stages 1 and 2</text>
+
+  <rect x="1000" y="205" width="430" height="58" rx="29" fill="#eef1f7" stroke="#a6accb" stroke-width="2.5" stroke-dasharray="8 6"/>
+  <circle cx="1040" cy="234" r="8" fill="#a6accb"/>
+  <text x="1064" y="242" font-size="21" font-weight="600" fill="#6a6e82">Designed for, not built yet</text>
+
+  <!-- three boxes on the SAME horizontal line: w=430 h=230, y=390..620 -->
+  <!-- Stage 1 (solid blue) -->
+  <rect x="80" y="390" width="430" height="230" rx="16" fill="#3a76ff"/>
+  <text x="115" y="450" font-size="23" font-weight="700" fill="#cfe0ff">STAGE 1</text>
+  <text x="115" y="500" font-size="32" font-weight="700" fill="#fff">Report</text>
+  <text x="115" y="548" font-size="20" fill="#eaf1ff">store, deduplicate and</text>
+  <text x="115" y="576" font-size="20" fill="#eaf1ff">post one clear alert</text>
+
+  <!-- Stage 2 (solid darker blue) -->
+  <rect x="585" y="390" width="430" height="230" rx="16" fill="#2451c9"/>
+  <text x="620" y="450" font-size="23" font-weight="700" fill="#cfe0ff">STAGE 2</text>
+  <text x="620" y="500" font-size="32" font-weight="700" fill="#fff">Act on decisions</text>
+  <text x="620" y="548" font-size="20" fill="#eaf1ff">the hero acts from Slack,</text>
+  <text x="620" y="576" font-size="20" fill="#eaf1ff">every decision recorded</text>
+
+  <!-- Stage 3 (future: dashed) -->
+  <rect x="1090" y="390" width="430" height="230" rx="16" fill="#eef1f7" stroke="#a6accb" stroke-width="3" stroke-dasharray="9 7"/>
+  <text x="1125" y="450" font-size="23" font-weight="700" fill="#8b90a8">STAGE 3</text>
+  <text x="1125" y="500" font-size="32" font-weight="700" fill="#3a3d52">Act on its own</text>
+  <text x="1125" y="548" font-size="20" fill="#6a6e82">proposes and performs safe</text>
+  <text x="1125" y="576" font-size="20" fill="#6a6e82">actions, escalates when unsure</text>
+
+  <!-- horizontal arrows between boxes -->
+  <path d="M510 505 L585 505" fill="none" stroke="#6a6e82" stroke-width="3" marker-end="url(#aR)"/>
+  <path d="M1015 505 L1090 505" fill="none" stroke="#6a6e82" stroke-width="3" marker-end="url(#aR)"/>
+
+  <!-- bottom caption -->
+  <text x="800" y="770" text-anchor="middle" font-size="22" font-weight="600" fill="#3a76ff">increasing autonomy  →</text>
+</svg>
