@@ -1,4 +1,14 @@
 <svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <style>
+    .ttl { fill: #3a76ff; }
+    .mut { fill: #6a6e82; }
+    .gln { stroke: #6a6e82; }
+    @media (prefers-color-scheme: dark) {
+      .ttl { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .gln { stroke: #9aa0b5; }
+    }
+  </style>
   <defs>
     <marker id="arrRed" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M1 1 L10 6 L1 11 z" fill="#e5484d"/>
@@ -8,10 +18,8 @@
     </marker>
   </defs>
 
-  <rect x="2" y="2" width="1596" height="896" rx="24" fill="#fbfbfd" stroke="#eaedf2" stroke-width="2"/>
-
-  <text x="800" y="92" text-anchor="middle" font-size="40" font-weight="700" fill="#0b1026">Where a failure can be reported</text>
-  <text x="800" y="134" text-anchor="middle" font-size="24" fill="#6a6e82">The same failure can surface from two independent places</text>
+  <text x="800" y="92" text-anchor="middle" font-size="40" font-weight="700" class="ttl">Where a failure can be reported</text>
+  <text x="800" y="134" text-anchor="middle" font-size="24" class="mut">The same failure can surface from two independent places</text>
 
   <!-- Orchestrator (solid blue) -->
   <rect x="120" y="255" width="380" height="150" rx="16" fill="#3a76ff"/>
@@ -24,8 +32,8 @@
   <text x="310" y="665" text-anchor="middle" font-size="21" fill="#a6accb">isolated container</text>
 
   <!-- triggers arrow -->
-  <path d="M310 405 L310 565" fill="none" stroke="#6a6e82" stroke-width="3" marker-end="url(#arrGrey)"/>
-  <text x="330" y="493" font-size="20" fill="#6a6e82">triggers</text>
+  <path d="M310 405 L310 565" fill="none" class="gln" stroke-width="3" marker-end="url(#arrGrey)"/>
+  <text x="330" y="493" font-size="20" class="mut">triggers</text>
 
   <!-- Slack (centered vertically at 485) -->
   <rect x="1120" y="410" width="360" height="150" rx="16" fill="#4A154B"/>
