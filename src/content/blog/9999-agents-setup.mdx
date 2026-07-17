@@ -179,7 +179,7 @@ The problem is that two agents editing the same working tree step on each other:
 The fix is <FancyLink linkText="git worktrees" url="https://git-scm.com/docs/git-worktree"/>: each agent gets its own checkout and branch of the same repo, so they work in full isolation and merge back through normal PRs.
 
 I don't even manage the worktrees myself.
-Since there is no Claude desktop app for Pop!_OS, I use <FancyLink linkText="Orca" url="https://github.com/stablyai/orca"/>, an open source desktop app for running CLI agents (Claude Code, Codex, ...) in parallel.
+Since there is no Claude desktop app for <FancyLink linkText="Pop!_OS" url="https://system76.com/pop/" company="pop_os"/>, I use <FancyLink linkText="Orca" url="https://github.com/stablyai/orca"/>, an open source desktop app for running CLI agents (Claude Code, Codex, ...) in parallel.
 When I open multiple agents on the same repo, each one gets its own worktree by default, with all the agents' outputs streaming into one window.
 
 > [!tip]
