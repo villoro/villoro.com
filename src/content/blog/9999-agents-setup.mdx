@@ -171,6 +171,20 @@ Writing the plan to disk instead of keeping it in the conversation buys a lot:
 The planning phase is also governed by a shared playbook (`clarify-before-implementing`): before implementing anything non-trivial, the agent must ask 2-4 specific questions that would change the implementation.
 For headless runs (CI, scheduled agents) where nobody can answer, the rule flips: don't block, pick the most reasonable interpretation, and state the assumptions prominently in the deliverable.
 
+## Parallel agents, isolated with git worktrees
+
+Once plans are written down, nothing stops you from running several agents at once.
+The problem is that two agents editing the same working tree step on each other: one runs the formatter while the other is mid-refactor, and both diffs become garbage.
+
+The fix is <FancyLink linkText="git worktrees" url="https://git-scm.com/docs/git-worktree"/>: each agent gets its own checkout and branch of the same repo, so they work in full isolation and merge back through normal PRs.
+
+I don't even manage the worktrees myself.
+Since there is no Claude desktop app for Pop!_OS, I use <FancyLink linkText="Orca" url="https://github.com/stablyai/orca"/>, an open source desktop app for running CLI agents (Claude Code, Codex, ...) in parallel.
+When I open multiple agents on the same repo, each one gets its own worktree by default, with all the agents' outputs streaming into one window.
+
+> [!tip]
+> Worktrees pair very well with the plan-first workflow: write N plans with one strong agent, then fan out N cheaper agents, each implementing one plan in its own worktree.
+
 ## Agents that learn: every lesson gets committed
 
 This is the part of the setup I care most about.
@@ -242,6 +256,7 @@ If you only take a few things from this post:
 * **A shared repo for cross-repo guidance**, mounted as a pinned submodule, with lazy skills for workflows and always-on playbooks for behavior. It scales to as many shared repos as you need.
 * **A correction ladder**: hook if enforceable, one line in `AGENTS.md` if hard, playbook prose if judgment. Never a lessons log, never private memory.
 * **Plan in markdown, then implement**: the plan survives lost sessions, gets reviewed before code exists, and lets a cheaper model do the typing.
+* **Run parallel agents in git worktrees**: isolated checkouts mean no clobbered diffs, and tools like Orca set them up for you.
 * **Treat the instructions as code**: single-sourced, link-checked, reviewed in PRs. They rot otherwise.
 
 What's next for me: measuring whether agents actually follow the rules (the status report from the `LEGACY` markers is a start), and growing the shared repo as more repos and more agents join the setup.
