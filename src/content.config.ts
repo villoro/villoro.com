@@ -10,6 +10,8 @@ const blogCollection = defineCollection({
     description: z.string().optional(),
     date: z.date().optional(),
     updatedDate: z.date().optional(),
+    // Internal only: when the post was written; never rendered
+    writingDate: z.date().optional(),
     image: z.string().optional(),
     imageAlt: z.string().optional(),
     readingTime: z.number().int().positive().optional(),
