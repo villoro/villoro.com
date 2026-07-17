@@ -15,9 +15,9 @@ draft: false
 AI coding agents are only as good as the context you give them.
 When I started using them seriously across several repos (ECS extraction jobs, dbt, this website), I kept hitting the same problems:
 
-* **Every tool wants its own config** – Claude Code reads `CLAUDE.md`, Codex reads `AGENTS.md`, Cursor has its own rules file. Duplicating instructions per tool guarantees they drift apart.
-* **Lessons didn't stick** – I would correct an agent, and a week later a different agent (or the same one in a new session) made the exact same mistake.
-* **Conventions were repeated everywhere** – how to run Python, how to name branches, how to write a Jira ticket. Same rules, copy-pasted into every repo, each copy slowly rotting.
+* **Every tool wants its own config**: Claude Code reads `CLAUDE.md`, Codex reads `AGENTS.md`, Cursor has its own rules file. Duplicating instructions per tool guarantees they drift apart.
+* **Lessons didn't stick**: I would correct an agent, and a week later a different agent (or the same one in a new session) made the exact same mistake.
+* **Conventions were repeated everywhere**: how to run Python, how to name branches, how to write a Jira ticket. Same rules, copy-pasted into every repo, each copy slowly rotting.
 
 This post describes the setup I converged on: one entrypoint per repo, a shared skills repo mounted as a git submodule, every lesson committed as markdown or enforced by a hook, and a plan-first workflow that survives lost sessions.
 
@@ -89,8 +89,8 @@ That content lives in a dedicated repo (in my case it's called `data-agents-play
 
 The shared repo has two kinds of content:
 
-* **Skills** (`skills/<name>/SKILL.md`) – task-triggered workflows. Both Claude Code and Codex natively support the same `SKILL.md` format: the `name`/`description` frontmatter is always in the agent's context, and the full instructions load only when the task matches.
-* **Playbooks** (`playbooks/<topic>.md`) – always-on behavioral rules that apply from the first turn of every session, routed from `AGENTS.md`. Skills load lazily by design, so rules that must apply from turn one can't be skills.
+* **Skills** (`skills/<name>/SKILL.md`): task-triggered workflows. Both Claude Code and Codex natively support the same `SKILL.md` format: the `name`/`description` frontmatter is always in the agent's context, and the full instructions load only when the task matches.
+* **Playbooks** (`playbooks/<topic>.md`): always-on behavioral rules that apply from the first turn of every session, routed from `AGENTS.md`. Skills load lazily by design, so rules that must apply from turn one can't be skills.
 
 A skill is just plain markdown with a small header, so it also works for humans and for agents without skill support:
 
@@ -111,9 +111,9 @@ description: Use when running Python code or tools, writing a new
 Skills are discovered per tool (`.claude/skills/`, `.codex/skills/`), so each consuming repo commits **relative symlinks** from those paths into the submodule.
 This gives you:
 
-* **One copy of the content** – no sync scripts, no drift between copies.
-* **Pinned, reviewable updates** – the submodule points at a commit. Each repo decides when to pick up changes, and the bump shows up in a PR diff.
-* **Works on a fresh clone** – git stores symlinks as regular objects, so everything works right after `git submodule update --init`.
+* **One copy of the content**: no sync scripts, no drift between copies.
+* **Pinned, reviewable updates**: the submodule points at a commit. Each repo decides when to pick up changes, and the bump shows up in a PR diff.
+* **Works on a fresh clone**: git stores symlinks as regular objects, so everything works right after `git submodule update --init`.
 
 The symlinks themselves are created by a small script in the shared repo, so no repo ever hand-maintains them.
 This is the core of it (trimmed for the post):
@@ -156,14 +156,14 @@ Per-skill symlinks (instead of one link to the whole `skills/` folder) are what 
 
 For any non-trivial task, I split the work in two phases:
 
-1. **Plan** – the agent explores the code, asks clarifying questions, and writes the plan down **as a markdown file**.
-2. **Implement** – an agent (often a different, cheaper one) executes the plan step by step.
+1. **Plan**: the agent explores the code, asks clarifying questions, and writes the plan down **as a markdown file**.
+2. **Implement**: an agent (often a different, cheaper one) executes the plan step by step.
 
 Writing the plan to disk instead of keeping it in the conversation buys a lot:
 
-* **Survives lost sessions** – a crashed session or an expired quota doesn't erase the plan. Any new session picks up the markdown and continues.
-* **Reviewable before code exists** – it's much cheaper to correct a plan than a diff. I review the plan like I would review a design doc.
-* **Cheaper implementation** – planning is where the hard reasoning happens. Once the plan is explicit enough, a smaller/faster model can implement it. You pay for the expensive model once, not for the whole task.
+* **Survives lost sessions**: a crashed session or an expired quota doesn't erase the plan. Any new session picks up the markdown and continues.
+* **Reviewable before code exists**: it's much cheaper to correct a plan than a diff. I review the plan like I would review a design doc.
+* **Cheaper implementation**: planning is where the hard reasoning happens. Once the plan is explicit enough, a smaller/faster model can implement it. You pay for the expensive model once, not for the whole task.
 
 > [!tip]
 > The quality bar for a written plan: a different agent, with no access to the planning conversation, should be able to implement it. If it can't, the plan is missing context.
@@ -184,8 +184,8 @@ The playbook defines a **correction ladder**. Every durable lesson gets promoted
 
 And two things are explicitly banned:
 
-* **No "lessons learned" log file** – an unread append-only doc doesn't prevent recurrence. If a lesson matters, it becomes a rule where it will be seen; if it doesn't, it's noise.
-* **No agent-private memory** – memory stores are invisible to other agents and other developers, and they don't get reviewed. Everything lands in version-controlled markdown.
+* **No "lessons learned" log file**: an unread append-only doc doesn't prevent recurrence. If a lesson matters, it becomes a rule where it will be seen; if it doesn't, it's noise.
+* **No agent-private memory**: memory stores are invisible to other agents and other developers, and they don't get reviewed. Everything lands in version-controlled markdown.
 
 Scope matters too: a cross-repo lesson goes to the shared repo, a repo-specific one to `.agents/local/`.
 Either way, the agent proposes the change and I review it, same as any code.
@@ -228,8 +228,8 @@ Nobody broke these on purpose; they rotted because nothing was checking them.
 
 The fixes follow the same philosophy as everything else:
 
-* **Single-source every rule** – one file owns each rule; everywhere else keeps a one-line pointer with the rule ID.
-* **Lint the links** – a pre-commit hook fails if a relative markdown link doesn't resolve. The day I added it, it caught two more broken links I hadn't noticed.
+* **Single-source every rule**: one file owns each rule; everywhere else keeps a one-line pointer with the rule ID.
+* **Lint the links**: a pre-commit hook fails if a relative markdown link doesn't resolve. The day I added it, it caught two more broken links I hadn't noticed.
 
 > [!warning]
 > If your agent instructions have no mechanical checks, assume they are already partially wrong. Mine were.
@@ -240,8 +240,8 @@ If you only take a few things from this post:
 
 * **One provider-neutral entrypoint per repo** (`AGENTS.md`), with tool files as one-line pointers. Enforce it with a hook.
 * **A shared repo for cross-repo guidance**, mounted as a pinned submodule, with lazy skills for workflows and always-on playbooks for behavior. It scales to as many shared repos as you need.
-* **A correction ladder** – hook if enforceable, one line in `AGENTS.md` if hard, playbook prose if judgment. Never a lessons log, never private memory.
-* **Plan in markdown, then implement** – the plan survives lost sessions, gets reviewed before code exists, and lets a cheaper model do the typing.
-* **Treat the instructions as code** – single-sourced, linked-checked, reviewed in PRs. They rot otherwise.
+* **A correction ladder**: hook if enforceable, one line in `AGENTS.md` if hard, playbook prose if judgment. Never a lessons log, never private memory.
+* **Plan in markdown, then implement**: the plan survives lost sessions, gets reviewed before code exists, and lets a cheaper model do the typing.
+* **Treat the instructions as code**: single-sourced, linked-checked, reviewed in PRs. They rot otherwise.
 
 What's next for me: measuring whether agents actually follow the rules (the status report from the `LEGACY` markers is a start), and growing the shared repo as more repos and more agents join the setup.
