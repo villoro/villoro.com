@@ -7,7 +7,7 @@ date: 2026-07-17
 image: /images/blog/9999-f1-pit-stop-agents.jpg
 category: DE
 tags: [DE, AI, Best Practices]
-draft: true
+draft: false
 ---
 
 ## Motivation
@@ -173,7 +173,7 @@ For headless runs (CI, scheduled agents) where nobody can answer, the rule flips
 
 ## Parallel agents, isolated with git worktrees
 
-Once plans are written down, nothing stops you from running several agents at once.
+Nothing stops you from running several agents at once, and this applies to both phases: multiple agents implementing different plans, but also multiple agents each drafting the plan for a different task.
 The problem is that two agents editing the same working tree step on each other: one runs the formatter while the other is mid-refactor, and both diffs become garbage.
 
 The fix is <FancyLink linkText="git worktrees" url="https://git-scm.com/docs/git-worktree"/>: each agent gets its own checkout and branch of the same repo, so they work in full isolation and merge back through normal PRs.
@@ -183,7 +183,16 @@ Since there is no Claude desktop app for Pop!_OS, I use <FancyLink linkText="Orc
 When I open multiple agents on the same repo, each one gets its own worktree by default, with all the agents' outputs streaming into one window.
 
 > [!tip]
-> Worktrees pair very well with the plan-first workflow: write N plans with one strong agent, then fan out N cheaper agents, each implementing one plan in its own worktree.
+> Worktrees pair very well with the plan-first workflow: plan N tasks in parallel, review the markdowns, then fan out N cheaper agents, each implementing one plan in its own worktree.
+
+### Two ways of reviewing the work
+
+Depending on the task, I review agent work in one of two modes:
+
+* **Review before commit**: the agent proposes changes and I look at every diff before anything is committed. This is the mode for risky or exploratory work, where I want to steer early and often.
+* **Review the PR**: the agent commits incrementally, pushes, and opens a PR; I review it like I would review a teammate's. This is the mode for well-planned or parallel work, and it's the only mode that scales when several agents run at once.
+
+The second mode is where all the guardrails from this post earn their keep: pre-commit hooks, CI checks, and branch conventions run on every agent commit, so by the time the PR reaches me the mechanical problems are already gone and I can focus on the design.
 
 ## Agents that learn: every lesson gets committed
 
