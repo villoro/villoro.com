@@ -9,72 +9,213 @@ tags: [DE, AI, Best Practices]
 draft: true
 ---
 
-{/* TODO: hero image (16:9, src/images/blog/) — add `image:` to frontmatter once created */}
+{/* TODO: hero image (16:9, src/images/blog/) and add `image:` to frontmatter */}
 
 ## Motivation
 
-{/* Why this post: agents are only as good as their context. Working across many repos
-    (ECS jobs, dbt, personal site) with several agents (Claude Code, Codex), the naive
-    approach — per-tool config files, private memory, repeated corrections — doesn't scale.
-    Goal: one setup where any agent, in any repo, gets the same instructions and where
-    lessons stick. */}
+AI coding agents are only as good as the context you give them.
+When I started using them seriously across several repos (ECS extraction jobs, dbt, this website), I kept hitting the same problems:
+
+* **Every tool wants its own config** – Claude Code reads `CLAUDE.md`, Codex reads `AGENTS.md`, Cursor has its own rules file. Duplicating instructions per tool guarantees they drift apart.
+* **Lessons didn't stick** – I would correct an agent, and a week later a different agent (or the same one in a new session) made the exact same mistake.
+* **Conventions were repeated everywhere** – how to run Python, how to name branches, how to write a Jira ticket. Same rules, copy-pasted into every repo, each copy slowly rotting.
+
+This post describes the setup I converged on: one entrypoint per repo, a shared skills repo mounted as a git submodule, every lesson committed as markdown or enforced by a hook, and a plan-first workflow that survives lost sessions.
 
 ## The big picture
 
-{/* Diagram + overview of the pieces: AGENTS.md as the agent-agnostic entrypoint,
-    .agents/shared submodule with playbooks + skills, .agents/local for repo-specific
-    overrides, symlinks into .claude/skills + .codex/skills, prek hooks as enforcement.
-    Precedence: human > local > shared > defaults. */}
+The whole setup is built around one principle: **agent instructions are code**.
+They live in the repo, they are reviewed in PRs, they have a single source of truth, and they are linted by pre-commit hooks.
+
+In each repo, the layout looks like this:
+
+```text
+repository/
+  AGENTS.md                  # entrypoint + router (repo-specific)
+  .agents/
+    shared/                  # shared playbooks repo, as a git submodule
+      playbooks/             # always-on rules
+      skills/                # task-triggered skills
+    local/                   # repo-specific playbooks and skills
+  .claude/skills/<name> ->   # committed relative symlinks into .agents/
+  .codex/skills/<name>  ->   # (so each tool auto-discovers the skills)
+```
+
+When instructions conflict, precedence is explicit:
+
+1. Direct human instruction
+2. Repo-specific instructions in `.agents/local/`
+3. Shared instructions in `.agents/shared/`
+4. General agent defaults
+
+> [!note]
+> Repository-specific instructions always override shared ones. That's what makes a shared repo safe: any repo can opt out of a rule locally without forking the shared content.
 
 ## One entrypoint: AGENTS.md, never tool-specific files
 
-{/* Everything lives in provider-neutral markdown; CLAUDE.md is a one-line pointer.
-    A pre-commit hook rejects guidance in .claude/, .cursorrules, etc.
-    Why: tool-specific files are invisible to other agents AND other developers. */}
+Each repo has a single `AGENTS.md` that any agent reads first.
+It covers the architecture, the key abstractions, the required commands, and it routes to the playbooks and skills for everything else.
+`CLAUDE.md` is literally one line:
+
+```markdown
+# CLAUDE.md
+
+See [AGENTS.md](AGENTS.md).
+```
+
+The rule is strict: **all shared guidance lives in `AGENTS.md` or `.agents/`, never in a tool-specific location**.
+A `.claude/` file is invisible to Codex, and both are invisible to a teammate browsing the repo.
+Provider-neutral markdown works for every agent and every human.
+
+And because rules that depend on discipline eventually get broken, a pre-commit hook enforces it:
+
+```yaml
+- id: no-tool-specific-agent-guidance
+  name: no tool-specific agent guidance (use .agents/)
+  entry: >-
+    Shared agent guidance must live in .agents/ or AGENTS.md,
+    not in tool-specific locations.
+  language: fail
+  files: '^(\.claude/|\.cursor/|\.cursorrules$|.*/skills/)'
+  exclude: '^\.agents/'
+```
+
+> [!tip]
+> I use <FancyLink linkText="prek" url="https://github.com/j178/prek"/> as a faster drop-in replacement for pre-commit. Same `.pre-commit-config.yaml`, no Python bootstrap needed.
 
 ## A shared skills repo, mounted as a submodule
 
-{/* nt-data-agents-playbooks: skills (task-triggered, SKILL.md format both Claude Code
-    and Codex discover natively) vs playbooks (always-on rules routed from AGENTS.md).
-    Committed relative symlinks bridge tool discovery paths — one copy, zero sync.
-    Pinned commit = explicit, reviewable updates per repo (bump_shared.sh).
-    Scales to N shared repos: each is just another submodule under .agents/,
-    linked the same way. */}
+Most guidance is not repo-specific: how to run Python through `uv`, how to name branches, how to review a PR, how to format a Jira ticket.
+That content lives in a dedicated repo (`nt-data-agents-playbooks`) that every consuming repo mounts as a git submodule at `.agents/shared/`.
 
-## Code standards as rules agents can follow
+The shared repo has two kinds of content:
 
-{/* nt-code-standards.md: every quality rule has an ID, a canonical in-repo module to
-    copy, and known violations marked inline with NT-LEGACY[rule-id]. The whole codebase
-    swept once; a hook regenerates the per-package status report. Agents never propagate
-    marked code and check their own diff against the rules. */}
+* **Skills** (`skills/<name>/SKILL.md`) – task-triggered workflows. Both Claude Code and Codex natively support the same `SKILL.md` format: the `name`/`description` frontmatter is always in the agent's context, and the full instructions load only when the task matches.
+* **Playbooks** (`playbooks/<topic>.md`) – always-on behavioral rules that apply from the first turn of every session, routed from `AGENTS.md`. Skills load lazily by design, so rules that must apply from turn one can't be skills.
 
-## Agents that learn: every lesson gets committed
+A skill is just plain markdown with a small header, so it also works for humans and for agents without skill support:
 
-{/* The correction ladder — when the user corrects an agent, promote the lesson to the
-    strongest available form: (1) a pre-commit/CI hook if mechanically enforceable,
-    (2) one tight line in AGENTS.md, (3) prose in the specific playbook/skill someone
-    doing that work will actually open. Never a "lessons learned" log file, never
-    agent-private memory. Cross-repo lessons go to the shared repo; repo-specific to
-    .agents/local. */}
+```markdown
+---
+name: python-and-versioning
+description: Use when running Python code or tools, writing a new
+  Python module, or when bumping a package version. Covers uv run,
+  module-header comments, and semver bumps with bump-my-version.
+---
 
-## Guardrails so the docs themselves don't rot
+# Python and versioning
+...
+```
 
-{/* Instructions drift like code: stale file references, rules duplicated in two files
-    that contradict each other. Real examples found in my own setup. Fixes: single-source
-    every rule (pointers with rule IDs instead of restatements), a prek hook that fails
-    on broken relative markdown links, stable IDs for checklist items. */}
+### Why a submodule and symlinks
+
+Skills are discovered per tool (`.claude/skills/`, `.codex/skills/`), so each consuming repo commits **relative symlinks** from those paths into the submodule.
+This gives you:
+
+* **One copy of the content** – no sync scripts, no drift between copies.
+* **Pinned, reviewable updates** – the submodule points at a commit. Each repo decides when to pick up changes, and the bump shows up in a PR diff.
+* **Works on a fresh clone** – git stores symlinks as regular objects, so everything works right after `git submodule update --init`.
+
+Updating a repo to the latest shared playbooks is one script that bumps the pin and re-links the skills, committed as its own commit.
+
+### Scaling to N shared repos
+
+Nothing in this design is limited to a single shared repo.
+If tomorrow I need a second one (say, company-wide guidance vs team-specific guidance), it's just another submodule under `.agents/`, with its skills linked into the same tool directories.
+Per-skill symlinks (instead of one link to the whole `skills/` folder) are what make this possible: skills from multiple sources coexist in the same discovery path.
 
 ## Workflow: plan first, and write the plan down
 
-{/* Every non-trivial task: plan phase producing a committed/saved markdown plan, then
-    implementation phase. Why a written plan: survives lost sessions and quota limits,
-    reviewable by a human before code exists, and lets a cheaper/faster model execute
-    what a stronger model planned. Clarify-before-implementing: agents ask 2-4 specific
-    questions up front (and headless agents state assumptions instead of blocking). */}
+For any non-trivial task, I split the work in two phases:
+
+1. **Plan** – the agent explores the code, asks clarifying questions, and writes the plan down **as a markdown file**.
+2. **Implement** – an agent (often a different, cheaper one) executes the plan step by step.
+
+Writing the plan to disk instead of keeping it in the conversation buys a lot:
+
+* **Survives lost sessions** – a crashed session or an expired quota doesn't erase the plan. Any new session picks up the markdown and continues.
+* **Reviewable before code exists** – it's much cheaper to correct a plan than a diff. I review the plan like I would review a design doc.
+* **Cheaper implementation** – planning is where the hard reasoning happens. Once the plan is explicit enough, a smaller/faster model can implement it. You pay for the expensive model once, not for the whole task.
+
+> [!tip]
+> The quality bar for a written plan: a different agent, with no access to the planning conversation, should be able to implement it. If it can't, the plan is missing context.
+
+The planning phase is also governed by a shared playbook (`clarify-before-implementing`): before implementing anything non-trivial, the agent must ask 2-4 specific questions that would change the implementation.
+For headless runs (CI, scheduled agents) where nobody can answer, the rule flips: don't block, pick the most reasonable interpretation, and state the assumptions prominently in the deliverable.
+
+## Agents that learn: every lesson gets committed
+
+This is the part of the setup I care most about.
+When I correct an agent, I don't want a one-off fix: I want the underlying instructions to improve so no agent ever repeats the mistake.
+
+The playbook defines a **correction ladder**. Every durable lesson gets promoted to the strongest form available:
+
+1. **Mechanically enforceable?** → a pre-commit or CI hook. This is the strongest form because it doesn't depend on any agent reading anything.
+2. **A hard rule, but not enforceable?** → one tight line in `AGENTS.md`, which is auto-loaded every session.
+3. **A judgment call?** → prose in the specific playbook or skill that someone doing that kind of work will actually open.
+
+And two things are explicitly banned:
+
+* **No "lessons learned" log file** – an unread append-only doc doesn't prevent recurrence. If a lesson matters, it becomes a rule where it will be seen; if it doesn't, it's noise.
+* **No agent-private memory** – memory stores are invisible to other agents and other developers, and they don't get reviewed. Everything lands in version-controlled markdown.
+
+Scope matters too: a cross-repo lesson goes to the shared repo, a repo-specific one to `.agents/local/`.
+Either way, the agent proposes the change and I review it, same as any code.
+
+> [!note]
+> The side effect I didn't expect: writing rules for agents made the documentation better for humans. Every "why" an agent needs is a "why" a new teammate needs.
+
+## Code standards as rules agents can follow
+
+"Follow the existing code style" is useless as an instruction, because most codebases contain both the pattern you want and the legacy pattern you're trying to kill.
+An agent (like a new hire) can't tell which is which.
+
+My fix is a single `nt-code-standards.md` file where **every quality rule has an ID, a canonical example, and known violations**:
+
+* The rule itself (e.g. `retry-policy`: all API retries go through the shared retry decorator).
+* A **canonical module** to copy, pointing at real code in the repo.
+* The list of **known violations**, marked inline in the code:
+
+```python
+# NT-LEGACY[retry-policy]: migrate to api_retry from nt_common
+@backoff.on_exception(...)
+def _request(self, ...):
+```
+
+The marker means "this pattern is superseded; don't copy or propagate it".
+Agents are told to never introduce a new violation and to check their own diff against the rules before finishing.
+A pre-commit hook regenerates a per-package status report from the markers, so there is always an up-to-date map of what's clean and what's legacy.
+
+The important part: the whole codebase was swept once against every rule.
+A package with no markers is genuinely clean, not just unexamined, so the agent can trust the map.
+
+## Guardrails so the docs themselves don't rot
+
+Here is the uncomfortable lesson: **instructions drift exactly like code does**.
+When I audited my own setup, I found:
+
+* `AGENTS.md` linking to a file that had been renamed months earlier.
+* The same rule stated in full in two files, where one copy described a retry pattern that no longer existed in the code.
+* Cross-references by item number into a checklist where items get deleted, silently shifting what the numbers point at.
+
+Nobody broke these on purpose. They rotted because nothing was checking them.
+The fixes follow the same philosophy as everything else:
+
+* **Single-source every rule** – each rule lives in exactly one file; everywhere else keeps a one-line pointer with the rule ID. Restating a rule in two places is how contradictions are born.
+* **Lint the links** – a pre-commit hook walks every markdown file and fails if a relative link doesn't resolve. The day I added it, it immediately caught two more broken links I hadn't noticed.
+* **Stable IDs** – checklist items keep their numbers forever (gaps allowed, never reused), so cross-references can't silently shift.
+
+> [!warning]
+> If your agent instructions have no mechanical checks, assume they are already partially wrong. Mine were.
 
 ## What I'd tell you to steal
 
-{/* Closing takeaways: start with AGENTS.md + one shared repo; enforce mechanically
-    whatever you can; treat instructions as code (reviewed, linted, single-sourced);
-    plan in markdown before implementing. What's next: more shared repos, measuring
-    whether agents actually follow the rules. */}
+If you only take a few things from this post:
+
+* **One provider-neutral entrypoint per repo** (`AGENTS.md`), with tool files as one-line pointers. Enforce it with a hook.
+* **A shared repo for cross-repo guidance**, mounted as a pinned submodule, with lazy skills for workflows and always-on playbooks for behavior. It scales to as many shared repos as you need.
+* **A correction ladder** – hook if enforceable, one line in `AGENTS.md` if hard, playbook prose if judgment. Never a lessons log, never private memory.
+* **Plan in markdown, then implement** – the plan survives lost sessions, gets reviewed before code exists, and lets a cheaper model do the typing.
+* **Treat the instructions as code** – single-sourced, linked-checked, reviewed in PRs. They rot otherwise.
+
+What's next for me: measuring whether agents actually follow the rules (the status report from the `NT-LEGACY` markers is a start), and growing the shared repo as more repos and more agents join the setup.
