@@ -21,7 +21,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { blog_folder, similar_items_length } = config.settings;
-const { title, description, image, date, updatedDate, tags = [], category } = post.data;
+const { title, description, image, date, updated_date: updatedDate, tags = [], category } = post.data;
 const slug     = post.data.slug || post.id;
 const canonical = `${config.site.base_url}${Astro.url.pathname}`;
 
