@@ -1,0 +1,80 @@
+---
+slug: multi-agent-setup
+title: A Multi-Agent Setup That Learns
+meta_title: A Multi-Agent Setup That Learns - Shared Skills, Committed Lessons, Plan-First Workflow
+description: How I set up AI coding agents across multiple data repos so any agent (Claude, Codex, ...) shares the same instructions, skills live in one versioned repo consumed as a git submodule, corrections become committed rules or pre-commit hooks instead of private memory, and every task starts with a written plan that survives lost sessions.
+date: 2026-07-17
+category: DE
+tags: [DE, AI, Best Practices]
+draft: true
+---
+
+{/* TODO: hero image (16:9, src/images/blog/) — add `image:` to frontmatter once created */}
+
+## Motivation
+
+{/* Why this post: agents are only as good as their context. Working across many repos
+    (ECS jobs, dbt, personal site) with several agents (Claude Code, Codex), the naive
+    approach — per-tool config files, private memory, repeated corrections — doesn't scale.
+    Goal: one setup where any agent, in any repo, gets the same instructions and where
+    lessons stick. */}
+
+## The big picture
+
+{/* Diagram + overview of the pieces: AGENTS.md as the agent-agnostic entrypoint,
+    .agents/shared submodule with playbooks + skills, .agents/local for repo-specific
+    overrides, symlinks into .claude/skills + .codex/skills, prek hooks as enforcement.
+    Precedence: human > local > shared > defaults. */}
+
+## One entrypoint: AGENTS.md, never tool-specific files
+
+{/* Everything lives in provider-neutral markdown; CLAUDE.md is a one-line pointer.
+    A pre-commit hook rejects guidance in .claude/, .cursorrules, etc.
+    Why: tool-specific files are invisible to other agents AND other developers. */}
+
+## A shared skills repo, mounted as a submodule
+
+{/* nt-data-agents-playbooks: skills (task-triggered, SKILL.md format both Claude Code
+    and Codex discover natively) vs playbooks (always-on rules routed from AGENTS.md).
+    Committed relative symlinks bridge tool discovery paths — one copy, zero sync.
+    Pinned commit = explicit, reviewable updates per repo (bump_shared.sh).
+    Scales to N shared repos: each is just another submodule under .agents/,
+    linked the same way. */}
+
+## Code standards as rules agents can follow
+
+{/* nt-code-standards.md: every quality rule has an ID, a canonical in-repo module to
+    copy, and known violations marked inline with NT-LEGACY[rule-id]. The whole codebase
+    swept once; a hook regenerates the per-package status report. Agents never propagate
+    marked code and check their own diff against the rules. */}
+
+## Agents that learn: every lesson gets committed
+
+{/* The correction ladder — when the user corrects an agent, promote the lesson to the
+    strongest available form: (1) a pre-commit/CI hook if mechanically enforceable,
+    (2) one tight line in AGENTS.md, (3) prose in the specific playbook/skill someone
+    doing that work will actually open. Never a "lessons learned" log file, never
+    agent-private memory. Cross-repo lessons go to the shared repo; repo-specific to
+    .agents/local. */}
+
+## Guardrails so the docs themselves don't rot
+
+{/* Instructions drift like code: stale file references, rules duplicated in two files
+    that contradict each other. Real examples found in my own setup. Fixes: single-source
+    every rule (pointers with rule IDs instead of restatements), a prek hook that fails
+    on broken relative markdown links, stable IDs for checklist items. */}
+
+## Workflow: plan first, and write the plan down
+
+{/* Every non-trivial task: plan phase producing a committed/saved markdown plan, then
+    implementation phase. Why a written plan: survives lost sessions and quota limits,
+    reviewable by a human before code exists, and lets a cheaper/faster model execute
+    what a stronger model planned. Clarify-before-implementing: agents ask 2-4 specific
+    questions up front (and headless agents state assumptions instead of blocking). */}
+
+## What I'd tell you to steal
+
+{/* Closing takeaways: start with AGENTS.md + one shared repo; enforce mechanically
+    whatever you can; treat instructions as code (reviewed, linted, single-sourced);
+    plan in markdown before implementing. What's next: more shared repos, measuring
+    whether agents actually follow the rules. */}
