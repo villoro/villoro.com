@@ -45,6 +45,23 @@ npm version minor    # 1.0.0 → 1.1.0
 npm version major    # 1.0.0 → 2.0.0
 ```
 
+## Updating Dependencies
+To check for and update outdated npm dependencies:
+
+```bash
+npm outdated          # list outdated packages
+npm update             # update within the ranges defined in package.json
+npx npm-check-updates -u && npm install   # bump package.json to the latest versions and install
+```
+
+After updating, run the checks below to make sure nothing broke:
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
+
 ## Project Structure
 The project is organized as follows:
 
