@@ -99,7 +99,7 @@ The pages don't call the API. They query the database directly and render server
 
 Served at `/` (and `/summary`), this is the landing page: a filterable, paginated list of failures, newest first.
 
-{/* SCREENSHOT: summary page at / — filters row, stat cards, failure list. File: ../../images/posts/2026/9999-de-hero-summary-page.png */}
+![The de-hero summary page: stat cards, filters, and a list of failures](../../images/posts/2026/9999-de-hero-summary-page.png)
 
 The filters are a time window (default: the last 24 hours), job name, source app, and resolution state. Resolution state defaults to *unresolved*, since that is what a hero on call actually cares about.
 
@@ -114,9 +114,9 @@ Won't-fix is counted apart from resolved, because a deliberate non-fix is not a 
 
 Each row links to `/failures/{id}`, the full context for a single failure: everything the alert carried (job, owner, exception, traceback) plus the stored Bedrock triage.
 
-{/* SCREENSHOT: detail page at /failures/{id} — context, suggested-resolution pill next to the resolution form. File: ../../images/posts/2026/9999-de-hero-detail-page.png */}
+![The de-hero failure detail page: triage, the suggested resolution, and the resolution form](../../images/posts/2026/9999-de-hero-detail-page.png)
 
-This is where the suggested resolution from the last post earns its place. The model's suggestion is shown as a pill right next to the control the hero uses to set the real resolution, styled the same as the resolution pill so the two read as a matched pair. The hero can accept the suggestion or override it; either way it is one click.
+This is where the suggested resolution from the last post earns its place. The triage box shows the model's summary, category, and suggested resolution, and that suggestion also appears as a pill among the failure's tags, styled the same as the actual resolution pill so the two read as a matched pair. Just below, the resolution form is where the hero commits the real one, taking the model's suggestion or overriding it.
 
 Setting the resolution here is what fires the `PATCH` from the previous section, cascade and all. Reading the page is a `GET /api/failures/{id}`.
 
