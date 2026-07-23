@@ -78,13 +78,14 @@ A few decisions worth calling out:
 
 ## The tricky part: who sends the alert?
 
-This is the part that makes the service more than a webhook. A single failure can be reported twice:
+This is the part that makes the service more than a webhook. To see why, it helps to know how the jobs run. The orchestrator, <FancyLink linkText="Prefect" url="https://www.prefect.io/" dark="true"/>, decides what runs and when, but it doesn't run the heavy work itself. It triggers each job as a separate task on ECS, in its own container. So the code that can notice a failure lives in two places: the orchestrator, which sees that a task failed, and the task itself, which has the actual exception, traceback, and exit code.
 
-1. A Prefect **worker flow** triggers an **ECS child** task.
-2. The ECS task fails and reports its own failure.
-3. The worker flow sees the child failed and *also* reports.
+Both of them report to the service, so a single failure can arrive twice:
 
-If both report, the hero gets two Slack messages for one problem. But if I just silence the worker, I lose the alert completely when the ECS task dies before it can report anything (an OOM kill, for example).
+- The **ECS task** reports its own failure. It has the richest context, so its alert is the one we want.
+- The **Prefect flow** that triggered the task also notices it failed, and reports too.
+
+If both report, the hero gets two Slack messages for one problem. But if I just silence the Prefect side, I lose the alert completely when the ECS task dies before it can report anything (an OOM kill, for example). In that case the orchestrator is the only one that knows something went wrong.
 
 The rule that resolves this lives in its own module. These decisions are deterministic and owned by the application, never by the model:
 
@@ -109,7 +110,7 @@ def should_notify(event: FailureEvent, session_factory) -> bool:
         return True
 ```
 
-The correlation works like this: the worker passes its own `prefect_flow_id` down to the child, and the child echoes it back as `parent_flow_run_id`. So checking "did ECS already alert for this run?" is a lookup for a notified event whose `parent_flow_run_id` matches the worker's flow id.
+The correlation works like this: the Prefect flow passes its own `prefect_flow_id` down to the ECS task it triggers, and the task echoes it back as `parent_flow_run_id`. So checking "did the ECS task already alert for this run?" is a lookup for a notified event whose `parent_flow_run_id` matches the Prefect flow's id.
 
 > [!tip]
 > Every branch is biased the same way: when in doubt, alert. No database, no flow id, or a failed query all fall through to notifying. A duplicate alert is annoying, but a dropped failure is a production incident.
