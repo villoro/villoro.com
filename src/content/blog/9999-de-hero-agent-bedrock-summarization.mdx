@@ -2,10 +2,10 @@
 slug: data-engineering-hero-agent-bedrock-summarization
 title: The Hero Agent - Summarizing and Classifying Failures with Bedrock
 meta_title: Building a Data Engineering Hero Agent - Bedrock Summarization and Classification
-description: How the DE hero agent turns a raw traceback into a short summary, a likely cause, and a suggested resolution category using AWS Bedrock, with a fail-safe fallback when the model call fails.
-date: 2026-07-07
-writing_date: 2026-07-07
-image: /images/blog/9999-de-hero-agent-bedrock-summarization.jpg
+description: How the DE hero agent turns a raw traceback into a short summary, a likely cause, and a suggested resolution using AWS Bedrock, with a fail-safe fallback when the model call fails.
+date: 2026-07-23
+writing_date: 2026-07-23
+image: /images/blog/9999-bedrock.jpg
 category: DE
 tags: [DE, AI, AWS, Best Practices, Prefect]
 draft: true
@@ -13,35 +13,197 @@ draft: true
 
 ## Motivation
 
-{/* Link back to the stage-1 post. Recap: stage 1 shipped ingestion/dedup/alerting with
-no AI. This post is where the model enters: reading a raw failure and writing something
-a human can act on immediately, still with a human deciding what to do. */}
+The DE hero agent takes over the on-call "hero" work of triaging data pipeline failures, and I laid out the full plan in the <FancyLink linkText="Building a Data Engineering Hero Agent" url="https://villoro.com/blog/data-engineering-hero-agent-vision/" dark="true"/> vision post. In the <FancyLink linkText="Fail-Safe FastAPI Ingestion Service" url="https://villoro.com/blog/data-engineering-hero-agent-ingestion-service/" dark="true"/> post I built Stage 1: a service that ingests structured failure events, deduplicates them, and posts a clean Slack alert. That alert already beats a raw stack trace, but it still leans on the last few lines of a traceback to tell the story.
 
-## Why Bedrock, and which model
+This post adds the first bit of AI. When a job fails, the service now sends the error to a model and gets back three things: a short summary of what went wrong, a guess at the category of failure, and a suggested resolution. The hero still decides what to do. The model only reads the error and writes down what it sees, which is exactly what models are good at.
 
-{/* GPT-OSS 20B via the Converse API. Why this model/setup, what BedrockModel wraps,
-one-configured-instance-per-purpose. */}
+> [!note]
+> The model advises, it never acts. Nothing here reruns a job or changes state. It turns an ugly traceback into a sentence the hero can read at a glance, and everything it produces is a suggestion.
 
-## Structured output, not free text
+## The Bedrock wrapper
 
-{/* Pydantic-validated model output. What the schema looks like (summary, likely cause,
-maybe suggested resolution category). Why validation matters here. */}
+The AI runs on <FancyLink linkText="AWS Bedrock" url="https://aws.amazon.com/bedrock/" dark="true"/> through its Converse API, which gives a single request shape across models. The model is GPT-OSS 20B (`openai.gpt-oss-20b-1:0`). Bedrock is what the rest of our platform already uses, so it was the natural place to start rather than reaching for an external provider.
 
-## Summarizing a failure
+Everything Bedrock-specific lives in one small class, `BedrockModel`. It bundles the things that define a single use of the model (which model, temperature, token budget) so each purpose gets its own configured, reusable instance:
 
-{/* summarize_failure in alerts.py. Prompt shape / what context it gets (traceback,
-exception type, metadata). Before/after example in the Slack alert. */}
+<FileName>
+  de_hero/bedrock.py
+</FileName>
+```python
+class BedrockModel:
+    def __init__(self, *, name, temperature, max_tokens, model_id=DEFAULT_MODEL_ID):
+        self._model_id = model_id
+        self._temperature = temperature
+        self._max_tokens = max_tokens
+        self._client = boto3.client(
+            "bedrock-runtime",
+            region_name="eu-west-1",
+            config=Config(
+                connect_timeout=3,
+                read_timeout=8,
+                retries={"max_attempts": 1},
+            ),
+        )
+```
 
-## Classifying into a resolution category
+The timeouts and the single attempt are the important part. This call sits on the production alerting path, so a slow or flaky model must not stall the alert. One try, tight timeouts, and if it doesn't answer quickly the caller falls back (more on that below).
 
-{/* Triage suggesting a resolution category (#42). How this connects into the
-resolution system (link forward to the resolution post). Token budget concerns (#43). */}
+### One instance per purpose
 
-## Fail-safe: falling back to the deterministic alert
+There's only one instance today, created once at import and reused for every triage call. The boto3 client is thread-safe and stateless, so a module-level singleton is all it needs:
 
-{/* summarize_failure returns None on any Bedrock/parse error, alert falls back to the
-cropped traceback. Why this rule is non-negotiable given stage-1's fail-safe posture. */}
+<FileName>
+  de_hero/alerts.py
+</FileName>
+```python
+triage_model = BedrockModel(name="failure-triage", temperature=0.0, max_tokens=1024)
+```
+
+Making each *purpose* its own `BedrockModel` is deliberate, though, and it's laying track for what's coming. Summarization is the only AI touchpoint right now, but the plan is more of them: a classifier, and eventually the Stage 3 agent that reasons over past failures to suggest actions. Each will want its own model, temperature and token budget, and keeping them as separate configured instances means they can never share a prompt or a setting by accident. `name` is just a label for logs, so I can tell which one made a given call.
+
+### Reading the reply
+
+The `converse` method runs one turn and returns the reply text. There's one Bedrock quirk worth showing:
+
+<FileName>
+  de_hero/bedrock.py
+</FileName>
+```python
+def converse(self, *, system: str, messages: list[dict]) -> str:
+    response = self._client.converse(
+        modelId=self._model_id,
+        system=[{"text": system}],
+        messages=messages,
+        inferenceConfig={"maxTokens": self._max_tokens, "temperature": self._temperature},
+    )
+    content = response["output"]["message"]["content"]
+    text = next((block["text"] for block in content if "text" in block), None)
+    if text is None:
+        raise ValueError("Bedrock reply had no text content block")
+    return text
+```
+
+> [!tip]
+> Read the first content block that has `text`, not block `0`. GPT-OSS is a reasoning model, so it prepends a `reasoningContent` block before the actual reply. Indexing into block `0` would sometimes hand back the reasoning instead of the answer.
+
+## One call, three answers
+
+The whole triage is a single Converse call. The system prompt asks the model to do three things at once and reply with one JSON object:
+
+<FileName>
+  de_hero/alerts.py
+</FileName>
+```python
+TRIAGE_SYSTEM_PROMPT = (
+    "You are a data-engineering on-call assistant. You are given the raw error context "
+    "of a failed job (exception, message, traceback tail). Do three things: (1) write "
+    "ONE concise, plain summary (at most two sentences, under 40 words) of what went "
+    "wrong and, if evident, the likely cause; (2) classify the failure; (3) suggest how "
+    "it will likely end up being resolved. Do not invent details that are not in the "
+    "context. ...\n"
+    f"Pick exactly one category from: {_CATEGORY_VALUES}. "
+    f"Pick exactly one suggested resolution from: {_RESOLUTION_VALUES} ...\n"
+    'Respond with a single JSON object of the form {"summary": "...", "category": '
+    '"...", "suggested_resolution": "...", "confidence": "..."} and nothing else.'
+)
+```
+
+The category is a small, fixed set that maps to what the hero does next: `infrastructure`, `transient`, `upstream_dependency`, `data_quality`, `permissions`, `configuration`, `code_bug`, and `unknown` for when there isn't enough signal. The suggested resolution comes from the same list the hero picks from by hand when they close a failure, which is what ties this into the resolution flow in the next post.
+
+The context I send is assembled deterministically from the event: the job name, the exception and exit code, the last 15 lines of up to three tracebacks, and one more signal worth calling out.
+
+> [!tip]
+> I also tell the model how many times this same job has failed in the last 7 days. A job that has failed 20 times this week is probably not going to be fixed by another blind rerun, regardless of the exception. Giving the model that count lets it weigh "retry" against "this is persistent" instead of judging each failure in isolation.
+
+Temperature is `0.0`. There's no creativity wanted here: the model is summarizing a traceback that's right in front of it, and a low temperature keeps it from embellishing.
+
+## Getting structured output back
+
+I ask for JSON in the prompt rather than using a tool-call schema, then validate the reply with <FancyLink linkText="Pydantic" url="https://docs.pydantic.dev/" dark="true" company="default"/>. Validation is what stands between a messy model reply and the Slack channel:
+
+<FileName>
+  de_hero/alerts.py
+</FileName>
+```python
+class FailureTriage(BaseModel):
+    summary: str
+    category: FailureCategory
+    suggested_resolution: ResolutionCategory | None
+    confidence: Literal["low", "medium", "high"]
+
+    @field_validator("summary")
+    @classmethod
+    def _strip_and_cap(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("summary is empty")  # empty summary → fall back
+        if len(value) > SUMMARY_MAX_CHARS:
+            value = value[: SUMMARY_MAX_CHARS - 1].rstrip() + "…"
+        return value
+```
+
+The three fields are handled with different levels of strictness, on purpose:
+
+- **`summary`** is stripped and capped at 400 characters. A slightly long summary is truncated rather than rejected, because a long summary still beats no summary. But an *empty* summary fails validation, since falling back to the traceback is better than rendering a blank line.
+- **`category`** coerces anything outside the enum to `unknown`. A surprising label shouldn't sink an otherwise-useful triage.
+- **`suggested_resolution`** coerces an unrecognized value to `None`, meaning "no usable suggestion". It's the same enum the hero picks from, and it has no `unknown` member, so an odd value just drops the suggestion instead of the whole reply.
+
+If the reply isn't valid JSON, or doesn't validate into this shape, parsing returns `None` and the caller falls back. Nothing half-formed ever reaches Slack.
+
+### A token budget that bit me
+
+That `max_tokens=1024` above wasn't the original value, and getting it wrong caused a real production incident worth sharing. It started at `256`, tuned back when the reply was just `summary` + `category`. Then I added the third field, `suggested_resolution`. Because GPT-OSS spends part of its budget on that hidden `reasoningContent` block before it writes any text, the longer reply plus the reasoning no longer fit in 256 tokens. The model got cut off *before it ever emitted a text block*, which surfaced in prod as `Bedrock reply had no text content block`.
+
+> [!warning]
+> With a reasoning model, `maxTokens` has to cover the hidden reasoning *and* the visible answer. A budget that's comfortable for the reply alone can still starve the model before it says anything. I raised it to 1024 with margin, not the minimum that happened to fix it.
+
+## Fail-safe: the model is optional
+
+Stage 1's rule was "degrade, never swallow", and triage follows it exactly. The whole call is wrapped so it can never raise and never block the alert:
+
+<FileName>
+  de_hero/alerts.py
+</FileName>
+```python
+def triage_failure(event: FailureEvent, session_factory=None) -> "FailureTriage | None":
+    context = _build_error_context(event, _recent_failure_count(session_factory, event.job_name))
+    if context is None:
+        return None  # nothing worth triaging (e.g. dbt node statuses, no traceback)
+    try:
+        raw = triage_model.converse(
+            system=TRIAGE_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": [{"text": context}]}],
+        )
+    except Exception as error:
+        logger.warning("Bedrock triage failed; falling back to traceback: {}", error)
+        return None
+    return _parse_triage(raw)
+```
+
+Every path that could go wrong returns `None`: no traceback to summarize, a Bedrock outage, a timeout, a malformed reply. And `None` has a precise meaning downstream. When `build_alert_payload` gets a triage it renders the summary and classification; when it gets `None` it renders the deterministic cropped-traceback alert from Stage 1, unchanged. The AI is a layer on top of an alert that already works, never a dependency it needs.
+
+There's also a gate before the call even happens: triage only runs when there's an actual traceback. A dbt run that fails with node statuses instead of a Python exception has nothing to summarize, so the service skips Bedrock entirely and keeps its existing per-node rendering.
+
+## What the hero sees
+
+When triage succeeds, the summary and a one-line classification replace the cropped traceback in the alert:
+
+```txt
+@data-platform ❌ salesforce_extract failed
+🤖 Summary
+Salesforce extraction hit the API rate limit (HTTP 429) while paging results and
+gave up after exhausting retries. Likely a transient throttling issue.
+🏷️ `transient` · 💡 suggests `retried` · 🟢 high confidence
+```
+
+The classification line is compact by design: the category, the suggested resolution, and a colored dot for the model's confidence. The hero reads one sentence and a tag instead of decoding a stack trace, and still makes the call themselves.
+
+The triage is also stored alongside the failure, including that suggested resolution. That saved suggestion is what the next stage builds on.
 
 ## Where this leaves us
 
-{/* Recap + point forward to the resolution/auto-resolve post. */}
+The reporting path now has one AI touchpoint, and it's deliberately contained: a single Bedrock call, validated output, and a hard fallback to the deterministic alert whenever anything goes wrong. The model reads and suggests; it doesn't decide.
+
+There's a longer game here too. The suggested resolution is stored with every failure. Once the hero also records the *real* resolution (the subject of the next post), each failure carries both: the model's guess and what actually happened. Accumulated over time, those pairs become a labelled table of suggested-versus-actual resolutions. That's useful twice over: I can measure how good the suggestions actually are, and further out I can feed that history to a smarter, more specialized agent that learns which kinds of failures tend to resolve which way. It's the evidence base the vision post described, where the model earns more responsibility only once the record shows it's reliable.
+
+Next in the series: **resolution and auto-resolve**, where that suggested resolution stops being decorative. The hero can resolve a failure, resolutions cascade across related failures, and a successful rerun can close the original failure on its own.
