@@ -114,6 +114,72 @@ The correlation trick: the worker passes its own `prefect_flow_id` down to the c
 > [!tip]
 > Notice the bias in every branch: **when unsure, alert.** No database, no flow id, a failed query — all fall through to notifying. A duplicate alert is annoying; a dropped failure is a production incident.
 
+## Building the Slack alert
+
+This is the actual deliverable of the "Report" stage: turning a structured event into one clean, scannable message instead of a raw stack trace dumped into a channel. Building the message is a **pure, deterministic function** — same event in, same Slack blocks out — which keeps it trivial to test and (later) makes the AI summary a drop-in replacement for one block rather than a rewrite:
+
+<FileName>
+  de_hero/alerts.py
+</FileName>
+```python
+def build_alert_payload(failure_id: UUID, event: FailureEvent) -> dict[str, Any]:
+    """Build a Slack webhook payload for a failure event. Pure and deterministic."""
+    mention = f"{resolve_mention(event.owner)} " if event.owner else ""
+    header = f"{mention}:x: *{_job_label(failure_id, event)} failed*"
+
+    blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": header}}]
+    if event.failed_items:
+        blocks += _render_failed_items(event)  # one summary per distinct error
+    else:
+        blocks += _render_single_failure(event)  # exception + cropped traceback
+
+    return {
+        "attachments": [
+            {
+                "color": _level_color(event),
+                "fallback": f"{event.job_name} failed",
+                "blocks": blocks,
+            }
+        ],
+    }
+```
+
+Three small decisions do most of the work here:
+
+- **The `owner` becomes a real `@`-mention** in the header, so the right person is pinged without anyone triaging first. This is the single highest-value line in the whole alert.
+- **The job name links to the failure's de-hero detail page**, not the raw Prefect run — so "tell me more" is one click, and there's somewhere to grow richer context later.
+- **The traceback is cropped to its last few lines.** That's where the actual error almost always is; the other 55 lines are import machinery. A `metadata["slack_level"]` picks the colored bar (`error`/`warning`/`info`), so severity is visible at a glance.
+
+Posting it is a plain webhook `POST` — and, because it sits on the alerting path, it is written to **never raise**:
+
+<FileName>
+  de_hero/slack.py
+</FileName>
+```python
+def post_alert(webhook_url: str, payload: dict[str, Any]) -> bool:
+    """Post to a Slack incoming webhook. Returns True on success. Never raises."""
+    try:
+        response = httpx.post(webhook_url, json=payload, timeout=5.0)
+        response.raise_for_status()
+        return True
+    except httpx.HTTPError as error:
+        logger.error("failed to post Slack alert: {}", error)
+        return False
+```
+
+The `bool` return is load-bearing, not cosmetic: it's exactly the "did Slack actually accept the post?" signal the dedup and fail-safe logic depends on. A Slack outage becomes a `False`, not an exception that fails the whole ingestion request.
+
+The result is the difference the vision post promised — instead of a 60-line traceback, the hero gets:
+
+```txt
+@data-platform ❌ salesforce_extract failed
+ConnectionError: HTTPSConnectionPool: Max retries exceeded (429 Too Many Requests)
+  File "extract/salesforce.py", line 88, in fetch_page
+    resp.raise_for_status()
+```
+
+Same failure, but it names the owner, links to the detail page, and leads with the line that matters.
+
 ## Fail-safe on the alerting path
 
 This is the rule that shapes `main.py`. The service sits **in the production alerting path**. If it's down, the database is unreachable, or Slack times out — the failure still has to surface. So the guiding principle is **degrade, never swallow**.
@@ -124,7 +190,7 @@ That shows up in three places:
 - **Storage fails?** Still send the alert — and post an *internal* alert so the hero knows the audit trail is missing a row.
 - **Slack post fails?** Record the event as *not notified*, so a later worker event can still be the fallback.
 
-Here's the ingestion handler, trimmed to the essentials:
+Here's the ingestion handler, trimmed to the essentials — where `_alert` is just the `build_alert_payload` + `post_alert` pair from the section above, returning whether the post went out:
 
 <FileName>
   de_hero/main.py
