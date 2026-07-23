@@ -276,7 +276,9 @@ def build_session_factory(engine: Engine) -> sessionmaker[Session]:
     return sessionmaker(bind=engine, expire_on_commit=False)
 ```
 
-`main.py` builds one engine and one session factory at startup and passes the factory around as `app.state.session_factory`. Every request opens its own short-lived session with it (`with session_factory() as session: ...`) instead of sharing a connection. `pool_pre_ping` is worth calling out: RDS silently closes idle connections, and without it the first request after a quiet period fails with a confusing "connection already closed" error instead of reconnecting transparently.
+At startup `main.py` builds a single engine and session factory, and stores the factory on `app.state`. Each request then opens its own short-lived session (`with session_factory() as session: ...`) instead of sharing one connection.
+
+The one flag worth calling out is `pool_pre_ping`. RDS silently drops idle connections, and without it the first request after a quiet spell fails with a confusing "connection already closed" error. With it, SQLAlchemy checks the connection before handing it over and reconnects if needed.
 
 There's a single table, `failure_events`. Each event is one row: the validated payload stored as JSON, plus a few columns pulled out for the things I actually query on:
 
@@ -304,9 +306,17 @@ class FailureEventRecord(Base):
     payload: Mapped[dict[str, Any]] = mapped_column(JSON)
 ```
 
-The **UUIDv7** primary key is time-sortable, so ordering by id also orders rows chronologically without a second index. Every other column follows one rule: it stays in `payload` until something needs to query or filter on it directly, and only then does it become a real, indexed column. `job_name` and `app` back the frontend's filters, `parent_flow_run_id` backs the dedup lookup, and `notified` is read by a later worker event. Nothing is pulled out before there's a query that needs it.
+The `id` is a **UUIDv7**, which is time-sortable, so ordering by id also orders rows chronologically and I don't need a separate index for that.
 
-`updated_at` is the exception, and it's there by convention rather than because this service needs it. Every table in our warehouse carries an `id` and an `updated_at` that bumps itself on any change (`onupdate=func.now()`, so I never have to set it by hand). That's the contract our datalake extraction relies on: it pulls new and changed rows incrementally by asking each table for everything with an `updated_at` past the last run. Following the convention here means `failure_events` lands in the datalake like any other table, with no special handling.
+Every other column follows one rule: a field stays inside `payload` until I actually need to query or filter on it, and only then does it get promoted to its own indexed column. So far that means:
+
+- `job_name` and `app` back the frontend's filters
+- `parent_flow_run_id` backs the dedup lookup
+- `notified` is read by a later Prefect-side event
+
+Nothing is pulled out before there's a query that needs it.
+
+`updated_at` is the one exception, there by convention rather than because this service queries it. Every table in our warehouse carries an `id` and an `updated_at` that bumps itself on any change (`onupdate=func.now()`, so I never set it by hand). Our datalake extraction relies on that: it pulls new and changed rows incrementally by asking each table for everything updated since its last run. Following the convention means `failure_events` lands in the datalake like any other table, with no special handling.
 
 ## Migrating the schema with Alembic
 
