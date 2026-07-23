@@ -8,7 +8,7 @@ writing_date: 2026-07-07
 image: /images/blog/9999-de-hero-agent-stage-1.jpg
 category: DE
 tags: [DE, Python, FastAPI, Prefect, Best Practices]
-draft: true
+draft: false
 ---
 
 ## Motivation
@@ -22,11 +22,11 @@ Stage 1 has no AI yet, and that's on purpose. Before a model summarizes anything
 
 ## Why a synchronous FastAPI service
 
-It's a small <FancyLink linkText="FastAPI" url="https://fastapi.tiangolo.com/" company="fastapi"/> service. Jobs stop posting their own Slack alerts and instead `POST /failures` with a structured event. The service then decides whether to send the alert to Slack, and stores the event.
+It's a small <FancyLink linkText="FastAPI" url="https://fastapi.tiangolo.com/" company="fastapi"/> service. Jobs stop posting their own Slack alerts and instead `POST /failures` with a structured event. The service then decides whether to alert, posts to Slack, and stores the event.
 
-I picked FastAPI mostly for Pydantic. The `FailureEvent` schema (below) is the API contract, and from that one class I get validation, a `422` on a malformed payload, and an OpenAPI schema that producers can generate a client from. Throughput was never a concern, since the service only sees traffic when a job fails and will never be under real load.
+FastAPI is the obvious choice for a small Python service like this, and it gives me Pydantic validation and a free OpenAPI schema on top. The decision I actually thought about was making it synchronous.
 
-For the same reason the handlers are plain `def`, not `async def`. Each request does one blocking Postgres write (through `psycopg`'s sync driver) and one blocking HTTP call to Slack. There's no concurrent I/O to overlap, so `async` would only add noise. FastAPI runs sync handlers in a thread pool, and that's enough concurrency here.
+The handlers are plain `def`, not `async def`. Each request does one blocking Postgres write (through `psycopg`'s sync driver) and one blocking HTTP call to Slack. There's no concurrent I/O to overlap, so `async` would only add noise. FastAPI runs sync handlers in a thread pool, and that's more than enough here: the service only sees traffic when a job fails, so it will never be under real load.
 
 > [!note]
 > I considered putting a queue (SQS or an EventBridge bus) in front of ingestion, so a slow Slack call or a database hiccup couldn't block a producer. I skipped it. A queue mainly buys durability, and the fail-safe design further down already provides that: accept and log, alert before persist, never raise. A queue would be a second mechanism for the same problem and one more thing to operate, for a service whose whole input is the occasional failed job.
