@@ -3,12 +3,12 @@ slug: data-engineering-hero-agent-bedrock-summarization
 title: The Hero Agent - Summarizing and Classifying Failures with Bedrock
 meta_title: Building a Data Engineering Hero Agent - Bedrock Summarization and Classification
 description: How the DE hero agent turns a raw traceback into a short summary, a likely cause, and a suggested resolution using AWS Bedrock, with a fail-safe fallback when the model call fails.
-date: 2026-07-07
-writing_date: 2026-07-07
+date: 2026-07-23
+writing_date: 2026-07-23
 image: /images/blog/9999-de-hero-agent-bedrock-summarization.jpg
 category: DE
 tags: [DE, AI, AWS, Best Practices, Prefect]
-draft: true
+draft: false
 ---
 
 ## Motivation
@@ -47,6 +47,17 @@ class BedrockModel:
 ```
 
 The timeouts and the single attempt are the important part. This call sits on the production alerting path, so a slow or flaky model must not stall the alert. One try, tight timeouts, and if it doesn't answer quickly the caller falls back (more on that below).
+
+There's only one instance today, created once at import and reused for every triage call. The boto3 client is thread-safe and stateless, so a module-level singleton is all it needs:
+
+<FileName>
+  de_hero/alerts.py
+</FileName>
+```python
+triage_model = BedrockModel(name="failure-triage", temperature=0.0, max_tokens=1024)
+```
+
+Making each *purpose* its own `BedrockModel` is deliberate, though, and it's laying track for what's coming. Summarization is the only AI touchpoint right now, but the plan is more of them: a classifier, and eventually the Stage 3 agent that reasons over past failures to suggest actions. Each will want its own model, temperature and token budget, and keeping them as separate configured instances means they can never share a prompt or a setting by accident. `name` is just a label for logs, so I can tell which one made a given call.
 
 The `converse` method runs one turn and returns the reply text. There's one Bedrock quirk worth showing:
 
@@ -136,16 +147,7 @@ If the reply isn't valid JSON, or doesn't validate into this shape, parsing retu
 
 ### A token budget that bit me
 
-The model config carries a token cap, and getting it wrong caused a real production incident worth sharing:
-
-<FileName>
-  de_hero/alerts.py
-</FileName>
-```python
-triage_model = BedrockModel(name="failure-triage", temperature=0.0, max_tokens=1024)
-```
-
-It started at `256`, tuned back when the reply was just `summary` + `category`. Then I added the third field, `suggested_resolution`. Because GPT-OSS spends part of its budget on that hidden `reasoningContent` block before it writes any text, the longer reply plus the reasoning no longer fit in 256 tokens. The model got cut off *before it ever emitted a text block*, which surfaced in prod as `Bedrock reply had no text content block`.
+That `max_tokens=1024` above wasn't the original value, and getting it wrong caused a real production incident worth sharing. It started at `256`, tuned back when the reply was just `summary` + `category`. Then I added the third field, `suggested_resolution`. Because GPT-OSS spends part of its budget on that hidden `reasoningContent` block before it writes any text, the longer reply plus the reasoning no longer fit in 256 tokens. The model got cut off *before it ever emitted a text block*, which surfaced in prod as `Bedrock reply had no text content block`.
 
 > [!warning]
 > With a reasoning model, `maxTokens` has to cover the hidden reasoning *and* the visible answer. A budget that's comfortable for the reply alone can still starve the model before it says anything. I raised it to 1024 with margin, not the minimum that happened to fix it.
