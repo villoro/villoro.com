@@ -1,0 +1,47 @@
+---
+slug: data-engineering-hero-agent-bedrock-summarization
+title: The Hero Agent - Summarizing and Classifying Failures with Bedrock
+meta_title: Building a Data Engineering Hero Agent - Bedrock Summarization and Classification
+description: How the DE hero agent turns a raw traceback into a short summary, a likely cause, and a suggested resolution category using AWS Bedrock, with a fail-safe fallback when the model call fails.
+date: 2026-07-07
+writing_date: 2026-07-07
+image: /images/blog/9999-de-hero-agent-bedrock-summarization.jpg
+category: DE
+tags: [DE, AI, AWS, Best Practices, Prefect]
+draft: true
+---
+
+## Motivation
+
+<!-- Link back to the stage-1 post. Recap: stage 1 shipped ingestion/dedup/alerting with
+no AI. This post is where the model enters: reading a raw failure and writing something
+a human can act on immediately, still with a human deciding what to do. -->
+
+## Why Bedrock, and which model
+
+<!-- GPT-OSS 20B via the Converse API. Why this model/setup, what BedrockModel wraps,
+one-configured-instance-per-purpose. -->
+
+## Structured output, not free text
+
+<!-- Pydantic-validated model output. What the schema looks like (summary, likely cause,
+maybe suggested resolution category). Why validation matters here. -->
+
+## Summarizing a failure
+
+<!-- summarize_failure in alerts.py. Prompt shape / what context it gets (traceback,
+exception type, metadata). Before/after example in the Slack alert. -->
+
+## Classifying into a resolution category
+
+<!-- Triage suggesting a resolution category (#42). How this connects into the
+resolution system (link forward to the resolution post). Token budget concerns (#43). -->
+
+## Fail-safe: falling back to the deterministic alert
+
+<!-- summarize_failure returns None on any Bedrock/parse error, alert falls back to the
+cropped traceback. Why this rule is non-negotiable given stage-1's fail-safe posture. -->
+
+## Where this leaves us
+
+<!-- Recap + point forward to the resolution/auto-resolve post. -->
