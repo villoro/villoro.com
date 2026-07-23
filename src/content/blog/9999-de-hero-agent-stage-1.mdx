@@ -102,7 +102,7 @@ def should_notify(event: FailureEvent, session_factory) -> bool:
     if session_factory is None or not event.prefect_flow_id:
         return True
 
-    # A Prefect worker alerts only if its ECS child hasn't already.
+    # A Prefect flow alerts only if its ECS task hasn't already.
     try:
         return not _ecs_already_notified(session_factory, event.prefect_flow_id)
     except SQLAlchemyError as error:
@@ -195,7 +195,7 @@ That shows up in three places:
 
 - **No database?** Accept and log the event anyway, skip storing it.
 - **Storage fails?** Still send the alert, and also post an internal alert so the hero knows the audit trail is missing a row.
-- **Slack post fails?** Record the event as *not notified*, so a later worker event can still be the fallback.
+- **Slack post fails?** Record the event as *not notified*, so a later Prefect-side event can still be the fallback.
 
 Here's the ingestion handler, trimmed to the essentials. `_alert` is just the `build_alert_payload` and `post_alert` pair from the section above, and returns whether the post went out:
 
@@ -227,7 +227,7 @@ def submit_failure(event: FailureEvent) -> FailureAccepted:
 Two details hide in that order of operations:
 
 - We **alert before we persist**. If the process crashes between the two we might alert twice, and that's the failure mode I want. Duplicates beat dropped alerts.
-- The stored `notified` flag records whether Slack actually accepted the post, not just whether we decided to send it. A later worker event reads that flag to decide whether to stay quiet, so a failed post must never suppress the fallback.
+- The stored `notified` flag records whether Slack actually accepted the post, not just whether we decided to send it. A later Prefect-side event reads that flag to decide whether to stay quiet, so a failed post must never suppress the fallback.
 
 `_persist` itself is also written to never raise:
 
