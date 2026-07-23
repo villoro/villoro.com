@@ -1,8 +1,8 @@
 ---
-slug: data-engineering-hero-agent-stage-1
-title: The Hero Agent, Stage 1 - Structured Ingestion and Fail-Safe Alerts
-meta_title: Building a Data Engineering Hero Agent - Stage 1 Ingestion and Alerting
-description: A hands-on walkthrough of Stage 1 of the DE hero agent - a FastAPI service that ingests structured failure events, deduplicates Prefect-vs-ECS alerts, and posts clean Slack messages while failing safe.
+slug: data-engineering-hero-agent-ingestion-service
+title: The Hero Agent, Stage 1 - A Fail-Safe FastAPI Ingestion Service
+meta_title: Building a Data Engineering Hero Agent - A Fail-Safe FastAPI Ingestion Service
+description: A hands-on walkthrough of Stage 1 of the DE hero agent - why it's a small synchronous FastAPI service, how it deduplicates Prefect-vs-ECS alerts, and how it guarantees a failure never gets silently dropped.
 date: 2026-07-07
 writing_date: 2026-07-07
 image: /images/blog/9999-de-hero-agent-stage-1.jpg
@@ -20,9 +20,16 @@ Stage 1 has no AI yet, and that's on purpose. Before a model summarizes anything
 > [!note]
 > The AI (via AWS Bedrock) is a *later* stage. The interesting engineering in Stage 1 is everything around where the model will eventually plug in.
 
-## The shape of the service
+## Why a synchronous FastAPI service
 
 It's a small <FancyLink linkText="FastAPI" url="https://fastapi.tiangolo.com/" company="fastapi"/> service. Jobs stop posting their own Slack alerts and instead `POST /failures` with a structured event. The service decides whether to alert, posts to Slack, and stores the event.
+
+FastAPI earns its place for one reason mostly: the `FailureEvent` schema (below) *is* the API contract, and Pydantic gives me validation, a `422` on a malformed payload, and (eventually) an OpenAPI schema producers can generate a client from, all from the same class. That's worth more here than raw throughput, since this service handles failed job runs, not user traffic — it's never going to see meaningful load.
+
+That's also why the handlers are plain `def`, not `async def`. Every request does one blocking Postgres write (via `psycopg`'s sync driver) and one blocking HTTP call to Slack — there's no concurrent I/O to overlap, so `async` would add ceremony without buying anything. FastAPI happily runs sync handlers in a thread pool, which is all the concurrency this workload needs.
+
+> [!note]
+> I also considered putting a queue (SQS, or an EventBridge bus) in front of ingestion, so a slow Slack call or a DB hiccup couldn't block a producer. I skipped it: a queue buys you durability, and durability is exactly what the fail-safe design further down provides directly — accept-and-log, alert-before-persist, never raise. Adding a queue on top would be two mechanisms solving the same problem, plus another moving part to operate, for a service whose entire input is "a job occasionally fails."
 
 The whole thing is deliberately tiny — a handful of modules, each with one job:
 
@@ -181,6 +188,10 @@ def _persist(failure_id, event, notified, session_factory) -> bool:
 > [!warning]
 > A database outage must not turn a failure report into a `500` and a lost alert. Every path that touches storage or Slack either degrades gracefully or is caught — the only deliberate exception is a bad ingest token, which returns `401`.
 
+## Why a shared bearer token, not something fancier
+
+`/failures` sits behind a single shared token, checked with a plain `Authorization: Bearer` header. I could have reached for per-producer credentials, mTLS, or SigV4-signed requests instead. I didn't, because the threat model is narrow: every caller is a job I control, running in my own AWS account, and the only thing the token protects against is *someone else's* traffic hitting the ingestion path. A shared secret checked on every request is enough for that, and it's trivial for a Prefect flow or an ECS task to send. If de-hero ever accepts events from outside my own infrastructure, this is the first thing that would need to change — not before.
+
 ## What gets stored
 
 The event is persisted with a **UUIDv7** primary key (time-sortable, so ordering ids also orders them chronologically) and the full payload as JSON. Only the fields we actually query on — `occurred_at`, the two Prefect flow ids, and `notified` — are broken out into columns and indexed. Everything else lives in the JSON blob.
@@ -189,7 +200,7 @@ This is the start of the **audit trail** from the vision post. Right now it just
 
 ## Where this leaves us
 
-Stage 1 is intentionally boring where it matters: no AI, no clever autonomy, just structured events, correct deduplication, clean Slack alerts, and a hard guarantee that failures reach a human. That's the foundation everything else sits on.
+Stage 1 is intentionally boring where it matters: no AI, no queue, no fancy auth, just structured events, correct deduplication, clean Slack alerts, and a hard guarantee that failures reach a human. Every tool choice here optimizes for that guarantee over performance or generality — this is the foundation everything else sits on.
 
 Next in the series: **teaching the model to read the failure**, where Bedrock turns a raw traceback into a short summary and a likely cause, with a deterministic fallback for when the AI call fails.
 
