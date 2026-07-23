@@ -117,7 +117,11 @@ The correlation works like this: the Prefect flow passes its own `prefect_flow_i
 
 ## Building the Slack alert
 
-This is what the Report stage is for: turning a structured event into one clean message instead of a raw stack trace dumped into a channel. Building the message is a pure function, so the same event always produces the same Slack blocks. That keeps it easy to test, and later it lets the AI summary replace a single block instead of rewriting the whole thing:
+This is what the Report stage is for: turning a structured event into one clean message instead of a raw stack trace dumped into a channel.
+
+### Building the message
+
+Building the message is a pure function, so the same event always produces the same Slack blocks. That keeps it easy to test, and later it lets the AI summary replace a single block instead of rewriting the whole thing:
 
 <FileName>
   de_hero/alerts.py
@@ -150,6 +154,8 @@ A few small things do most of the work here:
 - The **`owner` becomes a real `@`-mention** in the header, so the right person is pinged before anyone has to triage. This is probably the most useful line in the alert.
 - The **job name links to the failure's de-hero detail page** rather than the raw Prefect run, so following up is one click and there's a place to add richer context later.
 - The **traceback is cropped to its last few lines**, which is where the real error almost always is; the rest is usually import machinery. A `metadata["slack_level"]` value picks the colored bar (`error`/`warning`/`info`) so severity is visible at a glance.
+
+### Posting it
 
 Posting it is a plain webhook `POST`. Because it sits on the alerting path, it's written to never raise:
 
