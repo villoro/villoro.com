@@ -1,6 +1,6 @@
 ---
 slug: data-engineering-hero-agent-stage-1
-title: The Hero Agent, Stage 1 - Structured Failure Triage
+title: The Hero Agent, Stage 1 - Structured Ingestion and Fail-Safe Alerts
 meta_title: Building a Data Engineering Hero Agent - Stage 1 Ingestion and Alerting
 description: A hands-on walkthrough of Stage 1 of the DE hero agent - a FastAPI service that ingests structured failure events, deduplicates Prefect-vs-ECS alerts, and posts clean Slack messages while failing safe.
 date: 2026-07-07
@@ -191,7 +191,7 @@ This is the start of the **audit trail** from the vision post. Right now it just
 
 Stage 1 is intentionally boring where it matters: no AI, no clever autonomy, just structured events, correct deduplication, clean Slack alerts, and a hard guarantee that failures reach a human. That's the foundation everything else sits on.
 
-Next in the series: **Stage 2 — acting on human decisions from Slack**, where the hero can rerun, reassign, or resolve a failure straight from the thread, and every decision gets recorded. That's when the audit trail starts to earn its keep.
+Next in the series: **teaching the model to read the failure**, where Bedrock turns a raw traceback into a short summary and a likely cause, with a deterministic fallback for when the AI call fails.
 
 > [!note]
 > The pattern here echoes an earlier post, <FancyLink linkText="Handling pipeline failures" url="https://villoro.com/blog/handling-pipeline-failures/" dark="true"/> — the hero agent is, in a sense, that philosophy pulled out of every job and into one service.
