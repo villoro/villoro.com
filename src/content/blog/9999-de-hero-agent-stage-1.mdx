@@ -22,7 +22,7 @@ Stage 1 has no AI yet, and that's on purpose. Before a model summarizes anything
 
 ## Why a synchronous FastAPI service
 
-It's a small <FancyLink linkText="FastAPI" url="https://fastapi.tiangolo.com/" company="fastapi"/> service. Jobs stop posting their own Slack alerts and instead `POST /failures` with a structured event. The service then decides whether to alert, posts to Slack, and stores the event.
+It's a small <FancyLink linkText="FastAPI" url="https://fastapi.tiangolo.com/" company="fastapi"/> service. Jobs stop posting their own Slack alerts and instead `POST /failures` with a structured event. The service then decides whether to send the alert to Slack, and stores the event.
 
 I picked FastAPI mostly for Pydantic. The `FailureEvent` schema (below) is the API contract, and from that one class I get validation, a `422` on a malformed payload, and an OpenAPI schema that producers can generate a client from. Throughput was never a concern, since the service only sees traffic when a job fails and will never be under real load.
 
