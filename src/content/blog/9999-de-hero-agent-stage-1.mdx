@@ -37,8 +37,9 @@ The whole thing is deliberately tiny — a handful of modules, each with one job
 | -------------- | ------------------------------------------------------- |
 | `schemas.py`   | The `FailureEvent` payload jobs send (Pydantic).        |
 | `decisions.py` | *Should* this event alert? (deterministic dedup policy) |
-| `context.py`   | Build the Slack message.                                |
+| `alerts.py`    | Build the Slack message.                                |
 | `slack.py`     | Post it.                                                 |
+| `models.py` / `db.py` | The SQLAlchemy model and engine/session setup.   |
 | `main.py`      | Wire it together, and never crash the alerting path.    |
 
 ## The structured event
@@ -52,13 +53,13 @@ The core of the whole design is that jobs send **structured data**, not a pre-fo
 class FailureEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    app: SourceApp = Field(description="System the job ran in: ecs or prefect.")
+    app: SourceApp = Field(description="System the job ran in.")
     job_name: str = Field(min_length=1)
-    owner: str = Field(min_length=1, description="Used to @-mention on the alert.")
+    owner: str | None = Field(default=None, min_length=1)
 
     prefect_flow_id: str | None = None
     parent_flow_run_id: str | None = None
-    failed_tasks: list[FailedTask] = Field(default_factory=list)
+    failed_items: list[FailedItem] = Field(default_factory=list)
 
     exception_type: str | None = None
     error_message: str | None = None
@@ -72,8 +73,8 @@ class FailureEvent(BaseModel):
 A couple of decisions worth calling out:
 
 - **`extra="forbid"`** — an unexpected field is a `422`, not a silently swallowed typo. If a producer sends the wrong shape, we want to know.
-- **`owner`** is first-class — because the single most useful thing an alert can do is ping the *right* person automatically.
-- Both a **top-level failure** (a single ECS task) and a list of **`failed_tasks`** (several failed Prefect tasks in one run) are supported, because a flow-level alert usually fires once at the end of a run and may carry several failures.
+- **`owner`** exists so the single most useful thing an alert can do — ping the *right* person — is automatic. It's optional because not every producer tracks one; those alerts just carry no mention.
+- Both a **top-level failure** (a single ECS task) and a list of **`failed_items`**  are supported, because a flow-level alert usually fires once at the end of a run and may carry several failures. `FailedItem` is deliberately generic (an id, an optional status, an optional owner, plus the same exception/message/traceback shape) rather than "a Prefect task": a run can fail in ways that aren't a single Python exception, and this one field covers those too without a producer-specific schema.
 
 ## The tricky part: who sends the alert?
 
@@ -192,9 +193,76 @@ def _persist(failure_id, event, notified, session_factory) -> bool:
 
 `/failures` sits behind a single shared token, checked with a plain `Authorization: Bearer` header. I could have reached for per-producer credentials, mTLS, or SigV4-signed requests instead. I didn't, because the threat model is narrow: every caller is a job I control, running in my own AWS account, and the only thing the token protects against is *someone else's* traffic hitting the ingestion path. A shared secret checked on every request is enough for that, and it's trivial for a Prefect flow or an ECS task to send. If de-hero ever accepts events from outside my own infrastructure, this is the first thing that would need to change — not before.
 
-## What gets stored
+## Talking to Postgres
 
-The event is persisted with a **UUIDv7** primary key (time-sortable, so ordering ids also orders them chronologically) and the full payload as JSON. Only the fields we actually query on — `occurred_at`, the two Prefect flow ids, and `notified` — are broken out into columns and indexed. Everything else lives in the JSON blob.
+Storage is plain <FancyLink linkText="SQLAlchemy" url="https://www.sqlalchemy.org/" dark="true"/> against RDS Postgres — no async driver, no ORM cleverness, matching the rest of the service:
+
+<FileName>
+  de_hero/db.py
+</FileName>
+```python
+def build_engine(database_url: str) -> Engine:
+    return create_engine(database_url, pool_pre_ping=True)
+
+
+def build_session_factory(engine: Engine) -> sessionmaker[Session]:
+    return sessionmaker(bind=engine, expire_on_commit=False)
+```
+
+`main.py` builds one engine and one session factory at startup and hands the factory around as `app.state.session_factory` — every request opens its own short-lived session with it (`with session_factory() as session: ...`), rather than sharing one connection across requests. `pool_pre_ping` matters more than it looks: RDS will silently close idle connections, and without it the *first* request after a quiet period gets a confusing "connection already closed" error instead of a transparent reconnect.
+
+There's one table, `failure_events`, and it stores each event as one row with the validated payload kept as JSON, plus a handful of columns broken out for the things actually queried on:
+
+<FileName>
+  de_hero/models.py
+</FileName>
+```python
+class FailureEventRecord(Base):
+    __tablename__ = "failure_events"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)  # UUIDv7
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    job_name: Mapped[str] = mapped_column(String, index=True)
+    app: Mapped[str] = mapped_column(String, index=True)
+    parent_flow_run_id: Mapped[str | None] = mapped_column(
+        String, nullable=True, index=True
+    )
+    notified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON)
+```
+
+The **UUIDv7** primary key is what makes `id` time-sortable, so ordering by id also orders rows chronologically without a second index. The rule for every other column is the same: it lives in `payload` by default, and only gets promoted to a real, indexed column once something actually needs to query or filter on it directly — `job_name` and `app` for the frontend's filters, `parent_flow_run_id` because the dedup lookup queries by it, `notified` because a later worker event reads it. Nothing is broken out speculatively.
+
+## Migrating the schema with Alembic
+
+That "promote a field when it's needed" rule means the schema changes often, in small steps, as features land — not once up front. That's the whole reason for <FancyLink linkText="Alembic" url="https://alembic.sqlalchemy.org/" dark="true"/>: each change is one reviewable, revertible migration file with an `upgrade`/`downgrade` pair, chained to the previous one by a revision id. This is a real migration from the project's history, promoting `job_name` out of the JSON payload once the frontend needed to filter on it:
+
+<FileName>
+  migrations/versions/..._add_job_name.py
+</FileName>
+```python
+def upgrade() -> None:
+    op.add_column(
+        "failure_events",
+        sa.Column("job_name", sa.String(), nullable=True),
+    )
+    op.execute("UPDATE failure_events SET job_name = payload->>'job_name'")
+    op.alter_column("failure_events", "job_name", nullable=False)
+    op.create_index(op.f("ix_failure_events_job_name"), "failure_events", ["job_name"])
+
+
+def downgrade() -> None:
+    op.drop_index(op.f("ix_failure_events_job_name"), "failure_events")
+    op.drop_column("failure_events", "job_name")
+```
+
+The shape is always the same: add the column **nullable**, backfill it from data that already exists (here, straight out of the JSON payload with Postgres's `->>` operator), then tighten it to `NOT NULL`. Doing it in three steps instead of one migration that adds a `NOT NULL` column keeps existing rows from breaking the migration — there's no "add the column and hope nothing already in the table cares" step.
+
+> [!tip]
+> Alembic can autogenerate a migration by diffing the ORM models against the live schema (`alembic revision --autogenerate`), but for anything with a backfill step — like this one — the generated file is a starting point to edit, not the final migration. The model change and the data migration are two different concerns, and only one of them is mechanical.
 
 This is the start of the **audit trail** from the vision post. Right now it just records what failed. Once Stage 2 adds human actions on top, this same store becomes the evidence base for deciding what's safe to automate.
 
