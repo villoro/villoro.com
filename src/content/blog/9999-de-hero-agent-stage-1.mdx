@@ -262,7 +262,7 @@ def _persist(failure_id, event, notified, session_factory) -> bool:
 
 ## Talking to Postgres
 
-Storage is plain <FancyLink linkText="SQLAlchemy" url="https://www.sqlalchemy.org/" dark="true"/> against RDS Postgres, with a sync driver and no ORM tricks, matching the rest of the service:
+Storage is plain <FancyLink linkText="SQLAlchemy" url="https://www.sqlalchemy.org/" dark="true" company="default"/> against RDS Postgres, with a sync driver and no ORM tricks, matching the rest of the service:
 
 <FileName>
   de_hero/db.py
@@ -292,6 +292,9 @@ class FailureEventRecord(Base):
     received_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
     job_name: Mapped[str] = mapped_column(String, index=True)
     app: Mapped[str] = mapped_column(String, index=True)
     parent_flow_run_id: Mapped[str | None] = mapped_column(
@@ -303,9 +306,11 @@ class FailureEventRecord(Base):
 
 The **UUIDv7** primary key is time-sortable, so ordering by id also orders rows chronologically without a second index. Every other column follows one rule: it stays in `payload` until something needs to query or filter on it directly, and only then does it become a real, indexed column. `job_name` and `app` back the frontend's filters, `parent_flow_run_id` backs the dedup lookup, and `notified` is read by a later worker event. Nothing is pulled out before there's a query that needs it.
 
+`updated_at` is the exception, and it's there by convention rather than because this service needs it. Every table in our warehouse carries an `id` and an `updated_at` that bumps itself on any change (`onupdate=func.now()`, so I never have to set it by hand). That's the contract our datalake extraction relies on: it pulls new and changed rows incrementally by asking each table for everything with an `updated_at` past the last run. Following the convention here means `failure_events` lands in the datalake like any other table, with no special handling.
+
 ## Migrating the schema with Alembic
 
-Because columns get promoted only when they're needed, the schema changes often and in small steps as features land, rather than all at once up front. That's what <FancyLink linkText="Alembic" url="https://alembic.sqlalchemy.org/" dark="true"/> is for. Each change is a single migration file with an `upgrade`/`downgrade` pair, chained to the previous one by a revision id, so it's easy to review and to revert. Here's a real migration from the project, pulling `job_name` out of the JSON payload once the frontend needed to filter on it:
+Because columns get promoted only when they're needed, the schema changes often and in small steps as features land, rather than all at once up front. That's what <FancyLink linkText="Alembic" url="https://alembic.sqlalchemy.org/" dark="true" company="default"/> is for. Each change is a single migration file with an `upgrade`/`downgrade` pair, chained to the previous one by a revision id, so it's easy to review and to revert. Here's a real migration from the project, pulling `job_name` out of the JSON payload once the frontend needed to filter on it:
 
 <FileName>
   migrations/versions/..._add_job_name.py
