@@ -13,31 +13,58 @@ draft: true
 
 ## Motivation
 
-{/* Recap: stage 1 = report, previous post = summarize/classify. This post closes the
-loop on a failure's lifecycle - status, resolution, and eventually auto-resolve - without
-yet needing Slack buttons (that's still stage 2's interactive piece). */}
+{/* Closing the loop. Stage 1 reported failures; the Bedrock post added a summary +
+suggested resolution. This post records what actually resolved each failure, and starts
+closing some automatically. Callback to the suggested-vs-actual dataset teased last post.
+Note: auto-resolve is the first bit of autonomy, but deterministic (a successful rerun),
+not the model acting. Links to vision + stage-1 + bedrock posts. */}
 
-## The resolution status model
+## How a failure gets resolved
 
-{/* Statuses/categories on a failure event. Why resolution is modeled the way it is,
-cascading resolution across related failures (#37, #40). */}
+{/* The data model + write path.
+- ResolutionCategory enum: hero-owned fixed set (fixed_bug, retried, upstream_fixed,
+  config_change, wont_fix, not_an_issue) + auto_resolved, the one machine-set value.
+- Resolution is a nullable column: null = unresolved, no separate bool flag.
+- update_resolution sets/clears it, exposed via PATCH /api/failures/{id}.
+- The sibling cascade: resolving one of a Prefect-flow/ECS-task pair resolves both
+  (same prefect_flow_id or parent_flow_run_id). Explained here once; auto-resolve reuses
+  it. Maybe a ### subsection for the cascade. */}
 
-## Surfacing the suggested resolution
+## Looking at failures
 
-{/* The suggested-resolution pill in the UI, styled like the resolution pill (#44).
-How it relates to the Bedrock-suggested category from the previous post. */}
+{/* The two web pages + their read endpoints, plus a note on why there are two UI
+surfaces: server-rendered Jinja pages (views.py) AND a JSON API (/api/failures...). */}
 
-## Auto-resolving via a success endpoint
+### The summary page
 
-{/* #45/#46: a success endpoint that matches decoded metadata["params"] to auto-resolve
-the original failure when a rerun succeeds. Why matching on decoded params, not raw
-metadata, was the actual fix. */}
+{/* / and /summary. Filters (time window, job, app, resolved/unresolved/wont-fix),
+pagination, clickable rows. Stat cards from count_resolution_breakdown, and the
+deliberate choice that they ignore the resolved filter so totals don't shift while
+toggling. Backed by GET /api/failures. */}
 
-## The failures summary page
+### The failure detail page
 
-{/* Maybe fold in here rather than a separate post: filters, clickable cards, pagination,
-resolution breakdown replacing retryable stat cards (#36, #40, #41). */}
+{/* /failures/{id}. Full context, the Bedrock suggested-resolution pill sitting next to
+the manual resolution form (the form is what triggers the PATCH from the previous
+section). Backed by GET /api/failures/{id}. */}
+
+## Auto-resolving on success
+
+{/* POST /success -> auto_resolve_failures. Self-healing pipelines: a later successful
+run supersedes an earlier failure (same job_name + app, failure occurred before the
+success). Reuses update_resolution, so the same sibling cascade applies, and marks
+auto_resolved. */}
+
+### Matching a success to a failure
+
+{/* _params_cover: decode metadata["params"] (why decoded params, not the raw metadata
+dict which carries run/env noise). Everything must match exactly EXCEPT select/exclude,
+which get superset/coverage logic (dbt-style table scoping). The decoded-params fix
+(#46) was the actual bug fix. */}
 
 ## Where this leaves us
 
-{/* Recap. What's still manual (Slack actions) vs. what's now automatic (auto-resolve). */}
+{/* The loop is closed: suggested (Bedrock) + actual resolutions now both stored -> the
+real suggested-vs-actual dataset from last post. Auto-resolve is the first cautious,
+deterministic step toward Stage 3 autonomy - a successful rerun closing a failure, not
+the model acting. Forward to Stage 2 (Slack actions) / Stage 3 (autonomy). */}
