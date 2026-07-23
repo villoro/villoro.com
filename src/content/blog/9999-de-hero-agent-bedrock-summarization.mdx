@@ -48,6 +48,8 @@ class BedrockModel:
 
 The timeouts and the single attempt are the important part. This call sits on the production alerting path, so a slow or flaky model must not stall the alert. One try, tight timeouts, and if it doesn't answer quickly the caller falls back (more on that below).
 
+### One instance per purpose
+
 There's only one instance today, created once at import and reused for every triage call. The boto3 client is thread-safe and stateless, so a module-level singleton is all it needs:
 
 <FileName>
@@ -58,6 +60,8 @@ triage_model = BedrockModel(name="failure-triage", temperature=0.0, max_tokens=1
 ```
 
 Making each *purpose* its own `BedrockModel` is deliberate, though, and it's laying track for what's coming. Summarization is the only AI touchpoint right now, but the plan is more of them: a classifier, and eventually the Stage 3 agent that reasons over past failures to suggest actions. Each will want its own model, temperature and token budget, and keeping them as separate configured instances means they can never share a prompt or a setting by accident. `name` is just a label for logs, so I can tell which one made a given call.
+
+### Reading the reply
 
 The `converse` method runs one turn and returns the reply text. There's one Bedrock quirk worth showing:
 
@@ -79,7 +83,8 @@ def converse(self, *, system: str, messages: list[dict]) -> str:
     return text
 ```
 
-I read the first content block that has `text`, not block `0`. GPT-OSS is a reasoning model: it prepends a `reasoningContent` block before the actual reply, so the text I want isn't necessarily first. Reading by index would sometimes hand back the reasoning instead of the answer.
+> [!tip]
+> Read the first content block that has `text`, not block `0`. GPT-OSS is a reasoning model, so it prepends a `reasoningContent` block before the actual reply. Indexing into block `0` would sometimes hand back the reasoning instead of the answer.
 
 ## One call, three answers
 
