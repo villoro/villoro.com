@@ -15,23 +15,23 @@ draft: true
 
 In the <FancyLink linkText="Building a Data Engineering Hero Agent" url="https://villoro.com/blog/data-engineering-hero-agent-vision/" dark="true"/> post I described the vision: a centralized service that takes over the manual on-call "hero" work, designed to gain autonomy in stages. This post is about **Stage 1 — Report**: the part that's actually running.
 
-Stage 1 has no AI yet, and that's on purpose. Before a model summarizes anything, the plumbing around it has to be solid: structured ingestion, sane deduplication, clean alerts, and — most importantly — a service that **never drops a failure**, even when parts of it are broken.
+Stage 1 has no AI yet, and that's on purpose. Before a model summarizes anything, the plumbing around it has to be solid: structured ingestion, deduplication, clean alerts, and a service that never drops a failure even when parts of it are broken.
 
 > [!note]
-> The AI (via AWS Bedrock) is a *later* stage. The interesting engineering in Stage 1 is everything around where the model will eventually plug in.
+> The AI (via AWS Bedrock) comes in a later stage. Stage 1 is all the engineering around the spot where the model will eventually plug in.
 
 ## Why a synchronous FastAPI service
 
-It's a small <FancyLink linkText="FastAPI" url="https://fastapi.tiangolo.com/" company="fastapi"/> service. Jobs stop posting their own Slack alerts and instead `POST /failures` with a structured event. The service decides whether to alert, posts to Slack, and stores the event.
+It's a small <FancyLink linkText="FastAPI" url="https://fastapi.tiangolo.com/" company="fastapi"/> service. Jobs stop posting their own Slack alerts and instead `POST /failures` with a structured event. The service then decides whether to alert, posts to Slack, and stores the event.
 
-FastAPI earns its place for one reason mostly: the `FailureEvent` schema (below) *is* the API contract, and Pydantic gives me validation, a `422` on a malformed payload, and (eventually) an OpenAPI schema producers can generate a client from, all from the same class. That's worth more here than raw throughput, since this service handles failed job runs, not user traffic — it's never going to see meaningful load.
+I picked FastAPI mostly for Pydantic. The `FailureEvent` schema (below) is the API contract, and from that one class I get validation, a `422` on a malformed payload, and an OpenAPI schema that producers can generate a client from. Throughput was never a concern, since the service only sees traffic when a job fails and will never be under real load.
 
-That's also why the handlers are plain `def`, not `async def`. Every request does one blocking Postgres write (via `psycopg`'s sync driver) and one blocking HTTP call to Slack — there's no concurrent I/O to overlap, so `async` would add ceremony without buying anything. FastAPI happily runs sync handlers in a thread pool, which is all the concurrency this workload needs.
+For the same reason the handlers are plain `def`, not `async def`. Each request does one blocking Postgres write (through `psycopg`'s sync driver) and one blocking HTTP call to Slack. There's no concurrent I/O to overlap, so `async` would only add noise. FastAPI runs sync handlers in a thread pool, and that's enough concurrency here.
 
 > [!note]
-> I also considered putting a queue (SQS, or an EventBridge bus) in front of ingestion, so a slow Slack call or a DB hiccup couldn't block a producer. I skipped it: a queue buys you durability, and durability is exactly what the fail-safe design further down provides directly — accept-and-log, alert-before-persist, never raise. Adding a queue on top would be two mechanisms solving the same problem, plus another moving part to operate, for a service whose entire input is "a job occasionally fails."
+> I considered putting a queue (SQS or an EventBridge bus) in front of ingestion, so a slow Slack call or a database hiccup couldn't block a producer. I skipped it. A queue mainly buys durability, and the fail-safe design further down already provides that: accept and log, alert before persist, never raise. A queue would be a second mechanism for the same problem and one more thing to operate, for a service whose whole input is the occasional failed job.
 
-The whole thing is deliberately tiny — a handful of modules, each with one job:
+The whole thing is small, a handful of modules that each do one job:
 
 | Module         | Responsibility                                          |
 | -------------- | ------------------------------------------------------- |
@@ -44,7 +44,7 @@ The whole thing is deliberately tiny — a handful of modules, each with one job
 
 ## The structured event
 
-The core of the whole design is that jobs send **structured data**, not a pre-formatted Slack string. This is the payload:
+The core idea is that jobs send structured data instead of a pre-formatted Slack string. This is the payload:
 
 <FileName>
   de_hero/schemas.py
@@ -70,23 +70,23 @@ class FailureEvent(BaseModel):
     metadata: dict[str, str] = Field(default_factory=dict)
 ```
 
-A couple of decisions worth calling out:
+A few decisions worth calling out:
 
-- **`extra="forbid"`** — an unexpected field is a `422`, not a silently swallowed typo. If a producer sends the wrong shape, we want to know.
-- **`owner`** exists so the single most useful thing an alert can do — ping the *right* person — is automatic. It's optional because not every producer tracks one; those alerts just carry no mention.
-- Both a **top-level failure** (a single ECS task) and a list of **`failed_items`**  are supported, because a flow-level alert usually fires once at the end of a run and may carry several failures. `FailedItem` is deliberately generic (an id, an optional status, an optional owner, plus the same exception/message/traceback shape) rather than "a Prefect task": a run can fail in ways that aren't a single Python exception, and this one field covers those too without a producer-specific schema.
+- **`extra="forbid"`** means an unexpected field returns a `422` instead of being silently swallowed. If a producer sends the wrong shape, I want to hear about it.
+- **`owner`** is what lets an alert ping the right person automatically. It's optional because not every producer tracks ownership, and those alerts simply carry no mention.
+- There are two ways to report a failure: a **top-level** one for a single ECS task, and a list of **`failed_items`** for a run that ends with several failures at once. (A flow-level alert usually fires once, at the end of a run.) `FailedItem` is intentionally generic: an id, an optional status, an optional owner, and the same exception/message/traceback fields. That way a failure that isn't a single Python exception still fits, without needing a producer-specific schema.
 
 ## The tricky part: who sends the alert?
 
-Here's the problem that makes this more than a glorified webhook. A single logical failure can be reported **twice**:
+This is the part that makes the service more than a webhook. A single failure can be reported twice:
 
 1. A Prefect **worker flow** triggers an **ECS child** task.
 2. The ECS task fails and reports its own failure.
 3. The worker flow sees the child failed and *also* reports.
 
-If both alert, the hero gets two Slack messages for one problem. If we naively silence the worker, we lose the alert entirely when the ECS task dies *before* it can report (say, an OOM kill).
+If both report, the hero gets two Slack messages for one problem. But if I just silence the worker, I lose the alert completely when the ECS task dies before it can report anything (an OOM kill, for example).
 
-The rule that resolves this lives in its own module, because these decisions are **deterministic and application-owned** — never the model's:
+The rule that resolves this lives in its own module. These decisions are deterministic and owned by the application, never by the model:
 
 <FileName>
   de_hero/decisions.py
@@ -109,14 +109,14 @@ def should_notify(event: FailureEvent, session_factory) -> bool:
         return True
 ```
 
-The correlation trick: the worker passes its own `prefect_flow_id` down to the child, and the child echoes it back as `parent_flow_run_id`. So "did ECS already alert for this run?" is just a lookup for a **notified** event whose `parent_flow_run_id` matches this worker's flow id.
+The correlation works like this: the worker passes its own `prefect_flow_id` down to the child, and the child echoes it back as `parent_flow_run_id`. So checking "did ECS already alert for this run?" is a lookup for a notified event whose `parent_flow_run_id` matches the worker's flow id.
 
 > [!tip]
-> Notice the bias in every branch: **when unsure, alert.** No database, no flow id, a failed query — all fall through to notifying. A duplicate alert is annoying; a dropped failure is a production incident.
+> Every branch is biased the same way: when in doubt, alert. No database, no flow id, or a failed query all fall through to notifying. A duplicate alert is annoying, but a dropped failure is a production incident.
 
 ## Building the Slack alert
 
-This is the actual deliverable of the "Report" stage: turning a structured event into one clean, scannable message instead of a raw stack trace dumped into a channel. Building the message is a **pure, deterministic function** — same event in, same Slack blocks out — which keeps it trivial to test and (later) makes the AI summary a drop-in replacement for one block rather than a rewrite:
+This is what the Report stage is for: turning a structured event into one clean message instead of a raw stack trace dumped into a channel. Building the message is a pure function, so the same event always produces the same Slack blocks. That keeps it easy to test, and later it lets the AI summary replace a single block instead of rewriting the whole thing:
 
 <FileName>
   de_hero/alerts.py
@@ -144,13 +144,13 @@ def build_alert_payload(failure_id: UUID, event: FailureEvent) -> dict[str, Any]
     }
 ```
 
-Three small decisions do most of the work here:
+A few small things do most of the work here:
 
-- **The `owner` becomes a real `@`-mention** in the header, so the right person is pinged without anyone triaging first. This is the single highest-value line in the whole alert.
-- **The job name links to the failure's de-hero detail page**, not the raw Prefect run — so "tell me more" is one click, and there's somewhere to grow richer context later.
-- **The traceback is cropped to its last few lines.** That's where the actual error almost always is; the other 55 lines are import machinery. A `metadata["slack_level"]` picks the colored bar (`error`/`warning`/`info`), so severity is visible at a glance.
+- The **`owner` becomes a real `@`-mention** in the header, so the right person is pinged before anyone has to triage. This is probably the most useful line in the alert.
+- The **job name links to the failure's de-hero detail page** rather than the raw Prefect run, so following up is one click and there's a place to add richer context later.
+- The **traceback is cropped to its last few lines**, which is where the real error almost always is; the rest is usually import machinery. A `metadata["slack_level"]` value picks the colored bar (`error`/`warning`/`info`) so severity is visible at a glance.
 
-Posting it is a plain webhook `POST` — and, because it sits on the alerting path, it is written to **never raise**:
+Posting it is a plain webhook `POST`. Because it sits on the alerting path, it's written to never raise:
 
 <FileName>
   de_hero/slack.py
@@ -167,9 +167,9 @@ def post_alert(webhook_url: str, payload: dict[str, Any]) -> bool:
         return False
 ```
 
-The `bool` return is load-bearing, not cosmetic: it's exactly the "did Slack actually accept the post?" signal the dedup and fail-safe logic depends on. A Slack outage becomes a `False`, not an exception that fails the whole ingestion request.
+That `bool` return matters: it's the "did Slack actually accept the post?" signal the dedup and fail-safe logic rely on. A Slack outage turns into a `False`, not an exception that fails the whole ingestion request.
 
-The result is the difference the vision post promised — instead of a 60-line traceback, the hero gets:
+The result is the change the vision post promised. Instead of a 60-line traceback, the hero gets:
 
 ```txt
 @data-platform ❌ salesforce_extract failed
@@ -178,19 +178,19 @@ ConnectionError: HTTPSConnectionPool: Max retries exceeded (429 Too Many Request
     resp.raise_for_status()
 ```
 
-Same failure, but it names the owner, links to the detail page, and leads with the line that matters.
+It's the same failure, but now it names the owner, links to the detail page, and leads with the line that matters.
 
 ## Fail-safe on the alerting path
 
-This is the rule that shapes `main.py`. The service sits **in the production alerting path**. If it's down, the database is unreachable, or Slack times out — the failure still has to surface. So the guiding principle is **degrade, never swallow**.
+This is the rule that shapes `main.py`. The service sits in the production alerting path, so if it's down, the database is unreachable, or Slack times out, the failure still has to surface. The guiding principle is to degrade, never swallow.
 
 That shows up in three places:
 
 - **No database?** Accept and log the event anyway, skip storing it.
-- **Storage fails?** Still send the alert — and post an *internal* alert so the hero knows the audit trail is missing a row.
+- **Storage fails?** Still send the alert, and also post an internal alert so the hero knows the audit trail is missing a row.
 - **Slack post fails?** Record the event as *not notified*, so a later worker event can still be the fallback.
 
-Here's the ingestion handler, trimmed to the essentials — where `_alert` is just the `build_alert_payload` + `post_alert` pair from the section above, returning whether the post went out:
+Here's the ingestion handler, trimmed to the essentials. `_alert` is just the `build_alert_payload` and `post_alert` pair from the section above, and returns whether the post went out:
 
 <FileName>
   de_hero/main.py
@@ -217,12 +217,12 @@ def submit_failure(event: FailureEvent) -> FailureAccepted:
     return FailureAccepted(id=failure_id, job_name=event.job_name)
 ```
 
-Two subtle points hide in that order of operations:
+Two details hide in that order of operations:
 
-- We **alert before we persist**. If the process crashed between the two, we could double-alert — and that's the *correct* failure mode. Duplicates over dropped alerts.
-- The stored `notified` flag records whether Slack **actually accepted** the post, not just whether we *decided* to send it. A later worker event reads that flag to decide whether to stay quiet — so a failed post must never suppress the fallback.
+- We **alert before we persist**. If the process crashes between the two we might alert twice, and that's the failure mode I want. Duplicates beat dropped alerts.
+- The stored `notified` flag records whether Slack actually accepted the post, not just whether we decided to send it. A later worker event reads that flag to decide whether to stay quiet, so a failed post must never suppress the fallback.
 
-And `_persist` itself is written to never raise:
+`_persist` itself is also written to never raise:
 
 <FileName>
   de_hero/main.py
@@ -253,15 +253,15 @@ def _persist(failure_id, event, notified, session_factory) -> bool:
 ```
 
 > [!warning]
-> A database outage must not turn a failure report into a `500` and a lost alert. Every path that touches storage or Slack either degrades gracefully or is caught — the only deliberate exception is a bad ingest token, which returns `401`.
+> A database outage must not turn a failure report into a `500` and a lost alert. Every path that touches storage or Slack either degrades gracefully or is caught. The only deliberate exception is a bad ingest token, which returns `401`.
 
 ## Why a shared bearer token, not something fancier
 
-`/failures` sits behind a single shared token, checked with a plain `Authorization: Bearer` header. I could have reached for per-producer credentials, mTLS, or SigV4-signed requests instead. I didn't, because the threat model is narrow: every caller is a job I control, running in my own AWS account, and the only thing the token protects against is *someone else's* traffic hitting the ingestion path. A shared secret checked on every request is enough for that, and it's trivial for a Prefect flow or an ECS task to send. If de-hero ever accepts events from outside my own infrastructure, this is the first thing that would need to change — not before.
+`/failures` sits behind a single shared token, checked with a plain `Authorization: Bearer` header. I could have used per-producer credentials, mTLS, or SigV4-signed requests, but the threat model is narrow. Every caller is a job I control, running in my own AWS account, and the token only needs to keep someone else's traffic off the ingestion path. A shared secret checked on every request does that, and it's trivial for a Prefect flow or an ECS task to send. If de-hero ever accepts events from outside my own infrastructure this is the first thing I'd change, but not before.
 
 ## Talking to Postgres
 
-Storage is plain <FancyLink linkText="SQLAlchemy" url="https://www.sqlalchemy.org/" dark="true"/> against RDS Postgres — no async driver, no ORM cleverness, matching the rest of the service:
+Storage is plain <FancyLink linkText="SQLAlchemy" url="https://www.sqlalchemy.org/" dark="true"/> against RDS Postgres, with a sync driver and no ORM tricks, matching the rest of the service:
 
 <FileName>
   de_hero/db.py
@@ -275,9 +275,9 @@ def build_session_factory(engine: Engine) -> sessionmaker[Session]:
     return sessionmaker(bind=engine, expire_on_commit=False)
 ```
 
-`main.py` builds one engine and one session factory at startup and hands the factory around as `app.state.session_factory` — every request opens its own short-lived session with it (`with session_factory() as session: ...`), rather than sharing one connection across requests. `pool_pre_ping` matters more than it looks: RDS will silently close idle connections, and without it the *first* request after a quiet period gets a confusing "connection already closed" error instead of a transparent reconnect.
+`main.py` builds one engine and one session factory at startup and passes the factory around as `app.state.session_factory`. Every request opens its own short-lived session with it (`with session_factory() as session: ...`) instead of sharing a connection. `pool_pre_ping` is worth calling out: RDS silently closes idle connections, and without it the first request after a quiet period fails with a confusing "connection already closed" error instead of reconnecting transparently.
 
-There's one table, `failure_events`, and it stores each event as one row with the validated payload kept as JSON, plus a handful of columns broken out for the things actually queried on:
+There's a single table, `failure_events`. Each event is one row: the validated payload stored as JSON, plus a few columns pulled out for the things I actually query on:
 
 <FileName>
   de_hero/models.py
@@ -300,11 +300,11 @@ class FailureEventRecord(Base):
     payload: Mapped[dict[str, Any]] = mapped_column(JSON)
 ```
 
-The **UUIDv7** primary key is what makes `id` time-sortable, so ordering by id also orders rows chronologically without a second index. The rule for every other column is the same: it lives in `payload` by default, and only gets promoted to a real, indexed column once something actually needs to query or filter on it directly — `job_name` and `app` for the frontend's filters, `parent_flow_run_id` because the dedup lookup queries by it, `notified` because a later worker event reads it. Nothing is broken out speculatively.
+The **UUIDv7** primary key is time-sortable, so ordering by id also orders rows chronologically without a second index. Every other column follows one rule: it stays in `payload` until something needs to query or filter on it directly, and only then does it become a real, indexed column. `job_name` and `app` back the frontend's filters, `parent_flow_run_id` backs the dedup lookup, and `notified` is read by a later worker event. Nothing is pulled out before there's a query that needs it.
 
 ## Migrating the schema with Alembic
 
-That "promote a field when it's needed" rule means the schema changes often, in small steps, as features land — not once up front. That's the whole reason for <FancyLink linkText="Alembic" url="https://alembic.sqlalchemy.org/" dark="true"/>: each change is one reviewable, revertible migration file with an `upgrade`/`downgrade` pair, chained to the previous one by a revision id. This is a real migration from the project's history, promoting `job_name` out of the JSON payload once the frontend needed to filter on it:
+Because columns get promoted only when they're needed, the schema changes often and in small steps as features land, rather than all at once up front. That's what <FancyLink linkText="Alembic" url="https://alembic.sqlalchemy.org/" dark="true"/> is for. Each change is a single migration file with an `upgrade`/`downgrade` pair, chained to the previous one by a revision id, so it's easy to review and to revert. Here's a real migration from the project, pulling `job_name` out of the JSON payload once the frontend needed to filter on it:
 
 <FileName>
   migrations/versions/..._add_job_name.py
@@ -325,18 +325,18 @@ def downgrade() -> None:
     op.drop_column("failure_events", "job_name")
 ```
 
-The shape is always the same: add the column **nullable**, backfill it from data that already exists (here, straight out of the JSON payload with Postgres's `->>` operator), then tighten it to `NOT NULL`. Doing it in three steps instead of one migration that adds a `NOT NULL` column keeps existing rows from breaking the migration — there's no "add the column and hope nothing already in the table cares" step.
+The shape is always the same: add the column as nullable, backfill it from data that already exists (here, straight from the JSON payload with Postgres's `->>` operator), then tighten it to `NOT NULL`. Splitting it into three steps means existing rows don't break the migration, which a single "add a `NOT NULL` column" step would risk.
 
 > [!tip]
-> Alembic can autogenerate a migration by diffing the ORM models against the live schema (`alembic revision --autogenerate`), but for anything with a backfill step — like this one — the generated file is a starting point to edit, not the final migration. The model change and the data migration are two different concerns, and only one of them is mechanical.
+> Alembic can autogenerate a migration by diffing the ORM models against the live schema (`alembic revision --autogenerate`), but for anything with a backfill step like this one the generated file is only a starting point. The model change is mechanical; the data migration isn't.
 
-This is the start of the **audit trail** from the vision post. Right now it just records what failed. Once Stage 2 adds human actions on top, this same store becomes the evidence base for deciding what's safe to automate.
+This is the start of the audit trail from the vision post. For now it only records what failed. Once Stage 2 adds human actions on top, this same store becomes the evidence for deciding what's safe to automate.
 
 ## Where this leaves us
 
-Stage 1 is intentionally boring where it matters: no AI, no queue, no fancy auth, just structured events, correct deduplication, clean Slack alerts, and a hard guarantee that failures reach a human. Every tool choice here optimizes for that guarantee over performance or generality — this is the foundation everything else sits on.
+Stage 1 is deliberately boring where it counts: no AI, no queue, no fancy auth. Just structured events, correct deduplication, clean Slack alerts, and a firm guarantee that failures reach a human. Every choice here favors that guarantee over performance or generality, and it's the foundation the rest of the project sits on.
 
-Next in the series: **teaching the model to read the failure**, where Bedrock turns a raw traceback into a short summary and a likely cause, with a deterministic fallback for when the AI call fails.
+Next in the series: teaching the model to read the failure, where Bedrock turns a raw traceback into a short summary and a likely cause, with a deterministic fallback for when the AI call fails.
 
 > [!note]
-> The pattern here echoes an earlier post, <FancyLink linkText="Handling pipeline failures" url="https://villoro.com/blog/handling-pipeline-failures/" dark="true"/> — the hero agent is, in a sense, that philosophy pulled out of every job and into one service.
+> This builds on an earlier post, <FancyLink linkText="Handling pipeline failures" url="https://villoro.com/blog/handling-pipeline-failures/" dark="true"/>. The hero agent is that philosophy pulled out of every individual job and into one service.
