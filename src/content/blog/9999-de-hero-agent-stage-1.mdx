@@ -262,7 +262,9 @@ def _persist(failure_id, event, notified, session_factory) -> bool:
 
 ## Talking to Postgres
 
-Storage is plain <FancyLink linkText="SQLAlchemy" url="https://www.sqlalchemy.org/" dark="true" company="default"/> against RDS Postgres, with a sync driver and no ORM tricks, matching the rest of the service:
+Storage is plain <FancyLink linkText="SQLAlchemy" url="https://www.sqlalchemy.org/" dark="true" company="default"/> against RDS Postgres, with a sync driver and no ORM tricks, matching the rest of the service.
+
+### Engine and sessions
 
 <FileName>
   de_hero/db.py
@@ -279,6 +281,8 @@ def build_session_factory(engine: Engine) -> sessionmaker[Session]:
 At startup `main.py` builds a single engine and session factory, and stores the factory on `app.state`. Each request then opens its own short-lived session (`with session_factory() as session: ...`) instead of sharing one connection.
 
 The one flag worth calling out is `pool_pre_ping`. RDS silently drops idle connections, and without it the first request after a quiet spell fails with a confusing "connection already closed" error. With it, SQLAlchemy checks the connection before handing it over and reconnects if needed.
+
+### The failure_events table
 
 There's a single table, `failure_events`. Each event is one row: the validated payload stored as JSON, plus a few columns pulled out for the things I actually query on:
 
