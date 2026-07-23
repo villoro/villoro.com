@@ -101,12 +101,12 @@ Served at `/` (and `/summary`), this is the landing page: a filterable, paginate
 
 ![The de-hero summary page: stat cards, filters, and a list of failures](../../images/posts/2026/9999-de-hero-summary-page.png)
 
-The filters are a time window (default: the last 24 hours), job name, source app, and resolution state. Resolution state defaults to *unresolved*, since that is what a hero on call actually cares about.
+A form above the list holds most of the filters: a time window (default: the last 24 hours), source app, and job name. The resolution-state filter works differently, and it doubles as the summary at the top.
 
-Above the list sit four stat cards: total, resolved, unresolved, and won't-fix. There is one deliberate choice in how they count.
+Those four stat cards, total / resolved / not resolved / won't-fix, are also the resolution filter. Each one is a link: clicking it filters the list below to that state and marks the card active. By default nothing is filtered, so the *total* card is the selected one. There is one deliberate choice in how they count.
 
 > [!tip]
-> The stat cards count the whole window regardless of the resolved/unresolved filter. If they shrank to match the filter, switching to "resolved" would show "resolved: N of N", which tells you nothing. Keeping them fixed lets the hero read "12 total, 9 resolved, 3 left" while filtering the list down to just those 3.
+> The cards always count the whole window, even the one you have clicked. If they shrank to match the current filter, selecting "resolved" would show "resolved: N of N", which tells you nothing. Keeping them fixed lets the hero read "12 total, 9 resolved, 3 left" while the list below shows just those 3.
 
 Won't-fix is counted apart from resolved, because a deliberate non-fix is not a fix: `unresolved = total − resolved − won't-fix`. The list itself is backed by `GET /api/failures`, which takes the same filters as query params and returns one page of results plus the total count for pagination.
 
@@ -148,9 +148,9 @@ def submit_success(event: SuccessEvent) -> SuccessResult:
 
 "Same job" is not enough. A success that only reprocessed table A should not resolve a failure that was about table B. So each event carries the job's invocation params, and a success only resolves a failure whose params it covers.
 
-Two subtleties, both of which were real bugs I had to fix.
+Two subtleties matter here.
 
-First, the params themselves. ECS reports them JSON-encoded under `metadata["params"]`, next to run and environment noise like `duration_minutes` and `ecs_version`. Matching on the raw metadata dict never worked, because `duration_minutes` alone guarantees two runs never match exactly. The fix was to decode `metadata["params"]` and match on that, ignoring the noise:
+First, the params themselves, and this one was an actual bug. ECS reports them JSON-encoded under `metadata["params"]`, next to run and environment noise like `duration_minutes` and `ecs_version`. Matching on the raw metadata dict never worked, because `duration_minutes` alone guarantees two runs never match exactly. The fix was to decode `metadata["params"]` and match on that, ignoring the noise:
 
 <FileName>
   de_hero/queries.py
