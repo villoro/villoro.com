@@ -195,6 +195,50 @@ Depending on the task, I review agent work in one of two modes:
 
 The second mode is where all the guardrails from this post earn their keep: pre-commit hooks, CI checks, and branch conventions run on every agent commit, so by the time the PR reaches me the mechanical problems are already gone and I can focus on the design.
 
+### Delegating across repos
+
+Everything so far has me as the dispatcher: I open N agents, each gets a worktree, I review N diffs.
+The next step up is one long-lived coordinator agent I talk to instead, which routes each request to the repo that owns it and dispatches a worker there. Parallel agents vs. **delegated** agents.
+
+The coordinator does not edit code. Its job is to route, dispatch, wait, verify, and report.
+The moment it starts editing files in another repo itself, the delegation has been skipped and you're back to one agent doing everything, just with extra steps.
+
+Each worker gets a fresh worktree in the target repo, and it picks up that repo's `AGENTS.md` and the shared skills on its own, the same way any agent would if I'd opened it there directly.
+This is the payoff for the whole first half of this post: the shared-skills investment is exactly what makes a worker dropped into a repo it has never seen behave correctly from the first turn.
+
+The task spec is the entire handoff. The worker has no access to my conversation with the coordinator, so the goal, the acceptance criteria, the ticket, and where to stop all have to go in the spec.
+What does *not* go in the spec: the target repo's own conventions. The worker reads those from `AGENTS.md` itself; restating them just gives you two copies to keep in sync.
+
+One task, one repo, one worker. If a change spans two repos, that's two tasks with a dependency between them, not one worker reaching across a repo boundary it doesn't own.
+
+Supervision looks different from babysitting a single agent:
+
+* **Wait on a mailbox, don't poll.** The coordinator blocks until a worker reports back, instead of checking in every few seconds.
+* **Relay, don't answer.** If a worker escalates a question, the coordinator passes it to me; it doesn't guess on my behalf.
+* **Read the diff, not the status.** "Worker succeeded" means it finished, not that it did the right thing. I still read the actual change before I believe the report.
+
+The mechanics come from Orca, the same worktree manager I use for parallel agents, extended to orchestration: a mailbox for dispatch and reports, and a task attached to a terminal.
+
+```text
+orca orchestration send --type task_dispatch --repo <repo> --task "<spec>"
+orca orchestration check --wait
+```
+
+> [!tip]
+> Keep the command detail minimal in your own notes too. This post is about the pattern, not the CLI, and the CLI is the part most likely to change.
+
+**Model tiering.** The plan-first section above already said "a smaller/faster model can implement it" without saying which. Now I can be concrete:
+
+* Small and fully specified (a submodule bump, a rename, applying a known fix): `codex` on `gpt-5.6-luna`, or `claude-haiku-4-5` on a machine without Codex installed.
+* Ordinary implementation from a clear spec: `claude-sonnet-5`.
+* Genuine judgment (design work, an unclear root cause, a refactor): `claude-opus-5`.
+
+The non-obvious part: Orca has no model parameter. Its `--agent` flag picks the CLI, and each CLI launches on its own default; for Claude that's the strongest model available.
+An unspecified worker is an expensive worker by default. Pinning a different model means creating the terminal with an explicit command and attaching the task to it, not passing a flag to the dispatch itself.
+
+> [!note]
+> When unsure, start one tier down and re-dispatch if the worker struggles. Re-running a cheap worker still costs less than defaulting every task to the most expensive model.
+
 ## Agents that learn: every lesson gets committed
 
 This is the part of the setup I care most about.
@@ -209,7 +253,7 @@ The playbook defines a **correction ladder**. Every durable lesson gets promoted
 And two things are explicitly banned:
 
 * **No "lessons learned" log file**: an unread append-only doc doesn't prevent recurrence. If a lesson matters, it becomes a rule where it will be seen; if it doesn't, it's noise.
-* **No agent-private memory**: memory stores are invisible to other agents and other developers, and they don't get reviewed. Everything lands in version-controlled markdown.
+* **No agent-private memory**: memory stores are invisible to other agents and other developers, and they don't get reviewed. Everything lands in version-controlled markdown. The one carve-out is machine-local state (which binary is disabled on this laptop, how to recover a local misconfiguration): that's a fact about one machine, not a lesson other agents need, and it may stay local.
 
 Scope matters too: a cross-repo lesson goes to the shared repo, a repo-specific one to `.agents/local/`.
 Either way, the agent proposes the change and I review it, same as any code.
@@ -254,6 +298,7 @@ The fixes follow the same philosophy as everything else:
 
 * **Single-source every rule**: one file owns each rule; everywhere else keeps a one-line pointer with the rule ID.
 * **Lint the links**: a pre-commit hook fails if a relative markdown link doesn't resolve. The day I added it, it caught two more broken links I hadn't noticed.
+* **Identify the binary, don't just resolve the name**: a setup script needed to detect whether the Orca CLI was installed. `command -v orca` looks like the obvious check, and it's wrong: on most Linux desktops `orca` is also GNOME's own screen reader at `/usr/bin/orca`. The check passed, found the wrong binary, and running it switched on my screen reader. A check that merely passes is not a check that is correct, and automation that runs on teammates' machines has to identify what it executes, not just resolve a name.
 
 > [!warning]
 > If your agent instructions have no mechanical checks, assume they are already partially wrong. Mine were.
@@ -267,6 +312,7 @@ If you only take a few things from this post:
 * **A correction ladder**: hook if enforceable, one line in `AGENTS.md` if hard, playbook prose if judgment. Never a lessons log, never private memory.
 * **Plan in markdown, then implement**: the plan survives lost sessions, gets reviewed before code exists, and lets a cheaper model do the typing.
 * **Run parallel agents in git worktrees**: isolated checkouts mean no clobbered diffs, and tools like Orca set them up for you.
+* **Delegate across repos instead of dispatching yourself**: one coordinator that routes, waits, and verifies scales further than you fanning out agents by hand, and it only works because each worker can read a repo's own conventions on arrival.
 * **Treat the instructions as code**: single-sourced, link-checked, reviewed in PRs. They rot otherwise.
 
 What's next for me: measuring whether agents actually follow the rules (the status report from the `LEGACY` markers is a start), and growing the shared repo as more repos and more agents join the setup.
