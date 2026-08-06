@@ -9,6 +9,7 @@ repos:
       - id: check-toml
       - id: check-merge-conflict
       - id: no-commit-to-branch
+        args: ['--branch', 'main']
 
   # YAML formatter
   - repo: https://github.com/google/yamlfmt
