@@ -5,6 +5,7 @@ meta_title: Time Series Smoothing Techniques in Python and SQL
 description: A practical guide to smoothing time series data using Python and SQL. Explore moving averages, Gaussian and Lowess smoothers, SQL medians, quantiles, and their trade-offs through side-by-side visual comparisons.
 date: 2025-05-08
 writing_date: 2025-04-04
+updated_date: 2026-08-20
 image: /images/blog/0057-smoothie-curtains.jpg
 category: DE
 tags: [DE, Python, SQL, Best Practices]
@@ -15,13 +16,13 @@ draft: false
 
 ## Why Smoothing Matters (and Why It’s Not That Simple)
 
-I’ve spent hours—maybe days—trying to find the "perfect" way to smooth a time series. I didn’t just want a trend line—I wanted a smoothed *series*—the kind you often see in polished dashboards, where the noise fades and the pattern becomes obvious. I remembered seeing some tools that seemed to use something close to a Gaussian smoother, and that became my benchmark.
+I’ve spent hours, maybe days, trying to find the "perfect" way to smooth a time series. I didn’t just want a trend line, I wanted a smoothed *series*, the kind you often see in polished dashboards, where the noise fades and the pattern becomes obvious. I remembered seeing some tools that seemed to use something close to a Gaussian smoother, and that became my benchmark.
 
 So I tried everything: simple moving averages, exponentially weighted moving averages (EWMA), Kalman filters, even rolling medians. Some were too noisy, others too laggy. I wanted something that respected the data's structure while highlighting the trend.
 
-This post walks through that journey—from the most basic methods to more advanced, expressive smoothers. We’ll also explore what can and can’t be done in SQL, and why not every smoother belongs in a database.
+This post walks through that journey, from the most basic methods to more advanced, expressive smoothers. We’ll also explore what can and can’t be done in SQL, which, as I learned after first publishing this post, is more than I initially thought.
 
-Along the way, I’ll show visual comparisons using the same time series, so you can see exactly what each technique does—and where it shines or fails.
+Along the way, I’ll show visual comparisons using the same time series, so you can see exactly what each technique does, and where it shines or fails.
 
 To do so, I'll use the following time series with daily data:
 
@@ -89,7 +90,7 @@ df["gaussian"] = smoother.smooth_data[0]
 Lowess (Locally Weighted Scatterplot Smoothing) fits a local linear regression at each point using weighted neighboring data.
 
 **Pros:**
-- Adapts to local patterns—great for non-linear trends
+- Adapts to local patterns, great for non-linear trends
 - Handles seasonal variation and local curvature very well
 - Smoother than a moving average or Gaussian, especially with complex signals
 
@@ -110,12 +111,52 @@ df["lowess"] = smoother.smooth_data[0]
 
 <canvas id="plot_lowess" style="width:100%;height:300px;"></canvas>
 
-## Smoothing with SQL: What’s Possible, What’s Not
+## Smoothing with SQL: What's Possible, What's Not
 
-### ❌ Why no Gaussian or Lowess in SQL?
-Techniques like Gaussian smoothing and Lowess require iterative, weighted, and often non-linear computations—something SQL just isn't designed for. You can’t easily apply convolution or perform local regressions inside a SQL query.
+> [!NOTE] Update, August 2026
+> When I first wrote this section I claimed Gaussian and Lowess smoothing "just aren't something SQL is designed for." That was too strong. Since then I've built all of this in pure SQL (DuckDB, via dbt macros) as part of my `vtasks` pipeline, to smooth monthly income/expense trends without a Python step. The rest of this section reflects what I learned building it.
 
-SQL engines don’t support weighted kernels or local least-squares fitting. While it's possible to simulate some behaviors using window functions and recursive queries, the complexity and performance penalties make it impractical.
+### 🎯 Gaussian and Savitzky-Golay both fit in SQL
+
+Gaussian smoothing is just a weighted moving average: a self-join bounded to a window, with the weight computed inline as `exp(-0.5 * pow((neighbour.m - base.m) / sigma, 2))`. Dividing by the sum of the weights renormalises the kernel wherever it's truncated, which also gives edge handling for free: clamping the join index to the first/last row reproduces scipy's `mode="nearest"`.
+
+Savitzky-Golay is the piece I'd missed. It fits a polynomial over a sliding window and keeps the value at the centre, but since least squares is linear in the data, that fitted value is a **fixed linear combination of the inputs**. The weights depend only on `(window_size, degree)`, never on the data, so they can be precomputed once (via `np.linalg.pinv` on the polynomial design matrix, no scipy needed) and the filter becomes a plain weighted sum against a lookup table:
+
+```sql
+sum(tap_weight * neighbour.value)  -- tap_weight from a precomputed (window_size, degree) table
+```
+
+I checked this against real data: reproducing `savgol_filter(35, 5, mode="nearest")` plus a 3-point convolution this way gave **0.00 deviation across every interior point** of three real monthly series (incomes, expenses, result; 158 months each). Only the first and last point differed, because `tsmoothie` pads the trailing convolution differently.
+
+Lowess is expressible too, mostly: a local linear (or quadratic) fit has a closed form, so weighted least squares reduces to sums a database already computes (`slope = (Sw*Sxy - Sx*Sy) / (Sw*Sxx - Sx*Sx)`), no iteration needed. What genuinely doesn't belong in SQL is Lowess's *robustness iterations*, which repeatedly re-weight residuals. Calling that part impractical is still fair; it's just not the whole algorithm.
+
+I'd also overstated the cost: a self-join bounded to a window is **O(n · w), not O(n²)**. At 158 monthly points with a 35-month window that's roughly **11k intermediate rows**, single-digit milliseconds in DuckDB. Only an unbounded window is quadratic.
+
+### 🎚️ Degree, not algorithm family, buys responsiveness
+
+Comparing local-polynomial fits against the savgol reference (MAE in euros, over 158 months, on series averaging about 2500/month):
+
+| Method                    | Incomes MAE | Expenses MAE |
+| ------------------------- | ----------- | ------------ |
+| Local linear, sigma=4     | 103.5       | 80.8         |
+| Local linear, sigma=6     | 123.3       | 84.4         |
+| Local quadratic, sigma=6  | 83.4        | 70.3         |
+
+Plain Gaussian and local-linear both lag at turning points, since a straight line fitted through a window can't bend to a peak. It's the polynomial degree that lets Savitzky-Golay track changes faster, not something inherent to "SQL vs Python."
+
+### ⚠️ The caveat I'd missed: negative ringing
+
+Savitzky-Golay taps include **negative lobes**, so an isolated spike in a sparse series rings *below zero* on both sides. On a real expense category with a single non-zero month out of 158, the savgol trend reached **-9.38** where the Gaussian smoother stayed at **0**. An earlier ad-hoc measurement on a different sparse category bottomed out around **-113 EUR**. Lowering the degree doesn't fix it (tested at `(21, 3)` and `(15, 2)`); it's inherent to the kernel. Gaussian weights are all positive, so a weighted average of non-negative values can never go negative:
+
+- **Dense aggregate series** (monthly totals) → Savitzky-Golay, for responsiveness
+- **Sparse detail series** (a breakdown by category) → Gaussian, for non-negativity
+
+### 🕳️ Complete the series before you smooth it
+
+Both filters match neighbours **by period index**, not by date, so a missing month doesn't create a gap: it makes the months on either side of the hole behave as if they were consecutive, and the trend comes out quietly wrong with no error and no null. Build a complete date grid (period × dimensions) and fill it first, and the fill rule depends on the measure:
+
+- **Flow** measures (spend, hours logged, pages read) → missing means `0`
+- **Stock** measures (account balances, net worth) → missing means carry the last value forward; zero would be badly wrong
 
 ### 📊 Median Smoothing
 SQL *can* do robust smoothing with medians:
