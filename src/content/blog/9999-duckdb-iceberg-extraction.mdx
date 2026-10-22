@@ -185,7 +185,19 @@ The whole SQL Server database (202 tables, 300M rows):
 
 That is roughly **5x faster and 90% less compute**: the run is shorter and the task is smaller, and the two multiply.
 
-The run is lopsided. 169 of the 202 tables have under 1M rows and stage in half a second on average. Three tables account for most of the time, with 7.2, 5.2 and 4.7 minutes of staging. What bounds a run now is the queue of heavy tables we serialise (22 minutes), more than the parallelism.
+The run is lopsided. 169 of the 202 tables have under 1M rows and stage in half a second on average. Three tables account for most of the time, with 7.2, 5.2 and 4.7 minutes of staging.
+
+### What did not work: more concurrency
+
+Seven heavy tables were serialised, which made a queue of 22 minutes. We assumed that queue was the bottleneck, so we untagged four of the seven and let them run together. It did not help:
+
+| | Serialised (7 tagged) | 4 untagged |
+| --- | --- | --- |
+| Wall time | 29.5 min | 30.8 min |
+| Average concurrency | 3.2 | 3.8 |
+| Sum of task times | 94 min | 118 min |
+
+Concurrency went up, but every table got slower, so the sum of task times grew by about a quarter and the wall time did not move. The source database is saturated: tables read at the same time just slow each other down. The same logic says that more parallelism would not help either. What bounds the run is the throughput of the source, so a faster source is what would shorten it, not a different concurrency setting. We kept the serialised tags.
 
 ## What to check before you copy this
 
@@ -198,7 +210,6 @@ The run is lopsided. 169 of the 202 tables have under 1M rows and stage in half 
 
 ## What is next
 
-- Untagging four of the seven heavy tables, so they run together instead of one at a time, to shorten the serialised queue. The experiment is still running, so no result yet. Early data point: with those four running together, four engines peaked at about 59% of the container.
 - Retry with backoff when Glue answers `concurrent modifications` to a commit.
 - A thread cap per engine: the memory is capped, the threads are not.
 - More sources. A new database is one adapter, and MySQL is the obvious next one.
