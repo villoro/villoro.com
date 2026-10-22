@@ -1,0 +1,204 @@
+---
+slug: duckdb-relational-to-iceberg
+title: Extracting Relational Databases into Iceberg with DuckDB, 5x Faster than pandas
+meta_title: Extracting SQL Server and PostgreSQL into Iceberg with DuckDB
+description: How we replaced a pandas extraction pipeline with DuckDB that attaches the source database and writes the Iceberg table on Glue itself - 5x faster, 90% less compute, and the sharp edges we hit on the way.
+date: 2026-10-22
+writing_date: 2026-10-22
+image: /images/blog/9999-iceberg-polar-bears.jpg
+category: DE
+tags: [DE, DuckDB, Iceberg, AWS, Python, SQL]
+draft: true
+---
+
+## The problem: pandas as the middle man
+
+Our extraction pipeline moves tables from relational databases (PostgreSQL and SQL Server) into a data lake: Iceberg tables in the AWS Glue catalog, queried with Athena. It started the obvious way. Read a batch with `pandas.read_sql`, turn it into a DataFrame, write it to Iceberg, repeat.
+
+It works, but every row pays a toll:
+
+- **Memory.** A DataFrame is a bad container for a wide table. One table reached 7.3 GB of memory on its own, so the big tables needed an 8 vCPU / 16 GB task.
+- **Batching.** To avoid loading everything, we paginated with keyset pagination (`WHERE id > last_id ORDER BY id LIMIT n`). That needs a sortable key per table, one query per batch, and a lot of config.
+- **Time.** Rows go source → driver → Python objects → DataFrame → Arrow → Parquet. Most of that is Python doing work a database engine does in C++.
+
+For the biggest source, a SQL Server database with 202 tables and 300M rows in total, a full run took about **2.6 hours** across two jobs: one for the big tables (8 vCPU / 16 GB, one at a time) and one for everything else (4 vCPU / 8 GB, in parallel).
+
+## The idea: let the engine write the lake table
+
+DuckDB can attach a PostgreSQL or SQL Server database, and it can attach a Glue catalog and write Iceberg tables into it. If it can do both, no row has to go through Python at all:
+
+```
+┌────────────┐   attach    ┌─────────────────────────┐   attach    ┌──────────────┐
+│ PostgreSQL │ ──────────► │         DuckDB          │ ──────────► │ Glue catalog │
+│ SQL Server │  (read-only)│  1. stage (temp table)  │  (Iceberg)  │  + S3 files  │
+└────────────┘             │  2. write (SQL)         │             └──────────────┘
+                           └─────────────────────────┘
+                              Python only sends SQL
+```
+
+Python is now an orchestrator: it builds the SQL, runs it and logs. The data never becomes a DataFrame.
+
+## How it works
+
+For each table, in one Python process per job, the engine does three things.
+
+### 1. Attach the source
+
+PostgreSQL uses DuckDB's `postgres` extension. SQL Server uses the community `mssql` extension. Credentials go into a DuckDB secret instead of a connection string, so a `;` or a `=` in a password needs no escaping. The SQL Server source is attached read-only.
+
+```sql
+CREATE OR REPLACE SECRET src_secret (
+    TYPE mssql,
+    host '...', port 1433, database '...',
+    user '...', password '...',
+    trust_server_certificate true
+);
+ATTACH '' AS src (TYPE mssql, SECRET src_secret, READ_ONLY);
+```
+
+The Glue catalog is attached with the Iceberg extension:
+
+```sql
+ATTACH '<aws account id>' AS lake
+    (TYPE iceberg, ENDPOINT_TYPE 'glue', DEFAULT_SCHEMA 'default');
+```
+
+### 2. Stage
+
+```sql
+CREATE TABLE staged AS
+SELECT ... FROM mssql_scan('src', '<query that runs on the source>');
+```
+
+This reads the whole table in one pass into DuckDB's memory, and spills to a temp folder past its memory limit. Spilling barely slows it down, because the bottleneck is the source database, not the disk. The query runs on the source, so filters, joins and the incremental watermark (`WHERE updated_at > ...`) are evaluated there. The staging query is also where we cast the columns DuckDB would otherwise misread (see the sharp edges).
+
+### 3. Write
+
+The staged rows go to the Iceberg table in Glue. The engine creates the table if it is missing, then appends, merges on keys, or overwrites (a full refresh). It also adds any column the source gained since the last run, and finally exports the table's file metadata for monitoring.
+
+### One config for both paths
+
+A table is described in a YAML file: its name, an optional incremental column, the merge keys, and whether it is a full refresh. The same file drives the old pandas path and the DuckDB path, so the output tables are the same, and moving a table is a one-line change (`engine: duckdb`). That made it safe to migrate gradually and to compare both outputs.
+
+### Source adapters are small
+
+The engine knows no database. A `Source` class implements five things:
+
+| Method | What it does |
+| --- | --- |
+| `attach_queries` | The statements that make the database available in DuckDB |
+| `scan` | The table function that runs a query on the source (`postgres_query`, `mssql_scan`) |
+| `columns` | The name and source type of every column of a table |
+| `kind` | How to stage a source type (text, timestamp, GUID, JSON, ...) |
+| `prepare` | Rewrites the query the way the source needs it |
+
+A new database is one adapter. PostgreSQL and SQL Server exist today.
+
+### A memory budget
+
+DuckDB takes 80% of the container's memory by default. That is fine for one table. With two big tables staged at once in the same process, the task gets OOM-killed.
+
+So the engines alive in a process share a fixed fraction of the container (50%), split evenly and re-balanced whenever one starts or ends. Each engine keeps a control connection that can change the memory limit of the others while they run. The whole 202-table run, with four tables in parallel, peaked at **54% of the container**. With a 60% budget it peaked at 74%, which is too close for comfort.
+
+### Parallelism lives in the orchestrator
+
+There is no parallelism code in the engine. Prefect tag concurrency limits decide it: one tag caps the tables in parallel (4), and a stricter tag with a limit of 1 serialises the few heaviest tables.
+
+The stricter tag is easy to overuse. Tagging 22 tables serialised most of a run: it took 34 of 36 minutes. Tagging 3 cut the critical path. Tag only what is really slow or big.
+
+### Overwrites without DROP
+
+DuckDB can read and write Iceberg on Glue, but it cannot `DROP`, `RENAME` or `CREATE OR REPLACE` a Glue table. So a full refresh is a `DELETE` plus an `INSERT` in one transaction, which is atomic: readers see either the old table or the new one.
+
+The side effect is that `DELETE` writes position-delete files instead of rewriting data, so every overwrite keeps an extra copy of the data under the table. We saw one table go from 1 data file to 3, plus 2 delete files. The fix is to run Athena's `OPTIMIZE ... REWRITE DATA USING BIN_PACK` and then `VACUUM` after every overwrite. It took 12 seconds for a 68M-row table.
+
+## The sharp edges
+
+This is the part I would have liked to read before starting.
+
+### DuckDB's limits on Glue Iceberg (1.5)
+
+We ran a spike first and found these:
+
+- No `DROP`, `RENAME` or `CREATE OR REPLACE`, and no views.
+- `CREATE TABLE` needs an explicit `location`.
+- No retry on commit conflicts. With 16 concurrent inserts into Glue, 12 failed. Writes need a backoff.
+- No schema evolution. A new source column needs an explicit `ALTER TABLE ... ADD COLUMN`.
+- Listing the catalog is slow (about 40 seconds), so never list it: address tables by name.
+
+We moved to DuckDB 2.0 later, which also needs Python 3.11 or newer.
+
+### Types the SQL Server extension misreads
+
+The fix is the same in every case: cast on the server, so DuckDB receives something it reads correctly.
+
+| Source type | What goes wrong | Fix on the server |
+| --- | --- | --- |
+| `datetime` | Comes as `.733333`, where SQL Server shows `.733` (it is stored in 1/300 s ticks) | Cast to `DATETIME2(3)` |
+| `char` / `varchar` with a non-UTF-8 collation | Arrives as undecoded bytes, accents fail | Cast to `NVARCHAR` |
+| `uniqueidentifier` | Lower-case, where SQL Server and pandas give upper-case. It matters when it is a merge key | Upper-case it when staging |
+| `hierarchyid`, `geography` | `Unsupported SQL Server type UDT` | `CONVERT(VARCHAR(MAX), CAST(col AS VARBINARY(MAX)), 2)` (hex) |
+
+### Parity with the old pipeline
+
+A faster pipeline that writes different data is not an improvement. We compared every DuckDB table with its production table by value, with `EXCEPT` in both directions and formatting normalised. 156 of the 196 comparable tables matched exactly. The other 40 differ by a handful of rows each, most likely source changes between the two runs.
+
+The systematic differences are all formatting:
+
+- `CHAR(n)` is trimmed (pandas kept the padding).
+- Decimals keep their scale (pandas wrote floats: `100.0000` against `100.0`).
+- Integers with NULLs have no `.0` (pandas turned them into floats).
+- `datetime` fractions have a fixed width.
+
+If you have downstream models that parse these values, check that they accept both formats before you switch.
+
+### Sizing
+
+A 68M-row overwrite was OOM-killed on a 2 vCPU / 4 GB task during the delete and the insert, and ran in 6 minutes on 4 vCPU / 8 GB. The staging had been fine on the small task. The container exit code 137 is the OOM kill. The lesson: staging fits a small task, the transactional overwrite does not.
+
+### There is no way back
+
+DuckDB's tables carry two extra columns (a write counter and the first export timestamp). A table moved to DuckDB can't be written by the pandas path again, so do not alternate engines on a table.
+
+### Testing without touching production
+
+We ran the whole job on the real infrastructure, with the output redirected to throwaway tables in a scratch schema, and compared them with production. For a source that a laptop can't reach, we built a manual image with a personal version tag and ran it on demand.
+
+## Results
+
+Per table, with the same output:
+
+| Table | Rows | pandas | DuckDB |
+| --- | --- | --- | --- |
+| A wide-ish table | 13.9M | 17:49 | 3:50 |
+| A wide table (48 columns) | 12.4M | 24:55 | about 7:00 |
+| A narrow table (7 columns), overwrite | 68M | 31:32 | 6:03 (staging 4:05, writing 1:50) |
+
+The whole SQL Server database (202 tables, 300M rows):
+
+| | pandas | DuckDB |
+| --- | --- | --- |
+| Jobs | Big tables (8 vCPU / 16 GB, sequential) + the rest (4 vCPU / 8 GB, parallel) | One job (4 vCPU / 8 GB) |
+| Run time | 2 h 24 min + 12 min | about 30 min (29:32) |
+| Peak memory | Up to 7.3 GB on one table | 4.4 GB of 8 GB |
+| Compute (task size × time, an 8 vCPU task counts 2 units an hour) | 5.0 units | 0.5 units |
+
+That is roughly **5x faster and 90% less compute**: the run is shorter and the task is smaller, and the two multiply.
+
+The run is lopsided. 169 of the 202 tables have under 1M rows and stage in half a second on average. Three tables account for most of the time, with 7.2, 5.2 and 4.7 minutes of staging. What bounds a run now is the queue of heavy tables we serialise (22 minutes), more than the parallelism.
+
+## What to check before you copy this
+
+- **Does your table fit?** Tables with a custom query or that explode columns were not supported by our engine, and stay on pandas.
+- **Do the types survive?** Compare by value, not by row count. Put the cast in the source adapter, and expect to add one for each exotic type.
+- **Can your consumers take the formatting changes?** Trimmed `CHAR`, decimal scale, no `.0`.
+- **Is the overwrite compacted?** Run `OPTIMIZE` and `VACUUM`, or every refresh doubles the storage.
+- **Is the task big enough for the biggest overwrite?** Not the staging: the delete and insert.
+- **Do you accept there is no way back?** Rehearse on throwaway tables first.
+
+## What is next
+
+- Untagging four of the seven heavy tables, so they run together instead of one at a time, to shorten the serialised queue. The experiment is still running, so no result yet. Early data point: with those four running together, four engines peaked at about 59% of the container.
+- Retry with backoff when Glue answers `concurrent modifications` to a commit.
+- A thread cap per engine: the memory is capped, the threads are not.
+- More sources. A new database is one adapter, and MySQL is the obvious next one.
