@@ -480,13 +480,20 @@ If you want to try this approach, these are the questions I'd ask first:
 * **Do the types survive?** Compare the new tables with the old ones by value, not by row count. Expect a cast or two for each exotic type, and put them in the source adapter.
 * **Is the disk big enough for the biggest spill?** Memory is easy to share between tables. Disk runs out quietly, and DuckDB reports it as out of memory.
 * **Are overwrites compacted?** Run `OPTIMIZE` and `VACUUM` after a `DELETE` + `INSERT`, or every refresh keeps the old copy of the table.
-* **Do you want a way back?** DuckDB doesn't lock you in, but your own choices might. We decided to add metadata columns (`_num_writes`, `_first_exported_at`) that our old pandas path doesn't write, so for us a table that moves stays moved. Decide that up front, and test on throwaway copies of the tables first.
+* **Do you want a way back?** DuckDB doesn't lock you in, but your own choices might. We decided to add metadata columns (`_num_writes`, `_first_exported_at`) that our old pandas path doesn't write, so for us a table that moves stays moved. Decide that up front, and test on throwaway copies of the tables first. We ran every migration on production infrastructure, writing to separate schemas, as I explain in <FancyLink linkText="One Environment to Rule Them All" url="https://villoro.com/blog/one-environment-prod/" dark="true"/>.
 
 ## Conclusion
 
-{/*
-Short wrap-up.
-*/}
+Spark has become the default answer to "how do we move this data?", and for most teams it's the wrong one. Not because Spark is bad, but because their tables aren't big enough to need it.
+
+pandas is great until a table stops fitting in memory, and then it gets complicated fast. DuckDB fills the gap between the two: it reads a table bigger than memory in one pass, attaches the source and the lake directly, and lets Python do what it's good at, orchestrating.
+
+For us, that meant one job instead of many, 70% to 95% less compute, and full extractions several times faster, on machines smaller than a laptop. The price was owning a few hundred lines of write logic, and learning where one machine stops.
+
+> [!tip] Next time you're about to spin up a cluster
+> Ask how big your biggest table really is. If it fits on one machine's disk, try DuckDB first. You might not need the cluster at all.
+
+If you try it, or if you've hit a limit I haven't, I'd love to hear about it in the comments.
 
 ## Appendix: the migrations in detail
 
