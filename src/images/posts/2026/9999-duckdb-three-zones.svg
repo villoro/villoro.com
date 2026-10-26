@@ -1,5 +1,6 @@
 <svg viewBox="0 0 1600 800" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
   <style>
+    .card { fill: #ffffff; }
     .ttl { fill: #3a76ff; }
     .txt { fill: #1f2333; }
     .mut { fill: #6a6e82; }
@@ -7,6 +8,7 @@
     .zbg { fill: #f3f5fb; }
     .zbg3 { fill: #eceff7; }
     @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
       .ttl { fill: #e8eaf6; }
       .txt { fill: #e8eaf6; }
       .mut { fill: #b4afb6; }
@@ -24,6 +26,9 @@
       <line x1="0" y1="0" x2="0" y2="18" stroke="#f59e0b" stroke-width="6"/>
     </pattern>
   </defs>
+
+  <!-- opaque card: as an <img> the SVG follows the OS theme, not the site's .dark class -->
+  <rect width="1600" height="800" rx="24" class="card"/>
 
   <text x="800" y="70" text-anchor="middle" font-size="40" font-weight="700" class="ttl">Three zones of table size</text>
   <text x="800" y="112" text-anchor="middle" font-size="23" class="mut">DuckDB moves the line where you actually need a cluster</text>
