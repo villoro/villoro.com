@@ -38,28 +38,26 @@ When you use Spark for it anyway, you pay for things you don't need:
 
 When I think about moving a table out of a database, I think in three zones:
 
-1. **It fits in memory.** pandas (or polars, or anything with a DataFrame) is great here. `read_sql`, a DataFrame, a write. Nothing to tune.
-2. **It is bigger than memory, but not huge.** Tens or hundreds of millions of rows, wide tables, a task with 4 or 8 GB of RAM.
-3. **It is really big.** It does not fit on one machine at all. A cluster makes sense: Spark.
+![Three zones of table size](../../images/posts/2026/9999-duckdb-three-zones.svg)
 
 Many teams start in zone 1 with pandas, and it works. Then a table grows, a task gets OOM-killed, and the next step feels obvious: "pandas doesn't scale, let's use Spark." The jump goes straight from zone 1 to zone 3.
 
-What makes zone 2 painful with pandas is that everything has to be in memory at once. So you start working around it:
+Zone 2 is painful with pandas because everything has to fit in memory at once. So you start working around it:
 
-* **Batches.** Read the table in chunks with `LIMIT` or keyset pagination, which needs a sortable key per table and a batch size tuned per source.
+* **Batches.** Read the table in chunks (`WHERE updated_at > x ORDER BY ... LIMIT n`), which needs a sortable key per table and a batch size tuned per source. Each batch is another query, often on a column without an index, so a table read in 20 batches is scanned about 20 times.
 * **Bigger tasks** for the big tables, and a separate job for the rest.
-* **Safety nets**: a cap on the number of batches, a "safe mode" for backfills, retries.
+* **Safety nets**: a cap on the number of batches so a run can't go forever, and a "safe mode" for backfills.
 
 Each workaround is reasonable on its own. Together, they make a simple job complicated, and that complexity is what makes Spark look attractive.
 
-**DuckDB changes where the line is.** It is an analytical engine that runs inside your Python process, and it does not need the whole table in memory: when it runs out, it spills to disk and keeps going. A table bigger than RAM is read in one pass, with no batches. Zone 2 stops being a pain and becomes "just run the query".
+**DuckDB changes where the line is.** It runs inside your Python process and does not need the whole table in memory: when it runs out, it spills to disk and keeps going. A table bigger than RAM is read in one pass, with no batches.
 
-To give an idea of how far that goes, these are numbers from our own migrations:
+> [!tip] How far is the frontier?
+> One of our SQL Server databases, **202 tables and 300M rows**, is extracted **in full** (not incrementally: every row of every table, read and written to the lake) in about **30 minutes** on a single **4 vCPU / 8 GB** task.
+>
+> With pandas the same extraction took two jobs, one of them running almost 2.5 hours on a 16 GB task just for the biggest tables. An older migration of mine did it with Spark in around 40 minutes, so one small DuckDB task is even a bit faster than the cluster.
 
-* A **SQL Server** database of **202 tables and 300M rows** extracted in about **30 minutes**, in one job, on a **4 vCPU / 8 GB** task. With pandas it took two jobs, one of them running for almost 2.5 hours on a 16 GB task just for the biggest tables.
-* A single **68M-row table** fully rewritten in **6 minutes** on that same task.
-
-That's 300M rows on a machine smaller than most laptops. The frontier for "we need Spark" is a lot higher than people coming from pandas expect. It isn't infinite (one machine eventually runs out of disk, more on that later), but most teams are nowhere near it.
+That's 300M rows on a machine smaller than most laptops. The line isn't infinitely far (one machine eventually runs out of disk, more on that later), but most teams are nowhere near it.
 
 ## The idea: let the engine move the data
 
