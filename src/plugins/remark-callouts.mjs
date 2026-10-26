@@ -35,7 +35,9 @@ function remarkCallouts() {
       const type = TYPE_ALIASES[rawType] ?? rawType;
 
       // Strip [!TYPE] line from content; remaining text after the newline becomes content
-      const remaining = firstText.value.slice(match[0].length).replace(/^\n/, "");
+      const remaining = firstText.value
+        .slice(match[0].length)
+        .replace(/^\n/, "");
 
       let children;
 
@@ -56,6 +58,20 @@ function remarkCallouts() {
             ],
           },
           ...node.children.slice(1),
+        ];
+      }
+
+      // An optional title after [!TYPE] becomes a bold first line
+      const title = match[0].replace(/^\[!\w+\]/, "").trim();
+      if (title) {
+        children = [
+          {
+            type: "paragraph",
+            children: [
+              { type: "strong", children: [{ type: "text", value: title }] },
+            ],
+          },
+          ...children,
         ];
       }
 
