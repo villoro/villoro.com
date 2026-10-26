@@ -259,11 +259,39 @@ MySQL was the third database we added, and it took one adapter and a handful of 
 
 ## What we got
 
-{/*
-Headline numbers only (X% faster, Y% less compute, N jobs -> 1), pointing to the
-appendix for detail. The odd part: everything got better at once (simpler, cheaper,
-faster), which almost never happens.
-*/}
+We moved three kinds of jobs from pandas to DuckDB.
+
+> [!success] The short version
+> **70% to 95% less compute** on every job we migrated, every set of parallel jobs collapsed into **a single one**, and the full extraction **5x faster**.
+
+In more detail:
+
+| Migration | Jobs | Wall time | Compute |
+| --- | --- | --- | --- |
+| SQL Server, full extraction (202 tables, 300M rows) | 2 → **1** | 2 h 24 min → **30 min** (~5x faster) | **90% less** |
+| MySQL, nightly incremental export (11 databases) | 11 → **1** | ~25 min → **~20 min** | **~70% less** |
+| MySQL, weekly hard-delete check (836M ids) | 12 tasks → **1** | ~49 min → **11 min** (~4x faster) | **~95% less** |
+
+Compute is vCPU-hours: how long each task ran, times its size. The numbers come from real runs on the real sources; the details of each migration, and how each number was measured, are in the [appendix](#appendix-the-migrations-in-detail).
+
+The nightly export is the least impressive line, and that's on purpose. It is incremental (it only reads the rows that changed), so most of its time is spent waiting for MySQL to answer, and **no engine makes a source database answer faster**. Even there, we went from 11 jobs to 1 and used a fraction of the compute.
+
+### Everything got better
+
+> [!important] Fast, cheap, simple: pick three
+> There's an old engineering joke: fast, cheap or good, pick two. This migration is the rare case where you don't have to pick.
+
+What I find odd about these results is that **there is no trade-off** in them. Usually you buy speed with money, or simplicity with speed. Here, everything moved in the right direction at once:
+
+* **Faster**: the full extractions take a fraction of the time.
+* **Cheaper**: smaller tasks, running for less time. The biggest SQL Server tables needed a 16 GB task with pandas; DuckDB moves the whole database on 8 GB.
+* **Simpler**: no batches, no batch sizes per source, no caps or safe modes, and one job per source instead of many. The hard-delete check went from three steps, two jobs and a set of snapshot tables to a single `SELECT id` per table (that one deserves its own post).
+* **Less load on the source**: every table is read once, instead of once per batch.
+
+> [!note] I'm not putting a price on it
+> At AWS list prices, the absolute savings are small: these are small tasks to begin with. The real win is that the pipeline is simpler and faster. Spending less is a bonus.
+
+The one real cost was writing code that we used to get for free, which is the next section.
 
 ## The trade-off: you write the write logic
 
