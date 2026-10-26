@@ -295,11 +295,57 @@ The one real cost was writing code that we used to get for free, which is the ne
 
 ## The trade-off: you write the write logic
 
-{/*
-The one real cost: awswrangler handled append / merge / overwrite / schema evolution for
-us. With DuckDB on Glue Iceberg we wrote it ourselves, plus its limits (no DROP / CREATE
-OR REPLACE, no commit retries, overwrite = DELETE + INSERT, compaction afterwards).
-*/}
+With pandas, writing to the lake was one call to <FancyLink linkText="awswrangler.athena.to_iceberg" url="https://aws-sdk-pandas.readthedocs.io/en/stable/stubs/awswrangler.athena.to_iceberg.html" company="aws" dark="true"/>. You give it a DataFrame, a `mode`, some `merge_cols` and `schema_evolution=True`, and it figures out the rest.
+
+DuckDB writes Iceberg natively, but at a lower level: it gives you SQL statements, not a "write this table" function. Everything awswrangler decided for us, we now write ourselves. That's about 400 lines of Python, and this is what they do:
+
+| Problem | What we do |
+| --- | --- |
+| A merge needs one row per key | Deduplicate the staged rows first |
+| A new column in the source | Compare with `DESCRIBE` and `ALTER TABLE ... ADD COLUMN` each new one, since DuckDB doesn't evolve the schema by itself |
+| `CREATE TABLE` on Glue needs an explicit `location` | Compute the S3 path and the table properties ourselves |
+| No `DROP` or `CREATE OR REPLACE` | Overwrite as `DELETE` + `INSERT` in one transaction (see [above](#an-overwrite-in-a-single-transaction)) |
+| A `DELETE` writes delete files instead of rewriting data | Run Athena's `OPTIMIZE` and `VACUUM` after every overwrite, or each one keeps the old copy of the table |
+| Glue fails a commit now and then (a 502, a conflict) and DuckDB doesn't retry | Retry the commit with a growing wait |
+
+Most of these are a few lines each. Two of them are worth showing.
+
+**The merge.** DuckDB's `QUALIFY` makes the deduplication a one-liner, and then the merge is plain SQL:
+
+```sql
+-- One row per key: the latest version wins
+CREATE OR REPLACE TEMP TABLE staged AS
+SELECT * FROM staged
+WHERE id IS NOT NULL
+QUALIFY row_number() OVER (PARTITION BY id ORDER BY updated_at DESC) = 1;
+
+MERGE INTO lake.raw.employees AS t
+USING staged AS s ON t.id = s.id
+WHEN MATCHED THEN UPDATE SET name = s.name, updated_at = s.updated_at, ...
+WHEN NOT MATCHED THEN INSERT BY NAME;
+```
+
+**The commit retry.** Glue's Iceberg endpoint fails a commit every now and then, and retrying a write is not always safe: a `502` can mean the commit landed anyway, and appending the same rows twice duplicates them. So before retrying a create or an append, we check whether the rows are already there:
+
+```python
+for attempt in range(1, COMMIT_TRIES + 1):
+    try:
+        write_rows()
+        return
+    except duckdb.Error as error:
+        if not is_transient(error) or attempt == COMMIT_TRIES:
+            raise
+        logger.warning(f"Committing to {table} failed ({attempt=}): {error}")
+        if mode in ("create", "append") and rows_landed(table):  # by this run's extraction timestamp
+            logger.warning("The rows are in the table already, not writing again")
+            return
+        time.sleep(WAIT_SECONDS * 2 ** (attempt - 1))
+```
+
+A merge or an overwrite gives the same table when run twice, so those are simply retried.
+
+> [!note] Is it worth it?
+> For us, clearly. It's a few hundred lines written once, and every table reuses them. In exchange, we got everything in the previous section. But it's real code that you own: if you just need to dump a few small tables, awswrangler is still the shortest path.
 
 ## What we learned
 
