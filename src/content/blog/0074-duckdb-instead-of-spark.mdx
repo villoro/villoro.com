@@ -5,7 +5,7 @@ meta_title: Moving data between RDS and an Iceberg lake with DuckDB instead of S
 description: "Most teams don't have tables big enough for Spark. How we moved SQL Server and MySQL into an Iceberg lake with DuckDB on one small machine: simpler, faster and 70–95% cheaper."
 date: 2026-10-26
 writing_date: 2026-10-26
-image: /images/blog/9999-iceberg-polar-bears.jpg
+image: /images/blog/0074-duck-towing-iceberg.jpg
 category: DE
 tags: [DE, DuckDB, Iceberg, AWS, Python, SQL]
 draft: false
@@ -19,9 +19,7 @@ the approach or just see another way. Thesis: you can move data from RDS to the 
 
 ## Spark by default
 
-Ask a data team how they move tables from a relational database into their data lake, and there is a good chance the answer includes Spark. Glue jobs, EMR, Databricks: the tool changes, the reflex does not.
-
-> It's data engineering, so it's Spark.
+Ask a data team how they move tables from a relational database into their data lake, and there is a good chance the answer includes Spark. Glue jobs, EMR, Databricks: the tool changes, but the reasoning is usually the same: *it's data engineering, so it's Spark.*
 
 Spark is a great tool for a specific problem: data that does not fit on one machine. But **very few teams have that problem**. Most companies run on a handful of application databases with tables of thousands to a few hundred million rows. That is not big data. It is data that a single, fairly small machine can move.
 
@@ -40,7 +38,7 @@ I know because we've been through all three: our extractions started on Spark, m
 
 When I think about moving a table out of a database, I think in three zones:
 
-![Three zones of table size](../../images/posts/2026/9999-duckdb-three-zones.svg)
+![Three zones of table size](../../images/posts/2026/0074-duckdb-three-zones.svg)
 
 Many teams start in zone 1 with pandas, and it works. Then a table grows, a task gets OOM-killed, and the next step feels obvious: "pandas doesn't scale, let's use Spark." The jump goes straight from zone 1 to zone 3.
 
@@ -72,7 +70,7 @@ DuckDB can skip the whole trip because it can **attach** both ends:
 
 With both ends attached, moving a table is a SQL statement. The rows go from the source to S3 inside DuckDB's engine, and Python becomes an orchestrator: it builds the SQL, runs it and logs.
 
-![Where the rows go, before and after](../../images/posts/2026/9999-duckdb-rows-path.svg)
+![Where the rows go, before and after](../../images/posts/2026/0074-duckdb-rows-path.svg)
 
 These are the extensions we use, all of them installed with a single `INSTALL`:
 
@@ -417,7 +415,7 @@ When DuckDB runs out of memory, it **spills**: it writes the data it has already
 > [!success] Fix: retry with a bigger share
 > Prefect retries the failed table, and the retry counts double when the memory is split (triple on the second retry). The extra room comes from the other tables, not from the container.
 
-![Sharing memory between tables](../../images/posts/2026/9999-duckdb-memory-budget.svg)
+![Sharing memory between tables](../../images/posts/2026/0074-duckdb-memory-budget.svg)
 
 With both in place, the whole nightly MySQL export peaks at 2.3 to 3.4 GB on an 8 GB task.
 

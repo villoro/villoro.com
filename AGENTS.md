@@ -275,7 +275,7 @@ Posts are co-written, not generated in one go:
 
 ### SVG diagrams
 
-- Live in `src/images/posts/<year>/`, embedded with `![alt](../../images/posts/<year>/name.svg)`. Copy the style of an existing one (`9999-duckdb-three-zones.svg`): `viewBox` 1600 wide, Inter font, `.ttl`/`.mut`/`.txt` classes, blue `#3a76ff` as the accent.
+- Live in `src/images/posts/<year>/`, embedded with `![alt](../../images/posts/<year>/name.svg)`. Copy the style of an existing one (`0074-duckdb-three-zones.svg`): `viewBox` 1600 wide, Inter font, `.ttl`/`.mut`/`.txt` classes, blue `#3a76ff` as the accent.
 - **They must have an opaque background card** (`<rect class="card" …/>` right after `<defs>`). An SVG loaded as `<img>` follows the OS `prefers-color-scheme`, not the site's `.dark` class, so dark text on a transparent background becomes unreadable when the site and OS themes differ.
 - Check them by rendering to PNG with `sharp` (already a dependency). Sharp ignores `@media`, so to preview the dark variant, unwrap the `prefers-color-scheme` block into a scratch copy first.
 
