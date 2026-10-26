@@ -19,20 +19,47 @@ the approach or just see another way. Thesis: you can move data from RDS to the 
 
 ## Spark by default
 
-{/*
-The hook. Many teams reach for Spark the moment "pipeline" and "database" appear in the
-same sentence. Very few teams actually have big tables. Paying for a cluster (startup,
-config, ops) to move tables a small machine could move.
-*/}
+Ask a data team how they move tables from a relational database into their data lake, and there is a good chance the answer includes Spark. Glue jobs, EMR, Databricks: the tool changes, the reflex does not.
+
+> It's data engineering, so it's Spark.
+
+Spark is a great tool for a specific problem: data that does not fit on one machine. But **very few teams have that problem**. Most companies run on a handful of application databases with tables of thousands to a few hundred million rows. That is not big data. It is data that a single, fairly small machine can move.
+
+When you use Spark for it anyway, you pay for things you don't need:
+
+* **A cluster**, even if one node would do.
+* **Startup time**, often longer than reading the table itself.
+* **Configuration and operations**: executors, partitions, memory settings, and the knowledge to tune them.
+
+> [!abstract]
+> This post is about the alternative. You can move data between RDS and an Iceberg lake **without Spark**, on one small machine, and it will probably be faster and cheaper than anything else you might think of. I'll show how we did it with DuckDB, and what we got when we migrated our extractions from pandas.
 
 ## Where the frontier really is
 
-{/*
-The three zones (fits in memory / a bit bigger than memory / really big). Teams that used
-pandas on small tables think the next step is Spark. With DuckDB the "no Spark" frontier
-is much higher than people think: out-of-core, spills to disk, one pass.
-One concrete anchor: e.g. 300M rows / 202 tables on a 4 vCPU / 8 GB task.
-*/}
+When I think about moving a table out of a database, I think in three zones:
+
+1. **It fits in memory.** pandas (or polars, or anything with a DataFrame) is great here. `read_sql`, a DataFrame, a write. Nothing to tune.
+2. **It is bigger than memory, but not huge.** Tens or hundreds of millions of rows, wide tables, a task with 4 or 8 GB of RAM.
+3. **It is really big.** It does not fit on one machine at all. A cluster makes sense: Spark.
+
+Many teams start in zone 1 with pandas, and it works. Then a table grows, a task gets OOM-killed, and the next step feels obvious: "pandas doesn't scale, let's use Spark." The jump goes straight from zone 1 to zone 3.
+
+What makes zone 2 painful with pandas is that everything has to be in memory at once. So you start working around it:
+
+* **Batches.** Read the table in chunks with `LIMIT` or keyset pagination, which needs a sortable key per table and a batch size tuned per source.
+* **Bigger tasks** for the big tables, and a separate job for the rest.
+* **Safety nets**: a cap on the number of batches, a "safe mode" for backfills, retries.
+
+Each workaround is reasonable on its own. Together, they make a simple job complicated, and that complexity is what makes Spark look attractive.
+
+**DuckDB changes where the line is.** It is an analytical engine that runs inside your Python process, and it does not need the whole table in memory: when it runs out, it spills to disk and keeps going. A table bigger than RAM is read in one pass, with no batches. Zone 2 stops being a pain and becomes "just run the query".
+
+To give an idea of how far that goes, these are numbers from our own migrations:
+
+* A **SQL Server** database of **202 tables and 300M rows** extracted in about **30 minutes**, in one job, on a **4 vCPU / 8 GB** task. With pandas it took two jobs, one of them running for almost 2.5 hours on a 16 GB task just for the biggest tables.
+* A single **68M-row table** fully rewritten in **6 minutes** on that same task.
+
+That's 300M rows on a machine smaller than most laptops. The frontier for "we need Spark" is a lot higher than people coming from pandas expect. It isn't infinite (one machine eventually runs out of disk, more on that later), but most teams are nowhere near it.
 
 ## The idea: let the engine move the data
 
