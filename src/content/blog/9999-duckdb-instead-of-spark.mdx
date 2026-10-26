@@ -1,0 +1,96 @@
+---
+slug: duckdb-instead-of-spark
+title: You Probably Don't Need Spark to Move Data Between RDS and Your Lake
+meta_title: Moving data between RDS and an Iceberg lake with DuckDB instead of Spark
+description: TODO
+date: 2026-10-26
+writing_date: 2026-10-26
+image: /images/blog/9999-iceberg-polar-bears.jpg
+category: DE
+tags: [DE, DuckDB, Iceberg, AWS, Python, SQL]
+draft: false
+---
+
+{/*
+Target: ~450 lines. Audience: data engineers who know the problem and want to copy
+the approach or just see another way. Thesis: you can move data from RDS to the lake
+(and back) without Spark, and it will likely be faster and cheaper than anything else.
+*/}
+
+## Spark by default
+
+{/*
+The hook. Many teams reach for Spark the moment "pipeline" and "database" appear in the
+same sentence. Very few teams actually have big tables. Paying for a cluster (startup,
+config, ops) to move tables a small machine could move.
+*/}
+
+## Where the frontier really is
+
+{/*
+The three zones (fits in memory / a bit bigger than memory / really big). Teams that used
+pandas on small tables think the next step is Spark. With DuckDB the "no Spark" frontier
+is much higher than people think: out-of-core, spills to disk, one pass.
+One concrete anchor: e.g. 300M rows / 202 tables on a 4 vCPU / 8 GB task.
+*/}
+
+## The idea: let the engine move the data
+
+{/*
+DuckDB attaches the source DB and the Glue catalog. Rows never go through Python;
+Python only sends SQL. Diagram. Mention the reverse direction (lake -> RDS) if we did it.
+*/}
+
+## How it works
+
+{/*
+Short and concrete: attach, stage, write. One minimal code snippet end to end.
+Source adapters in a few lines (a new database is one small class).
+*/}
+
+## What we got
+
+{/*
+Headline numbers only (X% faster, Y% less compute, N jobs -> 1), pointing to the
+appendix for detail. The odd part: everything got better at once (simpler, cheaper,
+faster), which almost never happens.
+*/}
+
+## The trade-off: you write the write logic
+
+{/*
+The one real cost: awswrangler handled append / merge / overwrite / schema evolution for
+us. With DuckDB on Glue Iceberg we wrote it ourselves, plus its limits (no DROP / CREATE
+OR REPLACE, no commit retries, overwrite = DELETE + INSERT, compaction afterwards).
+*/}
+
+## What we learned
+
+{/*
+Only the lessons that generalise, kept short:
+- The source database is the bottleneck: more concurrency / bigger machine did not help.
+- Memory is a working set, not a total.
+- Where one machine actually stops: the disk for spill.
+*/}
+
+## When you do need Spark
+
+{/*
+Honest boundary + short checklist before copying this. We never benchmarked Spark.
+*/}
+
+## Conclusion
+
+{/*
+Short wrap-up.
+*/}
+
+## Appendix: the migrations in detail
+
+{/*
+Per-migration examples with tables:
+- SQL Server: 202 tables, 300M rows.
+- MySQL nightly export: 11 databases, 469 table extractions.
+- MySQL hard deletes: one paragraph + numbers, with a pointer to a future post.
+Caveats on the numbers (rehearsals, how "before" was measured).
+*/}
