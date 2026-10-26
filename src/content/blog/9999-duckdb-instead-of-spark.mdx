@@ -31,6 +31,8 @@ When you use Spark for it anyway, you pay for things you don't need:
 * **Startup time**, often longer than reading the table itself.
 * **Configuration and operations**: executors, partitions, memory settings, and the knowledge to tune them.
 
+I know because we've been through all three: our extractions started on Spark, moved to pandas, and now run on DuckDB.
+
 > [!abstract]
 > This post is about the alternative. You can move data between RDS and an Iceberg lake **without Spark**, on one small machine, and it will probably be faster and cheaper than anything else you might think of. I'll show how we did it with DuckDB, and what we got when we migrated our extractions from pandas.
 
@@ -311,6 +313,7 @@ DuckDB writes Iceberg natively, but at a lower level: it gives you SQL statement
 | No `DROP` or `CREATE OR REPLACE` | Overwrite as `DELETE` + `INSERT` in one transaction (see [above](#an-overwrite-in-a-single-transaction)) |
 | A `DELETE` writes delete files instead of rewriting data | Run Athena's `OPTIMIZE` and `VACUUM` after every overwrite, or each one keeps the old copy of the table |
 | Glue fails a commit now and then (a 502, a conflict) and DuckDB doesn't retry | Retry the commit with a growing wait |
+| Listing the Glue catalog from DuckDB is slow (about 40 seconds) | Never list it: address tables by name, and ask the Glue API whether a table exists |
 
 Most of these are a few lines each. Two of them are worth showing.
 
@@ -417,6 +420,8 @@ When DuckDB runs out of memory, it **spills**: it writes the data it has already
 ![Sharing memory between tables](../../images/posts/2026/9999-duckdb-memory-budget.svg)
 
 With both in place, the whole nightly MySQL export peaks at 2.3 to 3.4 GB on an 8 GB task.
+
+One more surprise: **reading isn't always the hungriest step.** A 68M-row full refresh staged fine on a 2 vCPU / 4 GB task, and was then killed during the `DELETE` + `INSERT`. On 4 vCPU / 8 GB it took 6 minutes. Size the task for the write, not only for the read.
 
 <Accordion client:load title="The memory split, in code">
 
