@@ -321,9 +321,23 @@ QUALIFY row_number() OVER (PARTITION BY id ORDER BY updated_at DESC) = 1;
 
 MERGE INTO lake.raw.employees AS t
 USING staged AS s ON t.id = s.id
-WHEN MATCHED THEN UPDATE SET name = s.name, updated_at = s.updated_at, ...
-WHEN NOT MATCHED THEN INSERT BY NAME;
+WHEN MATCHED THEN UPDATE SET
+    name = s.name,
+    updated_at = s.updated_at,
+    ...,
+    _extracted_at = s._extracted_at,
+    _num_writes = t._num_writes + 1,          -- how many times this row was written
+    _first_exported_at = t._first_exported_at  -- kept from the first time it was seen
+WHEN NOT MATCHED THEN INSERT BY NAME;      -- new rows: _num_writes = 1, _first_exported_at = now
 ```
+
+Owning the merge has a nice side effect: **we decide what happens to every column**, not only the source ones. With awswrangler, an update replaced the whole row. Now each row also carries some metadata about its own history:
+
+* `_extracted_at`: when the row was last extracted.
+* `_first_exported_at`: when it first reached the lake, kept across updates.
+* `_num_writes`: how many times it has been written. A row that changes every night stands out immediately.
+
+It's two lines in the `MERGE`, and it answers questions like "when did this record first appear?" without digging through Iceberg snapshots.
 
 **The commit retry.** Glue's Iceberg endpoint fails a commit every now and then, and retrying a write is not always safe: a `502` can mean the commit landed anyway, and appending the same rows twice duplicates them. So before retrying a create or an append, we check whether the rows are already there:
 
@@ -342,7 +356,15 @@ for attempt in range(1, COMMIT_TRIES + 1):
         time.sleep(WAIT_SECONDS * 2 ** (attempt - 1))
 ```
 
-A merge or an overwrite gives the same table when run twice, so those are simply retried.
+The wait doubles after every attempt (5 s, 10 s, 20 s...): an **exponential backoff**, so a struggling Glue gets more breathing room each time. A merge or an overwrite gives the same table when run twice, so those are simply retried.
+
+We wrote the loop by hand because of the "did it land?" check in the middle. If you only need the retries, <FancyLink linkText="backoff" url="https://github.com/litl/backoff" dark="true"/> gives you the same in a decorator:
+
+```python
+@backoff.on_exception(backoff.expo, duckdb.Error, max_tries=5, giveup=lambda e: not is_transient(e))
+def write_rows():
+    ...
+```
 
 > [!note] Is it worth it?
 > For us, clearly. It's a few hundred lines written once, and every table reuses them. In exchange, we got everything in the previous section. But it's real code that you own: if you just need to dump a few small tables, awswrangler is still the shortest path.
