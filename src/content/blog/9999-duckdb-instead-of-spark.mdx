@@ -257,6 +257,10 @@ class PostgresSource(Source):
 
 MySQL was the third database we added, and it took one adapter and a handful of type quirks (a `tinyint(1)` stays an integer instead of becoming a boolean, a `0000-00-00` date becomes NULL).
 
+### Many tables at once
+
+One more thing: we don't move one table at a time. A job submits every table as a separate Prefect task, all in the same Python process, and each task opens its own DuckDB. How many run at once isn't decided in our code but by a <FancyLink linkText="Prefect tag concurrency limit" url="https://docs.prefect.io/v3/develop/task-run-limits" dark="true"/>: the nightly MySQL export submits 469 table extractions, and only a handful run at any moment. The few heaviest tables get a stricter tag with a limit of 1, so they never run together.
+
 ## What we got
 
 We moved three kinds of jobs from pandas to DuckDB.
@@ -371,21 +375,25 @@ def write_rows():
 
 ## What we learned
 
-There's one thing I haven't mentioned yet: **we don't move one table at a time.** A job submits every table as a separate Prefect task, all in the same Python process, and each task opens its own DuckDB. How many run at once isn't decided in our code but by a <FancyLink linkText="Prefect tag concurrency limit" url="https://docs.prefect.io/v3/develop/task-run-limits" dark="true"/>: the nightly MySQL export submits 469 table extractions, and only a handful run at any moment. The few heaviest tables get a stricter tag with a limit of 1, so they never run together.
-
-Running tables in parallel on one machine raises three questions: how many at once, how much memory each one gets, and how much disk. These are the lessons we learned answering them.
+Running many tables in parallel on one machine raises three questions: how many at once, how much memory each one gets, and how much disk. These are the lessons we learned answering them.
 
 ### How many at once: the source decides
 
 Once the rows stop going through Python, the slowest part of the pipeline is the database you read from. And a source database doesn't get faster because you ask it more things at once. The first knob everyone turns, **more parallel reads, often does nothing**, or makes it worse: the tables just slow each other down.
 
-What we measured on the MySQL jobs:
+We tried more concurrency, a machine twice as big and letting the heaviest tables run in parallel. None of them made a run meaningfully faster, and most of them made it more expensive.
+
+<Accordion client:load title="The measurements">
+
+On the MySQL jobs:
 
 * **More concurrency, same time.** The hard-delete check with 6 tables at a time took 11m23s. With 10 at a time, 12m20s, and 55% more compute.
-* **A bigger machine, same time.** The nightly export took 21m26s on 8 vCPU / 16 GB, and 21m33s on 4 vCPU / 8 GB. Twice the machine for nothing.
+* **A bigger machine, same time.** The nightly export took 21m26s on 8 vCPU / 16 GB, and 21m33s on 4 vCPU / 8 GB.
 * **Parallel reads slow each other.** The biggest table took 347 s when it ran alone, and 620 s with other tables reading at the same time.
 
-SQL Server told the same story. We assumed that running the seven heaviest tables one by one was the bottleneck, and let four of them run in parallel instead. The run took about as long (29.5 vs 30.8 minutes), and the total task time grew by a quarter, because every table got slower.
+On SQL Server, we assumed that running the seven heaviest tables one by one was the bottleneck, and let four of them run in parallel instead. The run took about as long (29.5 vs 30.8 minutes), and the total task time grew by a quarter, because every table got slower.
+
+</Accordion>
 
 > [!tip] Find the point where the source stops feeding you faster, and stay there
 > Measure with the concurrency you have before adding more. If the tables slow each other down, neither more threads nor a bigger machine will help. Only a faster source would.
@@ -394,25 +402,55 @@ SQL Server told the same story. We assumed that running the seven heaviest table
 
 When DuckDB runs out of memory, it **spills**: it writes the data it has already processed to a temporary folder on disk and reads it back when it needs it. That's what lets it read a table bigger than its memory. But running several tables at once gave us two memory problems.
 
-**Problem 1: every table thought it had the whole machine.** By default, each DuckDB instance may use up to 80% of the machine's memory, and it knows nothing about the other DuckDBs in the same process. Stage two big tables at once and together they can ask for more memory than the container has. When that happens, nobody gets an error: the operating system kills the whole task (an *OOM kill*, exit code 137), and every table running in it fails.
+> [!failure] Problem: every table thought it had the whole machine
+> By default, each DuckDB may use up to 80% of the machine's memory, and it knows nothing about the other DuckDBs in the same process. Stage two big tables at once, and together they can ask for more memory than the container has. Nobody gets an error: the operating system kills the whole task (an *OOM kill*, exit code 137), and every table running in it fails.
 
-**The fix: a shared budget.** All the DuckDBs in a process share 70% of the container's memory, split evenly. Each time a table starts or ends, the split is recalculated and every running DuckDB gets its new limit (DuckDB lets you change `memory_limit` while a query runs). The total can't go over the budget, so the container is never at risk.
+> [!success] Fix: a shared budget
+> All the DuckDBs in a process share 70% of the container's memory, split evenly. Each time a table starts or ends, the split is recalculated and every running DuckDB gets its new `memory_limit`, even in the middle of a query.
 
-**Problem 2: one step that doesn't fit.** Spilling isn't magic. Think of a desk and a filing cabinet: finished pages go to the cabinet (disk), but the page you're working on has to fit on the desk (memory). A table with very long texts can need more room for a single step than its share of memory. This time DuckDB itself raises an out-of-memory error, and only that table fails.
+> [!failure] Problem: one step that doesn't fit
+> Spilling isn't magic. Think of a desk and a filing cabinet: finished pages go to the cabinet (disk), but the page you're working on has to fit on the desk (memory). A table with very long texts can need more room for a single step than its share. This time DuckDB raises an out-of-memory error, and only that table fails.
 
-**The fix: retry with a bigger share.** Prefect retries the failed task, and the retry counts double when the memory is split (triple on the second retry). It takes the extra room from the other tables, not from the container, so the budget stays the same.
+> [!success] Fix: retry with a bigger share
+> Prefect retries the failed table, and the retry counts double when the memory is split (triple on the second retry). The extra room comes from the other tables, not from the container.
+
+![Sharing memory between tables](../../images/posts/2026/9999-duckdb-memory-budget.svg)
 
 With both in place, the whole nightly MySQL export peaks at 2.3 to 3.4 GB on an 8 GB task.
 
+<Accordion client:load title="The memory split, in code">
+
+```python
+MEMORY_FRACTION = 0.7  # of the container, shared by every DuckDB alive in the process
+ENGINES = []           # the DuckDBs alive right now
+ENGINES_LOCK = threading.Lock()
+
+
+def share_memory():
+    """Gives each live engine its part of the budget. Call it when one starts or ends."""
+    limit_mb = get_container_memory_mb()
+    mb_per_weight = limit_mb * MEMORY_FRACTION / sum(e.weight for e in ENGINES)
+    for engine in ENGINES:
+        share_mb = int(mb_per_weight * engine.weight)  # weight is 2 on a retry, 3 on the next
+        # A separate cursor, because the engine's connection is busy running its query
+        engine.control.execute(f"SET memory_limit = '{share_mb}MiB'")
+```
+
+</Accordion>
+
 ### How much disk: where one machine stops
 
-Spilling moves the problem from memory to disk, and the disk is finite too. An ECS task has about 20 GiB of local disk by default, and on a big enough table, that's where a single machine stops.
+Spilling moves the problem from memory to disk, and the disk is finite too. Our tasks have about 20 GiB of local disk, and on a big enough table, that's where a single machine stops.
 
-We found it with a backfill: re-reading a year of the heaviest tables, about 196M rows, on a 4 vCPU / 8 GB task. Tables of 15 to 27M rows took 9 to 16 minutes each, no problem. But the three largest wide tables (27M, 39M and 67M rows) failed: DuckDB had spilled about 14 GiB and the disk was full. Memory was fine.
+> [!failure] Problem: the disk filled up, and DuckDB called it "out of memory"
+> We found it with a backfill: re-reading a year of the heaviest tables, about 196M rows, on a 4 vCPU / 8 GB task. Tables of 15 to 27M rows took 9 to 16 minutes each. But the three largest wide tables (27M, 39M and 67M rows) failed after spilling about 14 GiB. Memory was fine.
+>
+> The error said out of memory, though. So our "retry with a bigger share" kicked in, and re-read each table three times, 14 to 32 minutes each time, to fail in exactly the same way.
 
-What made it worse is that **DuckDB reports a full spill folder as an out-of-memory error.** So our "retry with a bigger share" fix kicked in, and re-read each of those tables three times, 14 to 32 minutes each time, to fail in exactly the same way. Now we tell them apart by the error message (a full disk mentions `max_temp_directory_size`) and don't retry it.
+> [!success] Fix: tell them apart, and don't retry a full disk
+> A full spill folder mentions `max_temp_directory_size` in the error, so that one is no longer retried. For tables that big, read them in time windows (a month at a time, say), or give the task more disk.
 
-For tables that big, the options are simple: read them in time windows (a month at a time, say), or give the task more disk. This is the honest edge of the single-machine approach, and the point where a bigger setup starts to make sense.
+This is the honest edge of the single-machine approach, and the point where a bigger setup starts to make sense.
 
 ## When you do need Spark
 
