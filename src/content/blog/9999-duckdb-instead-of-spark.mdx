@@ -461,11 +461,12 @@ And I'm not saying it from theory: two of the jobs in this post started on Spark
 * **The SQL Server extraction** ran on Spark before pandas. It took around 40 minutes, slightly slower than DuckDB's 30, and cost far more.
 * **The MySQL export** was even worse: **one cluster per database, so 11 clusters** every night, to move data that now fits on a single 8 GB task.
 
-So our path was Spark, then pandas, then DuckDB. Spark was overkill, pandas got complicated, and DuckDB turned out to be the middle that was missing.
+> [!abstract] Our path: Spark → pandas → DuckDB
+> Spark was overkill, pandas got complicated, and DuckDB turned out to be the middle that was missing.
 
 With that said, these are the signs I'd look for before reaching for a cluster:
 
-* **A single table doesn't fit on one machine's disk**, even read in time windows. That's the edge we found in the previous section, and it's a real one.
+* **A single table doesn't fit on one machine's disk.** That's the edge we found in the previous section, and it's a real one. Reading the table in batches (time windows, say) can push it further, but then you're back to the kind of complexity DuckDB removed in the first place.
 * **The work is more than moving rows.** Big joins across large datasets, or heavy aggregations that need to shuffle data between machines, are what Spark was built for.
 * **You already run Spark well.** If the platform, the team and the knowledge are already there, the extra cost of using it for extractions is much smaller.
 
@@ -479,7 +480,7 @@ If you want to try this approach, these are the questions I'd ask first:
 * **Do the types survive?** Compare the new tables with the old ones by value, not by row count. Expect a cast or two for each exotic type, and put them in the source adapter.
 * **Is the disk big enough for the biggest spill?** Memory is easy to share between tables. Disk runs out quietly, and DuckDB reports it as out of memory.
 * **Are overwrites compacted?** Run `OPTIMIZE` and `VACUUM` after a `DELETE` + `INSERT`, or every refresh keeps the old copy of the table.
-* **Can you go back?** Our DuckDB tables carry extra metadata columns that the old pandas path can't write, so once a table moves, it stays. Test on throwaway copies of the tables first.
+* **Do you want a way back?** DuckDB doesn't lock you in, but your own choices might. We decided to add metadata columns (`_num_writes`, `_first_exported_at`) that our old pandas path doesn't write, so for us a table that moves stays moved. Decide that up front, and test on throwaway copies of the tables first.
 
 ## Conclusion
 
