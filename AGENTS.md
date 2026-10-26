@@ -267,6 +267,7 @@ Posts are co-written, not generated in one go:
 - **Villoro reviews before anything is committed.** Draft the change, summarise it, and commit only when told. Don't run ahead to the next section.
 - **Length:** most posts are ~300–500 lines of MDX. Keep the main body lean; push detail (per-case numbers, tables of measurements) to an appendix and give the main text a headline figure.
 - **Voice:** first person, direct, short paragraphs, **bold** for the key phrase, bullets over long prose. Match an existing post (e.g. `0068-be-nice-data.mdx`) rather than inventing a style.
+- **No manual numbers in headings.** H2–H5 are auto-numbered (see "Heading numbering"), so `### 1. Attach` renders as "4.1 1. Attach". Write `### Attach`.
 - **Break up long text.** Use callouts (`[!abstract]` for the thesis, `[!tip]` for a striking number or aside), small tables, and SVG diagrams. Villoro likes diagrams: propose one whenever a concept has a shape (zones, flows, before/after).
 - **Link generously.** Earlier posts on the same topic (`<FancyLink url="https://villoro.com/blog/<slug>/" dark="true"/>`) and official docs for any tool, extension or connector mentioned.
 - **Be honest with numbers.** Use only figures from a source (the code, a measurement, Villoro). If you assume something (same workload, production vs. rehearsal, cluster size), say so in your summary so Villoro can confirm it. Never invent a statistic to make a claim stronger.
