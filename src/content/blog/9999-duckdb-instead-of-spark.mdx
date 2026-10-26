@@ -55,7 +55,7 @@ Each workaround is reasonable on its own. Together, they make a simple job compl
 > [!tip] How far is the frontier?
 > One of our SQL Server databases, **202 tables and 300M rows**, is extracted **in full** (not incrementally: every row of every table, read and written to the lake) in about **30 minutes** on a single **4 vCPU / 8 GB** task.
 >
-> With pandas the same extraction took two jobs, one of them running almost 2.5 hours on a 16 GB task just for the biggest tables. An older migration of mine did it with Spark in around 40 minutes, so one small DuckDB task is even a bit faster than the cluster.
+> With pandas the same extraction took two jobs, one of them running almost 2.5 hours on a 16 GB task just for the biggest tables. Before pandas, this same job ran on Spark and took around 40 minutes, so one small DuckDB task is even a bit faster than the cluster, at a fraction of the cost.
 
 That's 300M rows on a machine smaller than most laptops. The line isn't infinitely far (one machine eventually runs out of disk, more on that later), but most teams are nowhere near it.
 
@@ -454,9 +454,32 @@ This is the honest edge of the single-machine approach, and the point where a bi
 
 ## When you do need Spark
 
-{/*
-Honest boundary + short checklist before copying this. We never benchmarked Spark.
-*/}
+This post is not "Spark is bad". Spark is the right tool for problems that don't fit on one machine. The point is that **most extractions are not that problem**.
+
+And I'm not saying it from theory: two of the jobs in this post started on Spark.
+
+* **The SQL Server extraction** ran on Spark before pandas. It took around 40 minutes, slightly slower than DuckDB's 30, and cost far more.
+* **The MySQL export** was even worse: **one cluster per database, so 11 clusters** every night, to move data that now fits on a single 8 GB task.
+
+So our path was Spark, then pandas, then DuckDB. Spark was overkill, pandas got complicated, and DuckDB turned out to be the middle that was missing.
+
+With that said, these are the signs I'd look for before reaching for a cluster:
+
+* **A single table doesn't fit on one machine's disk**, even read in time windows. That's the edge we found in the previous section, and it's a real one.
+* **The work is more than moving rows.** Big joins across large datasets, or heavy aggregations that need to shuffle data between machines, are what Spark was built for.
+* **You already run Spark well.** If the platform, the team and the knowledge are already there, the extra cost of using it for extractions is much smaller.
+
+And before any of those, remember that one machine goes a long way. A bigger task, more disk, or reading the biggest tables in windows are all cheaper steps than a cluster.
+
+### Before you copy this
+
+If you want to try this approach, these are the questions I'd ask first:
+
+* **Is the source your limit?** Measure with the concurrency you have before adding more. If the tables slow each other down, a bigger machine won't help.
+* **Do the types survive?** Compare the new tables with the old ones by value, not by row count. Expect a cast or two for each exotic type, and put them in the source adapter.
+* **Is the disk big enough for the biggest spill?** Memory is easy to share between tables. Disk runs out quietly, and DuckDB reports it as out of memory.
+* **Are overwrites compacted?** Run `OPTIMIZE` and `VACUUM` after a `DELETE` + `INSERT`, or every refresh keeps the old copy of the table.
+* **Can you go back?** Our DuckDB tables carry extra metadata columns that the old pandas path can't write, so once a table moves, it stays. Test on throwaway copies of the tables first.
 
 ## Conclusion
 
