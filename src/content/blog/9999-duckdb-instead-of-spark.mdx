@@ -497,10 +497,67 @@ If you try it, or if you've hit a limit I haven't, I'd love to hear about it in 
 
 ## Appendix: the migrations in detail
 
-{/*
-Per-migration examples with tables:
-- SQL Server: 202 tables, 300M rows.
-- MySQL nightly export: 11 databases, 469 table extractions.
-- MySQL hard deletes: one paragraph + numbers, with a pointer to a future post.
-Caveats on the numbers (rehearsals, how "before" was measured).
-*/}
+The numbers behind the [What we got](#what-we-got) table, for those who want them.
+
+### How we tested
+
+We never switched a table blindly. Every migration ran first on production infrastructure, against the real source and on the real task sizes, but writing to separate schemas (the idea from <FancyLink linkText="One Environment to Rule Them All" url="https://villoro.com/blog/one-environment-prod/" dark="true"/>). Then we compared those tables with the production ones **by value**, with `EXCEPT` in both directions, and only switched once they matched.
+
+* **SQL Server**: 156 of the 196 comparable tables matched exactly. The other 40 differed by a handful of rows each, rows that changed in the source between the two runs.
+* **MySQL**: 13 of the 15 tables compared in full were identical. The other two differed only by rows that changed between the two runs.
+
+That's also what made the migration gradual: the engine is a setting per table, so we could move a few tables at a time, compare, and move on.
+
+### SQL Server: full extraction
+
+202 tables and 300M rows, read in full every time.
+
+| | pandas | DuckDB |
+| --- | --- | --- |
+| Jobs | 2: the big tables, one at a time, and the rest | 1 |
+| Task size | 8 vCPU / 16 GB for the big tables, 4 vCPU / 8 GB for the rest | 4 vCPU / 8 GB |
+| Run time | 2 h 24 min + 12 min | 29.5 min |
+| Peak memory | up to 7.3 GB for a single table | 4.4 GB of 8 GB, for the whole run |
+| Compute | about 20 vCPU-hours | about 2 vCPU-hours |
+
+Per table, with the same output:
+
+| Table | Rows | pandas | DuckDB |
+| --- | --- | --- | --- |
+| A wide-ish table | 13.9M | 17:49 | 3:50 |
+| A wide table (48 columns) | 12.4M | 24:55 | about 7:00 |
+| A narrow table (7 columns), full overwrite | 68M | 31:32 | 6:03 |
+
+The run is lopsided: 169 of the 202 tables have under 1M rows and take about half a second each. Three tables account for most of the time.
+
+### MySQL: nightly incremental export
+
+11 databases of the same application, about 42 tables each, reading what changed in the last 2 days: about 17M rows over 469 table extractions.
+
+| | pandas | DuckDB |
+| --- | --- | --- |
+| Jobs | 11, one per database | 1, all databases |
+| Task size | 2 vCPU / 4 GB each | 4 vCPU / 8 GB |
+| Run time | about 25 min (median) | 17 to 22 min |
+| Compute | about 5 vCPU-hours | about 1.4 vCPU-hours |
+
+Per table, the gain is small. On the biggest database, run on the same data at the same moment, pandas took 11m11s and DuckDB 9m47s: **about 1.1x faster**. That's the source being the limit, as explained in [What we learned](#how-many-at-once-the-source-decides). The gain is in the jobs and the compute, not in raw speed.
+
+### MySQL: weekly hard-delete check
+
+Some sources really delete rows, and the lake keeps them unless you check: that means reading every id of every table (836M ids) and comparing them with the lake.
+
+| | pandas | DuckDB |
+| --- | --- | --- |
+| Jobs | 12: 11 id exports (one per database), then a merge | 1, all databases |
+| Task size | 1 × 4 vCPU / 8 GB, 4 × 2 vCPU / 4 GB, 6 × 1 vCPU / 2 GB, plus a small task for the merge | 2 vCPU / 4 GB |
+| Run time | about 49 min | 11.4 min |
+| Compute | 8.5 vCPU-hours | 0.38 vCPU-hours |
+
+How it works, and the safety rules that keep it from flagging every row by mistake, deserve a post of their own.
+
+### Caveats on the numbers
+
+* **The "before" numbers are not a controlled benchmark.** They come from the pandas jobs' own history: averages of recent runs, or one measured night.
+* **Compute is vCPU-hours of run time**: each task's vCPUs times how long it ran. Provisioning time is left out on both sides, and only the extraction is counted, not what runs after it.
+* **The memory budget changed during the migration** (from 50% to 70% of the container), so not every memory figure is for the same setting.
