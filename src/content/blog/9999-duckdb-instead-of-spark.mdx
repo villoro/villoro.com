@@ -120,7 +120,7 @@ def extract_one(source, table, query):
 
 All the snippets in this section are simplified versions of our code.
 
-### 1. Attach
+### Attach
 
 `DuckDBEngine` opens an in-memory DuckDB, points its spill folder to a temporary directory, and runs the attach statements of the source. Then it attaches the lake with the AWS credentials of the running task:
 
@@ -133,7 +133,7 @@ ATTACH '<aws account id>' AS lake
     (TYPE iceberg, ENDPOINT_TYPE 'glue', DEFAULT_SCHEMA 'default');
 ```
 
-### 2. Stage
+### Stage
 
 Staging reads the source table into a DuckDB temp table, in a single query:
 
@@ -183,7 +183,7 @@ Nobody writes that by hand: the adapter wraps the table's query with one cast pe
 > [!tip] Leaving columns out
 > DuckDB has a handy <FancyLink linkText="SELECT * EXCLUDE" url="https://duckdb.org/docs/stable/sql/expressions/star" dark="true"/> to drop columns without listing the rest: `SELECT * EXCLUDE (password_hash) FROM ...`. Great for columns you don't need, but it drops them **after** reading them. For a column that must never leave the database (a password hash, say), we list the columns we keep in the query that runs on the source instead. That way the value never even crosses the network.
 
-### 3. Write
+### Write
 
 The staged rows go to the Iceberg table. Which statement depends on the table's state and config:
 
@@ -256,20 +256,6 @@ class PostgresSource(Source):
 ```
 
 MySQL was the third database we added, and it took one adapter and a handful of type quirks (a `tinyint(1)` stays an integer instead of becoming a boolean, a `0000-00-00` date becomes NULL).
-
-### Moving a table is one line
-
-Each table is described in a YAML file (name, incremental column, merge keys, columns to exclude...), and that file is the same for both engines. So moving a job to DuckDB is one setting on its table model:
-
-```python
-class MyAppTable(PostgresTable):
-    schema_out: str = "raw__my_app"
-    filter_col: str = "updated_at"
-    merge_cols: list[str] = ["id"]
-    engine: Engine = "duckdb"  # was "pandas"
-```
-
-That made it easy to migrate gradually: run the same table with both engines, compare the output, and switch when it matched.
 
 ## What we got
 
