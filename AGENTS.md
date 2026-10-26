@@ -246,11 +246,11 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 ## Image conventions
 
 - Blog post hero images: 16:9 (CI enforced), in `src/images/blog/`. Frontmatter keeps the `/images/blog/...` path; `resolveImage` (`src/lib/utils/blogImages.ts`) maps it to `src/images/blog` first, then `public/images` (logo, favicon).
-- Post-body images: `src/images/posts/<year>/...`, imported directly in the MDX.
+- Post-body images: `src/images/posts/<year>/...`, imported directly in the MDX. SVG diagrams need an opaque background (see "SVG diagrams" below).
 - `src/images/` → optimized via `astro:assets` (use `ImageMod` or `<Image>`); originals never ship in `dist`. `public/` → served verbatim.
 - Company logos: `src/images/companies/<name>.png` and `<name>_dark.png` for dark variant.
 
-## Workflow preferences (how Arnau wants agents to work)
+## Workflow preferences (how Villoro wants agents to work)
 
 - **Branch from fresh `origin/main`.** Always `git fetch` first and base new branches on `origin/main` — never on local `main` (often stale) or another unmerged branch. PRs here squash-merge quickly, so re-check `origin/main` between tasks.
 - **Incremental commits, like a developer.** Don't squash a whole task into one commit. Commit each logical step as you complete it (e.g. "move the files" → commit, "add the resolver" → commit, "fix the consumers" → commit, "update docs + version bump" → commit). Each commit message explains the why, not just the what.
@@ -258,6 +258,25 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - **Keep `IMPROVEMENTS.md` current.** When implementing an item from it, remove that item (and fix cross-references) in the same PR.
 - **Verify before opening a PR.** Build + typecheck + lint, and check the actual behavior in a browser against the built site (`npm run preview`), not just that the build passes.
 - **PRs:** push the branch and open the PR; the repo owner reviews/merges. No `gh` CLI on this machine — open the prefilled GitHub compare URL in the browser instead.
+
+## Writing blog posts with Villoro
+
+Posts are co-written, not generated in one go:
+
+- **Outline first, then section by section.** Agree on the thesis and audience, write a skeleton (headings + an MDX `{/* … */}` comment with each section's intent), then fill one or two sections per round.
+- **Villoro reviews before anything is committed.** Draft the change, summarise it, and commit only when told. Don't run ahead to the next section.
+- **Length:** most posts are ~300–500 lines of MDX. Keep the main body lean; push detail (per-case numbers, tables of measurements) to an appendix and give the main text a headline figure.
+- **Voice:** first person, direct, short paragraphs, **bold** for the key phrase, bullets over long prose. Match an existing post (e.g. `0068-be-nice-data.mdx`) rather than inventing a style.
+- **Break up long text.** Use callouts (`[!abstract]` for the thesis, `[!tip]` for a striking number or aside), small tables, and SVG diagrams. Villoro likes diagrams: propose one whenever a concept has a shape (zones, flows, before/after).
+- **Link generously.** Earlier posts on the same topic (`<FancyLink url="https://villoro.com/blog/<slug>/" dark="true"/>`) and official docs for any tool, extension or connector mentioned.
+- **Be honest with numbers.** Use only figures from a source (the code, a measurement, Villoro). If you assume something (same workload, production vs. rehearsal, cluster size), say so in your summary so Villoro can confirm it. Never invent a statistic to make a claim stronger.
+- **Rewriting an existing draft:** start a new `9999-*.mdx` on a branch from fresh `origin/main` and read the old draft with `git show <branch>:<path>` instead of building on top of it.
+
+### SVG diagrams
+
+- Live in `src/images/posts/<year>/`, embedded with `![alt](../../images/posts/<year>/name.svg)`. Copy the style of an existing one (`9999-duckdb-three-zones.svg`): `viewBox` 1600 wide, Inter font, `.ttl`/`.mut`/`.txt` classes, blue `#3a76ff` as the accent.
+- **They must have an opaque background card** (`<rect class="card" …/>` right after `<defs>`). An SVG loaded as `<img>` follows the OS `prefers-color-scheme`, not the site's `.dark` class, so dark text on a transparent background becomes unreadable when the site and OS themes differ.
+- Check them by rendering to PNG with `sharp` (already a dependency). Sharp ignores `@media`, so to preview the dark variant, unwrap the `prefers-color-scheme` block into a scratch copy first.
 
 ## Common task playbook
 
