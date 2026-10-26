@@ -50,7 +50,7 @@ Zone 2 is painful with pandas because everything has to fit in memory at once. S
 
 Each workaround is reasonable on its own. Together, they make a simple job complicated, and that complexity is what makes Spark look attractive.
 
-**DuckDB changes where the line is.** It runs inside your Python process and does not need the whole table in memory: when it runs out, it spills to disk and keeps going. A table bigger than RAM is read in one pass, with no batches.
+**DuckDB changes where the line is.** It runs inside your Python process and does not need the whole table in memory: when it runs out, it spills to disk and keeps going. A table bigger than RAM is read in one pass, with no batches. If you haven't used it, I wrote an intro in <FancyLink linkText="DuckDB and Beyond" url="https://villoro.com/blog/duckdb-fast-analytics/" dark="true"/>.
 
 > [!tip] How far is the frontier?
 > One of our SQL Server databases, **202 tables and 300M rows**, is extracted **in full** (not incrementally: every row of every table, read and written to the lake) in about **30 minutes** on a single **4 vCPU / 8 GB** task.
@@ -61,10 +61,49 @@ That's 300M rows on a machine smaller than most laptops. The line isn't infinite
 
 ## The idea: let the engine move the data
 
-{/*
-DuckDB attaches the source DB and the Glue catalog. Rows never go through Python;
-Python only sends SQL. Diagram. Mention the reverse direction (lake -> RDS) if we did it.
-*/}
+Our old pipeline was the obvious one: read a batch with `pandas.read_sql`, write it to the lake, repeat. It works, but every row makes a long trip: from the database driver to Python objects, to a DataFrame, to Arrow, to Parquet. Most of that is Python doing work that a database engine does much better.
+
+DuckDB can skip the whole trip because it can **attach** both ends:
+
+* **The source database.** An attached database looks like one more schema in DuckDB: you can `SELECT` from its tables, or send it a query to run on the server.
+* **The lake.** The Iceberg extension attaches an AWS Glue catalog, and DuckDB can create and write Iceberg tables in it.
+
+With both ends attached, moving a table is a SQL statement. The rows go from the source to S3 inside DuckDB's engine, and Python becomes an orchestrator: it builds the SQL, runs it and logs.
+
+![Where the rows go, before and after](../../images/posts/2026/9999-duckdb-rows-path.svg)
+
+These are the extensions we use, all of them installed with a single `INSTALL`:
+
+| Connects to | Extension | Docs |
+| --- | --- | --- |
+| PostgreSQL | `postgres` (core) | <FancyLink linkText="PostgreSQL extension" url="https://duckdb.org/docs/stable/core_extensions/postgres/overview" dark="true"/> |
+| MySQL | `mysql` (core) | <FancyLink linkText="MySQL extension" url="https://duckdb.org/docs/stable/core_extensions/mysql" dark="true"/> |
+| SQL Server | `mssql` (community) | <FancyLink linkText="mssql extension" url="https://duckdb.org/community_extensions/extensions/mssql" dark="true"/> |
+| Glue / Iceberg | `iceberg` (core) | <FancyLink linkText="Iceberg catalogs" url="https://duckdb.org/docs/stable/core_extensions/iceberg/catalogs" dark="true"/> |
+
+In its simplest form, the whole idea fits in a few lines:
+
+```sql
+INSTALL postgres; LOAD postgres;
+INSTALL iceberg; LOAD iceberg;
+
+-- The source, read-only
+ATTACH 'host=... dbname=app user=... password=...' AS src (TYPE postgres, READ_ONLY);
+
+-- The lake: a Glue catalog, addressed by AWS account id
+ATTACH '<aws account id>' AS lake (TYPE iceberg, ENDPOINT_TYPE 'glue');
+
+-- Move a table
+INSERT INTO lake.bronze.users
+SELECT * FROM src.public.users;
+```
+
+No DataFrame, no batches, no driver loop. The real version has a few more steps (staging, merges, types that need a cast), which I'll show in the next section.
+
+> [!tip] It works the other way too
+> An attached database is writable, so the same trick moves data from the lake back to the database: `INSERT INTO pg.public.table SELECT ... FROM lake.gold.table`. No Spark in that direction either.
+
+I already hinted at this in the "acting as a data mover" part of <FancyLink linkText="DuckDB and Beyond" url="https://villoro.com/blog/duckdb-fast-analytics/" dark="true"/>. This time it's not a toy example: it's what runs our extractions every night.
 
 ## How it works
 
