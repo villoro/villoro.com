@@ -1,0 +1,82 @@
+<svg viewBox="0 0 1600 860" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <style>
+    .card { fill: #ffffff; }
+    .ttl { fill: #3a76ff; }
+    .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .gln { stroke: #6a6e82; }
+    .box { fill: #f3f5fb; stroke: #a6accb; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl { fill: #e8eaf6; }
+      .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .gln { stroke: #9aa0b5; }
+      .box { fill: #23263a; stroke: #6a6e82; }
+    }
+  </style>
+  <defs>
+    <marker id="aR" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M1 1 L10 6 L1 11 z" fill="#6a6e82"/>
+    </marker>
+    <marker id="aB" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M1 1 L10 6 L1 11 z" fill="#3a76ff"/>
+    </marker>
+  </defs>
+
+  <!-- opaque card: as an <img> the SVG follows the OS theme, not the site's .dark class -->
+  <rect width="1600" height="860" rx="24" class="card"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="40" font-weight="700" class="ttl">Where the rows go</text>
+  <text x="800" y="112" text-anchor="middle" font-size="23" class="mut">with DuckDB, Python only sends SQL: the rows never become Python objects</text>
+
+  <!-- BEFORE -->
+  <text x="75" y="190" font-size="22" font-weight="700" fill="#d97706">BEFORE · pandas</text>
+  <rect x="75" y="215" width="200" height="100" rx="14" class="box" stroke-width="2"/>
+  <text x="175" y="273" text-anchor="middle" font-size="22" font-weight="600" class="txt">Source DB</text>
+  <rect x="325" y="215" width="200" height="100" rx="14" fill="#fdecc8" stroke="#f59e0b" stroke-width="2"/>
+  <text x="425" y="273" text-anchor="middle" font-size="22" font-weight="600" fill="#a15c00">driver</text>
+  <rect x="575" y="215" width="200" height="100" rx="14" fill="#fdecc8" stroke="#f59e0b" stroke-width="2"/>
+  <text x="675" y="260" text-anchor="middle" font-size="22" font-weight="600" fill="#a15c00">Python</text>
+  <text x="675" y="288" text-anchor="middle" font-size="22" font-weight="600" fill="#a15c00">objects</text>
+  <rect x="825" y="215" width="200" height="100" rx="14" fill="#fdecc8" stroke="#f59e0b" stroke-width="2"/>
+  <text x="925" y="273" text-anchor="middle" font-size="22" font-weight="600" fill="#a15c00">DataFrame</text>
+  <rect x="1075" y="215" width="200" height="100" rx="14" fill="#fdecc8" stroke="#f59e0b" stroke-width="2"/>
+  <text x="1175" y="260" text-anchor="middle" font-size="22" font-weight="600" fill="#a15c00">Arrow →</text>
+  <text x="1175" y="288" text-anchor="middle" font-size="22" font-weight="600" fill="#a15c00">Parquet</text>
+  <rect x="1325" y="215" width="200" height="100" rx="14" class="box" stroke-width="2"/>
+  <text x="1425" y="260" text-anchor="middle" font-size="22" font-weight="600" class="txt">Iceberg</text>
+  <text x="1425" y="288" text-anchor="middle" font-size="18" class="mut">Glue + S3</text>
+  <line x1="279" y1="265" x2="319" y2="265" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <line x1="529" y1="265" x2="569" y2="265" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <line x1="779" y1="265" x2="819" y2="265" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <line x1="1029" y1="265" x2="1069" y2="265" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <line x1="1279" y1="265" x2="1319" y2="265" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <text x="800" y="358" text-anchor="middle" font-size="20" class="mut">every row goes through Python, once per batch</text>
+
+  <!-- AFTER -->
+  <text x="75" y="450" font-size="22" font-weight="700" fill="#3a76ff">AFTER · DuckDB</text>
+  <rect x="75" y="475" width="300" height="150" rx="14" class="box" stroke-width="2"/>
+  <text x="225" y="535" text-anchor="middle" font-size="24" font-weight="600" class="txt">Source DB</text>
+  <text x="225" y="570" text-anchor="middle" font-size="18" class="mut">PostgreSQL · MySQL</text>
+  <text x="225" y="596" text-anchor="middle" font-size="18" class="mut">SQL Server</text>
+
+  <rect x="525" y="475" width="550" height="150" rx="14" fill="#3a76ff"/>
+  <text x="800" y="530" text-anchor="middle" font-size="28" font-weight="700" fill="#fff">DuckDB</text>
+  <text x="800" y="568" text-anchor="middle" font-size="20" fill="#eaf1ff">read once → stage → write</text>
+  <text x="800" y="598" text-anchor="middle" font-size="20" fill="#eaf1ff">spills to disk past its memory limit</text>
+
+  <rect x="1225" y="475" width="300" height="150" rx="14" class="box" stroke-width="2"/>
+  <text x="1375" y="540" text-anchor="middle" font-size="24" font-weight="600" class="txt">Iceberg</text>
+  <text x="1375" y="575" text-anchor="middle" font-size="18" class="mut">Glue catalog + S3</text>
+
+  <line x1="379" y1="550" x2="517" y2="550" stroke="#3a76ff" stroke-width="5" marker-end="url(#aB)"/>
+  <text x="450" y="532" text-anchor="middle" font-size="17" class="mut">ATTACH</text>
+  <line x1="1079" y1="550" x2="1217" y2="550" stroke="#3a76ff" stroke-width="5" marker-end="url(#aB)"/>
+  <text x="1150" y="532" text-anchor="middle" font-size="17" class="mut">ATTACH</text>
+
+  <!-- Python orchestrator -->
+  <rect x="650" y="720" width="300" height="80" rx="40" class="box" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="800" y="768" text-anchor="middle" font-size="22" font-weight="600" class="txt">Python: sends SQL</text>
+  <line x1="800" y1="716" x2="800" y2="633" class="gln" stroke-width="2.5" stroke-dasharray="6 6" marker-end="url(#aR)"/>
+</svg>

@@ -1,0 +1,76 @@
+<svg viewBox="0 0 1600 760" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <style>
+    .card { fill: #ffffff; }
+    .ttl { fill: #3a76ff; }
+    .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .ctr { fill: none; stroke: #1f2333; }
+    .head { fill: #eef1f7; stroke: #a6accb; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl { fill: #e8eaf6; }
+      .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .ctr { stroke: #e8eaf6; }
+      .head { fill: #2a2e45; stroke: #6a6e82; }
+    }
+  </style>
+  <defs>
+    <pattern id="over" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="16" height="16" fill="#fde2e2"/>
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#ef4444" stroke-width="6"/>
+    </pattern>
+  </defs>
+
+  <!-- opaque card: as an <img> the SVG follows the OS theme, not the site's .dark class -->
+  <rect width="1600" height="760" rx="24" class="card"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="40" font-weight="700" class="ttl">Sharing memory between tables</text>
+  <text x="800" y="112" text-anchor="middle" font-size="23" class="mut">the outlined box is the container's memory · each colour is one table's DuckDB</text>
+
+  <!-- container: x 300..1000 (700 px = 100%) -->
+
+  <!-- Row 1: default -->
+  <text x="270" y="205" text-anchor="end" font-size="24" font-weight="700" class="txt">By default</text>
+  <text x="270" y="235" text-anchor="end" font-size="18" class="mut">80% each</text>
+  <rect x="300" y="180" width="560" height="64" fill="#3a76ff"/>
+  <text x="580" y="220" text-anchor="middle" font-size="20" font-weight="600" fill="#fff">table A: up to 80%</text>
+  <rect x="860" y="180" width="140" height="64" fill="#10b981"/>
+  <rect x="1000" y="180" width="420" height="64" fill="url(#over)" stroke="#ef4444" stroke-width="2.5"/>
+  <rect x="1060" y="196" width="300" height="32" rx="6" fill="#fde2e2"/>
+  <text x="1210" y="220" text-anchor="middle" font-size="20" font-weight="600" fill="#b91c1c">table B: up to 80%</text>
+  <rect x="300" y="180" width="700" height="64" class="ctr" stroke-width="4"/>
+  <text x="1000" y="282" text-anchor="middle" font-size="20" font-weight="700" fill="#ef4444">over 100%: the whole task is killed</text>
+
+  <!-- Row 2: shared budget -->
+  <text x="270" y="385" text-anchor="end" font-size="24" font-weight="700" class="txt">Shared budget</text>
+  <text x="270" y="415" text-anchor="end" font-size="18" class="mut">70%, split evenly</text>
+  <rect x="300" y="360" width="163" height="64" fill="#3a76ff"/>
+  <text x="381" y="400" text-anchor="middle" font-size="20" font-weight="600" fill="#fff">A</text>
+  <rect x="463" y="360" width="164" height="64" fill="#10b981"/>
+  <text x="545" y="400" text-anchor="middle" font-size="20" font-weight="600" fill="#fff">B</text>
+  <rect x="627" y="360" width="163" height="64" fill="#f59e0b"/>
+  <text x="708" y="400" text-anchor="middle" font-size="20" font-weight="600" fill="#fff">C</text>
+  <rect x="790" y="360" width="210" height="64" class="head"/>
+  <text x="895" y="400" text-anchor="middle" font-size="18" class="mut">30% headroom</text>
+  <rect x="300" y="360" width="700" height="64" class="ctr" stroke-width="4"/>
+  <text x="1040" y="385" font-size="20" class="txt">re-split whenever a table</text>
+  <text x="1040" y="413" font-size="20" class="txt">starts or ends</text>
+
+  <!-- Row 3: retry -->
+  <text x="270" y="565" text-anchor="end" font-size="24" font-weight="700" class="txt">A retry</text>
+  <text x="270" y="595" text-anchor="end" font-size="18" class="mut">counts double</text>
+  <rect x="300" y="540" width="245" height="64" fill="#3a76ff"/>
+  <text x="422" y="580" text-anchor="middle" font-size="20" font-weight="600" fill="#fff">A (retry) ×2</text>
+  <rect x="545" y="540" width="123" height="64" fill="#10b981"/>
+  <text x="606" y="580" text-anchor="middle" font-size="20" font-weight="600" fill="#fff">B</text>
+  <rect x="668" y="540" width="122" height="64" fill="#f59e0b"/>
+  <text x="729" y="580" text-anchor="middle" font-size="20" font-weight="600" fill="#fff">C</text>
+  <rect x="790" y="540" width="210" height="64" class="head"/>
+  <text x="895" y="580" text-anchor="middle" font-size="18" class="mut">30% headroom</text>
+  <rect x="300" y="540" width="700" height="64" class="ctr" stroke-width="4"/>
+  <text x="1040" y="565" font-size="20" class="txt">the extra room comes from the</text>
+  <text x="1040" y="593" font-size="20" class="txt">other tables, never the container</text>
+
+  <text x="800" y="700" text-anchor="middle" font-size="21" class="mut">The total never goes over 70% of the container, however many tables run at once.</text>
+</svg>
