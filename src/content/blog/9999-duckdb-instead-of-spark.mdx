@@ -107,10 +107,169 @@ I already hinted at this in the "acting as a data mover" part of <FancyLink link
 
 ## How it works
 
-{/*
-Short and concrete: attach, stage, write. One minimal code snippet end to end.
-Source adapters in a few lines (a new database is one small class).
-*/}
+The snippet above is the idea. The real thing has a few more steps, but not many more: the whole engine is about 1,300 lines of Python, adapters for three databases included. For each table, it does three things:
+
+```python
+def extract_one(source, table, query):
+    """Moves one table to the lake with DuckDB. Returns the number of rows written."""
+    with DuckDBEngine(source) as engine:  # 1. attach the source
+        engine.connect_lake()             #    ...and the Glue catalog
+        engine.stage(table, query)        # 2. read the source once, into a temp table
+        return engine.write(table)        # 3. create, append, merge or overwrite
+```
+
+All the snippets in this section are simplified versions of our code.
+
+### 1. Attach
+
+`DuckDBEngine` opens an in-memory DuckDB, points its spill folder to a temporary directory, and runs the attach statements of the source. Then it attaches the lake with the AWS credentials of the running task:
+
+```sql
+CREATE OR REPLACE SECRET aws_credentials (
+    TYPE s3, KEY_ID '...', SECRET '...', SESSION_TOKEN '...', REGION '...'
+);
+
+ATTACH '<aws account id>' AS lake
+    (TYPE iceberg, ENDPOINT_TYPE 'glue', DEFAULT_SCHEMA 'default');
+```
+
+### 2. Stage
+
+Staging reads the source table into a DuckDB temp table, in a single query:
+
+```sql
+CREATE OR REPLACE TEMP TABLE staged AS
+SELECT
+    "id",
+    "name",
+    upper(CAST("external_id" AS VARCHAR)) AS "external_id",  -- a GUID
+    ...
+FROM postgres_query('src', ?)  -- the ? is the query that runs on the source
+```
+
+This is the step that replaces all the batching. It reads the whole table in one pass, and DuckDB spills to disk when it goes past its memory limit. A few details that matter:
+
+* **The query runs on the source.** `postgres_query` (or `mssql_scan`, or `mysql_query`) sends it to the database as it is, so the incremental filter (`WHERE updated_at > ...`) is evaluated there, with whatever index the source has.
+* **The engine writes the query itself.** It reads the source's column types from `information_schema` and builds the `SELECT` from them. That is where every type problem gets fixed (see below).
+* **Staging is separate from writing.** By the time the engine touches the lake, all the rows are already read. A slow or failed read never leaves a half-written table.
+
+#### Fixing types while staging
+
+Each database has a few types that DuckDB reads differently from what you expect. Because the engine knows the source type of every column, it can fix them in the query, **preferably on the server**, so DuckDB receives something it reads correctly. These are the ones we found:
+
+| Source | Type | What goes wrong | Fix |
+| --- | --- | --- | --- |
+| SQL Server | `datetime` | Stored in 1/300 s ticks: read as `.733333` where SQL Server shows `.733` | `CAST(col AS DATETIME2(3))` on the server |
+| SQL Server | `varchar` with a non-UTF-8 collation | The bytes arrive undecoded, so accents break | `CAST(col AS NVARCHAR(MAX))` on the server |
+| SQL Server | `hierarchyid`, `geography` | The extension fails: `Unsupported SQL Server type UDT` | Converted to hex on the server |
+| SQL Server | `uniqueidentifier` | Lower case in DuckDB, upper case in SQL Server. It matters when it is a merge key | `upper(...)` in DuckDB |
+| PostgreSQL | arrays | Read as a DuckDB `LIST` | `array_to_json(col)::text` on the server |
+| MySQL | `tinyint(1)` | Read as a boolean | `SET mysql_tinyint1_as_boolean = false` |
+| MySQL | `0000-00-00` dates | DuckDB can't hold them | `SET mysql_incomplete_dates_as_nulls = true` |
+
+For a SQL Server table, the query that actually runs on the server ends up looking like this:
+
+```sql
+SELECT
+    [id],
+    CAST([name] AS NVARCHAR(MAX)) AS [name],
+    CAST([created_at] AS DATETIME2(3)) AS [created_at],
+    LOWER(CONVERT(VARCHAR(MAX), CAST([org_path] AS VARBINARY(MAX)), 2)) AS [org_path]
+FROM (SELECT * FROM dbo.employees WHERE updated_at > '2026-10-25') AS source_query
+```
+
+Nobody writes that by hand: the adapter wraps the table's query with one cast per column that needs it.
+
+> [!tip] Leaving columns out
+> DuckDB has a handy <FancyLink linkText="SELECT * EXCLUDE" url="https://duckdb.org/docs/stable/sql/expressions/star" dark="true"/> to drop columns without listing the rest: `SELECT * EXCLUDE (password_hash) FROM ...`. Great for columns you don't need, but it drops them **after** reading them. For a column that must never leave the database (a password hash, say), we list the columns we keep in the query that runs on the source instead. That way the value never even crosses the network.
+
+### 3. Write
+
+The staged rows go to the Iceberg table. Which statement depends on the table's state and config:
+
+```python
+if not table_exists:
+    mode = "create"     # CREATE TABLE ... AS SELECT * FROM staged
+elif table.full_refresh:
+    mode = "overwrite"  # DELETE + INSERT, in one transaction
+elif table.merge_cols:
+    mode = "merge"      # MERGE INTO ... ON the merge keys
+else:
+    mode = "append"     # INSERT INTO ... BY NAME
+```
+
+Create, append and merge are one statement each, so each one is a single commit to Iceberg. The overwrite is the interesting one.
+
+#### An overwrite in a single transaction
+
+A full refresh replaces every row of a table. The obvious way would be to drop the table and create it again. DuckDB can't do that on Glue anyway (no `DROP` or `CREATE OR REPLACE` for Iceberg tables), but it's not what you want with Iceberg in any case.
+
+> [!warning] Don't drop an Iceberg table to refresh it
+> An Iceberg table keeps a history of snapshots, one per commit. That history is what gives you **time travel** (`FOR TIMESTAMP AS OF ...`) and lets you roll back a bad load. Dropping the table throws all of it away, and leaves a moment with no table at all for anyone reading it. Deleting the rows and inserting the new ones keeps the table and adds one more snapshot to its history.
+
+So we delete and insert, **in one transaction**:
+
+```python
+logger.info(f"Replacing every row of {table} (delete and insert in one transaction)")
+con.execute("BEGIN")
+try:
+    con.execute(f"DELETE FROM {table}")
+    con.execute(f"INSERT INTO {table} BY NAME SELECT * FROM staged")
+    con.execute("COMMIT")
+except BaseException as e:
+    logger.error(f"Replacing the rows of {table} failed ({e}), rolling back: the old rows stay")
+    con.execute("ROLLBACK")
+    raise
+```
+
+Between `BEGIN` and `COMMIT`, nothing is visible outside DuckDB. The `COMMIT` publishes both changes together as one new Iceberg snapshot, so anyone querying the table (Athena, in our case) sees either the old rows or the new ones. Never an empty table, never half of it. If anything fails in the middle, the `ROLLBACK` throws both changes away and the table stays as it was, and the log says so.
+
+Catching `BaseException` instead of `Exception` is on purpose: it also rolls back on things like a `KeyboardInterrupt`, not only when a query fails.
+
+This write logic is the part awswrangler used to do for us, and the one place where the switch cost real work. More on it in [the trade-off](#the-trade-off-you-write-the-write-logic).
+
+### A new database is one small class
+
+The engine knows nothing about PostgreSQL, SQL Server or MySQL. A source adapter tells it what differs:
+
+| Method | What it does |
+| --- | --- |
+| `attach_queries` | The statements that make the database available in DuckDB |
+| `scan` | The table function that runs a query on the source (`postgres_query`, `mssql_scan`, ...) |
+| `columns` | The name and source type of every column of a table |
+| `kind` | How to stage each source type (text, timestamp, GUID, JSON, ...) |
+| `prepare` | Rewrites the query the way the source needs it |
+
+The PostgreSQL adapter, for example, is less than 100 lines. Its core:
+
+```python
+class PostgresSource(Source):
+    def attach_queries(self, alias):
+        return [
+            "INSTALL postgres",
+            "LOAD postgres",
+            f"ATTACH '{self.conninfo}' AS {alias} (TYPE postgres, READ_ONLY)",
+        ]
+
+    def scan(self, alias):
+        return f"postgres_query('{alias}', ?)"
+```
+
+MySQL was the third database we added, and it took one adapter and a handful of type quirks (a `tinyint(1)` stays an integer instead of becoming a boolean, a `0000-00-00` date becomes NULL).
+
+### Moving a table is one line
+
+Each table is described in a YAML file (name, incremental column, merge keys, columns to exclude...), and that file is the same for both engines. So moving a job to DuckDB is one setting on its table model:
+
+```python
+class MyAppTable(PostgresTable):
+    schema_out: str = "raw__my_app"
+    filter_col: str = "updated_at"
+    merge_cols: list[str] = ["id"]
+    engine: Engine = "duckdb"  # was "pandas"
+```
+
+That made it easy to migrate gradually: run the same table with both engines, compare the output, and switch when it matched.
 
 ## What we got
 
