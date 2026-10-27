@@ -26,13 +26,16 @@ Most extractions into a data lake are **incremental**: each run reads the rows t
 
 When a row is **hard deleted** at the source (`DELETE FROM enrollments WHERE id = 42`), there is no new version of it to read. The incremental query doesn't return it, so the lake keeps the last version it extracted, as if the row still existed.
 
-This doesn't make anything fail, so it usually goes unnoticed until the numbers stop matching. Some examples:
+![What an incremental extraction sees](../../images/posts/2026/9999-hard-deletes-incremental.svg)
+
+Some examples of what this causes:
 
 * An enrollment that was cancelled and removed still counts as active.
 * A deleted course still shows up in a dashboard, with its old students.
 * A reconciliation between the lake and the application is off by a few hundred rows, and nobody knows why.
 
-The difference also grows over time, since every deleted row stays in the lake.
+> [!warning] Nothing fails
+> The extraction finishes without errors, so there is no alert. The problem usually shows up only when the numbers stop matching, and it gets bigger over time, since every deleted row stays in the lake.
 
 ### Two ways to know about a delete
 
