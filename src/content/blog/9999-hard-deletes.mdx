@@ -121,13 +121,14 @@ The lake has had 7 runs to extract each soft delete before the row is removed. T
     Shows the safe case (an extraction inside the window) and the unsafe one (the pipeline is down
     for longer than the window). */}
 
-The margin has to cover **the worst delay of the extraction, not the usual one**. If your pipeline can be down for longer than a week, use a longer margin. Whatever value you choose, write it down where both teams can see it, so nobody shortens it later without telling the data team.
+> [!tip] Size the margin for the worst delay
+> The margin has to cover **the worst delay of the extraction, not the usual one**. If your pipeline can be down for longer than a week, use a longer margin. Whatever value you choose, write it down where both teams can see it, so nobody shortens it later without telling the data team.
 
 ### What to ask the application team
 
 This is the part to copy into a ticket:
 
-> [!tip] What to ask the application team for
+> [!note] What to ask the application team for
 > * Soft delete with a `deleted_at` timestamp.
 > * Bump `updated_at` in the same statement.
 > * Purge only rows soft deleted more than *N* days ago, with *N* agreed with the data team.
@@ -140,14 +141,22 @@ This is the part to copy into a ticket:
 
 Some sources give you scenario 1 for free. Salesforce, for example, doesn't remove a deleted record right away: it moves it to the recycle bin, sets `IsDeleted = true`, and only purges it later. If you extract with <FancyLink linkText="queryAll" url="https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_calls_queryall.htm" company="salesforce" dark="true"/> instead of `query`, the deleted records come through as normal updates. Our Salesforce extraction does exactly that (`include_deleted=True` by default), so deletes there need no extra work.
 
+You can read more about it in <FancyLink linkText="Extracting data from Salesforce with Python" url="https://villoro.com/blog/extracting-data-salesforce-python/#querying-options" dark="true"/>.
+
 {/* TODO Villoro: confirm the Salesforce extraction is incremental on SystemModstamp/LastModifiedDate
     and that deleting a record bumps it. That's what makes it scenario 1. */}
 
 ### A variant: change data capture
 
-If you control the database's infrastructure, but not the application, there's another way to get scenario 1: **change data capture** (CDC). Tools like <FancyLink linkText="Debezium" url="https://debezium.io/documentation/reference/stable/connectors/mysql.html" company="default" dark="true"/> or AWS DMS read the database's own change log (the binlog in MySQL, the WAL in PostgreSQL), where a `DELETE` is an event like any other.
+If you control the database's infrastructure, but not the application, there is another way to get the same result: **change data capture** (CDC). Tools like <FancyLink linkText="Debezium" url="https://debezium.io/documentation/reference/stable/connectors/mysql.html" company="default" dark="true"/> or AWS DMS read the database's change log (the binlog in MySQL, the WAL in PostgreSQL), where every `DELETE` is recorded as an event. So the lake gets the deletes without any change in the application.
 
-It answers the question directly, but it's a different kind of pipeline: a process that runs all the time, a log retention you have to size (the same "worst delay" rule as above), and more to operate. If you already have it, deletes are solved. I wouldn't set it up just for deletes.
+> [!warning] A lot of work, and not always worth it
+> CDC is a different kind of pipeline, not a small addition to an incremental extraction:
+> * It needs access to the database configuration, for example enabling the binlog in row format.
+> * It runs all the time, instead of once a day, so it's one more service to deploy and monitor.
+> * The change log is only kept for a limited time, so it has the same margin problem as the hard delete above.
+>
+> If you already have CDC, deletes are solved. But I wouldn't set it up only to detect deletes: scenario 2 is much simpler to run.
 
 ## Scenario 2: no control over the source
 
@@ -167,7 +176,9 @@ For each table:
 
 Reading only the `id` column is cheap: the database answers it from the primary key, without touching the rest of the row. And a single statement gives you a **consistent snapshot**: the ids as they were at one moment, not a mix of moments.
 
-We do it with DuckDB, which reads from MySQL with its <FancyLink linkText="MySQL extension" url="https://duckdb.org/docs/stable/core_extensions/mysql" company="duckdb" dark="true"/>, and writes to the Iceberg tables in the lake. The read keeps the ids in a temporary table:
+We do it with DuckDB, the same setup I described in <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>. It reads from MySQL with its <FancyLink linkText="MySQL extension" url="https://duckdb.org/docs/stable/core_extensions/mysql" company="duckdb" dark="true"/>, and writes to the Iceberg tables in the lake. The read keeps the ids in a temporary table:
+
+{/* TODO: confirm the DuckDB post link works once 0074 is published (it is a draft now). */}
 
 ```sql
 CREATE OR REPLACE TEMP TABLE ids AS
@@ -215,15 +226,16 @@ WHEN MATCHED AND NOT f.is_deleted AND target.is_hard_deleted THEN
 
 A `MERGE` gives the same table when you run it twice, so if the commit fails (Glue does, now and then), it's safe to retry.
 
-### Why this needs the right engine
+### What the comparison needs from the engine
 
-The idea is simple. What makes it hard is the **size of the comparison**. Our biggest table has **184M ids** in a single brand. To compare them, you need all of them at once, plus the ids in the lake, in the same place.
+The idea is simple. What can make it hard is the **size of the comparison**. For a table with hundreds of millions of rows, you need every id from the source and every id from the lake in the same place to join them.
 
-With pandas, that's a problem. Hundreds of millions of ids, twice, as DataFrames, plus the join, on a small task: it runs out of memory long before it finishes. That's why we didn't do this before (see scenario 3).
+That rules out loading both sides into memory as DataFrames, unless you have a lot of memory to spare. What you want is an engine that:
 
-DuckDB doesn't need everything in memory: when it runs out, it spills to disk and keeps going. And it can read from MySQL and from the lake in the same process, so the join happens right there. I went through what that changes for extractions in general in <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>.
+* **Spills to disk** instead of failing when the ids don't fit in memory.
+* **Reads from the database and from the lake in the same process**, so the join happens there and the ids don't travel through your code.
 
-{/* TODO: confirm this link works once 0074 is published (it is a draft now). */}
+DuckDB does both, which is why I use it for this. If your tables have a few million rows, pandas is plenty and none of this matters.
 
 ### What it costs
 
