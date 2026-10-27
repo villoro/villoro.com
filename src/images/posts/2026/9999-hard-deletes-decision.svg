@@ -1,0 +1,69 @@
+<svg viewBox="0 0 1600 880" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <style>
+    .card { fill: #ffffff; }
+    .ttl { fill: #3a76ff; }
+    .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .gln { stroke: #6a6e82; }
+    .box { fill: #f3f5fb; stroke: #a6accb; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl { fill: #e8eaf6; }
+      .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .gln { stroke: #9aa0b5; }
+      .box { fill: #23263a; stroke: #6a6e82; }
+    }
+  </style>
+  <defs>
+    <marker id="aR" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M1 1 L10 6 L1 11 z" fill="#6a6e82"/>
+    </marker>
+  </defs>
+
+  <!-- opaque card: as an <img> the SVG follows the OS theme, not the site's .dark class -->
+  <rect width="1600" height="880" rx="24" class="card"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="40" font-weight="700" class="ttl">Which scenario are you in?</text>
+  <text x="800" y="112" text-anchor="middle" font-size="23" class="mut">two questions decide how you find the rows that were deleted at the source</text>
+
+  <!-- start -->
+  <rect x="200" y="160" width="500" height="70" rx="35" class="box" stroke-width="2"/>
+  <text x="450" y="204" text-anchor="middle" font-size="24" font-weight="600" class="txt">Rows get deleted at the source</text>
+  <line x1="450" y1="234" x2="450" y2="282" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+
+  <!-- Q1 -->
+  <rect x="150" y="290" width="600" height="110" rx="14" class="box" stroke-width="2"/>
+  <text x="450" y="337" text-anchor="middle" font-size="24" font-weight="700" class="txt">Can you change how the</text>
+  <text x="450" y="370" text-anchor="middle" font-size="24" font-weight="700" class="txt">source deletes rows?</text>
+  <line x1="754" y1="345" x2="942" y2="345" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <text x="848" y="330" text-anchor="middle" font-size="20" font-weight="600" class="mut">yes</text>
+  <line x1="450" y1="404" x2="450" y2="472" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <text x="472" y="446" font-size="20" font-weight="600" class="mut">no</text>
+
+  <!-- S1 -->
+  <rect x="950" y="290" width="550" height="110" rx="14" fill="#d1fae5" stroke="#10b981" stroke-width="2.5"/>
+  <text x="975" y="330" font-size="20" font-weight="700" fill="#047857">SCENARIO 1 · the good one</text>
+  <text x="975" y="368" font-size="22" font-weight="600" fill="#064e3b">Soft delete, purge later</text>
+
+  <!-- Q2 -->
+  <rect x="150" y="480" width="600" height="110" rx="14" class="box" stroke-width="2"/>
+  <text x="450" y="527" text-anchor="middle" font-size="24" font-weight="700" class="txt">Can you read every id of a table</text>
+  <text x="450" y="560" text-anchor="middle" font-size="24" font-weight="700" class="txt">in one go and compare on the spot?</text>
+  <line x1="754" y1="535" x2="942" y2="535" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <text x="848" y="520" text-anchor="middle" font-size="20" font-weight="600" class="mut">yes</text>
+  <polyline points="450,594 450,725 942,725" fill="none" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <text x="472" y="650" font-size="20" font-weight="600" class="mut">no</text>
+
+  <!-- S2 -->
+  <rect x="950" y="480" width="550" height="110" rx="14" fill="#fdecc8" stroke="#f59e0b" stroke-width="2.5"/>
+  <text x="975" y="520" font-size="20" font-weight="700" fill="#a15c00">SCENARIO 2 · no control over the source</text>
+  <text x="975" y="558" font-size="22" font-weight="600" fill="#7a4500">Read all ids, compare, tag</text>
+
+  <!-- S3 -->
+  <rect x="950" y="670" width="550" height="110" rx="14" fill="#fde2e2" stroke="#ef4444" stroke-width="2.5"/>
+  <text x="975" y="710" font-size="20" font-weight="700" fill="#b91c1c">SCENARIO 3 · the worst case</text>
+  <text x="975" y="748" font-size="22" font-weight="600" fill="#7f1d1d">Export ids to the lake, compare later</text>
+
+  <text x="800" y="840" text-anchor="middle" font-size="21" class="mut">In every scenario: tables that are only ever appended to (logs) have nothing to detect. Skip them.</text>
+</svg>

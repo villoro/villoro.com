@@ -263,10 +263,10 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 
 Posts are co-written, not generated in one go:
 
-- **Outline first, then section by section.** Agree on the thesis and audience, write a skeleton (headings + an MDX `{/* … */}` comment with each section's intent), then fill one or two sections per round.
-- **Villoro reviews before anything is committed.** Draft the change, summarise it, and commit only when told. Don't run ahead to the next section.
+- **Free draft first, then direction, then section by section.** (1) Write the whole post freely as a proposal, from the sources (code, measurements, earlier posts), with `{/* TODO Villoro: … */}` comments wherever you assumed something. (2) Villoro reads it and you agree on the thesis, audience and index together. (3) Rewrite one or two sections per round, with Villoro's direction and corrections.
+- **Commit what Villoro accepts, then continue.** Leave each change uncommitted until Villoro says it's good, so they can review it as a diff. When they accept it, commit that part (message prefixed `Draft:`) and only then move on to the next thing they asked for. Don't run ahead to the next section.
 - **Length:** most posts are ~300–500 lines of MDX. Keep the main body lean; push detail (per-case numbers, tables of measurements) to an appendix and give the main text a headline figure.
-- **Voice:** first person, direct, short paragraphs, **bold** for the key phrase, bullets over long prose. Match an existing post (e.g. `0068-be-nice-data.mdx`) rather than inventing a style.
+- **Voice:** first person, direct, short paragraphs, **bold** for the key phrase, bullets over long prose. Match an existing post (e.g. `0068-be-nice-data.mdx`) rather than inventing a style. **Plain and explanatory, not literary:** no dramatic fragments ("It doesn't change. It disappears."), no punchline triplets ("It's cheap, it's fast, and it has one blind spot"), no paired contrasts ("For its users… For the lake…"), no "you will be asked"-style asides. Say what happens and why, in complete sentences.
 - **No manual numbers in headings.** H2–H5 are auto-numbered (see "Heading numbering"), so `### 1. Attach` renders as "4.1 1. Attach". Write `### Attach`.
 - **Break up long text.** Use callouts (`[!abstract]` for the thesis, `[!tip]` for a striking number or aside), small tables, and SVG diagrams. Villoro likes diagrams: propose one whenever a concept has a shape (zones, flows, before/after).
 - **Link generously.** Earlier posts on the same topic (`<FancyLink url="https://villoro.com/blog/<slug>/" dark="true"/>`) and official docs for any tool, extension or connector mentioned.

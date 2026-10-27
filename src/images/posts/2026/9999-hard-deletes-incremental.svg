@@ -1,0 +1,69 @@
+<svg viewBox="0 0 1600 700" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <style>
+    .card { fill: #ffffff; }
+    .ttl { fill: #3a76ff; }
+    .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .gln { stroke: #6a6e82; }
+    .box { fill: #f3f5fb; stroke: #a6accb; }
+    .row { fill: #ffffff; stroke: #a6accb; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl { fill: #e8eaf6; }
+      .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .gln { stroke: #9aa0b5; }
+      .box { fill: #23263a; stroke: #6a6e82; }
+      .row { fill: #171a2b; stroke: #6a6e82; }
+    }
+  </style>
+  <defs>
+    <marker id="aR" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M1 1 L10 6 L1 11 z" fill="#6a6e82"/>
+    </marker>
+  </defs>
+
+  <!-- opaque card: as an <img> the SVG follows the OS theme, not the site's .dark class -->
+  <rect width="1600" height="700" rx="24" class="card"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="40" font-weight="700" class="ttl">What an incremental extraction sees</text>
+  <text x="800" y="112" text-anchor="middle" font-size="23" class="mut">row 42 was deleted at the source and row 43 was updated, since the last run</text>
+
+  <!-- Source -->
+  <rect x="80" y="160" width="440" height="420" rx="16" class="box" stroke-width="2"/>
+  <text x="300" y="210" text-anchor="middle" font-size="26" font-weight="700" class="txt">Source</text>
+  <rect x="120" y="250" width="360" height="70" rx="10" class="row" stroke-width="2"/>
+  <text x="150" y="294" font-size="22" font-weight="600" class="txt">id 41</text>
+  <text x="450" y="294" text-anchor="end" font-size="20" class="mut">not changed</text>
+  <rect x="120" y="345" width="360" height="70" rx="10" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="8 6"/>
+  <text x="150" y="389" font-size="22" font-weight="600" fill="#ef4444">id 42</text>
+  <line x1="146" y1="382" x2="204" y2="382" stroke="#ef4444" stroke-width="2.5"/>
+  <text x="450" y="389" text-anchor="end" font-size="20" font-weight="600" fill="#ef4444">deleted</text>
+  <rect x="120" y="440" width="360" height="70" rx="10" fill="#dbe7ff" stroke="#3a76ff" stroke-width="2.5"/>
+  <text x="150" y="484" font-size="22" font-weight="600" fill="#1a3a8f">id 43</text>
+  <text x="450" y="484" text-anchor="end" font-size="20" font-weight="600" fill="#2457d6">updated</text>
+
+  <!-- Incremental read -->
+  <line x1="524" y1="370" x2="612" y2="370" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <rect x="620" y="250" width="360" height="240" rx="16" fill="#3a76ff"/>
+  <text x="800" y="305" text-anchor="middle" font-size="24" font-weight="700" fill="#fff">Incremental read</text>
+  <text x="800" y="350" text-anchor="middle" font-size="19" fill="#eaf1ff" font-family="ui-monospace, Menlo, monospace">WHERE updated_at</text>
+  <text x="800" y="378" text-anchor="middle" font-size="19" fill="#eaf1ff" font-family="ui-monospace, Menlo, monospace">&gt; last_run</text>
+  <text x="800" y="440" text-anchor="middle" font-size="22" font-weight="700" fill="#fff">returns only id 43</text>
+  <line x1="984" y1="370" x2="1072" y2="370" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+
+  <!-- Lake -->
+  <rect x="1080" y="160" width="440" height="420" rx="16" class="box" stroke-width="2"/>
+  <text x="1300" y="210" text-anchor="middle" font-size="26" font-weight="700" class="txt">Lake</text>
+  <rect x="1120" y="250" width="360" height="70" rx="10" class="row" stroke-width="2"/>
+  <text x="1150" y="294" font-size="22" font-weight="600" class="txt">id 41</text>
+  <text x="1450" y="294" text-anchor="end" font-size="20" class="mut">as before</text>
+  <rect x="1120" y="345" width="360" height="70" rx="10" fill="#fdecc8" stroke="#f59e0b" stroke-width="2.5"/>
+  <text x="1150" y="389" font-size="22" font-weight="600" fill="#a15c00">id 42</text>
+  <text x="1450" y="389" text-anchor="end" font-size="20" font-weight="600" fill="#a15c00">still here</text>
+  <rect x="1120" y="440" width="360" height="70" rx="10" fill="#dbe7ff" stroke="#3a76ff" stroke-width="2.5"/>
+  <text x="1150" y="484" font-size="22" font-weight="600" fill="#1a3a8f">id 43</text>
+  <text x="1450" y="484" text-anchor="end" font-size="20" font-weight="600" fill="#2457d6">updated</text>
+
+  <text x="800" y="640" text-anchor="middle" font-size="21" class="mut">The run succeeds, and the lake keeps a row that the source no longer has.</text>
+</svg>
