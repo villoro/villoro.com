@@ -50,7 +50,10 @@ class DuckDBEngine(StagingMixin, WritingMixin, CommitMixin):
 * `WritingMixin` handles append, merge, overwrite, schema evolution and compaction.
 * `CommitMixin` commits to the lake and retries safely when another writer gets in first.
 
-The engine file went down to under 200 lines, and each concern now lives in a file that you can read in one go. **It was an elegant solution, and I didn't design it.** What I did was recognize that it was good, and that it was better than what I had.
+The engine file went down to under 200 lines, and each concern now lives in a file that you can read in one go.
+
+> [!success] It was an elegant solution, and I didn't design it
+> What I did was recognize that it was good, and that it was better than what I had.
 
 Agents are fast, they don't get tired of refactors, and they know more libraries than I do. For a well-defined task, they often write better code than I would have written in the same time.
 
@@ -94,7 +97,10 @@ Here are the stories behind each one.
 
 Someone asked us for an Excel file, every day, dropped somewhere they could pick it up.
 
-Before building anything, I asked why. What would they do with the file? Would a dashboard work? Or could the data simply be in the lake, so that another process could read it?
+Before building anything, I asked why:
+
+> [!question]
+> Why do you need an Excel file every day? What will you do with it? Why not a dashboard? Why not some data in the lake, so that something else can read it?
 
 It turned out that the data was the input of an **ML process**. So we wrote it to the lake and let the ML process read it directly from there. That was the end of the Excel problems.
 
@@ -104,7 +110,10 @@ It turned out that the data was the input of an **ML process**. So we wrote it t
 
 This one has happened many times: people asking for **real-time updates**.
 
-Real time is a huge platform investment. You need streaming infrastructure, and everything downstream needs to handle it. So my counter-question is always the same: **what automatic process needs this data, and would hourly updates work?**
+Real time is a huge platform investment. You need streaming infrastructure, and everything downstream needs to handle it. So my counter-question is always the same:
+
+> [!question]
+> What **automatic** process needs this data? Would hourly updates work?
 
 * If the data is for a person to review, they don't need real time. Often what they really need is to have the daily data ready when they open the dashboard in the morning, and that's a scheduling problem.
 * If it's something like fraud detection, where an automatic process has to act within seconds, then let's talk.
@@ -113,7 +122,10 @@ Real time is a huge platform investment. You need streaming infrastructure, and 
 
 ### Should this be solved here, or at the source?
 
-This is the story that taught me the most. For years, it was the project I talked about whenever someone asked me for **my biggest win**. Today I see it as **one of my biggest mistakes**.
+This is the story that taught me the most.
+
+> [!quote]
+> For years, it was the project I talked about whenever someone asked me for my biggest win. Today I see it as one of my biggest mistakes.
 
 At a previous company, I was asked to build a table that showed **when each store was open or closed**. We didn't have that data. What we had were the events exchanged in the streaming service that, together, decided whether a store was open:
 
@@ -137,7 +149,12 @@ It was a difficult and fun problem, and it worked. That's why I shared it as a s
 
 The project really belonged to another team, but I had capacity, so I built it. Then I became a manager, and someone else had to maintain it. **The people who took it over left the company quite fast**, and it was a nightmare to maintain.
 
-With experience, I now see it as a failure on my end: we should have said no. Rebuilding the state of a store from its events inside the data platform was the wrong approach. It had to be solved in the source system: whenever the backend received an event that affected a store, it should have calculated whether the store was open and emitted an event saying so. Working with those events would have been much simpler.
+With experience, I now see it as a failure on my end: we should have said no.
+
+> [!question]
+> Should this be solved in the data platform, or in the system that produces the events?
+
+Rebuilding the state of a store from its events inside the data platform was the wrong approach. It had to be solved in the source system: whenever the backend received an event that affected a store, it should have calculated whether the store was open and emitted an event saying so. Working with those events would have been much simpler.
 
 > [!warning] An agent would have built it too
 > Today an agent could write those window functions in an afternoon. That makes the wrong solution even more tempting, because it's cheap to build. **What is cheap to build is not cheap to maintain**, and the question of where it should live is still yours.
@@ -150,15 +167,17 @@ Over the last few years I've built a monorepo with multiple packages and a CI/CD
 
 Every once in a while, I see data scientists about to deploy their own Docker image to run some Python. Every time, the conversation goes the same way:
 
-* Will you have CI?
-* Will CD deploy it automatically?
-* Will you set proper alerts in Slack?
-* Will you have an orchestrator to see the history of past runs?
-* Will you write, from scratch, all the logic to read from and write to the lake?
+> [!question]
+> * Will you have CI?
+> * Will CD deploy it automatically?
+> * Will you set proper alerts in Slack?
+> * Will you have an orchestrator to see the history of past runs?
+> * Will you write, from scratch, all the logic to read from and write to the lake?
 
 I know they can do all of it, especially with an agent helping. But I see very little value in them doing it, when it's already solved and it's easy to add a new package to the monorepo.
 
-To be fair, I know where the friction comes from. A PR in the monorepo means a review from my team, and we will push for good practices, because we don't like failures in production. That's slower than shipping your own container. But it's much faster than maintaining a second platform.
+> [!note] Where the friction comes from
+> A PR in the monorepo means a review from my team, and we will push for good practices, because we don't like failures in production. That's slower than shipping your own container. But it's much faster than maintaining a second platform.
 
 ## Reviewing what agents produce
 
@@ -171,7 +190,12 @@ def test_write_modes():
     assert WRITE_MODES == ["append", "merge", "overwrite"]
 ```
 
-My question for any test is: **when do you expect this test to fail, and what problem is it saving you from?** For the test above, the only way it fails is when someone changes the constant on purpose, and then they have to change the test too. It catches nothing, and it costs CI time on every run.
+My question for any test is always the same:
+
+> [!question]
+> When do you expect this test to fail, and what problem is it saving you from?
+
+For the test above, the only way it fails is when someone changes the constant on purpose, and then they have to change the test too. It catches nothing, and it costs CI time on every run.
 
 I'm not against tests. In our CI, we deploy every Prefect workflow to a local test server. It's a simple check, but it catches deploys that would fail in production, for example because of import errors. We used to have problems like that once or twice a month, and I didn't like it. That test has a clear answer to my question.
 
@@ -189,9 +213,16 @@ Agents tend to add more, not less. Asking for less is usually my job.
 
 If I got this judgment from years of writing code, how do people who start today get it?
 
-For me, the answer is clear. **They need to try things, understand them, and decide if they add value or not.** It's fine if an agent writes the code. It's not fine if nobody understands why the code is the way it is. You can externalize the code, but you can never externalize the thinking.
+For me, the answer is clear. It's fine if an agent writes the code. It's not fine if nobody understands why the code is the way it is.
 
-And if possible, they should get close to someone with experience, and try to understand **why** that person proposes what they propose. Why they ask what the Excel file is for. Why they worry so much about what might fail. Why they push back on a request that is fun to build.
+> [!tip] If you are starting out
+> * **Try things**, even if an agent writes them.
+> * **Understand them**: why it works, and what would make it fail.
+> * **Decide if they add value**, and drop what doesn't.
+> * **Get close to someone with experience**, and ask why they propose what they propose. Why they ask what the Excel file is for, why they worry so much about what might fail, why they push back on a request that is fun to build.
+
+> [!quote]
+> You can externalize the code, but you can never externalize the thinking.
 
 {/* TODO Villoro: anything from your manager years about how people learned this? */}
 
