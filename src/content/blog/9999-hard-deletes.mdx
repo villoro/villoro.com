@@ -22,83 +22,81 @@ TODO: own hero image (the duck one is a placeholder).
 
 ## Hard deletes, and why they hurt
 
-Most extractions into a data lake are **incremental**: every night, read the rows that changed since the last run (`WHERE updated_at > last_run`) and merge them into the lake. It's cheap, it's fast, and it has one blind spot.
+Most extractions into a data lake are **incremental**: each run reads the rows that changed since the last one (`WHERE updated_at > last_run`) and merges them into the lake. This is cheap and fast, but it only sees rows that still exist.
 
-When a row is **hard deleted** at the source (`DELETE FROM enrollments WHERE id = 42`), it doesn't change. It disappears. There is no `updated_at` to bump, nothing to read, nothing to merge. The lake keeps the last version it saw, forever, as if the row still existed.
+When a row is **hard deleted** at the source (`DELETE FROM enrollments WHERE id = 42`), there is no new version of it to read. The incremental query doesn't return it, so the lake keeps the last version it extracted, as if the row still existed.
 
-Nobody notices at first. Then the numbers start drifting:
+This doesn't make anything fail, so it usually goes unnoticed until the numbers stop matching. Some examples:
 
 * An enrollment that was cancelled and removed still counts as active.
-* A course that was deleted still shows up in a dashboard, with its old students.
-* A reconciliation between the lake and the application is off by a few hundred rows, and nobody can say why.
+* A deleted course still shows up in a dashboard, with its old students.
+* A reconciliation between the lake and the application is off by a few hundred rows, and nobody knows why.
 
-And the drift only grows: every deleted row stays in the lake for good, and nothing in the pipeline ever fails.
+The difference also grows over time, since every deleted row stays in the lake.
 
-### You can't query what isn't there
+### Two ways to know about a delete
 
-The root of the problem is simple: **a deleted row leaves no trace to read**. No query against the source returns "the rows that used to be here". So there are only two ways to find out about a delete:
+There is no query that returns the rows a table used to have. So there are only two ways for the lake to know that a row was deleted:
 
-* **The source tells you.** The row isn't removed, it's marked as deleted, and the mark travels to the lake like any other change.
-* **You compare.** Read every id the source has now, and look for the ones the lake has but the source doesn't.
-
-The first one is a soft delete. The second one is what you're left with when you don't get one.
+* **The source keeps the row and marks it as deleted.** The mark reaches the lake like any other change. This is a soft delete.
+* **You compare.** Read every id the source has now, and look for the ids the lake has but the source doesn't.
 
 > [!abstract]
-> There are three ways to deal with hard deletes, and which one you use depends on what you control. **If you can change the source, make it soft delete first.** If you can't, read every id and compare it with the lake. And if you can't even do that in one go, export the ids and compare later. This post goes through all three in depth, plus the rules that keep a comparison from going wrong.
+> There are three ways to deal with hard deletes, and which one you use depends on what you control. **If you can change the source, make it soft delete first.** If you can't, read every id and compare it with the lake. If you can't do that in one go, export the ids to the lake and compare there. This post explains the three in depth, and the rules that keep a comparison from going wrong.
 
-## Soft deletes: a delete that looks like an update
+## Soft deletes
 
-A **soft delete** doesn't remove the row. It marks it:
+A **soft delete** keeps the row in the table and marks it as deleted, instead of removing it:
 
 ```sql
--- Hard delete: the row is gone, and the lake never hears about it
+-- Hard delete: the row is removed
 DELETE FROM enrollments WHERE id = 42;
 
--- Soft delete: the row stays, marked as deleted
+-- Soft delete: the row is kept and marked as deleted
 UPDATE enrollments
 SET deleted_at = NOW(),
     updated_at = NOW()
 WHERE id = 42;
 ```
 
-The application then treats marked rows as gone: it filters them out of every screen and every query (`WHERE deleted_at IS NULL`). For its users, the row is deleted. For the lake, **it's just another update**.
+The application then filters out the marked rows (`WHERE deleted_at IS NULL`), so it behaves as if they were deleted. For the extraction, a soft delete is a normal update.
 
-There are a few common ways to mark a row:
+These are the most common ways to mark a row:
 
 | Column | Example | Notes |
 | --- | --- | --- |
-| A timestamp | `deleted_at TIMESTAMP NULL` | `NULL` means alive. The best one: it also tells you *when*, and you will be asked |
-| A flag | `is_deleted BOOLEAN` | Simpler, but loses the "when" |
+| A timestamp | `deleted_at TIMESTAMP NULL` | `NULL` means not deleted. Preferred, since it also says when it was deleted |
+| A flag | `is_deleted BOOLEAN` | Simpler, but you lose when it was deleted |
 | A status | `status = 'deleted'` | Fine if the table already has a status column |
 
-Whatever the column, one detail decides whether the lake sees it: **`updated_at` must be bumped in the same statement**. That's what makes the incremental extraction pick the row up. A soft delete that doesn't touch `updated_at` is, from the lake's point of view, still invisible.
+Whichever column you use, **`updated_at` must be updated in the same statement**. Otherwise the incremental extraction doesn't pick up the change, and the lake never sees the delete.
 
 > [!tip]
-> I wrote about this from the other side, as advice for the teams that own the source, in <FancyLink linkText="How to Be Nice to the Data Team" url="https://villoro.com/blog/be-nice-to-data-team/" dark="true"/>. This post is the data team's side.
+> I wrote about this from the point of view of the teams that own the source in <FancyLink linkText="How to Be Nice to the Data Team" url="https://villoro.com/blog/be-nice-to-data-team/" dark="true"/>. This post covers the data team's side.
 
-Soft deletes don't mean keeping every row forever. Tables grow, and sometimes the data must legally go. So sooner or later the application **purges**: it hard deletes rows that were soft deleted a while ago. That's fine, as long as it's done right, which is what scenario 1 is about.
+Soft deleted rows are usually not kept forever: tables grow, and sometimes the data must be removed for legal reasons. So at some point the application **purges** them, hard deleting the rows that were soft deleted some time ago. This is fine if it's done with enough margin, which is what scenario 1 is about.
 
 ## Three scenarios
 
-Which approach you can use depends on two questions: can you change how the source deletes rows, and if not, can you read all its ids at once?
+Which approach you can use depends on two questions: can you change how the source deletes rows? And if not, can you read all its ids at once?
 
 ![Which scenario are you in?](../../images/posts/2026/9999-hard-deletes-decision.svg)
 
-* **Scenario 1: soft delete, then purge.** You (or a team you can talk to) control the source. The lake is told about every delete, and there is nothing to detect. This is what everybody should do.
-* **Scenario 2: read all ids and compare.** You don't control the source: a vendor's product, an open-source application. You read every id in one consistent read and compare it with the lake, in the same process.
-* **Scenario 3: export the ids, compare later.** You can't even do that in one go: the tables are too big for your tools, or the source can't serve one big read. You copy the ids to the lake in batches, and compare there.
+* **Scenario 1: soft delete, then purge.** You control the source, or can ask the team that does. Every delete reaches the lake as an update, so there is nothing to detect. This is what everybody should do.
+* **Scenario 2: read all ids and compare.** You don't control the source, for example a vendor's product or an open-source application. You read every id in a single query and compare them with the lake in the same process.
+* **Scenario 3: export the ids, compare later.** You can't read and compare all the ids at once, because the tables are too big for your tools or the source can't handle one big read. You export the ids to the lake in batches, and compare them there.
 
 | | Scenario 1: soft delete | Scenario 2: read all ids | Scenario 3: export ids |
 | --- | --- | --- | --- |
-| **You need** | Control over the source | Read access, and an engine that can compare a full id set | Read access |
+| **You need** | Control over the source | Read access, and an engine that can compare all the ids | Read access |
 | **Extra jobs** | None | One | Two, plus snapshot tables |
 | **Detection delay** | Next incremental run | Next check (weekly, for us) | Up to the snapshot window (~10 days, for us) |
 | **Load on the source** | None | One `SELECT id` per table | One `SELECT id` per batch |
-| **Gets it wrong when** | The source purges before the lake caught up | A read fails silently | A snapshot is partial or old |
+| **Fails when** | The source purges before the lake extracted the soft delete | A read fails without an error | A snapshot is partial or old |
 
 ## Scenario 1: soft delete, then purge
 
-This is the one every team should have, and the only one where the lake **doesn't have to guess**. The soft delete itself is the easy part (see above). What makes it safe end to end is how the rows are purged later.
+This is the only scenario where the lake doesn't need to detect anything. The soft delete itself is covered above, so this section is about doing the purge safely.
 
 ### Purge after a window longer than the worst delay
 
