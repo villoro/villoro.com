@@ -1,0 +1,67 @@
+<svg viewBox="0 0 1600 740" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <style>
+    .card { fill: #ffffff; }
+    .ttl { fill: #3a76ff; }
+    .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .gln { stroke: #6a6e82; }
+    .box { fill: #f3f5fb; stroke: #a6accb; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl { fill: #e8eaf6; }
+      .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .gln { stroke: #9aa0b5; }
+      .box { fill: #23263a; stroke: #6a6e82; }
+    }
+  </style>
+  <defs>
+    <marker id="aR" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M1 1 L10 6 L1 11 z" fill="#6a6e82"/>
+    </marker>
+  </defs>
+
+  <!-- opaque card: as an <img> the SVG follows the OS theme, not the site's .dark class -->
+  <rect width="1600" height="740" rx="24" class="card"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="40" font-weight="700" class="ttl">How I delegate to an agent</text>
+  <text x="800" y="112" text-anchor="middle" font-size="23" class="mut">if in doubt, let it try first, then decide what to do with the result</text>
+
+  <!-- task -->
+  <rect x="60" y="350" width="260" height="90" rx="45" class="box" stroke-width="2"/>
+  <text x="190" y="404" text-anchor="middle" font-size="24" font-weight="600" class="txt">A task</text>
+  <line x1="324" y1="395" x2="382" y2="395" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+
+  <!-- agent explores -->
+  <rect x="390" y="320" width="360" height="150" rx="16" fill="#3a76ff"/>
+  <text x="570" y="385" text-anchor="middle" font-size="26" font-weight="700" fill="#fff">The agent explores</text>
+  <text x="570" y="425" text-anchor="middle" font-size="21" fill="#eaf1ff">on its own</text>
+  <line x1="754" y1="395" x2="822" y2="395" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+
+  <!-- review -->
+  <rect x="830" y="320" width="300" height="150" rx="16" class="box" stroke-width="2"/>
+  <text x="980" y="385" text-anchor="middle" font-size="26" font-weight="700" class="txt">I review</text>
+  <text x="980" y="425" text-anchor="middle" font-size="21" class="mut">what it did and how</text>
+
+  <!-- fan out -->
+  <line x1="1134" y1="395" x2="1170" y2="395" class="gln" stroke-width="2.5"/>
+  <line x1="1170" y1="225" x2="1170" y2="565" class="gln" stroke-width="2.5"/>
+  <line x1="1170" y1="225" x2="1202" y2="225" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <line x1="1170" y1="395" x2="1202" y2="395" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+  <line x1="1170" y1="565" x2="1202" y2="565" class="gln" stroke-width="2.5" marker-end="url(#aR)"/>
+
+  <!-- outcomes -->
+  <rect x="1210" y="170" width="340" height="110" rx="14" fill="#d1fae5" stroke="#10b981" stroke-width="2.5"/>
+  <text x="1235" y="210" font-size="20" font-weight="700" fill="#047857">GOOD AS IT IS</text>
+  <text x="1235" y="248" font-size="22" font-weight="600" fill="#064e3b">Ship it</text>
+
+  <rect x="1210" y="340" width="340" height="110" rx="14" fill="#fdecc8" stroke="#f59e0b" stroke-width="2.5"/>
+  <text x="1235" y="380" font-size="20" font-weight="700" fill="#a15c00">CLOSE</text>
+  <text x="1235" y="418" font-size="22" font-weight="600" fill="#7a4500">Refine it together</text>
+
+  <rect x="1210" y="510" width="340" height="110" rx="14" fill="#fde2e2" stroke="#ef4444" stroke-width="2.5"/>
+  <text x="1235" y="550" font-size="20" font-weight="700" fill="#b91c1c">FAR OFF OR A BAD IDEA</text>
+  <text x="1235" y="588" font-size="22" font-weight="600" fill="#7f1d1d">Start again together</text>
+
+  <text x="800" y="690" text-anchor="middle" font-size="21" class="mut">Knowing which outcome to expect comes with experience, the same as with a junior engineer.</text>
+</svg>
