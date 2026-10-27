@@ -2,7 +2,7 @@
 slug: value-of-a-data-engineer
 title: The Value of a Data Engineer When AI Writes the Code
 meta_title: The value of a data engineer when AI agents write most of the code
-description: I code much less than I used to, because agents write most of it. An honest look at what a data engineer still adds, with the questions I ask before building anything and real stories of what went wrong when nobody asked them.
+description: I code much less than I used to, because agents write most of it. An honest look at what a data engineer still adds, with the questions I ask before building anything and the real stories behind them.
 date: 2026-10-27
 writing_date: 2026-10-27
 category: AI
@@ -10,13 +10,7 @@ tags: [DE, AI, Best Practices]
 draft: false
 ---
 
-{/*
-FREE DRAFT (step 1). Target: ~300 lines. Audience: data engineers (and their
-managers) who code less every month and wonder what is left of the job.
-Thesis: you can externalize the code, never the thinking. The value is in deciding
-what to build, where, and judging what gets built.
-TODO Villoro: hero image (16:9, src/images/blog/9999-...).
-*/}
+{/* TODO Villoro: hero image (16:9, src/images/blog/9999-...). */}
 
 ## I code much less than I used to
 
@@ -72,6 +66,11 @@ My rule is simple: **if in doubt, let the agent try first**, then look at the re
 * If it's good as it is, it goes in (after my review).
 * If it's close, we refine it together.
 * If it's far off or a bad idea, we start again from scratch, together.
+
+Some tasks are clear before starting:
+
+* **A new Postgres extraction**: there are plenty of examples in the repo, so I let the agent do it on its own.
+* **A new connector**, like the DuckDB one: there is nothing similar to copy, so we work on it together from the start.
 
 Letting it try is cheap, and even a wrong attempt shows me what the agent understood about the task. Knowing which of the three to expect comes with experience, the same way it did with junior engineers.
 
@@ -201,9 +200,7 @@ My question for any test is always the same:
 
 For the test above, the only way it fails is when someone changes the constant on purpose, and then they have to change the test too. It catches nothing, and it costs CI time on every run.
 
-I'm not against tests. In our CI, we deploy every Prefect workflow to a local test server. It's a simple check, but it catches deploys that would fail in production, for example because of import errors. We used to have problems like that once or twice a month, and I didn't like it. That test has a clear answer to my question.
-
-{/* TODO Villoro: link to the prefect-server post here, or to the CI code? */}
+I'm not against tests. In our CI, we deploy every Prefect workflow to a local test server (I explained how Prefect deployments work in <FancyLink linkText="Setting Up and Deploying Prefect Server" url="https://villoro.com/blog/prefect-server-setup-configuration-deployment/" dark="true"/>). It's a simple check, but it catches deploys that would fail in production, for example because of import errors. We used to have problems like that once or twice a month, and I didn't like it. That test has a clear answer to my question.
 
 The same applies beyond tests. When I review code, mine or an agent's, I mostly look for:
 
@@ -212,6 +209,9 @@ The same applies beyond tests. When I review code, mine or an agent's, I mostly 
 * **Simpler ways** to get the same result.
 
 Agents tend to add more, not less. Asking for less is usually my job.
+
+> [!warning] Reviewing is tiring
+> When agents produce most of the code, reviewing becomes most of the work. It's tiring, and after a long day it's easy to start approving without really reading. I'm working on something to address that, and I'll share it in a future post when it's ready.
 
 ## You can externalize code, never thinking
 
