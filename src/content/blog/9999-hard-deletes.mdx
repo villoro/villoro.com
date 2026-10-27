@@ -45,7 +45,7 @@ There is no query that returns the rows a table used to have. So there are only 
 * **You compare.** Read every id the source has now, and look for the ids the lake has but the source doesn't.
 
 > [!abstract]
-> There are three ways to deal with hard deletes, and which one you use depends on what you control. **If you can change the source, make it soft delete first.** If you can't, read every id and compare it with the lake. If you can't do that in one go, export the ids to the lake and compare there. This post explains the three in depth, and the rules that keep a comparison from going wrong.
+> If you have control over the source, **a soft delete is always the best solution**. This post explains why, and what to do when you don't have that control.
 
 ## Soft deletes
 
