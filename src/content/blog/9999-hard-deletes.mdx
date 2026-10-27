@@ -235,20 +235,9 @@ That rules out loading both sides into memory as DataFrames, unless you have a l
 * **Spills to disk** instead of failing when the ids don't fit in memory.
 * **Reads from the database and from the lake in the same process**, so the join happens there and the ids don't travel through your code.
 
-DuckDB does both, which is why I use it for this. If your tables have a few million rows, pandas is plenty and none of this matters.
+DuckDB does both, which is why I use it for this (I wrote about moving data between databases and a lake with it in <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>). If your tables have a few million rows, pandas is plenty and none of this matters.
 
-### What it costs
-
-The whole check, for all 11 brands, is **one job**:
-
-* **397 tables** with data, **836M ids** read.
-* About **11 minutes** on a 2 vCPU / 4 GB task, 6 tables at a time.
-* **1.7 GB** of memory at the peak: it only reads one column, so it doesn't need more.
-
-Almost all of the time goes to the two biggest reads of `mdl_scorm_scoes_value` (6.5 and 4.7 minutes). The other tables take seconds.
-
-> [!tip] Measure before adding concurrency
-> With 10 tables at a time instead of 6, the run took *longer* (12m20s vs 11m23s) and used 55% more compute. The bottleneck is the source, not the task. The full story is in the DuckDB post.
+It runs on a small machine, and more concurrency won't make it faster: the time goes into reading the ids from the source, so running more tables at once only makes them wait on each other.
 
 ## Scenario 3: when you can't do it on the fly
 
