@@ -56,14 +56,14 @@
   <text x="472" y="650" font-size="20" font-weight="600" class="mut">no</text>
 
   <!-- S2 -->
-  <rect x="950" y="480" width="550" height="110" rx="14" fill="#dbe7ff" stroke="#3a76ff" stroke-width="2.5"/>
-  <text x="975" y="520" font-size="20" font-weight="700" fill="#2457d6">SCENARIO 2 · no control over the source</text>
-  <text x="975" y="558" font-size="22" font-weight="600" fill="#1a3a8f">Read all ids, compare, tag</text>
+  <rect x="950" y="480" width="550" height="110" rx="14" fill="#fdecc8" stroke="#f59e0b" stroke-width="2.5"/>
+  <text x="975" y="520" font-size="20" font-weight="700" fill="#a15c00">SCENARIO 2 · no control over the source</text>
+  <text x="975" y="558" font-size="22" font-weight="600" fill="#7a4500">Read all ids, compare, tag</text>
 
   <!-- S3 -->
-  <rect x="950" y="670" width="550" height="110" rx="14" fill="#fdecc8" stroke="#f59e0b" stroke-width="2.5"/>
-  <text x="975" y="710" font-size="20" font-weight="700" fill="#a15c00">SCENARIO 3 · the worst case</text>
-  <text x="975" y="748" font-size="22" font-weight="600" fill="#7a4500">Export ids to the lake, compare later</text>
+  <rect x="950" y="670" width="550" height="110" rx="14" fill="#fde2e2" stroke="#ef4444" stroke-width="2.5"/>
+  <text x="975" y="710" font-size="20" font-weight="700" fill="#b91c1c">SCENARIO 3 · the worst case</text>
+  <text x="975" y="748" font-size="22" font-weight="600" fill="#7f1d1d">Export ids to the lake, compare later</text>
 
   <text x="800" y="840" text-anchor="middle" font-size="21" class="mut">In every scenario: tables that are only ever appended to (logs) have nothing to detect. Skip them.</text>
 </svg>

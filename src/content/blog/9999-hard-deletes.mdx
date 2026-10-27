@@ -101,21 +101,27 @@ Which approach you can use depends on two questions: can you change how the sour
 
 This is the only scenario where the lake doesn't need to detect anything. The soft delete itself is covered above, so this section is about doing the purge safely.
 
-### Purge after a window longer than the worst delay
+### Hard delete later, with enough margin
 
-A purge is a hard delete, so it's invisible to the lake like any other. That's fine, as long as **the lake has seen the soft delete before the purge**. If the purge runs first, the lake never saw the row marked as deleted, and you're back to an invisible hard delete.
+Soft deleted rows don't need to stay in the source forever. Once the lake has extracted the soft delete, the source can hard delete the row: the lake already has it marked as deleted, so it doesn't need anything else.
 
-{/* DIAGRAM idea: a timeline. Soft delete at t0 → lake extraction picks it up → purge at t0 + W.
-    Shows the safe case (lake run inside W) and the unsafe one (a failed week of runs pushes the
-    lake past W). */}
+The only condition is that **the lake extracts the soft delete before the hard delete runs**. If the hard delete comes first, the lake never sees the mark, and you are back to an invisible hard delete.
 
-The rule is simple: **the retention window must be longer than the worst delay of the lake**, not the usual one.
+So the hard delete waits for a margin after the soft delete. For example, with a daily extraction, hard deleting the rows that were soft deleted more than a week ago is fine:
 
-* Your extraction runs nightly, so the usual delay is one day.
-* But the pipeline can be down for a few days (an outage, a holiday, a schema change nobody announced).
-* And a backfill can rebuild a table from scratch, which only works if the soft deleted rows are still there.
+```sql
+-- Runs periodically, for example once a day (MySQL syntax)
+DELETE FROM enrollments
+WHERE deleted_at < NOW() - INTERVAL 7 DAY;
+```
 
-So a window of a few days is too tight. Agree on one that covers a bad week with margin, and **write it down** where both teams can see it.
+The lake has had 7 runs to extract each soft delete before the row is removed. That covers a few failed runs, or a weekend where nobody fixes the pipeline.
+
+{/* DIAGRAM idea: a timeline. Soft delete at t0 → daily extractions → hard delete at t0 + 7 days.
+    Shows the safe case (an extraction inside the window) and the unsafe one (the pipeline is down
+    for longer than the window). */}
+
+The margin has to cover **the worst delay of the extraction, not the usual one**. If your pipeline can be down for longer than a week, use a longer margin. Whatever value you choose, write it down where both teams can see it, so nobody shortens it later without telling the data team.
 
 ### What to ask the application team
 
