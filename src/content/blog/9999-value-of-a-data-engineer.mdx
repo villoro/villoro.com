@@ -113,9 +113,9 @@ Real time is a huge platform investment. You need streaming infrastructure, and 
 
 ### Should this be solved here, or at the source?
 
-This is the story that taught me the most.
+This is the story that taught me the most. For years, it was the project I talked about whenever someone asked me for **my biggest win**. Today I see it as **one of my biggest mistakes**.
 
-When I was working at Glovo, I was asked to build a table that showed **when each store was open or closed**. We didn't have that data. What we had were the events exchanged in the streaming service that, together, decided whether a store was open:
+At a previous company, I was asked to build a table that showed **when each store was open or closed**. We didn't have that data. What we had were the events exchanged in the streaming service that, together, decided whether a store was open:
 
 * whether it was within the store's working hours,
 * whether there was a force close for the store or for the whole city,
@@ -133,11 +133,11 @@ SUM(CASE WHEN event_type = 'force_close_start' THEN 1
 
 {/* TODO Villoro: is the sketch above close enough to how it worked? Happy to drop it. */}
 
-It was a difficult and fun problem, and it worked. The problem came later.
+It was a difficult and fun problem, and it worked. That's why I shared it as a success story for so long. The problem came later.
 
-The project really belonged to another team, but I had capacity, so I built it. Then I became a manager, and someone else had to maintain it. **The two people who took it over left the company within months**, and it was a nightmare to maintain.
+The project really belonged to another team, but I had capacity, so I built it. Then I became a manager, and someone else had to maintain it. **The people who took it over left the company quite fast**, and it was a nightmare to maintain.
 
-With experience, I now see that we should have said no. Rebuilding the state of a store from its events inside the data platform was the wrong approach. It had to be solved in the source system: whenever the backend received an event that affected a store, it should have calculated whether the store was open and emitted an event saying so. Working with those events would have been much simpler.
+With experience, I now see it as a failure on my end: we should have said no. Rebuilding the state of a store from its events inside the data platform was the wrong approach. It had to be solved in the source system: whenever the backend received an event that affected a store, it should have calculated whether the store was open and emitted an event saying so. Working with those events would have been much simpler.
 
 > [!warning] An agent would have built it too
 > Today an agent could write those window functions in an afternoon. That makes the wrong solution even more tempting, because it's cheap to build. **What is cheap to build is not cheap to maintain**, and the question of where it should live is still yours.
@@ -158,7 +158,7 @@ Every once in a while, I see data scientists about to deploy their own Docker im
 
 I know they can do all of it, especially with an agent helping. But I see very little value in them doing it, when it's already solved and it's easy to add a new package to the monorepo.
 
-To be fair, I know where the friction comes from. A PR in the monorepo means a review from me, and I will push for good practices, because I don't like failures in production. That's slower than shipping your own container. But it's much faster than maintaining a second platform.
+To be fair, I know where the friction comes from. A PR in the monorepo means a review from my team, and we will push for good practices, because we don't like failures in production. That's slower than shipping your own container. But it's much faster than maintaining a second platform.
 
 ## Reviewing what agents produce
 
