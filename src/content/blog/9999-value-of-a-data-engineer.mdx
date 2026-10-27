@@ -29,7 +29,7 @@ I won't pretend it doesn't cost me anything. What I miss most is the feeling of 
 So I've been asking myself what my value is now, if it isn't writing the code. This post is my honest answer.
 
 > [!abstract]
-> You can externalize the code, but you can never externalize the thinking. My value as a data engineer is in **deciding what is worth building, where it should live, and judging what gets built**. That's where I need to focus, even if it means coding less.
+> My value as a data engineer is in **understanding and evaluating**: deciding what is worth building, where it should live, and judging what gets built. That's where I need to focus, even if it means coding less.
 
 ## What agents do well
 
@@ -88,8 +88,8 @@ Most of the value I've added over the years came from asking a few questions bef
 | --- | --- |
 | Why do you need it, and what will you do with it? | Building the wrong thing |
 | What automatic process needs it this fresh? | Paying for real time nobody uses |
-| Should this be solved here, or at the source? | Rebuilding logic that belongs to another system |
 | Is it already solved somewhere? | Maintaining a second platform |
+| Should this be solved here, or at the source? | Rebuilding logic that belongs to another system |
 
 Here are the stories behind each one.
 
@@ -103,6 +103,8 @@ Before building anything, I asked why:
 > Why do you need an Excel file every day? What will you do with it? Why not a dashboard? Why not some data in the lake, so that something else can read it?
 
 It turned out that the data was the input of an **ML process**. So we wrote it to the lake and let the ML process read it directly from there. That was the end of the Excel problems.
+
+If they had asked an agent instead, they would have had a perfect daily Excel file the same day, and a process to maintain that nobody really needed.
 
 {/* TODO Villoro: any extra detail you want here (team, what the ML process did)? */}
 
@@ -118,7 +120,27 @@ Real time is a huge platform investment. You need streaming infrastructure, and 
 * If the data is for a person to review, they don't need real time. Often what they really need is to have the daily data ready when they open the dashboard in the morning, and that's a scheduling problem.
 * If it's something like fraud detection, where an automatic process has to act within seconds, then let's talk.
 
+An agent would build a streaming pipeline if you asked for one. It wouldn't ask whether anyone needs the data that fast.
+
 {/* TODO Villoro: a concrete request you can mention? */}
+
+### Is it already solved somewhere?
+
+Over the last few years I've built a monorepo with multiple packages and a CI/CD setup that I'm proud of. I described it in <FancyLink linkText="Scaling ECS Python Deployments with a Modular Monorepo" url="https://villoro.com/blog/monorepo-multimage/" dark="true"/> and <FancyLink linkText="Scalable GitHub Actions for Modern Repos" url="https://villoro.com/blog/github-hooks/" dark="true"/>.
+
+Every once in a while, I see data scientists about to deploy their own Docker image to run some Python. Every time, the conversation goes the same way:
+
+> [!question]
+> * Will you have CI?
+> * Will CD deploy it automatically?
+> * Will you set proper alerts in Slack?
+> * Will you have an orchestrator to see the history of past runs?
+> * Will you write, from scratch, all the logic to read from and write to the lake?
+
+I know they can do all of it, especially with an agent helping. But I see very little value in them doing it, when it's already solved and it's easy to add a new package to the monorepo.
+
+> [!note] Where the friction comes from
+> A PR in the monorepo means a review from my team, and we will push for good practices, because we don't like failures in production. That's slower than shipping your own container. But it's much faster than maintaining a second platform.
 
 ### Should this be solved here, or at the source?
 
@@ -160,24 +182,6 @@ Rebuilding the state of a store from its events inside the data platform was the
 > Today an agent could write those window functions in an afternoon. That makes the wrong solution even more tempting, because it's cheap to build. **What is cheap to build is not cheap to maintain**, and the question of where it should live is still yours.
 
 The same idea appears in <FancyLink linkText="How to Be Nice to the Data Team" url="https://villoro.com/blog/be-nice-to-data-team/" dark="true"/>: most data problems are born upstream, and that's usually where they should be fixed.
-
-### Is it already solved somewhere?
-
-Over the last few years I've built a monorepo with multiple packages and a CI/CD setup that I'm proud of. I described it in <FancyLink linkText="Scaling ECS Python Deployments with a Modular Monorepo" url="https://villoro.com/blog/monorepo-multimage/" dark="true"/> and <FancyLink linkText="Scalable GitHub Actions for Modern Repos" url="https://villoro.com/blog/github-hooks/" dark="true"/>.
-
-Every once in a while, I see data scientists about to deploy their own Docker image to run some Python. Every time, the conversation goes the same way:
-
-> [!question]
-> * Will you have CI?
-> * Will CD deploy it automatically?
-> * Will you set proper alerts in Slack?
-> * Will you have an orchestrator to see the history of past runs?
-> * Will you write, from scratch, all the logic to read from and write to the lake?
-
-I know they can do all of it, especially with an agent helping. But I see very little value in them doing it, when it's already solved and it's easy to add a new package to the monorepo.
-
-> [!note] Where the friction comes from
-> A PR in the monorepo means a review from my team, and we will push for good practices, because we don't like failures in production. That's slower than shipping your own container. But it's much faster than maintaining a second platform.
 
 ## Reviewing what agents produce
 
