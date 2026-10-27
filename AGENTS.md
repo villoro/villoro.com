@@ -257,7 +257,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - **Bump the version** (`package.json` + `package-lock.json`, e.g. `npm version X.Y.Z --no-git-tag-version`) in every site-affecting PR — CI's `check_version` fails otherwise. Fold it into the final docs/cleanup commit.
 - **Keep `IMPROVEMENTS.md` current.** When implementing an item from it, remove that item (and fix cross-references) in the same PR.
 - **Verify before opening a PR.** Build + typecheck + lint, and check the actual behavior in a browser against the built site (`npm run preview`), not just that the build passes.
-- **PRs:** push the branch and open the PR; the repo owner reviews/merges. No `gh` CLI on this machine — open the prefilled GitHub compare URL in the browser instead.
+- **PRs:** push the branch and open the PR yourself with `gh pr create` (installed and logged in); don't hand Villoro a compare URL to click. The repo owner reviews/merges. `gh pr checks` / `gh run view --log-failed` show why CI failed.
 
 ## Writing blog posts with Villoro
 
