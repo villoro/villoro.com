@@ -1,0 +1,68 @@
+<svg viewBox="0 0 1600 760" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <style>
+    .card { fill: #ffffff; }
+    .ttl { fill: #3a76ff; }
+    .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .gln { stroke: #a6accb; }
+    .run { fill: #3a76ff; }
+    .off { fill: #ffffff; stroke: #a6accb; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl { fill: #e8eaf6; }
+      .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .gln { stroke: #6a6e82; }
+      .run { fill: #6f9bff; }
+      .off { fill: #171a2b; stroke: #6a6e82; }
+    }
+  </style>
+  <defs>
+    <pattern id="hatch" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="14" height="14" fill="#fde2e2"/>
+      <line x1="0" y1="0" x2="0" y2="14" stroke="#f5b4b4" stroke-width="6"/>
+    </pattern>
+  </defs>
+
+  <!-- opaque card: as an <img> the SVG follows the OS theme, not the site's .dark class -->
+  <rect width="1600" height="760" rx="24" class="card"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="40" font-weight="700" class="ttl">Hard delete after a margin</text>
+  <text x="800" y="112" text-anchor="middle" font-size="23" class="mut">the lake has to extract the soft delete before the row is removed (daily extraction, 7-day margin)</text>
+
+  <!-- ROW 1: the pipeline runs every day -->
+  <text x="60" y="210" font-size="24" font-weight="700" class="txt">Pipeline runs every day</text>
+  <line x1="240" y1="300" x2="1500" y2="300" class="gln" stroke-width="3"/>
+  <circle cx="240" cy="300" r="14" fill="#f59e0b"/>
+  <text x="240" y="262" text-anchor="middle" font-size="20" font-weight="600" fill="#a15c00">soft delete</text>
+  <circle cx="405" cy="300" r="12" fill="#10b981"/>
+  <text x="405" y="262" text-anchor="middle" font-size="20" font-weight="600" fill="#047857">lake gets the mark</text>
+  <circle cx="570" cy="300" r="10" class="run"/>
+  <circle cx="735" cy="300" r="10" class="run"/>
+  <circle cx="900" cy="300" r="10" class="run"/>
+  <circle cx="1065" cy="300" r="10" class="run"/>
+  <circle cx="1230" cy="300" r="10" class="run"/>
+  <rect x="1381" y="286" width="28" height="28" rx="4" fill="#ef4444"/>
+  <text x="1395" y="262" text-anchor="middle" font-size="20" font-weight="600" fill="#b91c1c">hard delete</text>
+  <g font-size="18" class="mut" text-anchor="middle"><text x="240" y="345">day 0</text><text x="405" y="345">1</text><text x="570" y="345">2</text><text x="735" y="345">3</text><text x="900" y="345">4</text><text x="1065" y="345">5</text><text x="1230" y="345">6</text><text x="1395" y="345">7</text></g>
+  <text x="60" y="400" font-size="21" font-weight="600" fill="#047857">The lake has the row marked as deleted before it disappears from the source.</text>
+
+  <!-- ROW 2: the pipeline is down for longer than the margin -->
+  <text x="60" y="470" font-size="24" font-weight="700" class="txt">Pipeline down for more than 7 days</text>
+  <rect x="315" y="535" width="1185" height="50" rx="8" fill="url(#hatch)"/>
+  <line x1="240" y1="560" x2="1500" y2="560" class="gln" stroke-width="3"/>
+  <circle cx="240" cy="560" r="14" fill="#f59e0b"/>
+  <text x="240" y="522" text-anchor="middle" font-size="20" font-weight="600" fill="#a15c00">soft delete</text>
+  <circle cx="405" cy="560" r="10" class="off" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <circle cx="570" cy="560" r="10" class="off" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <circle cx="735" cy="560" r="10" class="off" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <circle cx="900" cy="560" r="10" class="off" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <circle cx="1065" cy="560" r="10" class="off" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <circle cx="1230" cy="560" r="10" class="off" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <rect x="1381" y="546" width="28" height="28" rx="4" fill="#ef4444"/>
+  <text x="1395" y="522" text-anchor="middle" font-size="20" font-weight="600" fill="#b91c1c">hard delete</text>
+  <text x="907" y="612" text-anchor="middle" font-size="19" font-weight="600" fill="#b91c1c">no extraction runs</text>
+  <text x="60" y="665" font-size="21" font-weight="600" fill="#b91c1c">The row is gone before the lake sees the mark: back to an invisible hard delete.</text>
+
+  <text x="800" y="725" text-anchor="middle" font-size="21" class="mut">Size the margin for the longest the pipeline can be down, not for a normal week.</text>
+</svg>
