@@ -239,22 +239,22 @@ It runs on a small machine, and more concurrency won't make it faster: the time 
 
 ### Build rows only for what can change
 
-A comparison looks at every id, but what it finds is a handful of rows. The intermediate results should be about that size too. There are two places where it is easy to get this wrong.
+The comparison usually finds only a few deleted rows. But it's easy to write it so that, on the way, it builds one row for every id in the lake. There are two places where this happens.
 
-**The comparison.** The obvious query computes a verdict for every id of the lake (one row per id, with its `is_deleted` and `flagged`) and filters afterwards. On a table with hundreds of millions of ids, that builds a second table as big as the lake to find a few rows. The query above only keeps the candidates:
+**The comparison.** The obvious query computes `is_deleted` and `flagged` for every id in the lake, and filters afterwards. On a table with hundreds of millions of ids, that builds a second table as big as the lake table. The query above only keeps the candidates:
 
 * an id that the source doesn't have, and
 * a row that is already tagged, to check whether it came back.
 
 The `LEFT JOIN` reads the lake table once and checks each row against `ids`. A row that is alive and untagged is dropped right there, so only the candidates reach the `GROUP BY`. The result is the same as grouping everything, because all the rows of a missing id are kept.
 
-**The `MERGE`.** Its source should only have the ids that can change (`WHERE is_deleted OR flagged`), which are the only ones either `WHEN` branch can update. With the whole `flags` table as the source, a merge that tags a few rows joins the table with itself.
+**The `MERGE`.** Its source only has the ids that will change (`WHERE is_deleted OR flagged`). The other rows in `flags` are ids missing from the source that the lake got after the read started, and there is nothing to update for them.
 
 > [!warning] Write it as a join, not as `EXISTS`
-> `WHERE NOT EXISTS (SELECT 1 FROM ids WHERE ids.id = raw.id)` reads better, but DuckDB planned it as a group over every distinct id of the lake first, which is the cost this section avoids. Look at the query plan (`EXPLAIN`) on a smaller copy of the data before running it at full size.
+> `WHERE NOT EXISTS (SELECT 1 FROM ids WHERE ids.id = raw.id)` reads better, but DuckDB planned it as a `GROUP BY` over every distinct id in the lake first, which is exactly the expensive part. Look at the query plan (`EXPLAIN`) on a smaller copy of the data before running it at full size.
 
 > [!tip] A bigger machine doesn't fix this
-> Spilling to disk and giving the job more memory don't help a query that builds one row per id: the work itself has to be smaller. On a copy with 20M string ids and a 400 MiB memory limit, the per-id version ran out of memory and the candidates version took 1.7 seconds.
+> Spilling to disk and giving the job more memory don't help much when the query builds one row per id. What helps is building fewer rows. On a copy with 20M string ids and a 400 MiB memory limit, the per-id version ran out of memory and the candidates version took 1.7 seconds.
 
 {/* TODO Villoro: I removed our production details from this section (the table with 184M ids, the dates of the failures, the full run of 13m36s on 2026-11-03). If you want one headline figure for the real job, it is that run, but it is a single run on a manual build. */}
 
@@ -352,7 +352,7 @@ Do this check **before** building the flags: with no ids, every row of the lake 
 
 ### Keep the intermediate results small
 
-A comparison is proportional to the table, but what it finds is proportional to what changed, which is usually a few rows. Keep the intermediate results to the second size. Build the rows of the candidates (missing from the source, or already tagged), not one per id of the lake, and give the final `MERGE` only those. The details are in [Scenario 2](#build-rows-only-for-what-can-change).
+Build rows only for the candidates (ids missing from the source, or already tagged), not one per id in the lake, and give the `MERGE` only the ids that will change. The details are in [Scenario 2](#build-rows-only-for-what-can-change).
 
 ### Tag, don't delete
 
