@@ -8,7 +8,7 @@ writing_date: 2026-10-27
 image: /images/blog/9999-mallard-hard-deletes.jpg
 category: DE
 tags: [DE, Iceberg, DuckDB, MySQL, SQL]
-draft: true
+draft: false
 ---
 
 {/*
@@ -185,37 +185,36 @@ SELECT CAST(id AS BIGINT) AS id
 FROM mysql_query('moodle', 'SELECT id FROM mdl_grade_grades');
 ```
 
-Then a second query decides, for every id in the lake, whether it was deleted:
+Then a second query decides which ids were deleted. It only builds a row for the ids that can change, the ones the source doesn't have and the ones already tagged:
 
 ```sql
 CREATE OR REPLACE TEMP TABLE flags AS
 SELECT
-    raw.id,
-    coalesce(ids.id IS NULL AND raw.extracted_at < :started_at, false) AS is_deleted,
-    raw.flagged
+    id,
+    NOT bool_or(in_source) AND max(p_extracted_at) < :started_at AS is_deleted,
+    bool_or(is_hard_deleted) AS flagged
 FROM (
-    SELECT
-        id,
-        max(p_extracted_at) AS extracted_at,
-        bool_or(is_hard_deleted) AS flagged
-    FROM lake.moodle.mdl_grade_grades
-    GROUP BY id
-) AS raw
-LEFT JOIN ids ON raw.id = ids.id;
+    SELECT raw.id, raw.p_extracted_at, raw.is_hard_deleted, ids.id IS NOT NULL AS in_source
+    FROM lake.moodle.mdl_grade_grades AS raw
+    LEFT JOIN ids ON raw.id = ids.id
+)
+WHERE NOT in_source OR is_hard_deleted
+GROUP BY id;
 ```
 
 {/* Simplified from the real one (the real one casts, since the raw tables are all strings). */}
 
-Two things in there are not obvious, and both are there because of a bug they prevent:
+Three things in there are not obvious, and each one is there because of a bug it prevents:
 
-* **`raw.extracted_at < :started_at`.** A row the lake got *after* we started reading ids could have been created after the read, so it's missing from the ids for a good reason. Only rows extracted before the read can be judged. More on this in [the rules](#rules-for-any-comparison).
+* **`max(p_extracted_at) < :started_at`.** A row the lake got *after* we started reading ids could have been created after the read, so it's missing from the ids for a good reason. Only rows extracted before the read can be judged. More on this in [the rules](#rules-for-any-comparison).
 * **`GROUP BY id`.** The raw table can have more than one row per id, and the next step, a `MERGE`, needs one row per key.
+* **`WHERE NOT in_source OR is_hard_deleted`.** Only the candidates get grouped. This is what makes it work on the biggest tables, and it has [its own section](#build-rows-only-for-what-can-change) below.
 
 Finally, one `MERGE` does both the tagging and the untagging:
 
 ```sql
 MERGE INTO lake.moodle.mdl_grade_grades AS target
-USING flags AS f
+USING (SELECT id, is_deleted FROM flags WHERE is_deleted OR flagged) AS f
 ON target.id = f.id
 WHEN MATCHED AND f.is_deleted AND NOT target.is_hard_deleted THEN
     UPDATE SET is_hard_deleted = true, hard_delete_detected_at = :now
@@ -231,12 +230,33 @@ The idea is simple. What can make it hard is the **size of the comparison**. For
 
 That rules out loading both sides into memory as DataFrames, unless you have a lot of memory to spare. What you want is an engine that:
 
-* **Spills to disk** instead of failing when the ids don't fit in memory.
+* **Spills to disk** instead of failing when the ids don't fit in memory. This helps, but it is not enough on its own, as the [next part](#build-rows-only-for-what-can-change) shows.
 * **Reads from the database and from the lake in the same process**, so the join happens there and the ids don't travel through your code.
 
 DuckDB does both, which is why I use it for this (I wrote about moving data between databases and a lake with it in <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>). If your tables have a few million rows, pandas is plenty and none of this matters.
 
 It runs on a small machine, and more concurrency won't make it faster: the time goes into reading the ids from the source, so running more tables at once only makes them wait on each other.
+
+### Build rows only for what can change
+
+A comparison looks at every id, but what it finds is a handful of rows. The intermediate results should be about that size too. There are two places where it is easy to get this wrong.
+
+**The comparison.** The obvious query computes a verdict for every id of the lake (one row per id, with its `is_deleted` and `flagged`) and filters afterwards. On a table with hundreds of millions of ids, that builds a second table as big as the lake to find a few rows. The query above only keeps the candidates:
+
+* an id that the source doesn't have, and
+* a row that is already tagged, to check whether it came back.
+
+The `LEFT JOIN` reads the lake table once and checks each row against `ids`. A row that is alive and untagged is dropped right there, so only the candidates reach the `GROUP BY`. The result is the same as grouping everything, because all the rows of a missing id are kept.
+
+**The `MERGE`.** Its source should only have the ids that can change (`WHERE is_deleted OR flagged`), which are the only ones either `WHEN` branch can update. With the whole `flags` table as the source, a merge that tags a few rows joins the table with itself.
+
+> [!warning] Write it as a join, not as `EXISTS`
+> `WHERE NOT EXISTS (SELECT 1 FROM ids WHERE ids.id = raw.id)` reads better, but DuckDB planned it as a group over every distinct id of the lake first, which is the cost this section avoids. Look at the query plan (`EXPLAIN`) on a smaller copy of the data before running it at full size.
+
+> [!tip] A bigger machine doesn't fix this
+> Spilling to disk and giving the job more memory don't help a query that builds one row per id: the work itself has to be smaller. On a copy with 20M string ids and a 400 MiB memory limit, the per-id version ran out of memory and the candidates version took 1.7 seconds.
+
+{/* TODO Villoro: I removed our production details from this section (the table with 184M ids, the dates of the failures, the full run of 13m36s on 2026-11-03). If you want one headline figure for the real job, it is that run, but it is a single run on a manual build. */}
 
 ## Scenario 3: when you can't do it on the fly
 
@@ -288,7 +308,10 @@ It worked, but look at the price:
 * **About 270 task-minutes** per weekly run (one large task per brand), plus 7 for the comparison. Scenario 2 does the same in 11.
 
 {/* TODO Villoro: the DuckDB post says "12 tasks → 1, ~49 min → 11 min" for this job. Both are
-    true (wall clock vs task time), but pick one to show here so the posts don't seem to disagree. */}
+    true (wall clock vs task time), but pick one to show here so the posts don't seem to disagree.
+    Also, the "11" here and in the DuckDB post was measured on an M task before the biggest tables
+    started to run out of memory. The latest full run took 13m36s on an L task (2026-11-03), and
+    the nightly runs before the fix took 20 to 27 minutes. Which one do we quote? */}
 
 > [!note] Still the right answer sometimes
 > If you're in one of the situations above, scenario 3 is what works, and the window and the margin are what make it safe. Just don't build it if scenario 2 is possible: every piece of it exists to work around not having one consistent read.
@@ -315,15 +338,21 @@ If the source returns **no ids** for a table that has rows in the lake, the like
 If you trust it, every row in the table gets tagged as deleted. So **stop** instead:
 
 ```python
-if n_rows_in_lake and not n_ids_in_source:
+if lake_has_rows and not n_ids_in_source:
     raise RuntimeError(
-        f"{table}: the source returned no ids but the lake has {n_rows_in_lake} rows, "
+        f"{table}: the source returned no ids but the lake has rows, "
         "not tagging them all as deleted"
     )
 ```
 
+Do this check **before** building the flags: with no ids, every row of the lake is a candidate, and building them is exactly the expensive thing the [previous section](#build-rows-only-for-what-can-change) avoids.
+
 {/* Maybe worth extending: also stop if more than X% of a table would be tagged at once.
     We don't do it today. TODO Villoro: worth suggesting, or leave it out? */}
+
+### Keep the intermediate results small
+
+A comparison is proportional to the table, but what it finds is proportional to what changed, which is usually a few rows. Keep the intermediate results to the second size. Build the rows of the candidates (missing from the source, or already tagged), not one per id of the lake, and give the final `MERGE` only those. The details are in [Scenario 2](#build-rows-only-for-what-can-change).
 
 ### Tag, don't delete
 
@@ -357,9 +386,7 @@ A table that's new in the source, and not in the lake yet, has nothing to compar
 * **If you can't, but you can read every id at once: scenario 2.** One job, one `SELECT id` per table, and an engine that can compare hundreds of millions of ids on a small machine.
 * **Otherwise: scenario 3.** Export the ids in batches, compare in the lake, and protect yourself with a rolling window and a margin.
 
-And whichever you choose: only judge rows you had before you looked, never trust an empty read, tag instead of deleting, and skip the tables that can't have deletes.
+And whichever you choose: only judge rows you had before you looked, never trust an empty read, build rows only for what can change, tag instead of deleting, and skip the tables that can't have deletes.
 
 > [!tip]
 > If you're extracting incrementally and have never thought about deletes, run one check: count the ids in the source and in the lake for your biggest table. If the lake has more, you have hard deletes, and now you know what to do about them.
-
-{/* TODO: closing line / CTA in Villoro's voice. */}
