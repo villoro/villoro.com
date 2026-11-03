@@ -243,8 +243,8 @@ The obvious way to write the comparison computes `is_deleted` and `flagged` for 
 
 The query above only keeps the **candidates**: ids the source doesn't have, and rows that are already tagged (to check whether they came back). A row that is alive and untagged is dropped in the `LEFT JOIN`, before the `GROUP BY`. All the rows of a missing id are kept, so the result is the same. The `MERGE` then gets only the ids that will change.
 
-> [!warning] Write it as a join, not as `EXISTS`
-> `NOT EXISTS` reads better, but DuckDB planned it as a `GROUP BY` over every id in the lake first. Check the plan with `EXPLAIN` on a smaller copy before running it at full size.
+> [!warning] Use a join, not a subquery
+> The same filter can be written as `WHERE NOT EXISTS (SELECT 1 FROM ids WHERE ids.id = raw.id) OR is_hard_deleted`. It means the same thing, but DuckDB runs it differently: it first groups every id in the lake, which is the big table we are trying to avoid. Running `EXPLAIN` on both versions shows the difference.
 
 > [!tip]
 > On a copy with 20M string ids and a 400 MiB memory limit, the per-id version ran out of memory and the candidates version took 1.7 seconds.
