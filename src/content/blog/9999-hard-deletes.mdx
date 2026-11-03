@@ -11,14 +11,6 @@ tags: [DE, Iceberg, DuckDB, MySQL, SQL]
 draft: true
 ---
 
-{/*
-FREE DRAFT (step 1). Target: ~400 lines. Audience: data engineers who extract
-application databases into a lake and either haven't noticed hard deletes yet, or
-are fighting them. Thesis: there are three situations, each with a right answer,
-and a handful of rules that apply to all of them. After reading, nobody should
-have to rediscover them.
-*/}
-
 ## Hard deletes, and why they hurt
 
 Most extractions into a data lake are **incremental**: each run reads the rows that changed since the last one (`WHERE updated_at > last_run`) and merges them into the lake. This is cheap and fast, but it only sees rows that still exist.
@@ -116,9 +108,7 @@ WHERE deleted_at < NOW() - INTERVAL 7 DAY;
 
 The lake has had 7 runs to extract each soft delete before the row is removed. That covers a few failed runs, or a weekend where nobody fixes the pipeline.
 
-{/* DIAGRAM idea: a timeline. Soft delete at t0 → daily extractions → hard delete at t0 + 7 days.
-    Shows the safe case (an extraction inside the window) and the unsafe one (the pipeline is down
-    for longer than the window). */}
+![Hard delete after a margin](../../images/posts/2026/9999-hard-deletes-purge-margin.svg)
 
 > [!tip] Size the margin for the worst delay
 > The margin has to cover **the worst delay of the extraction, not the usual one**. If your pipeline can be down for longer than a week, use a longer margin. Whatever value you choose, write it down where both teams can see it, so nobody shortens it later without telling the data team.
@@ -133,17 +123,11 @@ This is the part to copy into a ticket:
 > * Purge only rows soft deleted more than *N* days ago, with *N* agreed with the data team.
 > * Tell the data team before changing any of the three.
 
-{/* TODO Villoro: if the purge is for GDPR, the lake has to delete the row too, not just keep the
-    soft-deleted copy. Do we do anything for that today? Worth a paragraph, or out of scope? */}
-
 ### When the source already does this: Salesforce
 
-Some sources give you scenario 1 for free. Salesforce, for example, doesn't remove a deleted record right away: it moves it to the recycle bin, sets `IsDeleted = true`, and only purges it later. If you extract with <FancyLink linkText="queryAll" url="https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_calls_queryall.htm" company="salesforce" dark="true"/> instead of `query`, the deleted records come through as normal updates. Our Salesforce extraction does exactly that (`include_deleted=True` by default), so deletes there need no extra work.
+Some sources give you scenario 1 for free. Salesforce, for example, doesn't remove a deleted record right away: it moves it to the recycle bin, sets `IsDeleted = true`, and only purges it later. If you extract with <FancyLink linkText="queryAll" url="https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_calls_queryall.htm" company="salesforce" dark="true"/> instead of `query`, the deleted records come through as normal updates: deleting a record also bumps its `SystemModstamp`, so an incremental extraction picks the delete up like any other change. Our Salesforce extraction does exactly that (`include_deleted=True` by default), so deletes there need no extra work.
 
 You can read more about it in <FancyLink linkText="Extracting data from Salesforce with Python" url="https://villoro.com/blog/extracting-data-salesforce-python/#querying-options" dark="true"/>.
-
-{/* TODO Villoro: confirm the Salesforce extraction is incremental on SystemModstamp/LastModifiedDate
-    and that deleting a record bumps it. That's what makes it scenario 1. */}
 
 ### A variant: change data capture
 
@@ -177,45 +161,42 @@ Reading only the `id` column is cheap: the database answers it from the primary 
 
 We do it with DuckDB, the same setup I described in <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>. It reads from MySQL with its <FancyLink linkText="MySQL extension" url="https://duckdb.org/docs/stable/core_extensions/mysql" company="duckdb" dark="true"/>, and writes to the Iceberg tables in the lake. The read keeps the ids in a temporary table:
 
-{/* TODO: confirm the DuckDB post link works once 0074 is published (it is a draft now). */}
-
 ```sql
 CREATE OR REPLACE TEMP TABLE ids AS
 SELECT CAST(id AS BIGINT) AS id
 FROM mysql_query('moodle', 'SELECT id FROM mdl_grade_grades');
 ```
 
-Then a second query decides, for every id in the lake, whether it was deleted:
+Then a second query decides which ids were deleted. It only builds a row for the ids that can change, the ones the source doesn't have and the ones already tagged:
 
 ```sql
 CREATE OR REPLACE TEMP TABLE flags AS
 SELECT
-    raw.id,
-    coalesce(ids.id IS NULL AND raw.extracted_at < :started_at, false) AS is_deleted,
-    raw.flagged
+    id,
+    NOT bool_or(in_source) AND max(p_extracted_at) < :started_at AS is_deleted,
+    bool_or(is_hard_deleted) AS flagged
 FROM (
-    SELECT
-        id,
-        max(p_extracted_at) AS extracted_at,
-        bool_or(is_hard_deleted) AS flagged
-    FROM lake.moodle.mdl_grade_grades
-    GROUP BY id
-) AS raw
-LEFT JOIN ids ON raw.id = ids.id;
+    SELECT raw.id, raw.p_extracted_at, raw.is_hard_deleted, ids.id IS NOT NULL AS in_source
+    FROM lake.moodle.mdl_grade_grades AS raw
+    LEFT JOIN ids ON raw.id = ids.id
+)
+WHERE NOT in_source OR is_hard_deleted
+GROUP BY id;
 ```
 
 {/* Simplified from the real one (the real one casts, since the raw tables are all strings). */}
 
-Two things in there are not obvious, and both are there because of a bug they prevent:
+Three things in there are not obvious, and each one is there because of a bug it prevents:
 
-* **`raw.extracted_at < :started_at`.** A row the lake got *after* we started reading ids could have been created after the read, so it's missing from the ids for a good reason. Only rows extracted before the read can be judged. More on this in [the rules](#rules-for-any-comparison).
+* **`max(p_extracted_at) < :started_at`.** A row the lake got *after* we started reading ids could have been created after the read, so it's missing from the ids for a good reason. Only rows extracted before the read can be judged. More on this in [the rules](#rules-for-any-comparison).
 * **`GROUP BY id`.** The raw table can have more than one row per id, and the next step, a `MERGE`, needs one row per key.
+* **`WHERE NOT in_source OR is_hard_deleted`.** Only the candidates get grouped. This is what makes it work on the biggest tables, and it has [its own section](#build-rows-only-for-what-can-change) below.
 
 Finally, one `MERGE` does both the tagging and the untagging:
 
 ```sql
 MERGE INTO lake.moodle.mdl_grade_grades AS target
-USING flags AS f
+USING (SELECT id, is_deleted FROM flags WHERE is_deleted OR flagged) AS f
 ON target.id = f.id
 WHEN MATCHED AND f.is_deleted AND NOT target.is_hard_deleted THEN
     UPDATE SET is_hard_deleted = true, hard_delete_detected_at = :now
@@ -231,12 +212,24 @@ The idea is simple. What can make it hard is the **size of the comparison**. For
 
 That rules out loading both sides into memory as DataFrames, unless you have a lot of memory to spare. What you want is an engine that:
 
-* **Spills to disk** instead of failing when the ids don't fit in memory.
+* **Spills to disk** instead of failing when the ids don't fit in memory. This helps, but it is not enough on its own, as the [next part](#build-rows-only-for-what-can-change) shows.
 * **Reads from the database and from the lake in the same process**, so the join happens there and the ids don't travel through your code.
 
 DuckDB does both, which is why I use it for this (I wrote about moving data between databases and a lake with it in <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>). If your tables have a few million rows, pandas is plenty and none of this matters.
 
-It runs on a small machine, and more concurrency won't make it faster: the time goes into reading the ids from the source, so running more tables at once only makes them wait on each other.
+It runs on a single task, and more concurrency won't make it faster: the time goes into reading the ids from the source, so running more tables at once only makes them wait on each other.
+
+### Build rows only for what can change
+
+The obvious way to write the comparison computes `is_deleted` and `flagged` for every id in the lake, and filters afterwards. On a table with hundreds of millions of ids, that builds a second table as big as the lake one to find a few deleted rows, and spilling to disk or a bigger machine doesn't fix it.
+
+The query above only keeps the **candidates**: ids the source doesn't have, and rows that are already tagged (to check whether they came back). A row that is alive and untagged is dropped in the `LEFT JOIN`, before the `GROUP BY`. All the rows of a missing id are kept, so the result is the same. The `MERGE` then gets only the ids that will change.
+
+> [!warning] Use a join, not a subquery
+> The same filter can be written as `WHERE NOT EXISTS (SELECT 1 FROM ids WHERE ids.id = raw.id) OR is_hard_deleted`. It means the same thing, but DuckDB runs it differently: it first groups every id in the lake, which is the big table we are trying to avoid. Running `EXPLAIN` on both versions shows the difference.
+
+> [!tip]
+> On a copy with 20M string ids and a 400 MiB memory limit, the per-id version ran out of memory and the candidates version took 1.7 seconds.
 
 ## Scenario 3: when you can't do it on the fly
 
@@ -269,9 +262,6 @@ Each batch goes to the lake, into a table of id snapshots. Two lessons came with
 
 Here's the subtle part. With batches, **the ids are no longer a consistent snapshot**. Batch 1 was read at 01:00, batch 40 at 03:30. "The ids as of when?" has no single answer.
 
-{/* DIAGRAM idea: the batches on a timeline, with a row inserted between batch 1 and 40, and the
-    6h margin shown as a shaded band before the newest snapshot. */}
-
 We solved it with a **rolling window**:
 
 * The id export ran **weekly**, and kept the snapshots of the last **10 days**.
@@ -285,10 +275,7 @@ It worked, but look at the price:
 * **Two jobs**, one for the ids and one for the comparison, plus a cleanup of old snapshots.
 * **A snapshot table per brand**, with its own maintenance.
 * **A detection delay of up to ~10 days**: a deleted id had to age out of every snapshot in the window before it counted as gone.
-* **About 270 task-minutes** per weekly run (one large task per brand), plus 7 for the comparison. Scenario 2 does the same in 11.
-
-{/* TODO Villoro: the DuckDB post says "12 tasks → 1, ~49 min → 11 min" for this job. Both are
-    true (wall clock vs task time), but pick one to show here so the posts don't seem to disagree. */}
+* **About 270 task-minutes** per weekly run (one large task per brand), plus 7 for the comparison. Scenario 2 does the same with one task in about 14 minutes.
 
 > [!note] Still the right answer sometimes
 > If you're in one of the situations above, scenario 3 is what works, and the window and the margin are what make it safe. Just don't build it if scenario 2 is possible: every piece of it exists to work around not having one consistent read.
@@ -315,15 +302,20 @@ If the source returns **no ids** for a table that has rows in the lake, the like
 If you trust it, every row in the table gets tagged as deleted. So **stop** instead:
 
 ```python
-if n_rows_in_lake and not n_ids_in_source:
+if lake_has_rows and not n_ids_in_source:
     raise RuntimeError(
-        f"{table}: the source returned no ids but the lake has {n_rows_in_lake} rows, "
+        f"{table}: the source returned no ids but the lake has rows, "
         "not tagging them all as deleted"
     )
 ```
 
-{/* Maybe worth extending: also stop if more than X% of a table would be tagged at once.
-    We don't do it today. TODO Villoro: worth suggesting, or leave it out? */}
+Do this check **before** building the flags: with no ids, every row of the lake is a candidate, and building them is exactly the expensive thing the [previous section](#build-rows-only-for-what-can-change) avoids.
+
+One more guard you could add, which we don't have today: stop if a single run would tag more than a set share of a table, for example 10%.
+
+### Keep the intermediate results small
+
+Build rows only for the candidates (ids missing from the source, or already tagged), not one per id in the lake, and give the `MERGE` only the ids that will change. The details are in [Scenario 2](#build-rows-only-for-what-can-change).
 
 ### Tag, don't delete
 
@@ -351,15 +343,11 @@ A table that's new in the source, and not in the lake yet, has nothing to compar
 
 ## Which one should you use?
 
-{/* Maybe reuse the decision diagram here, or a short checklist. */}
-
 * **If you can change the source: scenario 1.** Ask for soft deletes with `deleted_at`, a bumped `updated_at`, and a purge window longer than your worst delay. It's the only option without guessing.
-* **If you can't, but you can read every id at once: scenario 2.** One job, one `SELECT id` per table, and an engine that can compare hundreds of millions of ids on a small machine.
+* **If you can't, but you can read every id at once: scenario 2.** One job, one `SELECT id` per table, and an engine that can compare hundreds of millions of ids on a single task.
 * **Otherwise: scenario 3.** Export the ids in batches, compare in the lake, and protect yourself with a rolling window and a margin.
 
-And whichever you choose: only judge rows you had before you looked, never trust an empty read, tag instead of deleting, and skip the tables that can't have deletes.
+And whichever you choose: only judge rows you had before you looked, never trust an empty read, build rows only for what can change, tag instead of deleting, and skip the tables that can't have deletes.
 
 > [!tip]
 > If you're extracting incrementally and have never thought about deletes, run one check: count the ids in the source and in the lake for your biggest table. If the lake has more, you have hard deletes, and now you know what to do about them.
-
-{/* TODO: closing line / CTA in Villoro's voice. */}

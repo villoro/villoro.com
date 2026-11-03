@@ -44,7 +44,7 @@
   <!-- S1 -->
   <rect x="950" y="290" width="550" height="110" rx="14" fill="#d1fae5" stroke="#10b981" stroke-width="2.5"/>
   <text x="975" y="330" font-size="20" font-weight="700" fill="#047857">SCENARIO 1 · the good one</text>
-  <text x="975" y="368" font-size="22" font-weight="600" fill="#064e3b">Soft delete, purge later</text>
+  <text x="975" y="368" font-size="22" font-weight="600" fill="#064e3b">Soft delete, hard delete later</text>
 
   <!-- Q2 -->
   <rect x="150" y="480" width="600" height="110" rx="14" class="box" stroke-width="2"/>
