@@ -60,13 +60,17 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache only the app shell (JS/CSS/HTML/SVG/fonts) and the PWA
-        // icons. Raster images are NOT precached — public/images alone is
-        // >20 MB of originals plus Sharp variants, which made first-visit
-        // installs download ~75 MB in the background. Images are cached
-        // lazily as they're viewed via the runtimeCaching rule below.
+        // Precache only hashed static assets (JS/CSS/SVG/fonts) and the PWA
+        // icons. HTML is NOT precached: precached pages are served
+        // cache-first, so new posts never appeared until the service worker
+        // managed to update (rare on mobile / with ClientRouter soft
+        // navigations), and every deploy forced re-downloading ~215 pages.
+        // Pages go through the NetworkFirst rule below instead.
+        // Raster images are NOT precached either — public/images alone is
+        // >20 MB of originals plus Sharp variants. They're cached lazily as
+        // they're viewed via the runtimeCaching rule below.
         globPatterns: [
-          "**/*.{js,css,html,svg,woff,woff2}",
+          "**/*.{js,css,svg,woff,woff2}",
           "pwa/*.png",
           "images/favicon.png",
         ],
@@ -74,6 +78,24 @@ export default defineConfig({
         // offline masks real 404s and confuses deep links on a blog.
         navigateFallback: null,
         runtimeCaching: [
+          {
+            // Pages: always try the network so new posts show up right
+            // away; fall back to the last cached copy when offline or the
+            // network is too slow. Only pages actually visited are cached.
+            urlPattern: ({ request, sameOrigin }) =>
+              sameOrigin && request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "pages",
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             urlPattern: ({ request, sameOrigin }) =>
               sameOrigin && request.destination === "image",
