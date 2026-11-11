@@ -138,7 +138,7 @@ Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native S
 
 ## PR 12. Lighthouse budget on previews
 
-Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). Worth doing only after PR 5, when there is a good number to protect. The fonts are self-hosted since v3.2.30 and PageSpeed hasn't been re-run since: the last numbers (June 2026, mobile) were Perf 70, FCP 3.8 s, LCP 5.1 s. Also check CLS, because the metric-adjusted fallback fonts that `astro-font` generated are gone.
+Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). Worth doing only after PR 5, when there is a good number to protect. The fonts are self-hosted since v3.2.32 and PageSpeed hasn't been re-run since: the last numbers (June 2026, mobile) were Perf 70, FCP 3.8 s, LCP 5.1 s. Also check CLS, because the metric-adjusted fallback fonts that `astro-font` generated are gone.
 
 ## PR 13. Colour contrast
 
