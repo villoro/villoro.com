@@ -19,7 +19,6 @@ equivalent), so a DataFrame has no job left in production: it's a bag for rows t
 and changes the data. Arrow builds the table, DuckDB writes it. DataFrames belong in notebooks,
 and notebooks don't go to production.
 Controversial on purpose, backed only by numbers we measured (ECS runs and a local benchmark).
-Reference draft (not to publish): 9999-no-dataframes.mdx.
 TODO before release: date, slug check.
 */}
 
@@ -47,9 +46,9 @@ Today most of us do **ELT** instead. The job extracts the raw data and loads it 
 The DataFrame, however, stayed in most jobs. In an ELT pipeline it has nothing left to transform, so it only carries the rows from the extract to the load. And that is not free: it uses much more memory than the data it holds, which forces the job to write in small chunks, and it changes some values on the way (integers with NULLs become `1.0`, nested objects become Python reprs instead of JSON).
 
 > [!abstract]
-> I think **you don't need DataFrames for data engineering**, neither pandas nor Polars. The T belongs in SQL, and the E and the L only move rows, which Arrow and DuckDB do well without a frame in the middle. In this post I show how we removed it from our extraction jobs, what we got, and what we learned on the way.
+> I think **you don't need DataFrames for data engineering**, neither pandas nor Polars. The T belongs in SQL, and the E and the L only move rows, which Arrow and DuckDB do well without a frame in the middle. In this post I show how we removed it from our extraction jobs, what we got, and what we learned on the way. (When the transformation itself has to happen in Python, for an ML model for example, that's a different story: I cover it at the end.)
 
-## What the bag costs
+## What the DataFrame costs
 
 We didn't use a DataFrame because we wanted one. When we started writing Iceberg tables with the Glue catalog, the only way we found was awswrangler's `to_iceberg`, and it takes a pandas DataFrame. So every job built one, and passed it to a shared writer, `write_iceberg`, which did what most loaders do:
 
@@ -78,10 +77,10 @@ So the memory of a write grows with the number of rows in it, and fast. That's w
 
 The DataFrame also changes some of the data:
 
-* **Integers with NULLs become floats.** pandas stores a column of integers with a missing value as `float64`, so `astype(str)` writes `"1.0"` instead of `"1"`. In dbt, we had to cast those columns through a double to get the integer back.
+* **Integers with NULLs become floats.** By default, pandas stores a column of integers with a missing value as `float64` (its nullable `Int64` type avoids it, but you have to ask for it), so `astype(str)` writes `"1.0"` instead of `"1"`. In dbt, we had to cast those columns through a double to get the integer back.
 * **Nested objects become Python reprs.** A dict is written as `"{'type': 'Task'}"`, which is not JSON, so `json_extract` in Athena can't read it.
 
-None of these are bugs in pandas. They are what happens when you use a tool built for analysis as a container for rows.
+None of these are bugs in pandas. They came from its default types and from how our writer converted them to text.
 
 ## "But Polars…"
 
@@ -97,7 +96,7 @@ But it's still a DataFrame, and the problem is not which one. In an EL job there
 * **We want to control the merge.** As I explained in <FancyLink linkText="the trade-off of the previous post" url="https://villoro.com/blog/duckdb-instead-of-spark/#the-trade-off-you-write-the-write-logic" dark="true"/>, writing the merge ourselves with DuckDB is what lets us add metadata to every row (how many times it was written, when it was first exported) and decide how rows behave: which version wins, and what happens to a key that comes twice.
 * **Its type inference doesn't like API data**, where the same field can be a number in one row and a string in the next.
 
-What the job really needs is a table in a format the writer understands, and that format is **Arrow**: DuckDB, Parquet and Iceberg all speak it.
+What the job really needs is a table in a format the writer understands, and that format is **Arrow**: the in-memory format that DuckDB reads directly, and that Parquet and Iceberg writers work with.
 
 > [!tip] If you want something off the shelf
 > `pa.Table.from_pylist(rows)` is the closest thing to what we do, and it's what I would try first. We didn't use it because it infers the types too, and we wanted to decide ourselves how each value lands as text: integers without `.0`, real JSON for nested objects. That's a few lines of Python, shown in the next section.
@@ -106,14 +105,14 @@ What the job really needs is a table in a format the writer understands, and tha
 
 So we wrote our own loader, `write_records`. It takes the rows as Python has them, a list of dicts or an iterator of pages of dicts, and never builds a frame:
 
-1. **Each page of rows becomes an Arrow table.** One pass per column: each value is turned into text the way we want it, straight into an Arrow array. Arrow keeps a column of strings as one buffer of bytes, without a Python object per value.
-2. **DuckDB adds the page to a temp table.** It reads the Arrow table in place and copies the rows into its own storage, which spills to disk when it goes past its memory limit. Then the page, and the dicts behind it, are freed.
+1. **Each page of rows becomes an Arrow table.** One pass per column: each value is turned into text the way we want it, straight into an Arrow array. Arrow keeps a column of strings in a few compact buffers (the bytes, and where each value starts), without a Python object per value.
+2. **DuckDB adds the page to a temp table.** It reads the Arrow table in place and copies the rows into its own storage, which can spill to disk when it goes past its memory limit. Then the page, and the dicts behind it, are freed.
 3. **When every page is staged, DuckDB writes the Iceberg table**, through the Glue catalog: create, append, overwrite or merge. It's the same engine as in the previous post, so the deduplication, the merge and the metadata columns come for free.
 
 The rows go in and out in different sizes, because each side has a different limit:
 
-* **`In`: small pages of 10k rows.** The limit here is Python's memory: a page is a list of dicts, the expensive part, so it should be small. Since a page only goes into the temp table, a small one costs nothing extra.
-* **`Out`: big merges of 1M rows.** The limit here is the merge: it needs memory for every row it merges at once. Before merging, the staged rows are deduplicated and sorted by the filter column, and then merged oldest first, each batch its own commit.
+* **`In`: small pages of 10k rows.** The limit here is Python's memory: a page is a list of dicts, the expensive part, so it should be small. Since a page only goes into the temp table, a small one costs very little.
+* **`Out`: big merges of about 1M rows.** The limit here is the merge: it needs memory for every row it merges at once. Before merging, the staged rows are deduplicated and sorted by the filter column, and then merged oldest first, each batch its own commit.
 
 ![Small pages in, big batches out](../../images/posts/2026/0075-pages-in-batches-out.svg)
 
@@ -186,7 +185,7 @@ To see the difference without AWS in the way, I ran both loaders locally on the 
 | pandas, peak memory | 0.74 GB | 2.45 GB | 5.64 GB |
 | Arrow + DuckDB, peak memory | 0.69 GB | 1.01 GB | 1.57 GB |
 
-<canvas id="memory-by-rows" style="width:100%;height:350px;"></canvas>
+<canvas id="memory-by-rows" style="width:100%;height:350px;" role="img" aria-label="Peak memory of one write by rows: pandas 0.74, 2.45 and 5.64 GB at 50k, 200k and 500k rows; Arrow and DuckDB 0.69, 1.01 and 1.57 GB">Peak memory of one write: the same numbers as the table above.</canvas>
 
 With small chunks, both cost about the same. The difference is how fast they grow:
 
@@ -194,7 +193,7 @@ With small chunks, both cost about the same. The difference is how fast they gro
 * **Arrow + DuckDB**: about **2 KB more for every row**. Python only holds one page of dicts, and DuckDB keeps the staged rows in about 0.5 KB each.
 
 > [!success] About 5x less memory per row
-> Every extra row costs pandas about 11 KB, and Arrow + DuckDB about 2 KB. That's what changes the job: with pandas, the size of a write is limited by the machine, so a big run is many writes. With Arrow and DuckDB, a whole run fits in one.
+> In this benchmark, every extra row costs pandas about 11 KB, and Arrow + DuckDB about 2 KB. That's what changes the job: with pandas, the size of a write is limited by the machine, so a big run is many writes. With Arrow and DuckDB, a whole run fits in one.
 
 ### On the real jobs
 
@@ -206,9 +205,9 @@ Then the same comparison on ECS, with the real Salesforce API (I explained how w
 | `Opportunity` (wide rows), 90 days (1.74M rows), on 4 GB | **killed** (out of memory) after 2 chunks | 3.7 GB peak, **1 write** |
 
 > [!success] The short version
-> **Half the memory** on our biggest jobs, a wide table that now **fits on a smaller machine**, **one commit** per run instead of one per chunk, and the data lands **as it came**: no `.0`, real JSON.
+> **Half the memory** on the `Task` job, a wide table that now **fits on a smaller machine**, **one commit** per run instead of one per chunk, and **faithful text**: no `.0`, real JSON.
 
-The runs took about the same time with both. That's expected: Salesforce serves 2000 rows per call, and that decides the speed. As in the previous post, **no engine makes a source answer faster**. The win here is not speed: it's that the job needs a smaller machine, writes once, and writes the right values.
+The runs took about the same time with both. That's expected: in these runs the bottleneck was Salesforce, which serves 2000 rows per call. As in the previous post, **no engine makes a source answer faster**. The win here is not speed: it's that the job needs a smaller machine, writes once, and writes the right values.
 
 ## What owning the load taught us
 
@@ -216,19 +215,17 @@ Dropping awswrangler means the write is our code now: the merge, the deduplicati
 
 ### Avoid big merges: merge in batches
 
-This is the one that took us longest to understand, so it has a few parts.
-
 #### We could stage it, but not merge it
 
 > [!failure] Problem: the merge didn't fit, whatever we tried
 > A backfill of 5 months of Salesforce `Task` is 3.8M rows, merged into a table of 36M. Staging them was fine on a 4 GB task: all the rows were in DuckDB. But the `MERGE` wasn't: DuckDB spilled 9 GiB to disk and still ran out of memory. Giving DuckDB a smaller share of the memory, so it would spill earlier, only made it fail sooner.
 
-We assumed the size of the destination table was the problem. It wasn't: a merge of 978k rows into the same 36M took 17 seconds. What matters is **how many rows you merge at once** (and how wide they are), not how big the destination table is. As far as we can tell from these runs, DuckDB builds the join from the new rows and only streams the destination table.
+We assumed the size of the destination table was the problem. It wasn't: a merge of 978k rows into the same 36M took 17 seconds. In these runs, what made the difference was **how many rows we merged at once** (and how wide they were), not how big the destination table was. As far as we can tell, DuckDB builds the join from the new rows and streams the destination table, so the table's size costs time more than memory.
 
 #### Merge in batches
 
 > [!success] Fix: merge in batches
-> Split the staged rows in batches of 1M (`max_merge_rows`) and merge them one at a time, each one its own commit. The same 3.8M rows on the same 4 GB task: **4 merges, 6 minutes**, under 1 GiB spilled each.
+> Split the staged rows in batches of about 1M (`max_merge_rows`) and merge them one at a time, each one its own commit. The same 3.8M rows on the same 4 GB task: **4 merges, 6 minutes**, under 1 GiB spilled each.
 
 This also corrects the previous post. There, a moodle backfill failed after filling the disk, and I wrote that this was where one machine stops (the section "How much disk: where one machine stops"). It wasn't the machine, it was the single merge. The same test now, 27M rows into a table of 206M on an 8 GB task:
 
@@ -239,9 +236,9 @@ This also corrects the previous post. There, a moodle backfill failed after fill
 
 ![One merge against merges in batches](../../images/posts/2026/0075-batched-merges.svg)
 
-#### Oldest first, so a crash loses nothing
+#### Oldest first, so a crashed run can resume
 
-Batches have a risk: a run can now die halfway, with some batches committed and others not. That's safe only if the batches go **oldest first**, by the column the job uses to continue (`SystemModstamp` in Salesforce). The next run starts where the table ends, so if the table is complete up to its highest value, a crash loses nothing. In any other order, it leaves gaps below that value, and no run will read them again.
+Batches have a risk: a run can now die halfway, with some batches committed and others not. That's safe only if the batches go **oldest first**, by the column the job uses to continue (`SystemModstamp` in Salesforce). An incremental run starts where the table ends, so if the table is complete up to its highest value, the next run picks up exactly where the crash left it. In any other order, a crash leaves gaps below that value, and no run will read them again. (A backfill is different: the table already has newer rows, so what makes it safe is that a window can simply be run again.)
 
 Many APIs can't give you the rows in that order: some don't sort at all, and some can't sort by the column you filter on. With pandas we worked around it with a temp table: each chunk was written to a temporary Iceberg table as it arrived, and at the end everything was moved to the real table, so the real table never saw a partial run. It worked, but it meant writing every row twice.
 
@@ -297,16 +294,19 @@ if keyless or repeated:
 The natural way to backfill an incremental table is to run it with an older `min_ts`, in windows on the same column it uses every day. In Salesforce that's `SystemModstamp`, its version of the usual `updated_at` (or `last_modified_at`) column: when the row last changed.
 
 > [!failure] Problem: a window that moves while you read it
-> `SystemModstamp` changes every time a row changes. A row edited while the backfill reads it moves to the end of the window, so it's read later or not at all, and the progress in the logs looks further along than it really is.
+> `SystemModstamp` changes every time a row changes. A row edited while the backfill reads it jumps forward, past the rows already read (or out of the window), so it's read later or not at all, and the progress in the logs looks further along than it really is.
 
 > [!success] Fix: use the creation date
-> A backfill reads the rows **created** in each window (`CreatedDate`, which never changes), and merges them as usual, so the newest version still wins. 5 months of `Task` per run on a 4 GB task: 64 minutes reading, 6 minutes merging.
+> A backfill reads the rows **created** in each window (`CreatedDate`, which never changes), and merges them as usual. Rows that change while it runs are picked up by the next incremental run. 5 months of `Task` per run on a 4 GB task: 64 minutes reading, 6 minutes merging.
 
-### Chunk size only costs memory
+> [!warning] Don't run a backfill next to the schedule
+> The merge replaces a row with whatever version it has. If the scheduled job writes a newer version of a row while a backfill is running, the backfill can put the older one back, until the row changes again. For tables that must be exact, pause the schedule during the backfill.
+
+### Smaller pages let wide rows fit
 
 With pandas, the chunk size was a trade-off. Each chunk was a write to the lake (and a commit), so we wanted big chunks to keep the number of writes low. But a big chunk is a big DataFrame, so the chunk was as big as the machine allowed.
 
-With staging, that trade-off is gone. Each chunk goes to the DuckDB temp table, which is cheap and has nothing to do with the lake, and the lake gets one write at the end. So the chunk can be small.
+With staging, that trade-off is gone: each chunk only goes to the DuckDB temp table, and the lake gets one write at the end ([small pages in, big batches out](#el-without-a-frame-rows-in-arrow-writes-in-duckdb)). So the chunk can be small.
 
 > [!failure] Problem: a wide table didn't fit before writing anything
 > Our Salesforce reader collected big chunks of rows before handing them to the loader. For `Opportunity`, with hundreds of columns, one chunk of dicts was already too much for a 4 GB task.
@@ -342,7 +342,7 @@ None of this means DataFrames are bad. I still use them every week, in notebooks
 > Once a notebook's logic becomes a pipeline, the transformation is SQL in dbt, and the job around it is EL. Neither needs a frame.
 
 > [!question] "But my ML library needs a DataFrame"
-> Then build it where the library needs it, not before. Read the data as Arrow (DuckDB, for example, returns query results as Arrow), and convert it to pandas or Polars right before calling the library. From Arrow that conversion is cheap, so the DataFrame lives for one function call instead of carrying the data through the whole pipeline.
+> Then build it where the library needs it, not before. Read the data as Arrow (DuckDB, for example, returns query results as Arrow), and convert it to pandas or Polars right before calling the library. From Arrow that conversion is usually cheap (numeric columns can often be shared without a copy), so the DataFrame lives for one function call instead of carrying the data through the whole pipeline.
 
 ### And Spark?
 
@@ -351,13 +351,13 @@ Spark is the other DataFrame that shows up in data engineering, and my answer is
 And even when you do need it, that's for the T. The E and the L of an API still move rows, and those still don't need a frame.
 
 > [!tip] An API decides the speed, not your cluster
-> When you read from an API, an SDK or any other external service, the limit is almost always the service: how many rows it returns per call, how many calls it allows, and how fast it answers. Salesforce serves 2000 rows per call whatever you do. A cluster doesn't make those calls faster, it only adds machines that wait.
+> When you read from an API, an SDK or any other external service, the limit is usually the service: how many rows it returns per call, how many calls it allows at once, and how fast it answers. Salesforce serves 2000 rows per call whatever you do. A cluster doesn't make those calls faster, it mostly adds machines that wait.
 
 ## Conclusion
 
 The DataFrame got into our extraction jobs with ETL, when the job did the transformation and pandas was the tool for it. With ELT the transformation moved to SQL, but the DataFrame stayed, and all it did was carry rows from the extract to the load, using several times their memory and changing some values on the way.
 
-Arrow and DuckDB do that job better. Python keeps one small page of rows at a time, DuckDB stages the rest, and the lake gets one write per run. For us that meant about 5x less memory per row, half the memory on our biggest Salesforce jobs, a wide table that now fits on a smaller machine, and values that land as they came. The price was owning the write logic, and learning a few things about merges, backfills and disks on the way.
+Arrow and DuckDB do that job better. Python keeps one small page of rows at a time, DuckDB stages the rest, and the lake gets one write per run. For us that meant about 5x less memory per row in our benchmark, half the memory on our `Task` job, a wide table that now fits on a smaller machine, and faithful text: no `.0`, real JSON. The price was owning the write logic, and learning a few things about merges, backfills and disks on the way.
 
 > [!tip] Next time you write an extraction job
 > Look at what the DataFrame in it actually does. If it only carries rows from the source to the lake, you probably don't need it: build Arrow pages and let DuckDB write them.

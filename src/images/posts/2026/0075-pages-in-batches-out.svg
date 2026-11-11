@@ -1,6 +1,6 @@
 <svg viewBox="0 0 1600 820" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif" role="img" aria-labelledby="t d">
   <title id="t">Small pages in, big batches out</title>
-  <desc id="d">The API returns rows in pages of 10k, and each page goes into a DuckDB temp table while Python holds only one page at a time. Once the run is staged, the rows are sorted by the filter column and merged into the Iceberg table in batches of 1M rows, oldest first, one commit per batch.</desc>
+  <desc id="d">The API returns rows in pages of 10k, and each page goes into a DuckDB temp table while Python holds only one page at a time. Once the run is staged, the rows are sorted by the filter column and merged into the Iceberg table in batches of about 1M rows, oldest first, one commit per batch.</desc>
   <style>
     .card { fill: #ffffff; }
     .ttl, .txt { fill: #1f2333; }
@@ -71,11 +71,11 @@
   </g>
   <text x="790" y="555" text-anchor="middle" font-size="20" class="txt">deduplicated, sorted by</text>
   <text x="790" y="583" text-anchor="middle" font-size="20" class="txt">the filter column</text>
-  <text x="790" y="650" text-anchor="middle" font-size="20" class="mut">spills to disk when it doesn't fit in memory</text>
+  <text x="790" y="650" text-anchor="middle" font-size="20" class="mut">can spill to disk when it doesn't fit in memory</text>
   <line x1="484" y1="400" x2="572" y2="400" class="gln" stroke-width="2.5" marker-end="url(#a)"/>
 
   <!-- batches (L) -->
-  <text x="1170" y="180" text-anchor="middle" font-size="24" font-weight="700" class="lt">Merges of 1M rows</text>
+  <text x="1170" y="180" text-anchor="middle" font-size="24" font-weight="700" class="lt">Merges of about 1M rows</text>
   <g>
     <rect x="1080" y="210" width="180" height="110" rx="12" class="l" stroke-width="2.5"/>
     <text x="1170" y="272" text-anchor="middle" font-size="20" font-weight="600" class="lt">oldest</text>
