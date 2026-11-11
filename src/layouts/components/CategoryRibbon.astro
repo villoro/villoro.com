@@ -80,8 +80,7 @@ const { categories, activeKey } = Astro.props;
     gap: 8px;
     padding: 8px 14px;
     border-radius: var(--radius-pill);
-    /* darker pill, not lighter: a light overlay on the blue would pull the white label below the blue's own ratio */
-    background: rgba(0, 0, 0, 0.14);
+    background: rgba(255, 255, 255, 0.12);
     color: #fff;
     font-family: var(--font-ui);
     font-size: 13px;
@@ -90,7 +89,7 @@ const { categories, activeKey } = Astro.props;
     white-space: nowrap;
     transition: background 0.15s;
   }
-  .cr__chip:hover     { background: rgba(0, 0, 0, 0.24); }
+  .cr__chip:hover     { background: rgba(255, 255, 255, 0.22); }
   .cr__chip.is-active { background: #fff; color: #1c1c1c; }
 
   :global(.dark) .cr { box-shadow: 0 8px 24px -12px rgba(255, 195, 58, 0.3); }

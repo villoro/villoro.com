@@ -73,9 +73,6 @@
   --color-on-dark-faint:      rgba(255, 255, 255, 0.55);
   --color-on-dark-muted:      #a6accb;      /* footer text: same as light grey-400, but stays put in dark mode */
 
-  /* Highlight colour as TEXT on a dark surface: yellow in light; in .dark the highlight is blue,
-     which is only 4.3:1 on the card, so it gets a lighter blue there */
-  --color-highlight-on-dark:  var(--color-yellow-400);
 
   /* Text ON the accent color (blue in light / yellow in dark) — must switch */
   --color-on-accent:          #fff;         /* white on blue */
@@ -115,7 +112,6 @@
   --color-surface-quote:  rgba(255, 195, 58, 0.07);         /* subtle yellow tint */
   --color-border-card:    var(--color-grey-300);            /* #3e3e3e */
   --color-on-accent:      #1c1c1c;   /* dark text on yellow accent */
-  --color-highlight-on-dark: #6b97ff; /* lighter blue: 5.8:1 on the about-page cards */
   /* surface-dark, surface-dark-rgb, and on-dark-* are NOT remapped —
      they are intentionally permanent (always dark surfaces / always white text) */
 }
