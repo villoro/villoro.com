@@ -16,9 +16,9 @@ Personal website/blog for Arnau Villoro (Data Engineer, Barcelona). Static Astro
 | Framework   | Astro 6 (static SSG)                              |
 | Content     | MDX + Astro content collections (Zod schemas)     |
 | Language    | TypeScript (strict)                               |
-| UI islands  | React 18 (search modal, shortcodes)               |
+| UI islands  | React 19 (search modal only; shortcodes are Astro) |
 | Styling     | Tailwind CSS 4 (`@theme` block) + custom tokens   |
-| Icons       | `react-icons` (FA6, `Fa*` prefix), inline SVGs    |
+| Icons       | Inline SVGs (no icon library)                     |
 | Images      | `astro:assets` + Sharp                            |
 | Comments    | Giscus                                            |
 | Deploy      | Netlify (auto on push to `main`)                  |
@@ -69,8 +69,8 @@ src/
 │   ├── ArticleLayout.astro         single-post layout (~700 lines, prose styles inside)
 │   ├── BlogListingLayout.astro     blog/category/tag listing layout (heroVariant: "full" | "simple")
 │   ├── components/                 reusable .astro UI (see "Components" below)
-│   ├── shortcodes/                 auto-imported MDX components (.tsx)
-│   └── helpers/                    React islands: SearchModal, SearchResult, DynamicIcon
+│   ├── shortcodes/                 auto-imported MDX components (.astro, no client JS)
+│   └── helpers/                    React island: SearchModal, SearchResult, useSearchKeyboard
 ├── content/                        Astro content collections (schemas in src/content.config.ts)
 │   ├── blog/                       *.mdx, FLAT (not by year). `9999-*` prefix = drafts/WIP
 │   ├── about/-index.md
@@ -140,11 +140,13 @@ Three top-level layouts; every page picks one:
 
 Listed in `astro.config.mjs` under `AutoImport.imports` — available in any `.mdx` without import:
 
-`Accordion`, `Button`, `FancyLink`, `FileName`, `Notice`, `Tab`, `Tabs`, `TerminalOutput`, `Video`
+`Accordion`, `Button`, `FancyLink`, `FileName`, `Notice`, `TerminalOutput`
 
-Source files are `src/layouts/shortcodes/*.tsx`. To add a new shortcode: drop a `.tsx` in that folder and add `"@/shortcodes/Name"` to the `AutoImport` list.
+`Notice` is what `remark-callouts` emits for `> [!TYPE]` blocks, so it is used by almost every post even though no post writes `<Notice>`. `Accordion` is a native `<details>`/`<summary>` (no JS, no `client:` directive); styles in `components.css`.
 
-**`FancyLink` `company` prop:** the component picks a favicon based on `company`. When linking to a site without a dedicated favicon mapping, set `company="default"` (used for generic links like RFCs, IETF, MDN, etc.). Existing `company="..."` values in posts (e.g. `iceberg`) map to specific brand icons.
+Source files are `src/layouts/shortcodes/*.astro`. To add a new shortcode: drop a `.astro` in that folder and add `"@/shortcodes/Name.astro"` (explicit extension) to the `AutoImport` list. Don't use `client:*` directives in MDX.
+
+**`FancyLink` `company` prop:** the component picks a favicon from `public/favicons` based on `company` (default: derived from the host; `x.apache.org` maps to `x`). A missing `-dark` file falls back to the light icon and a missing icon to `default`. Links to `https://villoro.com` lose their trailing slash. When linking to a site without a dedicated favicon mapping, set `company="default"` (used for generic links like RFCs, IETF, MDN, etc.). Existing `company="..."` values in posts (e.g. `iceberg`) map to specific brand icons.
 
 ## Custom callout syntax (remark-callouts)
 
@@ -269,7 +271,7 @@ Posts are co-written, not generated in one go:
 - **Voice:** first person, direct, short paragraphs, **bold** for the key phrase, bullets over long prose. Match an existing post (e.g. `0068-be-nice-data.mdx`) rather than inventing a style. **Plain and explanatory, not literary:** no dramatic fragments ("It doesn't change. It disappears."), no punchline triplets ("It's cheap, it's fast, and it has one blind spot"), no paired contrasts ("For its users… For the lake…"), no "you will be asked"-style asides. Say what happens and why, in complete sentences.
 - **No manual numbers in headings.** H2–H5 are auto-numbered (see "Heading numbering"), so `### 1. Attach` renders as "4.1 1. Attach". Write `### Attach`.
 - **Break up long text.** Use callouts (`[!abstract]` for the thesis, `[!tip]` for a striking number or aside), small tables, and SVG diagrams. Villoro likes diagrams: propose one whenever a concept has a shape (zones, flows, before/after).
-- **Link generously.** Earlier posts on the same topic (`<FancyLink url="https://villoro.com/blog/<slug>/" dark="true"/>`) and official docs for any tool, extension or connector mentioned.
+- **Link generously.** Earlier posts on the same topic (`<FancyLink url="https://villoro.com/blog/<slug>" dark="true"/>`) and official docs for any tool, extension or connector mentioned.
 - **Be honest with numbers.** Use only figures from a source (the code, a measurement, Villoro). If you assume something (same workload, production vs. rehearsal, cluster size), say so in your summary so Villoro can confirm it. Never invent a statistic to make a claim stronger.
 - **Rewriting an existing draft:** start a new `9999-*.mdx` on a branch from fresh `origin/main` and read the old draft with `git show <branch>:<path>` instead of building on top of it.
 - **When the free draft lacks punch, agree the thesis before the index.** A draft with good material but no single claim to defend reads flat. Propose two or three thesis options with the number that backs each, let Villoro pick, then agree the index, commit a skeleton (the headings, each with its intent as a `{/* */}` comment, no prose) and write it section by section. When Villoro says "commit, then fix", commit the version they reviewed first, so the fix shows as its own diff.
@@ -305,7 +307,7 @@ Posts are co-written, not generated in one go:
 | Edit nav / footer                           | `src/layouts/components/SiteNav.astro` / `SiteFooter.astro`.                                |
 | Edit colors                                 | `src/styles/tokens.css` (preferred) or `src/config/theme.json` → regenerates generated-theme.css. |
 | Edit pagination size, similar-items count   | `src/config/config.json` → `settings`.                                                      |
-| Add a shortcode                             | New `.tsx` in `src/layouts/shortcodes/` + add to `AutoImport.imports` in `astro.config.mjs`. |
+| Add a shortcode                             | New `.astro` in `src/layouts/shortcodes/` + add `"@/shortcodes/Name.astro"` to `AutoImport.imports` in `astro.config.mjs`. |
 | Add a callout type                          | `src/plugins/remark-callouts.mjs`.                                                          |
 | Add a new icon (right-arrow / social)       | Use `<IconArrow />` / `<SocialIcon name="…" />`. Add a new `name` case to `SocialIcon` if needed. |
 | Add a layout-level field to about/homepage  | Update Zod schema in `src/content.config.ts` AND the corresponding `-index.md`.             |
