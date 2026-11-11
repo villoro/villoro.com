@@ -16,7 +16,7 @@ Personal website/blog for Arnau Villoro (Data Engineer, Barcelona). Static Astro
 | Framework   | Astro 6 (static SSG)                              |
 | Content     | MDX + Astro content collections (Zod schemas)     |
 | Language    | TypeScript (strict)                               |
-| UI islands  | React 19 (search modal only; shortcodes are Astro) |
+| Client JS   | No framework: plain `<script>` in `.astro` components |
 | Styling     | Tailwind CSS 4 (`@theme` block) + custom tokens   |
 | Icons       | Inline SVGs (no icon library)                     |
 | Images      | `astro:assets` + Sharp                            |
@@ -34,14 +34,13 @@ npm run preview        # serve dist/ locally
 npm run format         # prettier on src/
 ```
 
-The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `dist/search.json`, lazy-fetched by `SearchModal` on first open. It stores plain text (capped per post) and 320px pipeline thumbnails.
+The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `dist/search.json`, lazy-fetched by `SearchModal` on first open. It stores plain text (capped per post) and 320px pipeline thumbnails. The modal is `src/layouts/components/SearchModal.astro`: static markup plus a ~4 KB script that listens on `document` (so it survives `ClientRouter` navigations) and renders results as HTML strings, escaping everything that comes from the index or the query.
 
 ## Path aliases (`tsconfig.json`)
 
 ```
 @/components/*   →  src/layouts/components/*
 @/shortcodes/*   →  src/layouts/shortcodes/*
-@/helpers/*      →  src/layouts/helpers/*
 @/partials/*     →  src/layouts/partials/*   (folder no longer exists — alias is dead, can be removed)
 @/*              →  src/*
 ```
@@ -69,8 +68,7 @@ src/
 │   ├── ArticleLayout.astro         single-post layout (~700 lines, prose styles inside)
 │   ├── BlogListingLayout.astro     blog/category/tag listing layout (heroVariant: "full" | "simple")
 │   ├── components/                 reusable .astro UI (see "Components" below)
-│   ├── shortcodes/                 auto-imported MDX components (.astro, no client JS)
-│   └── helpers/                    React island: SearchModal, SearchResult, useSearchKeyboard
+│   └── shortcodes/                 auto-imported MDX components (.astro, no client JS)
 ├── content/                        Astro content collections (schemas in src/content.config.ts)
 │   ├── blog/                       *.mdx, FLAT (not by year). `9999-*` prefix = drafts/WIP
 │   ├── about/-index.md
@@ -109,7 +107,7 @@ scripts/
 
 Three top-level layouts; every page picks one:
 
-- **BaseRedesign.astro** — `<html><head>` shell only. Loads main.css (which imports `fonts.css`: `@font-face` for Heebo/Signika/JetBrains Mono, all self-hosted in `public/fonts`, no third-party font requests; `heebo-latin.woff2` and `signika-latin.woff2` are preloaded), gtag, ClientRouter. Renders `<TwSizeIndicator>` + `<SearchModal client:load>` then `<slot />`. Pages render their own `SiteNav` and `SiteFooter`.
+- **BaseRedesign.astro** — `<html><head>` shell only. Loads main.css (which imports `fonts.css`: `@font-face` for Heebo/Signika/JetBrains Mono, all self-hosted in `public/fonts`, no third-party font requests; `heebo-latin.woff2` and `signika-latin.woff2` are preloaded), gtag, ClientRouter. Renders `<TwSizeIndicator>` + `<SearchModal>` then `<slot />`. Pages render their own `SiteNav` and `SiteFooter`.
 - **ArticleLayout.astro** — single blog post. Composes: `SiteNav` → hero (image + breadcrumb + title + tags + meta) → article (`ArticleTOC` sidebar + `<slot />` body + `CTAStrip` + `ShareRow` + `GiscusComments`) → `RelatedPostsGrid` → `SiteFooter`. **All MDX prose styles live in this file's `<style is:global>`** — that's where you go for h1-h6, blockquote, code-block, table, link styling.
 - **BlogListingLayout.astro** — listings (blog/category/tag). `heroVariant="full"` for blog+category (big "Notes from production" hero), `"simple"` for tags (compact h1).
 
@@ -132,6 +130,7 @@ Three top-level layouts; every page picks one:
 | `RelatedPostsGrid.astro` | ArticleLayout               | bottom-of-post grid                                                  |
 | `IconArrow.astro`     | many                           | shared right-arrow SVG. Props: `size?: number` (default 14), `class?` |
 | `SocialIcon.astro`    | SiteFooter, ShareRow           | shared SVGs. Props: `name: "github"\|"linkedin"\|"twitter"\|"email"\|"copy"`, `size?: number` (default 17) |
+| `SearchModal.astro`   | BaseRedesign                   | search dialog + its script; opened by any `[data-search-trigger]` or Ctrl/Cmd+K |
 | `ImageMod.astro`      | many                           | thin wrapper over `astro:assets` Image                               |
 | `TwSizeIndicator.astro`| BaseRedesign                  | dev-only Tailwind breakpoint indicator                               |
 

@@ -12,7 +12,7 @@ import { getImage } from "astro:assets";
 import "@/styles/main.css";
 import { ClientRouter } from "astro:transitions";
 import { pwaInfo } from "virtual:pwa-info";
-import SearchModal from "./helpers/SearchModal";
+import SearchModal from "@/components/SearchModal.astro";
 
 export interface Props {
   title?: string;
@@ -148,7 +148,7 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
   <body>
     <a href="#main" class="sr-only focus:not-sr-only">Skip to main content</a>
     <TwSizeIndicator />
-    <SearchModal client:idle />
+    <SearchModal />
     <slot />
     <script>
       import { registerSW } from "virtual:pwa-register";
