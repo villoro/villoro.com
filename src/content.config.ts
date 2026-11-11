@@ -3,6 +3,10 @@ import { glob } from "astro/loaders";
 import { z } from "zod";
 import config from "./config/config.json";
 
+// Hero used by posts that set no `image:` (e.g. a new draft). Same
+// "/images/blog/<file>" convention as frontmatter; see resolveImage.
+export const DEFAULT_POST_IMAGE = "/images/blog/0000-default.jpg";
+
 const blogCollection = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
   schema: z.object({
@@ -13,7 +17,7 @@ const blogCollection = defineCollection({
     updated_date: z.date().optional(),
     // Internal only: when the post was written; never rendered
     writing_date: z.date().optional(),
-    image: z.string().optional(),
+    image: z.string().default(DEFAULT_POST_IMAGE),
     imageAlt: z.string().optional(),
     readingTime: z.number().int().positive().optional(),
     slug: z.string().optional(),
