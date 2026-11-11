@@ -32,16 +32,11 @@ const darkName = hasFavicon(`${companyName}-dark`) ? `${companyName}-dark` : lig
 const domainLogoUrl = `/favicons/${lightName}.ico`;
 const darkDomainLogoUrl = `/favicons/${darkName}.ico`;
 
-// The canonical URLs of the site have no trailing slash.
-let href = url;
-if (new URL(url).origin === "https://villoro.com") {
-  href = url.replace(/^(https:\/\/villoro\.com[^?#]*?)\/(?=$|[?#])/, "$1");
-}
 
 const lightStyle = `width:14px;height:14px;${dark ? "" : "display:inline-block;"}flex-shrink:0`;
 ---
 
-<a href={href} role="button" class="fancy-link"
+<a href={url} role="button" class="fancy-link"
   ><img src={domainLogoUrl} alt="" aria-hidden="true" style={lightStyle} class={dark ? "dark:hidden" : undefined} />{
     dark && (
       <img
