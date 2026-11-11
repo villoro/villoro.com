@@ -254,9 +254,41 @@ Before a merge, the staged rows need one row per key. We used to deduplicate eve
 > [!success] Fix: count first
 > Count the repeated keys, reading only the key columns, which is cheap. If there are none, skip it. If there are, delete only the extra rows instead of rewriting the table. Locally, on 1M rows of 200 columns, it went from **13 s to 0.1 s**.
 
+<Accordion client:load title="The deduplication, in code">
+
+The count reads only the key column, so it's cheap even on a wide table:
+
+```sql
+-- Rows without a key, and rows that repeat a key
+WITH keyed AS (SELECT id FROM staged WHERE id IS NOT NULL)
+SELECT
+    (SELECT count(*) FROM staged) - (SELECT count(*) FROM keyed) AS keyless,
+    (SELECT count(*) FROM keyed) - (SELECT count(DISTINCT id) FROM keyed) AS repeated
+```
+
+Only when it finds something, it deletes the extra rows: the ones without a key, and every copy of a key except the newest.
+
+```sql
+DELETE FROM staged WHERE rowid IN (
+    SELECT rowid FROM staged WHERE id IS NULL
+    UNION ALL
+    SELECT rowid FROM staged
+    WHERE id IS NOT NULL
+    QUALIFY row_number() OVER (PARTITION BY id ORDER BY system_modstamp DESC) > 1
+)
+```
+
+```python
+[(keyless, repeated)] = con.execute(QUERY_COUNT_DUPLICATES).fetchall()
+if keyless or repeated:
+    con.execute(QUERY_DELETE_DUPLICATES)
+```
+
+</Accordion>
+
 ### Backfill on a column that never changes
 
-The natural way to backfill an incremental table is to run it with an older `min_ts`, in windows on the same column it uses every day (`SystemModstamp` in Salesforce).
+The natural way to backfill an incremental table is to run it with an older `min_ts`, in windows on the same column it uses every day. In Salesforce that's `SystemModstamp`, its version of the usual `updated_at` (or `last_modified_at`) column: when the row last changed.
 
 > [!failure] Problem: a window that moves while you read it
 > `SystemModstamp` changes every time a row changes. A row edited while the backfill reads it moves to the end of the window, so it's read later or not at all, and the progress in the logs looks further along than it really is.
@@ -265,6 +297,10 @@ The natural way to backfill an incremental table is to run it with an older `min
 > A backfill reads the rows **created** in each window (`CreatedDate`, which never changes), and merges them as usual, so the newest version still wins. 5 months of `Task` per run on a 4 GB task: 64 minutes reading, 6 minutes merging.
 
 ### Chunk size only costs memory
+
+With pandas, the chunk size was a trade-off. Each chunk was a write to the lake (and a commit), so we wanted big chunks to keep the number of writes low. But a big chunk is a big DataFrame, so the chunk was as big as the machine allowed.
+
+With staging, that trade-off is gone. Each chunk goes to the DuckDB temp table, which is cheap and has nothing to do with the lake, and the lake gets one write at the end. So the chunk can be small.
 
 > [!failure] Problem: a wide table didn't fit before writing anything
 > Our Salesforce reader collected big chunks of rows before handing them to the loader. For `Opportunity`, with hundreds of columns, one chunk of dicts was already too much for a 4 GB task.
