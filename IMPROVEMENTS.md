@@ -27,7 +27,6 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 | 7 | CI: one build job, real budgets, no audit noise | Maintenance | Medium | Medium | subagent |
 | 8 | Tests on the built site | Maintenance | Medium | High | senior designs, subagent writes |
 | 9 | Draft previews and strict frontmatter | Writing | Medium | Medium | senior |
-| 10 | Related posts: stop shuffling | SEO | Low | Low | subagent |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low | subagent, after PR 5 |
 | 12 | Lighthouse budget on previews | Speed | Medium | Medium | later |
 | 13 | Colour contrast | Accessibility | Low | Medium | later |
@@ -123,12 +122,8 @@ Do this PR next, so the rest of the list is developed against it.
 - **Unknown frontmatter keys pass silently.** The schema is a plain `z.object`, so a typo like `update_date:` is ignored. Use `z.strictObject`. The memory of past sessions already records confusion about snake_case keys; `imageAlt` and `readingTime` are the two camelCase leftovers, rename them.
 - **`category` is a free string** defaulting to `"Others"`, which isn't a key in `categoryMetadata.ts` (the key is `others`). Make it `z.enum` over the keys of `categoryMetadata` so a wrong category fails the build instead of rendering a grey chip.
 - **The blog schema serves two things.** `src/content/blog/-index.md` (the listing's hero copy) lives in the same collection as the posts, so the post schema carries `hero` and `section` fields that no post uses, and every query has to filter the `-index` entry out by id. Move it to its own small collection. In the homepage schema, `banner`, `slogan` and `blog` look like template leftovers: confirm they have no consumer and delete.
-- **`getSinglePage(collectionName: string)`** casts everything to `"blog"`, and `similarItems` is typed `any`. Type them properly; `rss.xml.ts` and `search.json.ts` re-implement the draft filter and should call the same helper.
+- **`getSinglePage(collectionName: string)`** casts everything to `"blog"`. Type it properly; `rss.xml.ts` and `search.json.ts` re-implement the draft filter and should call the same helper.
 - **A `npm run new-post` script** that creates `9999-<slug>.mdx` with the full frontmatter would remove the copy-paste step. Optional.
-
-## PR 10. Related posts: stop shuffling
-
-`similarItems` scores posts by shared category and tags, takes the top 3, then shuffles them with `Math.random()`. The shuffle only reorders the same three, so it adds nothing except that every build changes the HTML of all 76 posts. Remove `getRandomElements`, and break score ties by date (newest first) so the result is stable.
 
 ## PR 11. Major dependency upgrades
 
