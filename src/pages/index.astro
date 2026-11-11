@@ -68,7 +68,7 @@ const latestDateISO = latestPost?.data?.date
 const getReadTime = readingTimeForPost;
 
 
-const siteUrl = config.site.base_url;
+const siteUrl = `${config.site.base_url}/`;
 const jsonLd = [
   { "@context": "https://schema.org", "@type": "WebSite", name: config.site.title, url: siteUrl },
   {

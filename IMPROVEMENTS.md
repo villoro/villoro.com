@@ -20,7 +20,6 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 
 | PR | Topic | Goal | Effort | Impact | Who |
 | --- | :--- | :--- | --- | --- | :--- |
-| 0 | Canonical URLs redirect (trailing slash) | SEO | Medium | High | senior |
 | 1 | Metadata leftovers | SEO | Low | Low | subagent |
 | 6 | Dead config and stale docs | Maintenance | Low | Low | subagent |
 | 7 | CI: one build job, real budgets, no audit noise | Maintenance | Medium | Medium | subagent |
@@ -33,23 +32,6 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 "Senior" means the item needs design judgement; "subagent" means the change is specified well enough below to hand over.
 
 ---
-
-## PR 0. Canonical URLs redirect (trailing slash)
-
-Found while checking a deploy preview, and the most important SEO item left.
-
-**Netlify serves every page with a trailing slash and redirects the other form:** `https://villoro.com/blog/duckdb-instead-of-spark` answers `301` to `/blog/duckdb-instead-of-spark/`. But the site is configured with `trailing_slash: false`, so everything it generates uses the form that redirects:
-
-- the `<link rel="canonical">` and `og:url` of every page, so each page declares as canonical a URL that redirects back to itself;
-- every URL in the sitemap;
-- `mainEntityOfPage` in the JSON-LD;
-- every internal link (nav, cards, pagination, TOC), so each click costs an extra redirect.
-
-Only the RSS feed and the in-post `FancyLink`s (which are written with the slash) point to the URL that answers `200`.
-
-**Change:** set `trailing_slash: true` in `src/config/config.json` (Astro `trailingSlash: "always"`), then fix what assumes the old form: the canonical in `BaseRedesign`, hard-coded `/blog/${slug}` style hrefs in components and pages, pagination hrefs, the sitemap `filter`/`serialize` regexes in `astro.config.mjs` (they strip the slash before matching, check they still do), and `src/pages/search.json.ts`.
-
-**Check:** on the deploy preview, `curl -I` the canonical of the home page, a post, a tag and a paginated listing: all must answer `200`, not `301`. PR 8 should assert that every internal `href` ends with `/` or has a file extension.
 
 ## PR 1. Metadata leftovers
 
@@ -88,6 +70,7 @@ One script (`node --test`, no new dependency) that walks `dist/**/*.html` and as
 
 - every internal `href`/`src` resolves to a file (it passes today);
 - every page has exactly one `<h1>`, a unique `<title>`, a non-empty description without leading/trailing whitespace, and a canonical;
+- every internal `href`, canonical and sitemap `<loc>` ends with `/` (or has a file extension), because Netlify redirects the slashless form;
 - every post has JSON-LD inside `<head>` that parses, with an author that isn't "Admin" and an image URL that exists in `dist/`;
 - every URL in the sitemap exists and isn't `noindex`;
 - no draft slug appears in the sitemap, RSS or `search.json`;

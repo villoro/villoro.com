@@ -234,6 +234,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - Listing pages take `Astro.params` like `[category]` or `[tag]` and call `getStaticPaths()` to enumerate them.
 - Pagination uses `[slug]` (the page number) under `page/`. Page 1 is always the bare URL (no `/page/1`).
 - Single posts use `slug` from frontmatter or filename (filename minus the numeric prefix, e.g. `0067-marimo-notebooks.mdx` → `marimo-notebooks`).
+- **Internal links always end with `/`.** Netlify serves every page with a trailing slash and 301-redirects the slashless form, so `trailing_slash` is `true` and every URL we generate (hrefs, canonical, sitemap, JSON-LD) must already be the final one. Build them with `withTrailingSlash()` from `src/lib/utils/url.ts` or write the `/` directly; do the same for links inside posts (`/blog/<slug>/`). Files with an extension (`/rss.xml`) and `#anchor` links are the exception.
 
 ## Build / deploy
 
