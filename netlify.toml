@@ -1,5 +1,10 @@
 [build]
-command = "npm ci && npm run build"
+# No `npm ci` here on purpose. Netlify installs dependencies itself before
+# this command and restores node_modules from its build cache. Astro keeps
+# its optimized-image cache in node_modules/.astro, and `npm ci` deletes
+# node_modules first, so every deploy re-encoded all ~1,800 image variants
+# (minutes) instead of reusing them (seconds).
+command = "npm run build"
 publish = "dist"
 # Skip Deploy Previews for Dependabot branches: GitHub Actions already runs
 # `npm run build`, and there's nothing to eyeball on a dependency bump. The
