@@ -114,6 +114,8 @@ public/                             served verbatim
 ├── pwa/                            PWA icons
 └── robots.txt
 
+tests/                              site.test.mjs (checks on dist/) + unit.test.mjs (pure helpers), see "Tests"
+
 .github/
 ├── workflows/
 │   ├── CI.yaml                     PR checks (see "Build / deploy")
