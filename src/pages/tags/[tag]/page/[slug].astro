@@ -18,7 +18,8 @@ export async function getStaticPaths() {
     const items = await getSinglePage(blog_folder);
     const filtered = taxonomyFilter(items, "tags", tag);
     const totalPages = Math.ceil(filtered.length / pagination);
-    for (let i = 1; i <= totalPages; i++) {
+    // Page 1 is the bare listing URL: start at 2, or /page/1/ would duplicate it
+    for (let i = 2; i <= totalPages; i++) {
       paths.push({ params: { tag, slug: i.toString() } });
     }
   }
