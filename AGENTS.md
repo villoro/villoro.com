@@ -109,7 +109,7 @@ scripts/
 
 Three top-level layouts; every page picks one:
 
-- **BaseRedesign.astro** — `<html><head>` shell only. Loads main.css (which imports `fonts.css`: `@font-face` for Heebo/Signika/JetBrains Mono, all self-hosted in `public/fonts`, no third-party font requests; only `heebo-latin.woff2` is preloaded), gtag, ClientRouter. Renders `<TwSizeIndicator>` + `<SearchModal client:load>` then `<slot />`. Pages render their own `SiteNav` and `SiteFooter`.
+- **BaseRedesign.astro** — `<html><head>` shell only. Loads main.css (which imports `fonts.css`: `@font-face` for Heebo/Signika/JetBrains Mono, all self-hosted in `public/fonts`, no third-party font requests; `heebo-latin.woff2` and `signika-latin.woff2` are preloaded), gtag, ClientRouter. Renders `<TwSizeIndicator>` + `<SearchModal client:load>` then `<slot />`. Pages render their own `SiteNav` and `SiteFooter`.
 - **ArticleLayout.astro** — single blog post. Composes: `SiteNav` → hero (image + breadcrumb + title + tags + meta) → article (`ArticleTOC` sidebar + `<slot />` body + `CTAStrip` + `ShareRow` + `GiscusComments`) → `RelatedPostsGrid` → `SiteFooter`. **All MDX prose styles live in this file's `<style is:global>`** — that's where you go for h1-h6, blockquote, code-block, table, link styling.
 - **BlogListingLayout.astro** — listings (blog/category/tag). `heroVariant="full"` for blog+category (big "Notes from production" hero), `"simple"` for tags (compact h1).
 
