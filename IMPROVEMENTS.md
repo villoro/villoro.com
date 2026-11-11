@@ -40,7 +40,7 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 
 ## PR 7. Build and CI leftovers
 
-CI is one `tests` job since v3.2.43 (lint, typecheck, build, size, tests), the size check no longer installs Puppeteer, actions are on current majors and Dependabot opens one grouped PR a week. What is left:
+CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests), the size check no longer installs Puppeteer, actions are on current majors and Dependabot opens one grouped PR a week. What is left:
 
 - **Dependabot PRs fail `check_version`.** Every PR must bump the version by one and Dependabot doesn't. Until that is automated (a small workflow that bumps the version on `dependabot/*` branches), bump it by hand on the PR branch.
 - **`npm audit` still reports 15 findings (13 moderate, 2 low)**, down from 29. They are in build tooling (`deepmerge`, `glob`, `minimatch`, `postcss-selector-parser`), not in what the site ships. Check them again after the major upgrades of PR 11.
