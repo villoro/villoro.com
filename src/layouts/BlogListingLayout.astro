@@ -57,6 +57,9 @@ interface Props {
   currentPage: number;
   totalPages: number;
   paginationSection: string;
+
+  // Force noindex (pages > 1 are always noindex)
+  noindex?: boolean;
 }
 
 const {
@@ -80,6 +83,7 @@ const {
   currentPage,
   totalPages,
   paginationSection,
+  noindex = false,
 } = Astro.props;
 
 const getReadTime = readingTimeForPost;
@@ -95,7 +99,7 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
 <BaseRedesign
   title={title}
   description={description}
-  noindex={currentPage > 1}
+  noindex={noindex || currentPage > 1}
   prevHref={prevHref}
   nextHref={nextHref}
 >
