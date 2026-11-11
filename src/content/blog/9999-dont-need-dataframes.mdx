@@ -210,12 +210,16 @@ Dropping awswrangler means the write is our code now: the merge, the deduplicati
 
 ### Avoid big merges: merge in batches
 
-This is the one that took us longest to understand.
+This is the one that took us longest to understand, so it has a few parts.
 
-> [!failure] Problem: a backfill that didn't fit, whatever we tried
-> A backfill of 5 months of Salesforce `Task` is 3.8M rows, merged into a table of 36M. Reading it was fine on a 4 GB task, but the `MERGE` wasn't: DuckDB spilled 9 GiB to disk and still ran out of memory. Giving DuckDB a smaller share of the memory, so it would spill earlier, only made it fail sooner.
+#### We could stage it, but not merge it
 
-We assumed the size of the table was the problem. It wasn't: a merge of 978k rows into the same 36M took 17 seconds. What matters is **how many rows you merge at once** (and how wide they are), not how big the table is. As far as we can tell from these runs, DuckDB builds the join from the new rows and only streams the table.
+> [!failure] Problem: the merge didn't fit, whatever we tried
+> A backfill of 5 months of Salesforce `Task` is 3.8M rows, merged into a table of 36M. Staging them was fine on a 4 GB task: all the rows were in DuckDB. But the `MERGE` wasn't: DuckDB spilled 9 GiB to disk and still ran out of memory. Giving DuckDB a smaller share of the memory, so it would spill earlier, only made it fail sooner.
+
+We assumed the size of the destination table was the problem. It wasn't: a merge of 978k rows into the same 36M took 17 seconds. What matters is **how many rows you merge at once** (and how wide they are), not how big the destination table is. As far as we can tell from these runs, DuckDB builds the join from the new rows and only streams the destination table.
+
+#### Merge in batches
 
 > [!success] Fix: merge in batches
 > Split the staged rows in batches of 1M (`max_merge_rows`) and merge them one at a time, each one its own commit. The same 3.8M rows on the same 4 GB task: **4 merges, 6 minutes**, under 1 GiB spilled each.
@@ -229,9 +233,13 @@ This also corrects the previous post. There, a moodle backfill failed after fill
 
 ![One merge against merges in batches](../../images/posts/2026/0075-batched-merges.svg)
 
+#### Oldest first, so a crash loses nothing
+
 Batches have a risk: a run can now die halfway, with some batches committed and others not. That's safe only if the batches go **oldest first**, by the column the job uses to continue (`SystemModstamp` in Salesforce). The next run starts where the table ends, so if the table is complete up to its highest value, a crash loses nothing. In any other order, it leaves gaps below that value, and no run will read them again.
 
-And here staging pays off again. Many APIs can't give you the rows in that order: some don't sort at all, and some can't sort by the column you filter on. With pandas, each chunk was written as it arrived, so the order of the writes was whatever the API returned. Now the rows are all in DuckDB before the first write, so we can **sort them by the filter column ourselves** and merge them oldest first, whatever order the API used.
+Many APIs can't give you the rows in that order: some don't sort at all, and some can't sort by the column you filter on. With pandas we worked around it with a temp table: each chunk was written to a temporary Iceberg table as it arrived, and at the end everything was moved to the real table, so the real table never saw a partial run. It worked, but it meant writing every row twice.
+
+Staging gives us a simpler way. The rows are all in DuckDB before the first write, so we **sort them by the filter column ourselves**, and merge them oldest first, whatever order the API used. No temp table, and each row is written once.
 
 > [!tip] Keep ties together
 > A batch never ends in the middle of a value: if 30 rows share the same second, they go in the same batch. Otherwise, a job that reads `> last_value` would skip the rows of that second that weren't written.
