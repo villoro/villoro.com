@@ -186,7 +186,7 @@ if (ogLoader) {
     <link rel="canonical" href={resolvedCanonical} item-prop="url" />
     {prevHref && <link rel="prev" href={prevHref} />}
     {nextHref && <link rel="next" href={nextHref} />}
-    {noindex && <meta name="robots" content="noindex,nofollow" />}
+    {noindex && <meta name="robots" content="noindex,follow" />}
     <meta name="description" content={plainify(description ? description : config.metadata.meta_description)} />
     <ClientRouter />
     <meta name="author" content={config.metadata.meta_author} />
