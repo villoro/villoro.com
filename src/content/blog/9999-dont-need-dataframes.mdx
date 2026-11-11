@@ -62,7 +62,7 @@ None of those steps needs a DataFrame. But since the rows were in one, each step
 It's easy to think the DataFrame is the expensive part. It isn't: most of the memory goes to the rows themselves, as Python objects, before pandas even starts.
 
 | Step | What it costs |
-| --- | --- |
+| --- | :--- |
 | The list of dicts | The biggest part. Every row is a Python dict (a hash table with an entry per key), and every value is a separate Python object with its own header. |
 | `pd.DataFrame(records)` | Less than it looks. Text columns are `object` columns, arrays of pointers to the same Python strings. But the dicts and the frame are alive at the same time. |
 | Dropping keys and duplicates | Each filter builds a new frame (new arrays of pointers), and `drop_duplicates` hashes every key. |
@@ -82,11 +82,22 @@ None of these are bugs in pandas. They are what happens when you use a tool buil
 
 ## "But Polars…"
 
-{/*
-Short. Polars fixes the memory and the types, but it's still a frame with nothing to do; Arrow is
-already the format DuckDB, Parquet and Iceberg speak. pa.Table.from_pylist: close to what we do,
-but it infers types; we decide how each value lands as text.
-*/}
+The first answer I usually get is: use Polars instead of pandas. Polars is much better at this:
+
+* It's columnar and built on Arrow.
+* It uses far less memory than pandas.
+* It's strict with types.
+
+But it's still a DataFrame, and the problem is not which one. In an EL job there is nothing for a frame to do. And for writing Iceberg, it doesn't help much either:
+
+* **Writing Iceberg is experimental.** Polars' `write_iceberg` is still marked as unstable, and it goes through pyiceberg, which is one more dependency.
+* **We want to control the merge.** As I explained in the [previous post](https://villoro.com/blog/duckdb-instead-of-spark/#the-trade-off-you-write-the-write-logic), writing the merge ourselves with DuckDB is what lets us add metadata to every row (how many times it was written, when it was first exported) and decide how rows behave: which version wins, and what happens to a key that comes twice.
+* **Its type inference doesn't like API data**, where the same field can be a number in one row and a string in the next.
+
+What the job really needs is a table in a format the writer understands, and that format is **Arrow**: DuckDB, Parquet and Iceberg all speak it.
+
+> [!tip] If you want something off the shelf
+> `pa.Table.from_pylist(rows)` is the closest thing to what we do, and it's what I would try first. We didn't use it because it infers the types too, and we wanted to decide ourselves how each value lands as text: integers without `.0`, real JSON for nested objects. That's a few lines of Python, shown in the next section.
 
 ## EL without a frame: rows in Arrow, writes in DuckDB
 
