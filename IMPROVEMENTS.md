@@ -21,7 +21,6 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 | PR | Topic | Goal | Effort | Impact | Who |
 | --- | :--- | :--- | --- | --- | :--- |
 | 1 | Metadata leftovers | SEO | Low | Low | subagent |
-| 6 | Dead config and stale docs | Maintenance | Low | Low | subagent |
 | 7 | CI: one build job, real budgets, no audit noise | Maintenance | Medium | Medium | subagent |
 | 9 | Draft previews and strict frontmatter | Writing | Medium | Medium | senior |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low | subagent |
@@ -38,19 +37,6 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 
 - **`og:title` and `<title>` use `meta_title`, the JSON-LD headline uses `title`.** Decide whether that is intended and write the rule in `AGENTS.md`.
 - **Category/tag descriptions are generic** ("All posts in the 🐍 Python category."). Add an optional `description` to `categoryMetadata.ts`.
-
-## PR 6. Dead config and stale docs
-
-- `tailwind.config.js`: inert under Tailwind 4. Delete.
-- `scripts/removeDarkmode.js` and the `remove-darkmode` npm script. Delete.
-- `BaseRedesign.astro`: `<meta name="theme-name" content="astroplate">`, `<meta http-equiv="Content-Type">`, `item-prop="url"` on the canonical, and the header comment that mentions the removed `Base.astro`. Delete.
-- Root `images/` folder (`logo.png`, `mockup_*.jpg`, `pagespeed_rating.png`): only the README uses it. Keep what the README shows, delete the rest.
-- `src/styles/components.css` still has `.tab-content-panel` rules for the deleted `Tabs` shortcode. Delete.
-- **Ten `http://` outbound links** (numba, flask.pocoo.org, jinja.pocoo.org, supervisord, eepurl…). Move to `https://` where the site supports it, including `subscribe.link` in `config.json`.
-- `.github/labeler.yml` lists paths that no longer exist (`postcss.config.js`, `src/content/config.ts`, `src/hooks/**`, `src/content/contact/**`). Bring it in line with the tree.
-- **`AGENTS.md` is out of date**: says Astro 6 and React 18 (it's Astro 7, and there is no React any more), still lists the dead `@/partials/*` alias as present (already removed from `tsconfig.json`), says the prose styles live in `ArticleLayout.astro` at "~700 lines" (it's 373 lines; they moved to `src/styles/prose.css`), and doesn't mention the PWA, `rss.xml.ts`, `npm run lint`/`typecheck`/`size`, or the `bundle_size` and `lint_and_typecheck` CI jobs. Rewrite those parts.
-- `README.md` still credits the Astroplate template and layout that the redesign removed. Refresh.
-- Add `.nvmrc` with `22`: the repo requires Node 22 and it's easy to run it with another version locally.
 
 ## PR 7. CI: one build job, real budgets, no audit noise
 
