@@ -69,7 +69,7 @@ Run Lighthouse against the Netlify deploy preview of each PR and fail on a budge
 
 ## PR 13. Accessibility leftovers
 
-An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in v3.2.42: muted labels, category names and chips, footer text, the 404 page in dark theme, code comments. What is left:
+An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in November 2026: muted labels, category names and chips, footer text, the 404 page in dark theme, code comments. What is left:
 
 - **The brand blue is below the contrast standard, on purpose.** White on `#3a76ff` is 4.02:1 and `#3a76ff` on the page background is 3.89:1, against a required 4.5:1. It affects links, the active nav item, kickers, primary buttons and table headers. **Villoro decided to keep `#3a76ff` everywhere (November 2026): don't change it.** If that is ever revisited, the fix that keeps the logo is a slightly darker blue only where it carries text (about `#2f67e8`). Audit tools will keep reporting these.
 - **Wide tables can't be scrolled with the keyboard.** axe reports `scrollable-region-focusable` on a table in the numba post: a scrollable table needs `tabindex="0"`. Add it to tables in `prose.css`/the markdown pipeline.
