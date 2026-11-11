@@ -67,7 +67,7 @@ const imgSizes = sizes ?? imageDefaults[variant].sizes;
 const { blog_folder } = config.settings;
 const { title, image, description, date, category } = post.data;
 const slug = post.data.slug || post.id;
-const href = `/${blog_folder}/${slug}`;
+const href = `/${blog_folder}/${slug}/`;
 
 const catMeta = categoryMetadata[category] || { name: humanize(category) };
 const catName = catMeta.name;

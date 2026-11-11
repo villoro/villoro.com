@@ -6,11 +6,11 @@
     },
     {
       "name": "About",
-      "url": "/about"
+      "url": "/about/"
     },
     {
       "name": "Blog",
-      "url": "/blog"
+      "url": "/blog/"
     }
   ]
 }

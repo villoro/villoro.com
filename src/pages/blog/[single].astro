@@ -8,6 +8,7 @@ import dateFormat from "@/lib/utils/dateFormat";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 import { humanize } from "@/lib/utils/textConverter";
 import config from "@/config/config.json";
+import { withTrailingSlash } from "@/lib/utils/url";
 import type { TocItem } from "@/components/ArticleTOC.astro";
 
 export async function getStaticPaths() {
@@ -23,7 +24,7 @@ const { post } = Astro.props;
 const { blog_folder, similar_items_length } = config.settings;
 const { title, description, image, date, updated_date: updatedDate, tags = [], category } = post.data;
 const slug     = post.data.slug || post.id;
-const canonical = `${config.site.base_url}${Astro.url.pathname}`;
+const canonical = withTrailingSlash(`${config.site.base_url}${Astro.url.pathname}`);
 
 const posts        = await getSinglePage(blog_folder);
 const similarPosts = similarItems(post, posts, similar_items_length);

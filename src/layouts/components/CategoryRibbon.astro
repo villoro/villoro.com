@@ -22,7 +22,7 @@ const { categories, activeKey } = Astro.props;
     <span class="cr__label">Category</span>
     <div class="cr__chips">
       {categories.map((cat) => {
-        const href = cat.key === "all" ? "/blog" : `/categories/${slugify(cat.key)}`;
+        const href = cat.key === "all" ? "/blog/" : `/categories/${slugify(cat.key)}/`;
         const isActive = cat.key === "all"
           ? activeKey === "all"
           : slugify(cat.key) === activeKey;

@@ -17,6 +17,7 @@
  */
 
 import IconArrow from "@/components/IconArrow.astro";
+import { withTrailingSlash } from "@/lib/utils/url";
 
 interface BreadcrumbItem {
   href?: string;
@@ -40,7 +41,7 @@ const { items, variant = "dark", class: cls = "" } = Astro.props;
     <>
       {i > 0 && <IconArrow size={10} />}
       {item.href
-        ? <a href={item.href} class="bc__link">{item.label}</a>
+        ? <a href={withTrailingSlash(item.href)} class="bc__link">{item.label}</a>
         : <span class="bc__current" aria-current="page">{item.label}</span>
       }
     </>
