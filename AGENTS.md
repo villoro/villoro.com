@@ -4,16 +4,16 @@ Context for AI agents working on this repo. Read this first — it's designed to
 
 ## Project
 
-Personal website/blog for Arnau Villoro (Data Engineer, Barcelona). Static Astro site, MDX content, deployed on Netlify on push to `main`.
+Personal website/blog for Arnau Villoro (Data Engineer, Barcelona). Static Astro site, MDX content, deployed on Netlify on push to `main`. It is also an installable PWA (`@vite-pwa/astro`): hashed assets are precached, pages are served network-first.
 
 - Live: https://villoro.com
-- Currently on **redesign 3.0** (branch prefix `v3/`). Legacy v2 layouts (`Base.astro`, `PostSingle.astro`, `partials/Header.astro`, `partials/Footer.astro`) have been removed and replaced with redesign components — see "Layouts" below.
+- Currently on **redesign 3.0**. The legacy v2 layouts and partials are gone; every page uses the layouts and components described below.
 
 ## Tech Stack
 
 | Layer       | Tech                                              |
 | ----------- | ------------------------------------------------- |
-| Framework   | Astro 6 (static SSG)                              |
+| Framework   | Astro 7 (static SSG)                              |
 | Content     | MDX + Astro content collections (Zod schemas)     |
 | Language    | TypeScript (strict)                               |
 | Client JS   | No framework: plain `<script>` in `.astro` components |
@@ -22,7 +22,8 @@ Personal website/blog for Arnau Villoro (Data Engineer, Barcelona). Static Astro
 | Images      | `astro:assets` + Sharp                            |
 | Comments    | Giscus                                            |
 | Deploy      | Netlify (auto on push to `main`)                  |
-| Node        | **22.x required** (`engines.node` enforces this)  |
+| PWA         | `@vite-pwa/astro` (service worker, manifest)      |
+| Node        | **22.x required** (`engines.node`, `.nvmrc`)      |
 
 ## Commands
 
@@ -31,6 +32,9 @@ npm install
 npm run dev            # astro dev
 npm run build          # astro build
 npm run preview        # serve dist/ locally
+npm run lint           # eslint .
+npm run typecheck      # astro check
+npm run size           # size-limit on dist/ (JS and CSS budgets); build first
 npm run format         # prettier on src/
 npm test               # checks on the built site + unit tests (run `npm run build` first)
 ```
@@ -50,7 +54,6 @@ The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `di
 ```
 @/components/*   →  src/layouts/components/*
 @/shortcodes/*   →  src/layouts/shortcodes/*
-@/partials/*     →  src/layouts/partials/*   (folder no longer exists — alias is dead, can be removed)
 @/*              →  src/*
 ```
 
@@ -62,6 +65,8 @@ src/
 │   ├── index.astro                 home (hero + featured grid)
 │   ├── about.astro                 about page
 │   ├── 404.astro
+│   ├── rss.xml.ts                  RSS feed
+│   ├── search.json.ts              search index endpoint (see above)
 │   ├── blog/
 │   │   ├── index.astro             /blog (listing, page 1)
 │   │   ├── page/[slug].astro       /blog/page/2, 3, …
@@ -74,7 +79,7 @@ src/
 │       └── [tag]/page/[slug].astro
 ├── layouts/
 │   ├── BaseRedesign.astro          <html><head> + fonts + ClientRouter — used by ALL pages
-│   ├── ArticleLayout.astro         single-post layout (~700 lines, prose styles inside)
+│   ├── ArticleLayout.astro         single-post layout (imports styles/prose.css for the MDX body)
 │   ├── BlogListingLayout.astro     blog/category/tag listing layout (heroVariant: "full" | "simple")
 │   ├── components/                 reusable .astro UI (see "Components" below)
 │   └── shortcodes/                 auto-imported MDX components (.astro, no client JS)
@@ -84,11 +89,12 @@ src/
 │   └── homepage/-index.md
 ├── lib/
 │   ├── categoryMetadata.ts         category slug → display name + color (10 categories)
+│   ├── blogIndex.mjs               plain .mjs (astro.config.mjs can't import .ts/.astro): published posts from frontmatter, thin-tag rule, sitemap lastmod
 │   ├── contentParser.astro         getSinglePage(folder) — main collection helper
 │   ├── blogUtils.astro             blog-specific queries
 │   ├── taxonomyParser.astro        getTaxonomy() for tags/categories
 │   ├── listingData.ts              CategoryItem type + ribbon data
-│   └── utils/                      blogImages (resolveImage), dateFormat, readingTime, similarItems, sortFunctions, taxonomyFilter, textConverter (humanize, slugify, plainify)
+│   └── utils/                      blogImages (resolveImage), dateFormat, readingTime, similarItems, sortFunctions, taxonomyFilter, textConverter (humanize, slugify, plainify), url (withTrailingSlash), searchText (plainifyMdx)
 ├── config/
 │   ├── config.json                 site, settings (pagination=9, blog_folder="blog"), giscus, subscribe, buymeacoffee
 │   ├── theme.json                  legacy colors + fonts (consumed by generated-theme.css)
@@ -100,12 +106,19 @@ src/
 ├── content.config.ts               Zod schemas for blog/about/homepage collections
 └── env.d.ts
 
-scripts/
-└── removeDarkmode.js               one-off utility (rarely used)
+public/                             served verbatim
+├── fonts/                          self-hosted woff2 (Heebo, Signika, JetBrains Mono)
+├── favicons/                       FancyLink company icons
+├── images/                         logos, default favicon
+├── js/posts/                       per-post Chart.js scripts
+├── pwa/                            PWA icons
+└── robots.txt
+
+tests/                              site.test.mjs (checks on dist/) + unit.test.mjs (pure helpers), see "Tests"
 
 .github/
 ├── workflows/
-│   ├── CI.yaml                     PR checks: pre-commit, labeler, version bump, image aspect-ratio
+│   ├── CI.yaml                     PR checks (see "Build / deploy")
 │   ├── tag_commits_on_main.yaml    auto-tag if package.json version changed
 │   └── warm_image_cache.yaml       builds on main to save Astro's image cache for PR builds
 ├── scripts/check_aspect_ratio.py   asserts blog images are 16:9, favicon 1:1
@@ -117,7 +130,7 @@ scripts/
 Three top-level layouts; every page picks one:
 
 - **BaseRedesign.astro** — `<html><head>` shell only. Loads main.css (which imports `fonts.css`: `@font-face` for Heebo/Signika/JetBrains Mono, all self-hosted in `public/fonts`, no third-party font requests; `heebo-latin.woff2` and `signika-latin.woff2` are preloaded), gtag, ClientRouter. Renders `<TwSizeIndicator>` + `<SearchModal>` then `<slot />`. Pages render their own `SiteNav` and `SiteFooter`.
-- **ArticleLayout.astro** — single blog post. Composes: `SiteNav` → hero (image + breadcrumb + title + tags + meta) → article (`ArticleTOC` sidebar + `<slot />` body + `CTAStrip` + `ShareRow` + `GiscusComments`) → `RelatedPostsGrid` → `SiteFooter`. **All MDX prose styles live in this file's `<style is:global>`** — that's where you go for h1-h6, blockquote, code-block, table, link styling.
+- **ArticleLayout.astro** — single blog post. Composes: `SiteNav` → hero (image + breadcrumb + title + tags + meta) → article (`ArticleTOC` sidebar + `<slot />` body + `CTAStrip` + `ShareRow` + `GiscusComments`) → `RelatedPostsGrid` → `SiteFooter`. The layout's own styles are scoped in the file; the **MDX prose styles live in `src/styles/prose.css`**, imported by this layout so they only ship on article pages.
 - **BlogListingLayout.astro** — listings (blog/category/tag). `heroVariant="full"` for blog+category (big "Notes from production" hero), `"simple"` for tags (compact h1).
 
 ## Components (`src/layouts/components/`)
@@ -183,8 +196,11 @@ Blog post frontmatter (commonly used):
 
 ```yaml
 title: string                  # required
+meta_title: string             # optional, used for <title> and og:title
 description: string            # optional, used in <meta> and cards
-date: ISO date                 # optional, used for sorting
+date: ISO date                 # optional, publication date, used for sorting
+updated_date: ISO date         # optional, shown as "Updated ..."
+writing_date: ISO date         # optional, internal (drafting start), never rendered
 image: string                  # optional ("/images/blog/<file>", file in src/images/blog/); falls back to 0000-default.jpg
 category: string               # MUST match a key in categoryMetadata.ts (else falls back to humanize(slug))
 tags: [string]                 # default ["Others"]
@@ -212,6 +228,7 @@ main.css
 ├── @custom-variant dark (&:where(.dark, .dark *))
 ├── @import "./generated-theme.css"   ← Tailwind @theme block (legacy palette)
 ├── @import "./tokens.css"            ← redesign 3.0 design tokens
+├── @import "./fonts.css"             ← @font-face for the self-hosted fonts
 ├── @layer base       → base.css      ← @apply'd Tailwind classes for h1-h6, body
 ├── @layer components → components.css, buttons.css, search.css
 └── @layer utilities  → utilities.css
@@ -232,7 +249,7 @@ Class-based: `.dark` on `<html>`, set by `ThemeSwitcher.astro` (persists to `loc
 
 ### Where prose styles live
 
-`ArticleLayout.astro`'s `<style is:global>` block (~lines 160-580). That's where h2-h5 numbered counters, blockquotes, tables, code blocks, and link colors are defined. The `.al-body .article-content` selector scopes them to the article body.
+`src/styles/prose.css`, imported by `ArticleLayout.astro`. That's where inline code, code blocks, h2-h5 numbered counters, blockquotes, tables, links, and the TerminalOutput/FileName/Notice shortcodes are styled. The `.al-body .article-content` selector scopes them to the article body.
 
 ### Heading numbering
 
@@ -250,9 +267,11 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - Netlify deploys from `main`. PR previews are configured.
 - CI (`.github/workflows/CI.yaml`) runs on every PR:
   - `pre_commit` (code quality)
+  - `lint_and_typecheck` (`npm run lint` + `npm run typecheck`)
   - `labeler` (auto PR labels from `.github/labeler.yml`)
-  - `check_version` (`package.json` version must change for site-affecting PRs)
+  - `check_version` (`package.json` and `package-lock.json` version must be exactly one above `main`)
   - `aspect_ratio_check` — `python .github/scripts/check_aspect_ratio.py` validates blog images are 16:9, favicons 1:1
+  - `tests` — builds the site (restoring the image cache saved by `warm_image_cache.yaml`), runs `npm run size` against `.size-limit.json`, then `npm test`
 - `tag_commits_on_main.yaml` auto-tags commits on main if `package.json` version bumped.
 
 ## Image conventions
@@ -315,7 +334,7 @@ Posts are co-written, not generated in one go:
 | ------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | Add a blog post                             | New `.mdx` in `src/content/blog/` with frontmatter. Done.                                   |
 | Add a new category                          | `src/lib/categoryMetadata.ts` (add key + name + color). Use that key in post frontmatter.   |
-| Edit prose / typography for posts           | `src/layouts/ArticleLayout.astro` `<style is:global>` block.                                |
+| Edit prose / typography for posts           | `src/styles/prose.css`.                                                                      |
 | Edit nav / footer                           | `src/layouts/components/SiteNav.astro` / `SiteFooter.astro`.                                |
 | Edit colors                                 | `src/styles/tokens.css` (preferred) or `src/config/theme.json` → regenerates generated-theme.css. |
 | Edit pagination size, similar-items count   | `src/config/config.json` → `settings`.                                                      |
@@ -326,10 +345,10 @@ Posts are co-written, not generated in one go:
 
 ## Gotchas
 
-- **The `@/partials/*` tsconfig path alias is dead** — `src/layouts/partials/` was removed in redesign 3.0. Safe to drop.
 - **Two color systems** — see the styling section. Don't reflexively unify them; the Tailwind class consumers depend on `generated-theme.css`.
 - **`description` is no longer a `ShareRow` prop** (cleaned up). Don't pass it.
 - **`ThemeSwitcher` takes no props** (`className` was removed; it was always undefined).
-- **Reading time** is computed in `[single].astro` and listing pages from `(post as any).body` — the `.body` cast is needed because Astro 6's collection types don't expose body publicly. If you see `try { ... } catch { return ""; }` patterns around reading time, that's why.
-- **Tailwind v4** — config is in `@theme` block (in `generated-theme.css`), not `tailwind.config.js`. The `tailwind.config.js` file at root is mostly inert under v4.
-- **Astro 6 requires Node 22.x.** If you see `Node.js v20.x is not supported`, that's a local env issue, not the repo.
+- **Reading time** comes from `readingTimeForPost(post)` (`src/lib/utils/readingTime.ts`), used by `[single].astro`, the home page and `BlogListingLayout`. It reads `post.body`, which Astro's collection types don't expose publicly, hence the cast and the `try/catch` returning `""` inside it.
+- **Tailwind v4** — config is in the `@theme` block (in `generated-theme.css`); there is no `tailwind.config.js`.
+- **Astro 7 requires Node 22.x.** If you see `Node.js v20.x is not supported`, that's a local env issue, not the repo (`nvm use` reads `.nvmrc`).
+- **Pages are cached network-first by the service worker** (`astro.config.mjs`, `AstroPWA`). A stale page after a deploy means the network was slow or offline, not a precache bug; don't add HTML to `globPatterns`.

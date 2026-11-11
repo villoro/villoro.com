@@ -12,16 +12,13 @@ export default [
       ".astro/**",
       "public/**",
       "src/content/**",
-      "scripts/**",
-      "images/**",
-      "src/.json/**",
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...astro.configs.recommended,
   {
-    files: ["**/*.{ts,tsx,astro}"],
+    files: ["**/*.{ts,astro}"],
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
     },
@@ -33,16 +30,6 @@ export default [
       ],
       "@typescript-eslint/triple-slash-reference": "off",
       "no-empty": ["error", { allowEmptyCatch: true }],
-    },
-  },
-  {
-    files: ["**/*.cjs", "tailwind.config.js"],
-    languageOptions: {
-      globals: { ...globals.node },
-      sourceType: "commonjs",
-    },
-    rules: {
-      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ];

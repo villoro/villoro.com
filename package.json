@@ -1,6 +1,6 @@
 {
   "name": "villoro",
-  "version": "3.2.40",
+  "version": "3.2.41",
   "description": "My personal website",
   "author": "Arnau Villoro <arnau@villoro.com>",
   "license": "MIT",
@@ -16,8 +16,7 @@
     "format": "prettier -w ./src",
     "lint": "eslint .",
     "typecheck": "astro check",
-    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"tests/*.test.mjs\"",
-    "remove-darkmode": "node scripts/removeDarkmode.js && npm run format"
+    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"tests/*.test.mjs\""
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.1",

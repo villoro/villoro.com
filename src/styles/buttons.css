@@ -11,11 +11,6 @@
   outline-offset: 2px;
 }
 
-/* Small button variant (compact padding) */
-.btn-sm {
-  @apply px-4 py-1.5 text-sm rounded-sm;
-}
-
 /* Focus state (accessibility) */
 .btn:focus-visible {
   outline: 2px solid var(--color-blue-500);
