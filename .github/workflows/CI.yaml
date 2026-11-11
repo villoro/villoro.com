@@ -82,7 +82,7 @@ jobs:
         run: python .github/scripts/check_aspect_ratio.py --directory public/favicons --aspect-ratio 1:1
 
 
-  bundle_size:
+  tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -113,3 +113,7 @@ jobs:
 
       - name: Check bundle size
         run: npm run size
+
+      # Data-quality checks on dist/ plus unit tests (see tests/)
+      - name: Test the built site
+        run: npm test

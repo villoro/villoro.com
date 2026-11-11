@@ -12,8 +12,9 @@ export async function getStaticPaths() {
   const { blog_folder, pagination } = (await import("@/config/config.json")).settings;
   const posts = await getSinglePage(blog_folder);
   const totalPages = Math.ceil(posts.length / pagination);
-  return Array.from({ length: totalPages }, (_, i) => ({
-    params: { slug: (i + 1).toString() },
+  // Page 1 is /blog/ itself: start at 2, or /blog/page/1/ would duplicate it
+  return Array.from({ length: Math.max(totalPages - 1, 0) }, (_, i) => ({
+    params: { slug: (i + 2).toString() },
   }));
 }
 

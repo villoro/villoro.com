@@ -32,9 +32,18 @@ npm run dev            # astro dev
 npm run build          # astro build
 npm run preview        # serve dist/ locally
 npm run format         # prettier on src/
+npm test               # checks on the built site + unit tests (run `npm run build` first)
 ```
 
 The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `dist/search.json`, lazy-fetched by `SearchModal` on first open. It stores plain text (capped per post) and 320px pipeline thumbnails. The modal is `src/layouts/components/SearchModal.astro`: static markup plus a ~4 KB script that listens on `document` (so it survives `ClientRouter` navigations) and renders results as HTML strings, escaping everything that comes from the index or the query.
+
+## Tests
+
+`npm test` runs Node's built-in test runner on `tests/*.test.mjs`. No test framework.
+
+- **`tests/site.test.mjs`** checks the built `dist/`, like dbt tests on a model: every internal link resolves and ends with `/`, one `<h1>` and a unique title per page, canonicals and sitemap URLs point to real indexable pages, every post has valid JSON-LD, drafts are published nowhere, the search index is plain text, no Google Fonts and no framework islands. **When you fix a bug that shows in the built HTML, add an assertion here.**
+- **`tests/unit.test.mjs`** covers the pure helpers (`withTrailingSlash`, `plainify`, `plainifyMdx`, `similarItems`). It imports the `.ts` sources directly (Node strips the types), so those helpers must not import through the `@/` alias.
+- CI runs it in the `tests` job, after the build and the bundle-size check.
 
 ## Path aliases (`tsconfig.json`)
 

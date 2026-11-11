@@ -1,7 +1,7 @@
 import { getCollection } from "astro:content";
 import { getImage } from "astro:assets";
-import { marked } from "marked";
 import { resolveImage } from "@/lib/utils/blogImages";
+import { plainifyMdx } from "@/lib/utils/searchText";
 
 // Static endpoint: built once into dist/search.json and lazy-fetched by
 // SearchModal on first open. Replaces the old scripts/jsonGenerator.js —
@@ -12,30 +12,6 @@ import { resolveImage } from "@/lib/utils/blogImages";
 // long posts lose tail-end recall, which is an acceptable trade-off.
 const MAX_CONTENT_LENGTH = 5000;
 const THUMB_WIDTH = 320;
-
-// Convert MDX to plain text at build time so the client doesn't need to parse
-// markdown (this keeps `marked` out of the browser bundle — see SearchResult).
-const plainifyMdx = (mdxContent: string): string => {
-  const withoutImports = mdxContent.replace(/^(import|export)\s.*$/gm, "");
-  // strip MDX component tags (capitalized, possibly multiline attributes,
-  // e.g. <FancyLink linkText="…" url="…"/>) before markdown parsing —
-  // marked escapes them in some contexts so the HTML-tag strip below
-  // wouldn't catch them
-  const withoutComponents = withoutImports.replace(
-    /<\/?[A-Z][a-zA-Z]*(\s[^<>]*?)?\/?>/gs,
-    " ",
-  );
-  const html = marked.parse(withoutComponents) as string;
-  const withoutTags = html.replace(/<\/?[^>]+(>|$)/gm, " ");
-  const decoded = withoutTags
-    .replace(/&nbsp;/g, " ")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&");
-  return decoded.replace(/\s+/g, " ").trim();
-};
 
 export async function GET() {
   const posts = await getCollection(
