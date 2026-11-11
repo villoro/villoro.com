@@ -331,13 +331,17 @@ Our old moodle backfill is a good example. It read the same table for three bran
 
 ## Where DataFrames still belong: the notebook
 
-{/*
-Exploration, prototyping, ML experiments: great there, and they should stay there.
-Notebooks don't go to production: once the logic becomes a pipeline, the T is SQL in dbt and
-the job around it is EL.
-"My ML library needs a DataFrame": build it at the edge, from Arrow, when the library asks for
-it (close to free); the frame doesn't carry the data through the pipeline.
-*/}
+None of this means DataFrames are bad. I still use them every week, in notebooks:
+
+* **Exploring data**: looking at a sample, checking a distribution, finding the weird rows.
+* **Prototyping**: trying an idea before it becomes a model or a job.
+* **ML experiments**: most ML libraries expect a DataFrame, and that's fine there.
+
+> [!important] Notebooks don't go to production
+> Once a notebook's logic becomes a pipeline, the transformation is SQL in dbt, and the job around it is EL. Neither needs a frame.
+
+> [!question] "But my ML library needs a DataFrame"
+> Then build it where the library needs it, not before. Read the data as Arrow (DuckDB, for example, returns query results as Arrow), and convert it to pandas or Polars right before calling the library. From Arrow that conversion is cheap, so the DataFrame lives for one function call instead of carrying the data through the whole pipeline.
 
 ## Conclusion
 
