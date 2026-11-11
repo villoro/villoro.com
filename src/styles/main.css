@@ -11,6 +11,7 @@
  */
 @import "./generated-theme.css";
 @import "./tokens.css";
+@import "./fonts.css";
 
 @layer base {
   @import "./base.css";
