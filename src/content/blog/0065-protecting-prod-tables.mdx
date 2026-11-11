@@ -210,7 +210,7 @@ SELECT * FROM source;
 
 Supporting macros (environment detection, scheduled vs manual run, etc.) make this flexible.
 
-<Accordion client:load title="Environment detection macros">
+<Accordion title="Environment detection macros">
   ```sql
   {%- macro get_environment() -%}
       {%- if adapter.type() != "athena" -%}
@@ -243,7 +243,7 @@ Supporting macros (environment detection, scheduled vs manual run, etc.) make th
 
 It’s important that the **seed schema matches the real source schema**. One way is to explicitly enforce column types in the `seed_schema.yml` for seeds.
 
-<Accordion client:load title="seed_schema.yml example">
+<Accordion title="seed_schema.yml example">
   ```yaml
   version: 2
 
