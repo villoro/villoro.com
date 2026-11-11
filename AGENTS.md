@@ -118,6 +118,9 @@ public/                             served verbatim
 
 tests/                              site.test.mjs (checks on dist/) + unit.test.mjs (pure helpers), see "Tests"
 
+scripts/
+└── new-post.mjs                    `npm run new-post -- "Title"`: creates a draft post
+
 .github/
 ├── workflows/
 │   ├── CI.yaml                     PR checks (see "Build / deploy")
@@ -306,6 +309,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 
 Posts are co-written, not generated in one go:
 
+- **Start from the script.** `npm run new-post -- "Working title"` creates `src/content/blog/9999-<slug>.mdx` with the full frontmatter of a draft (`slug`, `title`, `meta_title`, `description`, `date` = `writing_date` = today, `category`, `tags`, `draft: true`) and a `{/* TODO */}` body; it refuses to overwrite or reuse a slug and prints the path. There is no `image:`: the schema applies the default hero until the real one exists. Fix the `TODO`s in the frontmatter as the post takes shape.
 - **Free draft first, then direction, then section by section.** (1) Write the whole post freely as a proposal, from the sources (code, measurements, earlier posts), with `{/* TODO Villoro: … */}` comments wherever you assumed something. (2) Villoro reads it and you agree on the thesis, audience and index together. (3) Rewrite one or two sections per round, with Villoro's direction and corrections.
 - **Commit what Villoro accepts, then continue.** Leave each change uncommitted until Villoro says it's good, so they can review it as a diff. When they accept it, commit that part (message prefixed `Draft:`) and only then move on to the next thing they asked for. Don't run ahead to the next section.
 - **Length:** most posts are ~300–500 lines of MDX. Keep the main body lean; push detail (per-case numbers, tables of measurements) to an appendix and give the main text a headline figure.
@@ -342,7 +346,7 @@ Posts are co-written, not generated in one go:
 
 | Task                                        | Touch                                                                                       |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Add a blog post                             | New `.mdx` in `src/content/blog/` with frontmatter. Done.                                   |
+| Add a blog post                             | `npm run new-post -- "Title"` creates `src/content/blog/9999-<slug>.mdx` (draft frontmatter, TODO body). |
 | Add a new category                          | `src/lib/categoryMetadata.ts` (add key + name + color). Use that key in post frontmatter.   |
 | Edit prose / typography for posts           | `src/styles/prose.css`.                                                                      |
 | Edit nav / footer                           | `src/layouts/components/SiteNav.astro` / `SiteFooter.astro`.                                |

@@ -16,7 +16,8 @@
     "format": "prettier -w ./src",
     "lint": "eslint .",
     "typecheck": "astro check",
-    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"tests/*.test.mjs\""
+    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"tests/*.test.mjs\"",
+    "new-post": "node scripts/new-post.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.1",
