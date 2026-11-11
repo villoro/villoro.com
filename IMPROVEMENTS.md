@@ -127,7 +127,7 @@ One script (`node --test`, no new dependency) that walks `dist/**/*.html` and as
 
 Then a few unit tests with Vitest for the pure functions that have subtle logic: `plainify` in `textConverter.ts`, the MDX-to-text code in `search.json.ts`, `similarItems`, `readingTime`.
 
-Do this PR right after PR 1 so the rest of the list is developed against it.
+Do this PR next, so the rest of the list is developed against it.
 
 ## PR 9. Draft previews and strict frontmatter
 
