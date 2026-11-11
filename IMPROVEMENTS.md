@@ -1,117 +1,188 @@
 # Improvement Proposals
 
-Audit of `villoro.com` (Astro 6 + Tailwind 4, Netlify). Proposals are grouped by category with current state, suggested change, and rough effort/impact.
+Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c` (v3.2.26, Astro 7, 76 published posts, 215 built pages). It replaces the June 2026 audit.
 
-> Note: Proposals reference paths discovered during audit. Verify each against current code before implementing — some may already be partially addressed.
->
-> **When an improvement is implemented, remove it from this file.** Keep the list current and actionable.
+**Goals, in the order they drive priority:** reach/SEO, speed, low maintenance, writing workflow.
 
----
+**Decisions already taken with Villoro** (don't re-open them):
 
-## Performance
+- **React goes away.** Search is rewritten in plain JS and the shortcodes become `.astro` components.
+- **The PWA stays.** Only audit it for correctness.
+- **GA4 stays as it is.** No consent banner, no replacement.
 
-> PageSpeed Insights — latest run **(Jun 14 2026, homepage, mobile)**: **Perf 70** / Acc 94 / BP 100 / SEO 100. Mobile **LCP 5.1s** 🔴 (target ≤2.5s), **FCP 3.8s** 🔴, **Speed Index 5.1s**, **TBT 0 ms** ✅, **CLS 0** ✅. Captured on Moto G Power / Slow 4G / Lighthouse 13.3. CrUX field data: not enough traffic yet — these are lab numbers only. Re-run PSI after each fix to confirm impact.
-> *(Prior May 2026 baseline read Perf 66 / FCP 3.0s / Speed Index 12.7s; the 12.7s figure does not reproduce and was almost certainly a bad trace — disregard it. Desktop was ~86, LCP 1.3s.)*
->
-> PSI flagged two red **Insights**. *"Improve image delivery — ~70 KiB"* → **done** (homepage LCP-image preload + responsive `sizes`/`widths`; see commit history). *"Render-blocking requests — ~150 ms"* → **P10/P11** (next up). A third item, *"Reduce unused JavaScript — ~83 KiB"*, sits under **Diagnostics** (PSI notes these "don't directly affect the Performance score") → **P12**.
->
-> **Diagnosis (homepage).** The mobile LCP gap was mostly self-inflicted on the home page and absent on article pages, which already do the right thing. The remaining cost center after the image fix:
-> - **Fonts on the critical path.** Five families (Heebo, Signika, Fraunces, Instrument Serif, JetBrains Mono) loaded from Google's CDN across **three** requests, each needing a cross-origin DNS+TLS+fetch to `fonts.googleapis.com` then `fonts.gstatic.com`. This is the main driver of FCP 3.8s on mobile.
->
-> Next win is **P10** (fonts → FCP). Re-run PSI to confirm the image fix moved LCP before starting it.
+**Rules for this file:**
 
-### P4. Audit/compress blog images
-- **Current:** `src/images/blog` is 21 MB across 74 images (~290 KB average). CI verifies aspect ratio only, not size. Originals no longer ship in `dist`, but smaller sources still mean smaller optimized variants and faster builds.
-- **Change:** Add a size budget (e.g. <200 KB) to `.github/scripts/` checks, batch-compress existing images.
-- **Effort:** Medium / **Impact:** Medium
+- When an item is implemented, **remove it** in the same PR and fix cross-references.
+- Every figure below was measured on the built `dist/` of the commit above. Re-check before implementing: some may have moved.
+- Items are grouped into **one PR each**. Every PR bumps the version, so two open PRs always conflict on `package.json`: merge them one at a time and rebase the next.
 
-### P10. Self-host fonts and trim the family set  ⭐ biggest FCP win
-- **Current:** `BaseRedesign.astro` loads five families over three cross-origin Google requests: Heebo + Signika via `AstroFont` (lines 140–161), Fraunces via one preload-as-style (lines 122–127), and Instrument Serif + JetBrains Mono via a second (lines 128–133). `inlineStylesheets: "auto"` is already on, so the remaining render-blocking cost is the font handshakes, not the app CSS.
-- **Change:**
-  1. **Self-host** with `@fontsource`/`@fontsource-variable` (or vendored `woff2` in `public/fonts/`). Same-origin removes the `fonts.googleapis.com` + `fonts.gstatic.com` DNS/TLS round-trips entirely, and the two `<link rel="preconnect">` lines can go.
-  2. **`<link rel="preload">` only the fonts the first paint actually uses** — Heebo (body) and Signika (UI/headings, currently `display:optional`+`preload:false`, so confirm whether the hero H1 should preload at all). Keep `font-display: swap`/`optional` to avoid blocking.
-  3. **Trim weights** to those actually rendered (Heebo 400/600, Signika 500/700 per `theme.json`).
-- **Effort:** Medium / **Impact:** High (attacks FCP 3.8s directly)
+## Summary
 
-### P11. Don't ship code/accent fonts on pages that never use them
-- **Current:** Instrument Serif (`--font-accent`, "small accent italics") and JetBrains Mono (`--font-mono`, code blocks) are requested in `BaseRedesign.astro` for **every** page, including the homepage — which renders neither. They're paid for on the LCP-critical home route for zero visual benefit.
-- **Change:** Move these two families out of the shared `<head>` and load them only where used (JetBrains Mono → `ArticleLayout`/prose pages with code; Instrument Serif → wherever the accent italic actually appears). Pairs naturally with P10's self-hosting. Re-audit whether Instrument Serif earns its place at all — Fraunces already has an italic.
-- **Effort:** Low–Medium / **Impact:** Medium (smaller critical path on the home/listing routes)
+| PR | Topic | Goal | Effort | Impact | Who |
+| --- | :--- | :--- | --- | --- | :--- |
+| 1 | Fix wrong metadata in every post | SEO | Low | High | subagent |
+| 2 | Sitemap and thin pages | SEO | Low | Medium | subagent |
+| 3 | Self-host the remaining fonts | Speed | Medium | High | subagent |
+| 4 | Shortcodes to `.astro` | Speed, maintenance | Medium | Medium | subagent |
+| 5 | Search without React, drop React | Speed, maintenance | Medium–High | High | senior |
+| 6 | Dead config and stale docs | Maintenance | Low | Low | subagent |
+| 7 | CI: one build job, real budgets, no audit noise | Maintenance | Medium | Medium | subagent |
+| 8 | Tests on the built site | Maintenance | Medium | High | senior designs, subagent writes |
+| 9 | Draft previews and strict frontmatter | Writing | Medium | Medium | senior |
+| 10 | Related posts: stop shuffling | SEO | Low | Low | subagent |
+| 11 | Major dependency upgrades | Maintenance | Medium | Low | subagent, after PR 5 |
+| 12 | Lighthouse budget on previews | Speed | Medium | Medium | later |
+| 13 | Colour contrast | Accessibility | Low | Medium | later |
 
-### P12. Reduce unused JavaScript bytes (low priority)
-- **Current:** The Jun 2026 trace shows **TBT 0 ms** and **Speed Index 5.1s** — the main thread is *not* blocked, so the earlier "Speed Index 12.7s / main-thread time" framing was wrong (bad trace). The only JS finding is a **Diagnostic**, *"Reduce unused JavaScript — ~83 KiB"*, which PSI explicitly notes does **not** directly affect the Performance score. Likely sources: the React runtime behind `SearchModal client:idle`, `ClientRouter` view-transitions, and the search bundle.
-- **Change:** Purely a transfer-size optimisation, not a responsiveness one — do **P1/P2/P10/P11 first**. If revisited: confirm `SearchModal` only ships React where needed, consider whether `ClientRouter` earns its bytes on a content site, and check the search payload. GA is already PROD-gated and `async`; the "3rd parties" insight was not flagged red.
-- **Effort:** Medium / **Impact:** Low (bytes only; does not move the score or the failing CWV)
-
-### P9. Audit render-blocking requests
-- **Current:** PSI: ~150 ms mobile, ~40 ms desktop. `inlineStylesheets: "auto"` is **already enabled** in `astro.config.mjs`, so the original CSS-inlining suggestion is done. The remaining render-blockers are the font requests — see **P10/P11**.
-- **Change:** Folded into P10/P11. Keep this entry only as a reminder to re-run a Lighthouse trace after those land to confirm no blockers remain.
-- **Effort:** — / **Impact:** — (subsumed by P10/P11)
+"Senior" means the item needs design judgement; "subagent" means the change is specified well enough below to hand over.
 
 ---
 
-## DX & Tooling
+## PR 1. Fix wrong metadata in every post
 
-### D2. Add a test harness (Vitest)
-- Start with utilities (`textConverter`, `readingTime`, `similarItems`) and the MDX plainify logic in `src/pages/search.json.ts` (subtle and currently untested).
-- **Effort:** High / **Impact:** High
+These are bugs, not polish. They are in the HTML of every published post today.
 
-### D4. Lighthouse / Unlighthouse CI step on previews
-- Netlify deploy previews exist; wire a Lighthouse assertion (LCP budget) against them so the recently-landed hero-preload work doesn't regress.
-- **Effort:** Medium / **Impact:** Medium
+- **Author is "Admin".** The blog schema defaults `author` to `"Admin"` (`src/content.config.ts`) and only one post sets it. So every post ships `<meta property="article:author" content="Admin">` and `"author":{"name":"Admin"}` in its JSON-LD. Change the default to `config.metadata.meta_author`.
+- **JSON-LD is outside the document.** `src/pages/blog/[single].astro` renders the `<script type="application/ld+json">` before `<ArticleLayout>`, so it lands between `<!DOCTYPE html>` and `<html>`. Pass it through the `head` slot of `BaseRedesign` instead.
+- **JSON-LD image is a 404.** It points to `https://villoro.com/images/blog/<file>.jpg`, which stopped being served when the images moved to `src/images` (#342). Reuse the URL `BaseRedesign` already resolves for `og:image`.
+- **Titles and descriptions end with a newline.** `og:title`, `twitter:title` and every `description` meta carry a trailing `\n` from the YAML block scalars. Trim in `plainify` (or at the call sites in `BaseRedesign`).
+- **`og:title` and `<title>` disagree with the JSON-LD headline.** The first two use `meta_title`, the headline uses `title`. Pick one on purpose (suggestion: `meta_title` for `<title>`/OG, `title` for the headline) and write the rule in `AGENTS.md`.
+- **Home page description is "Villoro's personal website".** That is the fallback `config.metadata.meta_description`, also used by the 404 and the RSS channel. Write a real one in `src/content/homepage/-index.md` (`meta.description` exists in the schema and is empty).
+- **No `og:site_name`, no `Person`/`WebSite` JSON-LD on the home page.** Add them in `BaseRedesign` / `index.astro`. The `Person` entry should list the social links from `social.json` as `sameAs`.
+- **`robots.txt`** has a `Disallow: /api/*` for a path that doesn't exist and doesn't reference the sitemap. Add `Sitemap: https://villoro.com/sitemap-index.xml`, drop the rule.
+- **Trailing-slash mismatch.** Canonicals have no trailing slash (`trailing_slash: false`), but the RSS feed and 42 in-post `FancyLink`s point to `https://villoro.com/blog/<slug>/`. Fix the RSS `link` in `src/pages/rss.xml.ts`; make `FancyLink` strip the slash for `villoro.com` URLs rather than editing 42 posts. Update the example in `AGENTS.md`, which teaches the slashed form.
+- **Category/tag descriptions are duplicated** across their paginated pages ("All posts in the 🐍 Python category."). Harmless because pages 2+ are `noindex`, but page 1 deserves a real sentence: add an optional `description` to `categoryMetadata.ts`.
 
-### D5. Dead-config cleanup
-- **Current:** Several inert leftovers confirmed in the repo:
-  - `tailwind.config.js` at root — inert under Tailwind v4 (`@theme` lives in `generated-theme.css`).
-  - `@/partials/*` alias in `tsconfig.json` — `src/layouts/partials/` no longer exists.
-  - `<meta name="theme-name" content="astroplate" />` in `BaseRedesign.astro` — theme-vendor leftover.
-  - `item-prop="url"` on the canonical `<link>` in `BaseRedesign.astro` — invalid attribute (itemprop misspelled, and pointless on a `<link rel=canonical>`).
-  - `<meta http-equiv="Content-Type" …>` — redundant; charset comes from the HTTP header/doctype.
-  - `scripts/removeDarkmode.js` — one-off utility; delete or move out of `scripts/`.
-- **Change:** Remove all of the above; update `AGENTS.md` gotchas accordingly.
-- **Effort:** Low / **Impact:** Low (hygiene, less confusion for the next agent/dev)
+**Check:** PR 8 turns each of these into an assertion. Until then, grep the built HTML of one post.
+
+## PR 2. Sitemap and thin pages
+
+- **The sitemap lists pages that are `noindex`.** 137 of its 215 URLs are tag, category and `page/N` URLs; the paginated ones carry `noindex,nofollow`. Give `sitemap()` a `filter` that drops `/page/`.
+- **No `lastmod`.** Posts already have `date` and `updated_date`. Use the `serialize` hook of `@astrojs/sitemap` with a slug-to-date map built from the collection.
+- **27 of the 46 tags have one or two posts.** Each is a page with a hero and one card. Mark tag pages with fewer than 3 posts `noindex,follow` and drop them from the sitemap. Don't delete the tags: they still drive related posts.
+- **`noindex,nofollow` on paginated listings** stops crawlers from following links to older posts. Use `noindex,follow`.
+
+## PR 3. Self-host the remaining fonts
+
+Heebo and Signika are already self-hosted (#371). The rest still comes from Google on every page:
+
+- **Instrument Serif is downloaded and never used.** `--font-accent` has no consumer in `src/`. Remove the request and the token.
+- **Fraunces** (display, used for every H1) loads through a `preload as="style"` + `onload` swap from `fonts.googleapis.com`, full axis range `300..800`, roman and italic. Self-host the variable `woff2` (latin + latin-ext) in `public/fonts`, the same way as Heebo, and preload the latin roman file only.
+- **JetBrains Mono** is requested on every page but only used in posts and the TOC. Self-host it and declare it from `ArticleLayout`, not `BaseRedesign`.
+- Once nothing is fetched from Google, delete both `preconnect` links and the `<noscript>` block.
+- **`astro-font` can go.** It is only a wrapper that prints `@font-face` rules and it already broke the build once. Plain `@font-face` in a CSS file plus one `<link rel="preload">` does the same with no dependency. Also remove the `fontPrimary`/`fontSecondary` regex parsing of `theme.json` in `BaseRedesign`.
+
+**Check:** no request to `fonts.googleapis.com` or `fonts.gstatic.com` in the built HTML; re-run PageSpeed on the home page and write the new numbers in the PR. The last measurement (June 2026, mobile) was Perf 70, FCP 3.8 s, LCP 5.1 s.
+
+## PR 4. Shortcodes to `.astro`
+
+First half of removing React. Nine shortcodes are auto-imported; usage across the 82 MDX files:
+
+| Shortcode | Posts using it | Action |
+| --- | --- | :--- |
+| `FancyLink` | 73 | port to `.astro` |
+| `FileName` | 31 | port to `.astro` |
+| `TerminalOutput` | 7 | port to `.astro` |
+| `Accordion` | 6 | port to `.astro` on top of `<details>`/`<summary>` |
+| `Button` | 4 | port to `.astro` |
+| `Tabs`, `Tab`, `Video`, `Notice` | 0 | delete |
+
+- `Accordion` is the only one hydrated (`client:load` in 6 posts, 15 places). With `<details>` it needs no JS; remove the `client:load` attributes from those posts.
+- `helpers/DynamicIcon.tsx` has no consumer: delete it. With `Notice` gone, **`react-icons` has no consumer either**: remove the dependency.
+- Deleting `Tabs.tsx` also clears the only two ESLint warnings in the repo.
+- `astro-auto-import` accepts `.astro` files; update the list in `astro.config.mjs` and the shortcode section of `AGENTS.md`.
+
+**Check:** build, then compare the rendered HTML of one post per shortcode before and after (`0073` for Accordion, `0054` for the most `client:load`s).
+
+## PR 5. Search without React, drop React
+
+`SearchModal client:idle` in `BaseRedesign` is the last island. Because of it **every page downloads `client.*.js`, 213 KB (React + ReactDOM)**, for a modal most visitors never open.
+
+- Rewrite `SearchModal.tsx` + `SearchResult.tsx` (389 lines) as one `.astro` component with a `<dialog>` and a plain `<script>`. Keep the behaviour: lazy fetch of `/search.json` on first open, keyboard shortcut, arrow-key navigation, highlighted matches.
+- Load the script **on first open** (dynamic `import()` from the search trigger), not on idle.
+- It must survive `ClientRouter` navigations: bind on `astro:page-load`, or mark the dialog `transition:persist`.
+- `search.json` is 370 KB uncompressed for 76 posts and grows with every post. It's fetched lazily, so it isn't urgent, but lower the per-post text cap or drop the body and index title + description + headings + tags.
+- Then remove `react`, `react-dom`, `@astrojs/react`, `@types/react*`, `eslint-plugin-react*`, the `react()` integration, `"jsx": "react"` in `tsconfig.json`, and the React blocks in `eslint.config.js`.
+- `marked` is imported by `SearchResult.tsx`, `textConverter.ts` and `search.json.ts`; check whether it is still needed once the first is gone. `gray-matter` is already unused: remove it.
+
+**Check:** the JS budget of PR 7 should drop from 300 KB to well under 50 KB. Test search in the preview build on a phone-sized viewport, in both themes, after a soft navigation.
+
+## PR 6. Dead config and stale docs
+
+- `tailwind.config.js`: inert under Tailwind 4. Delete.
+- `scripts/removeDarkmode.js` and the `remove-darkmode` npm script. Delete.
+- `BaseRedesign.astro`: `<meta name="theme-name" content="astroplate">`, `<meta http-equiv="Content-Type">`, `item-prop="url"` on the canonical, and the header comment that mentions the removed `Base.astro`. Delete.
+- Root `images/` folder (`logo.png`, `mockup_*.jpg`, `pagespeed_rating.png`): only the README uses it. Keep what the README shows, delete the rest.
+- **Two broken favicons**: posts reference `/favicons/apache.ico` and `/favicons/aws-dark.ico`, which don't exist. Fix the mapping in `FancyLink` (or add the files).
+- **Ten `http://` outbound links** (numba, flask.pocoo.org, jinja.pocoo.org, supervisord, eepurl…). Move to `https://` where the site supports it, including `subscribe.link` in `config.json`.
+- `.github/labeler.yml` lists paths that no longer exist (`postcss.config.js`, `src/content/config.ts`, `src/hooks/**`, `src/content/contact/**`). Bring it in line with the tree.
+- **`AGENTS.md` is out of date**: says Astro 6 and React 18 (it's Astro 7; React 19 until PR 5), still lists the dead `@/partials/*` alias as present (already removed from `tsconfig.json`), says the prose styles live in `ArticleLayout.astro` at "~700 lines" (it's 373 lines; they moved to `src/styles/prose.css`), and doesn't mention the PWA, `rss.xml.ts`, `npm run lint`/`typecheck`/`size`, or the `bundle_size` and `lint_and_typecheck` CI jobs. Rewrite those parts.
+- `README.md` still credits the Astroplate template and layout that the redesign removed. Refresh.
+- Add `.nvmrc` with `22`: the repo requires Node 22 and it's easy to run it with another version locally.
+
+## PR 7. CI: one build job, real budgets, no audit noise
+
+- **`npm audit` reports 29 vulnerabilities (14 high) and none are in the site.** They come from `@size-limit/preset-app`, which installs Puppeteer and Chromium to time page loads we don't measure. Swap it for `@size-limit/file` (size only). This also makes `npm ci` much faster in CI and on Netlify.
+- **The budgets don't guard anything.** They are measured after Brotli: JS is 104 KB against a 300 KB limit, CSS is 19 KB against 100 KB. Either could triple without failing. After PR 5, set each close to the real number (measured + 15%).
+- **Three jobs each run `npm ci`**, and the build only happens inside `bundle_size`. Merge `lint_and_typecheck` and `bundle_size` into one `build` job: lint, typecheck, build, size, then the tests of PR 8.
+- **Old action versions**: `actions/checkout@v3`, `actions/setup-python@v4`, `actions/labeler@v4`, `dorny/paths-filter@v2`. Update them.
+- **Dependabot**: three PRs have been open since August (#360, #361, #363). There is no `.github/dependabot.yml`, so these are ungrouped security updates. Add a config that groups npm updates weekly into one PR and also covers `github-actions`, then close the stale ones.
+- **Image weight**: `src/images/blog` is 23 MB; 29 hero images are over 300 KB and `0001-personal-web.png` is 945 KB. The originals don't ship, so this only costs build time and repo size. Add a size limit (400 KB, matching the hero-image rule in `AGENTS.md`) to `check_aspect_ratio.py` and recompress the ones over it. Low priority within this PR; split it out if it gets noisy.
+
+## PR 8. Tests on the built site
+
+There are no tests. For a static site the cheapest useful ones are **data-quality checks on the output**, the same idea as dbt tests on a model: build once, then assert things about `dist/`. All the bugs in PR 1 would have been caught by them.
+
+One script (`node --test`, no new dependency) that walks `dist/**/*.html` and asserts:
+
+- every internal `href`/`src` resolves to a file (today: 2 failures, the favicons of PR 6);
+- every page has exactly one `<h1>`, a unique `<title>`, a non-empty description without leading/trailing whitespace, and a canonical;
+- every post has JSON-LD inside `<head>` that parses, with an author that isn't "Admin" and an image URL that exists in `dist/`;
+- every URL in the sitemap exists and isn't `noindex`;
+- no draft slug appears in the sitemap, RSS or `search.json`;
+- no request to Google Fonts (after PR 3) and no `client.*.js` (after PR 5).
+
+Then a few unit tests with Vitest for the pure functions that have subtle logic: `plainify` in `textConverter.ts`, the MDX-to-text code in `search.json.ts`, `similarItems`, `readingTime`.
+
+Do this PR right after PR 1 so the rest of the list is developed against it.
+
+## PR 9. Draft previews and strict frontmatter
+
+- **Drafts can't be previewed.** `AGENTS.md` says to release a post with `draft: true` "so it can be checked live before it shows in listings", but `getSinglePage` filters drafts out of `getStaticPaths`, so a draft has no page at all, live or in the deploy preview. Build draft pages when `CONTEXT` isn't `production` (Netlify sets it to `deploy-preview` on PRs), always `noindex`, never in listings, RSS, sitemap or search. In dev, show them too.
+- **Unknown frontmatter keys pass silently.** The schema is a plain `z.object`, so a typo like `update_date:` is ignored. Use `z.strictObject`. The memory of past sessions already records confusion about snake_case keys; `imageAlt` and `readingTime` are the two camelCase leftovers, rename them.
+- **`category` is a free string** defaulting to `"Others"`, which isn't a key in `categoryMetadata.ts` (the key is `others`). Make it `z.enum` over the keys of `categoryMetadata` so a wrong category fails the build instead of rendering a grey chip.
+- **The blog schema serves two things.** `src/content/blog/-index.md` (the listing's hero copy) lives in the same collection as the posts, so the post schema carries `hero` and `section` fields that no post uses, and every query has to filter the `-index` entry out by id. Move it to its own small collection. In the homepage schema, `banner`, `slogan` and `blog` look like template leftovers: confirm they have no consumer and delete.
+- **`getSinglePage(collectionName: string)`** casts everything to `"blog"`, and `similarItems` is typed `any`. Type them properly; `rss.xml.ts` and `search.json.ts` re-implement the draft filter and should call the same helper.
+- **A `npm run new-post` script** that creates `9999-<slug>.mdx` with the full frontmatter would remove the copy-paste step. Optional.
+
+## PR 10. Related posts: stop shuffling
+
+`similarItems` scores posts by shared category and tags, takes the top 3, then shuffles them with `Math.random()`. The shuffle only reorders the same three, so it adds nothing except that every build changes the HTML of all 76 posts. Remove `getRandomElements`, and break score ties by date (newest first) so the result is stable.
+
+## PR 11. Major dependency upgrades
+
+After PR 5 (several of these disappear with React). Outdated by a major today: `@astrojs/mdx` 7 → 8, `@vite-pwa/astro` 1 → 2, `eslint` 9 → 10, `eslint-plugin-astro` 1 → 3, `prettier-plugin-astro` 0.14 → 1, `typescript` 6 → 7, `astro-auto-import` 0.5 → 0.6. One PR per risky one (mdx, PWA), the lint/format tooling together.
+
+Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native Sätteri markdown pipeline and the site pins the `unified` one for three plugins (`remark-callouts`, `remark-toc` + `remark-collapse`, `rehype-sectionize`). No file in `src/content` has a "Table of contents" heading (`ArticleTOC` replaced it), so `remark-toc` and `remark-collapse` do nothing and can be removed.
+
+## PR 12. Lighthouse budget on previews
+
+Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). Worth doing only after PRs 3 and 5, when there is a good number to protect.
+
+## PR 13. Colour contrast
+
+Carried over from the June audit and **not re-verified**: PageSpeed flagged insufficient contrast, probably the muted greys of card metadata (`pc-*__meta`, `bl-grid-meta`, `hp-stats__label`). Run axe on `/`, `/blog` and one post in both themes, and darken the failing tokens in `tokens.css`.
 
 ---
 
-## Content & Collections
+## Checked and fine
 
-### M3. Precompute related posts (and fix their randomness)
-- Build-time index instead of runtime `similarItems`. Note: `similarItems` currently takes the top-N scored posts and then **shuffles them with `Math.random()`** — so "related posts" change on every build and the scoring order is discarded. Decide if that's intentional; if not, drop `getRandomElements` (one-line fix, independent of the precompute).
-- **Effort:** Medium / **Impact:** Low (until corpus grows)
+So nobody audits these again soon:
 
----
-
-## Dependencies
-
-### Dep2. Consider replacing `react-icons`
-- **Current:** Only two consumers remain: `helpers/DynamicIcon.tsx` and `shortcodes/Notice.tsx`. Everything else already uses inline SVGs (`IconArrow`, `SocialIcon`), per the AGENTS.md convention.
-- **Change:** Inline the handful of icons those two files use, drop the dependency.
-- **Effort:** Low–Medium / **Impact:** Low–Medium (bundle + dep tree)
-
----
-
-## Accessibility (PSI: 87 mobile / 90 desktop)
-
-### A2. Fix color contrast on flagged elements
-- **Current:** PSI flags "Background and foreground colors do not have a sufficient contrast ratio." Likely culprits: muted greys for meta text (`pc-*__meta`, `bl-grid-meta`, `hp-stats__label`) and the yellow chip on light backgrounds.
-- **Change:** Run axe DevTools on `/` and `/blog`, identify each failing pair, and bump the muted greys one shade darker (or adjust `--color-grey-500`). Verify against `tokens.css`.
-- **Effort:** Low / **Impact:** Medium
-
----
-
-## SEO
-
-### SEO1. Tidy robots.txt and reference the sitemap
-- **Current:** `public/robots.txt` exists and is valid (the desktop-PSI "unable to download" report was likely transient — still worth a post-deploy spot check). But it contains `Disallow: /api/*` (there is no `/api` on this static site) and does **not** reference the sitemap generated by `@astrojs/sitemap`.
-- **Change:** Add `Sitemap: https://villoro.com/sitemap-index.xml`, drop the `/api` rule, end with a newline.
-- **Effort:** Low / **Impact:** Low
-
-### SEO4. Per-page OG image
-- **Current:** Home, blog index, about, tag, and category pages all fall back to `config.metadata.meta_image` for OG/Twitter cards. Sharing any of these gives the same card. (`BaseRedesign` already accepts an `image` prop — only article pages use it.)
-- **Change:** Pass an `image` prop from `index.astro`, `BlogListingLayout` (with a distinct hero per variant), `about.astro` so each surface has a recognizable preview.
-- **Effort:** Low / **Impact:** Low
-
-### SEO5. Add JSON-LD structured data
-- **Current:** No `<script type="application/ld+json">` anywhere. Articles already pass `publishedTime`/`modifiedTime`/`author` to `BaseRedesign` for OG tags, so the data is at hand.
-- **Change:** Emit `BlogPosting` (headline, image, dates, author) on article pages and `Person`/`WebSite` on the homepage, inside `BaseRedesign` driven by the existing props.
-- **Effort:** Low / **Impact:** Medium (rich results eligibility)
+- Every page has exactly one `<h1>` and a unique `<title>`.
+- Drafts don't leak into the sitemap, RSS or search index.
+- The 577 images with empty `alt` are all decorative favicons inside `FancyLink`, where an empty `alt` is correct.
+- Hero images are preloaded with responsive AVIF, originals don't ship, OG images are JPG.
+- The PWA precaches only hashed assets and serves pages network-first (#376).
+- Security headers are set in `netlify.toml`. A `Content-Security-Policy` is missing, but with inline scripts, GA and Giscus it would need care to be worth it; not proposed.
+- Old `/post/*` URLs are redirected.
