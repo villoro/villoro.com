@@ -48,15 +48,38 @@ The DataFrame, however, stayed in most jobs. In an ELT pipeline it has nothing l
 
 ## What the bag costs
 
-{/*
-What the DataFrame really does in an EL job: holds the rows, lowercases columns, drops
-duplicates, casts to text, hands them to the writer (write_iceberg / awswrangler).
-Where the memory goes, step by step: dicts (the biggest cost), DataFrame (pointers over the same
-strings), filters and drop_duplicates (new frames, keeps the first row not the newest),
-astype(str) (really allocates), Arrow + Parquet in awswrangler.
-What it changes on the way: "1.0" for nullable ints, Python reprs instead of JSON.
-Why 50k chunks were a pandas limit, not a design choice: N writes, N commits.
-*/}
+Before writing, our old jobs passed the DataFrame to a shared writer, `write_iceberg`. It did what most loaders do:
+
+1. Lowercase the column names.
+2. Drop the rows without a key, and the duplicated keys.
+3. Cast every column to text (we land raw data as strings, and type it in dbt).
+4. Hand it to awswrangler, which writes Parquet files to S3 and runs an Athena `MERGE`.
+
+None of that needs a DataFrame. But since the rows were in one, each step paid for it.
+
+### Where the memory goes
+
+It's easy to think the DataFrame is the expensive part. It isn't: most of the memory goes to the rows themselves, as Python objects, before pandas even starts.
+
+| Step | What it costs |
+| --- | --- |
+| The list of dicts | The biggest part. Every row is a Python dict (a hash table with an entry per key), and every value is a separate Python object with its own header. |
+| `pd.DataFrame(records)` | Less than it looks. Text columns are `object` columns, arrays of pointers to the same Python strings. But the dicts and the frame are alive at the same time. |
+| Dropping keys and duplicates | Each filter builds a new frame (new arrays of pointers), and `drop_duplicates` hashes every key. |
+| `astype(str).where(notnull)` | This one really allocates: a new Python string for every value that wasn't one, then a second pass to put the NULLs back. |
+| awswrangler | Converts the frame to Arrow to write Parquet, and buffers the files it uploads. |
+
+So the memory of a write grows with the number of rows in it, and fast. That's why our jobs wrote in chunks of 50k rows: not because 50k was a good size, but because it was what fit in the machine. A run of a million rows was twenty writes, and twenty commits to the table.
+
+### What it changes on the way
+
+The DataFrame also changes some of the data:
+
+* **Integers with NULLs become floats.** pandas stores a column of integers with a missing value as `float64`, so `astype(str)` writes `"1.0"` instead of `"1"`. In dbt, we had to cast those columns through a double to get the integer back.
+* **Nested objects become Python reprs.** A dict is written as `"{'type': 'Task'}"`, which is not JSON, so `json_extract` in Athena can't read it.
+* **The first duplicate wins, not the newest.** `drop_duplicates` keeps the first row of each key. If the API returns the same record twice, the version you keep depends on the order of the rows.
+
+None of these are bugs in pandas. They are what happens when you use a tool built for analysis as a container for rows.
 
 ## "But Polars…"
 
