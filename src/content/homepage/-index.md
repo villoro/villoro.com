@@ -1,7 +1,7 @@
 ---
 meta:
   title: "Villoro — Data pipelines. Written plainly."
-  description: ""
+  description: "Notes on data engineering from production: Python, SQL, dbt, DuckDB and AWS, written plainly by Arnau Villoro."
 
 hero:
   h1_lines:

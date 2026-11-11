@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Disallow: /api/*
+Sitemap: https://villoro.com/sitemap-index.xml

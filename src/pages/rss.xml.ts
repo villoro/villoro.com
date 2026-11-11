@@ -19,6 +19,8 @@ export async function GET(context: { site?: URL }) {
       description: post.data.description,
       categories: post.data.tags,
       author: post.data.author,
+      // Keep the trailing slash: this URL is also the item GUID, and changing it
+      // makes feed readers show every old post as new.
       link: `/blog/${post.data.slug || post.id}/`,
     })),
     customData: `<language>en</language>`,

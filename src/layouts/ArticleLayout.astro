@@ -43,6 +43,7 @@ interface Props {
   publishedTime?: string;
   modifiedTime?: string;
   author?: string;
+  jsonLd?: Record<string, unknown>;
 
   // Post metadata (for hero)
   category: string;
@@ -71,6 +72,7 @@ const {
   publishedTime,
   modifiedTime,
   author,
+  jsonLd,
   category,
   catName,
   catColor,
@@ -123,6 +125,7 @@ if (image) {
   publishedTime={publishedTime}
   modifiedTime={modifiedTime}
   author={author}
+  jsonLd={jsonLd}
 >
   {heroPreloadSrcset && (
     <link

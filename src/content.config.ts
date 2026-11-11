@@ -1,6 +1,7 @@
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "zod";
+import config from "./config/config.json";
 
 const blogCollection = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
@@ -16,7 +17,7 @@ const blogCollection = defineCollection({
     imageAlt: z.string().optional(),
     readingTime: z.number().int().positive().optional(),
     slug: z.string().optional(),
-    author: z.string().default("Admin"),
+    author: z.string().default(config.metadata.meta_author),
     category: z.string().default("Others"),
     tags: z.array(z.string()).default(["Others"]),
     draft: z.boolean().optional(),

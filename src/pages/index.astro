@@ -8,6 +8,7 @@ import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { readingTimeForPost } from "@/lib/utils/readingTime";
 import config from "@/config/config.json";
+import social from "@/config/social.json";
 import { getCollection } from "astro:content";
 import { getImage } from "astro:assets";
 import { resolveImage } from "@/lib/utils/blogImages";
@@ -66,9 +67,22 @@ const latestDateISO = latestPost?.data?.date
 
 const getReadTime = readingTimeForPost;
 
+
+const siteUrl = config.site.base_url;
+const jsonLd = [
+  { "@context": "https://schema.org", "@type": "WebSite", name: config.site.title, url: siteUrl },
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: config.metadata.meta_author,
+    url: siteUrl,
+    jobTitle: "Data Engineer",
+    sameAs: social.main.map((s) => s.link).filter((l) => !l.startsWith("mailto:")),
+  },
+];
 ---
 
-<BaseRedesign title={hp.meta.title}>
+<BaseRedesign title={hp.meta.title} description={hp.meta.description} jsonLd={jsonLd}>
   {heroPreloadSrcset && (
     <link
       slot="head"
