@@ -131,7 +131,7 @@ write_records(
 )
 ```
 
-<Accordion client:load title="The page and the text, in code">
+<Accordion title="The page and the text, in code">
 
 ```python
 def page_table(rows, as_snake_case=True):
@@ -257,7 +257,7 @@ Before a merge, the staged rows need one row per key. We used to deduplicate eve
 > [!success] Fix: count first
 > Count the repeated keys, reading only the key columns, which is cheap. If there are none, skip it. If there are, delete only the extra rows instead of rewriting the table. Locally, on 1M rows of 200 columns, it went from **13 s to 0.1 s**.
 
-<Accordion client:load title="The deduplication, in code">
+<Accordion title="The deduplication, in code">
 
 The count reads only the key column, so it's cheap even on a wide table:
 
