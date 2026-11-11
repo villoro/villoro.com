@@ -61,7 +61,7 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 
 ## PR 5. Search without React, drop React
 
-`SearchModal client:idle` in `BaseRedesign` is the last island: the shortcodes are `.astro` components since v3.2.32 and `react-icons` is gone. Because of it **every page downloads `client.*.js`, 213 KB (React + ReactDOM)**, for a modal most visitors never open.
+`SearchModal client:idle` in `BaseRedesign` is the last island: the shortcodes are `.astro` components since v3.2.34 and `react-icons` is gone. Because of it **every page downloads `client.*.js`, 213 KB (React + ReactDOM)**, for a modal most visitors never open.
 
 - Rewrite `SearchModal.tsx` + `SearchResult.tsx` (389 lines) as one `.astro` component with a `<dialog>` and a plain `<script>`. Keep the behaviour: lazy fetch of `/search.json` on first open, keyboard shortcut, arrow-key navigation, highlighted matches.
 - Load the script **on first open** (dynamic `import()` from the search trigger), not on idle.
