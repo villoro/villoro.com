@@ -22,32 +22,29 @@ Reference draft (not to publish): 9999-no-dataframes.mdx.
 TODO before release: hero image (16:9 jpg in src/images/blog/), date, slug check.
 */}
 
+> [!info] Part two
+> This post continues <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>, where we moved our database extractions to DuckDB. There, DuckDB reads the database itself and the rows never reach Python. This one is about the other sources: APIs, SDKs and anything else where the data reaches Python as a list of dicts (or something like it) at some point. The rows have to go through Python there, and this post is about what they should look like when they do.
+
 ## ETL is over, and so is the DataFrame in the middle
 
-Open almost any extraction job written in Python, and somewhere in the middle you'll find these three lines:
+Most extraction jobs that read an API or an SDK have these three lines somewhere:
 
 ```python
 records = api.get_all("Task")       # a list of dicts
-df = pd.DataFrame(records)          # because that's what you do
-wr.athena.to_iceberg(df, ...)       # because that's what the writer takes
+df = pd.DataFrame(records)
+wr.athena.to_iceberg(df, ...)
 ```
 
-The middle line made sense once. In the old **ETL** world, the job extracted the data, **transformed** it, and loaded the result. The transformation happened in Python, and pandas was the tool for it: joins, aggregations, cleaning, all in a DataFrame before the load.
+This made sense with **ETL**. The job extracted the data, transformed it, and loaded the result, and the transformation happened in Python. pandas was the natural tool for that: joins, aggregations and cleaning, all before loading.
 
-That's not how most of us work anymore. Modern data engineering is **ELT**: extract the raw data, load it as it is, and transform it later, in the warehouse or the lake, in SQL, with dbt or something like it. The T moved out of the job.
+Today most of us do **ELT** instead. The job extracts the raw data and loads it as it is, and the transformation happens later, in SQL, with dbt or something similar. The T moved out of the job.
 
-But the DataFrame stayed. In an ELT pipeline, the E and the L don't transform anything: they read rows and write them. So the DataFrame in the middle has **no job left**. It doesn't join, it doesn't aggregate, it doesn't model. It's just the bag the rows travel in, because "that's how you handle data in Python".
+![ETL vs ELT](../../images/posts/2026/0075-etl-vs-elt.svg)
 
-And it's an expensive bag. It costs several times the memory of the data it holds, it forces the job to write in small chunks, and it quietly changes the data on the way: integers become `1.0`, nested objects become Python reprs instead of JSON.
+The DataFrame, however, stayed in most jobs. In an ELT pipeline it has nothing left to transform, so it only carries the rows from the extract to the load. And that is not free: it uses much more memory than the data it holds, which forces the job to write in small chunks, and it changes some values on the way (integers with NULLs become `1.0`, nested objects become Python reprs instead of JSON).
 
 > [!abstract]
-> **You don't need DataFrames for data engineering**: not pandas, not Polars. The T belongs in SQL, and the EL only moves rows, which Arrow and DuckDB do better without a frame in the middle. When we dropped it from our extraction jobs:
-> * Each row costs about **5x less memory** to load (2 KB instead of 11 KB).
-> * Our biggest Salesforce jobs use **half the memory**, and a wide table that got pandas **killed** on a 4 GB task now fits.
-> * A run is **one commit**, instead of one per chunk.
-> * The data lands **as it came**: no `1.0`, real JSON.
-
-This is a sequel to <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>, where we moved our database extractions to DuckDB. There, DuckDB reads the source database itself, and the rows never touch Python. An API is different: Python is what calls it, so the rows *have* to pass through Python. The question this post answers is what shape they should have while they do. The answer is not a DataFrame.
+> I think **you don't need DataFrames for data engineering**, neither pandas nor Polars. The T belongs in SQL, and the E and the L only move rows, which Arrow and DuckDB do well without a frame in the middle. In this post I show how we removed it from our extraction jobs, what we got, and what we learned on the way.
 
 ## What the bag costs
 
