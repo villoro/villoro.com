@@ -343,6 +343,12 @@ None of this means DataFrames are bad. I still use them every week, in notebooks
 > [!question] "But my ML library needs a DataFrame"
 > Then build it where the library needs it, not before. Read the data as Arrow (DuckDB, for example, returns query results as Arrow), and convert it to pandas or Polars right before calling the library. From Arrow that conversion is cheap, so the DataFrame lives for one function call instead of carrying the data through the whole pipeline.
 
+### And Spark?
+
+Spark is the other DataFrame that shows up in data engineering, and my answer is the same as in the previous post. There are genuine cases for it: data that doesn't fit on one machine, or transformations with big joins and aggregations that need to spread the work across many machines. But that point is much further than most people think, and most extraction jobs are nowhere near it. I wrote about where that point is in <FancyLink linkText="When you do need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/#when-you-do-need-spark" dark="true"/>.
+
+And even when you do need it, that's for the T. The E and the L of an API still move rows, and those still don't need a frame.
+
 ## Conclusion
 
 The DataFrame got into our extraction jobs with ETL, when the job did the transformation and pandas was the tool for it. With ELT the transformation moved to SQL, but the DataFrame stayed, and all it did was carry rows from the extract to the load, using several times their memory and changing some values on the way.
