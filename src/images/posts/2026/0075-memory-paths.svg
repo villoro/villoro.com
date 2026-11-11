@@ -1,0 +1,69 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">Peak memory of the two write paths</title>
+  <desc id="d">Same synthetic Salesforce rows. 50k rows: pandas 1.0 GB, Arrow plus DuckDB 0.75 GB. 200k rows: pandas 3.5 GB, Arrow plus DuckDB 1.06 GB. The rows alone as a list of dicts weigh 2.5 GB at 200k; DuckDB holds 90 MB once staged.</desc>
+  <style>
+    .card { fill: #ffffff; }
+    .ttl { fill: #1f2333; }
+    .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .grid { stroke: #e3e6ef; }
+    .axis { stroke: #a6accb; }
+    .pd { fill: #d97706; }
+    .dk { fill: #3a76ff; }
+    .ref { stroke: #6a6e82; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl, .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .grid { stroke: #2c3048; }
+      .axis { stroke: #6a6e82; }
+      .dk { fill: #5b8cff; }
+      .ref { stroke: #9aa0b5; }
+    }
+  </style>
+  <rect width="1600" height="900" rx="24" class="card"/>
+
+  <text x="100" y="80" font-size="40" font-weight="700" class="ttl">Peak memory of one write</text>
+  <text x="100" y="122" font-size="23" class="mut">same Salesforce-like rows (~100 fields), measured as the process's resident memory</text>
+
+  <!-- legend -->
+  <rect x="100" y="160" width="22" height="22" rx="4" class="pd"/>
+  <text x="132" y="179" font-size="22" class="txt">pandas + write_iceberg</text>
+  <rect x="440" y="160" width="22" height="22" rx="4" class="dk"/>
+  <text x="472" y="179" font-size="22" class="txt">Arrow pages + DuckDB</text>
+
+  <!-- y axis: 0..4 GB, 0 at y=780, 1 GB = 130 px -->
+  <g font-size="19" class="mut" text-anchor="end">
+    <text x="170" y="786">0</text><text x="170" y="656">1 GB</text><text x="170" y="526">2 GB</text><text x="170" y="396">3 GB</text><text x="170" y="266">4 GB</text>
+  </g>
+  <g class="grid" stroke-width="1.5">
+    <line x1="190" y1="650" x2="1500" y2="650"/><line x1="190" y1="520" x2="1500" y2="520"/>
+    <line x1="190" y1="390" x2="1500" y2="390"/><line x1="190" y1="260" x2="1500" y2="260"/>
+  </g>
+  <line x1="190" y1="780" x2="1500" y2="780" class="axis" stroke-width="2"/>
+
+  <!-- 50k: pandas 1.0 GB (130), duckdb 0.75 (98) -->
+  <path d="M330 780 V654 a4 4 0 0 1 4 -4 H426 a4 4 0 0 1 4 4 V780 Z" class="pd"/>
+  <path d="M434 780 V686 a4 4 0 0 1 4 -4 H530 a4 4 0 0 1 4 4 V780 Z" class="dk"/>
+  <text x="380" y="636" text-anchor="middle" font-size="22" font-weight="600" class="txt">1.0 GB</text>
+  <text x="484" y="668" text-anchor="middle" font-size="22" font-weight="600" class="txt">0.75 GB</text>
+  <text x="432" y="822" text-anchor="middle" font-size="24" font-weight="600" class="txt">50k rows</text>
+
+  <!-- 200k: pandas 3.55 (461), duckdb 1.06 (138) -->
+  <path d="M900 780 V323 a4 4 0 0 1 4 -4 H996 a4 4 0 0 1 4 4 V780 Z" class="pd"/>
+  <path d="M1004 780 V646 a4 4 0 0 1 4 -4 H1100 a4 4 0 0 1 4 4 V780 Z" class="dk"/>
+  <text x="950" y="305" text-anchor="middle" font-size="22" font-weight="600" class="txt">3.5 GB</text>
+  <text x="1054" y="628" text-anchor="middle" font-size="22" font-weight="600" class="txt">1.06 GB</text>
+  <text x="1002" y="822" text-anchor="middle" font-size="24" font-weight="600" class="txt">200k rows</text>
+
+  <!-- reference: the list of dicts alone at 200k = 2.5 GB (y = 780-325 = 455) -->
+  <line x1="860" y1="455" x2="1140" y2="455" class="ref" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="1160" y="448" font-size="20" class="txt">the rows as dicts alone: 2.5 GB</text>
+  <text x="1160" y="474" font-size="19" class="mut">(12.6 KB a row)</text>
+
+  <!-- annotation for duckdb -->
+  <text x="1160" y="640" font-size="20" class="txt">DuckDB holds 90 MB of it</text>
+  <text x="1160" y="666" font-size="19" class="mut">(0.45 KB a row, compressed)</text>
+
+  <text x="100" y="870" font-size="19" class="mut">pandas holds the whole chunk as dicts and as a DataFrame at once; Arrow + DuckDB holds one page of 10k dicts.</text>
+</svg>

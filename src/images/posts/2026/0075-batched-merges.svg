@@ -1,0 +1,73 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">One merge against merges in batches</title>
+  <desc id="d">One merge of 27M rows into 206M joins all of them at once and fills the 16.9 GiB spill disk in 2.5 minutes. 27 merges of 1M, oldest first, each spill about 0.1 GiB and take 10 min 38 s in total. If a run dies after batch 2, the table is complete up to batch 2's last value, and the next incremental run starts right there.</desc>
+  <style>
+    .card { fill: #ffffff; }
+    .ttl, .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .box { fill: #f3f5fb; stroke: #a6accb; }
+    .bad { fill: #fde4e4; stroke: #c2410c; }
+    .badt { fill: #9a2f08; }
+    .b { fill: #3a76ff; }
+    .bl { fill: #c9d8ff; }
+    .gln { stroke: #6a6e82; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl, .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .box { fill: #23263a; stroke: #6a6e82; }
+      .bad { fill: #3d1d16; stroke: #f07a4a; }
+      .badt { fill: #ffb59a; }
+      .b { fill: #5b8cff; }
+      .bl { fill: #2c3a63; }
+      .gln { stroke: #9aa0b5; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M1 1 L10 6 L1 11 z" fill="#6a6e82"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="900" rx="24" class="card"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="40" font-weight="700" class="ttl">A merge costs what it joins</text>
+  <text x="800" y="112" text-anchor="middle" font-size="23" class="mut">moodle backfill: 27M staged rows into a 206M-row table, on an 8 GB task with a 16.9 GiB spill disk</text>
+
+  <!-- one merge -->
+  <text x="80" y="190" font-size="24" font-weight="700" class="txt">One merge</text>
+  <rect x="80" y="215" width="560" height="90" rx="12" class="bad" stroke-width="2"/>
+  <text x="360" y="258" text-anchor="middle" font-size="22" font-weight="600" class="badt">27M rows joined at once</text>
+  <text x="360" y="286" text-anchor="middle" font-size="19" class="badt">memory full, then the whole spill disk</text>
+  <line x1="645" y1="260" x2="745" y2="260" class="gln" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="760" y="252" font-size="24" font-weight="700" class="badt">failed after 2.5 min</text>
+  <text x="760" y="282" font-size="20" class="mut">16.9 / 16.9 GiB spilled · nothing committed</text>
+
+  <!-- batches -->
+  <text x="80" y="400" font-size="24" font-weight="700" class="txt">27 merges of 1M, oldest first by the incremental column</text>
+  <g>
+    <rect x="80" y="425" width="46" height="70" rx="6" class="b"/><rect x="132" y="425" width="46" height="70" rx="6" class="b"/>
+    <rect x="184" y="425" width="46" height="70" rx="6" class="b"/><rect x="236" y="425" width="46" height="70" rx="6" class="b"/>
+    <rect x="288" y="425" width="46" height="70" rx="6" class="b"/><rect x="340" y="425" width="46" height="70" rx="6" class="b"/>
+    <rect x="392" y="425" width="46" height="70" rx="6" class="b"/><rect x="444" y="425" width="46" height="70" rx="6" class="b"/>
+    <text x="520" y="468" font-size="26" class="mut">…</text>
+    <rect x="560" y="425" width="46" height="70" rx="6" class="b"/>
+  </g>
+  <text x="80" y="530" font-size="19" class="mut">older</text>
+  <text x="606" y="530" text-anchor="end" font-size="19" class="mut">newer</text>
+  <line x1="645" y1="460" x2="745" y2="460" class="gln" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="760" y="452" font-size="24" font-weight="700" class="txt">10 min 38 s in total</text>
+  <text x="760" y="482" font-size="20" class="mut">about 23 s and 0.1 GiB spilled per batch · one commit each</text>
+
+  <!-- crash safety -->
+  <rect x="80" y="590" width="1440" height="230" rx="16" class="box" stroke-width="2"/>
+  <text x="110" y="635" font-size="23" font-weight="700" class="txt">If the run dies after batch 2</text>
+  <rect x="110" y="660" width="46" height="60" rx="6" class="b"/><rect x="162" y="660" width="46" height="60" rx="6" class="b"/>
+  <rect x="214" y="660" width="46" height="60" rx="6" class="bl"/><rect x="266" y="660" width="46" height="60" rx="6" class="bl"/>
+  <rect x="318" y="660" width="46" height="60" rx="6" class="bl"/>
+  <line x1="211" y1="645" x2="211" y2="740" stroke="#c2410c" stroke-width="3" stroke-dasharray="6 5"/>
+  <text x="211" y="770" text-anchor="middle" font-size="19" class="mut">the table's highest value</text>
+  <text x="420" y="680" font-size="21" class="txt">Oldest first: everything below the table's highest value is written,</text>
+  <text x="420" y="710" font-size="21" class="txt">so the next run, which starts there (with <tspan font-family="monospace">&gt;=</tspan>), misses nothing.</text>
+  <text x="420" y="750" font-size="21" class="txt">Rows tied on the last value always share a batch: a batch never ends mid-second.</text>
+  <text x="420" y="790" font-size="19" class="mut">In any other order, a crash leaves gaps below the highest value that no run reads again.</text>
+</svg>
