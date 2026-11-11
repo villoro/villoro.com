@@ -22,6 +22,8 @@ Reference draft (not to publish): 9999-no-dataframes.mdx.
 TODO before release: hero image (16:9 jpg in src/images/blog/), date, slug check.
 */}
 
+<script type="module" src="/js/posts/0075-plots-dataframes.js"></script>
+
 > [!info] Part two
 > This post continues <FancyLink linkText="You Probably Don't Need Spark" url="https://villoro.com/blog/duckdb-instead-of-spark/" dark="true"/>, where we moved our database extractions to DuckDB. There, DuckDB reads the database itself and the rows never reach Python. This one is about the other sources: APIs, SDKs and anything else where the data reaches Python as a list of dicts (or something like it) at some point. The rows have to go through Python there, and this post is about what they should look like when they do.
 
@@ -99,7 +101,7 @@ What the job really needs is a table in a format the writer understands, and tha
 > [!tip] If you want something off the shelf
 > `pa.Table.from_pylist(rows)` is the closest thing to what we do, and it's what I would try first. We didn't use it because it infers the types too, and we wanted to decide ourselves how each value lands as text: integers without `.0`, real JSON for nested objects. That's a few lines of Python, shown in the next section.
 
-## EL without a frame: rows in Arrow, writes in DuckDB
+## `EL` without a frame: rows in Arrow, writes in DuckDB
 
 So we wrote our own loader, `write_records`. It takes the rows as Python has them, a list of dicts or an iterator of pages of dicts, and never builds a frame:
 
@@ -171,30 +173,31 @@ con.unregister("page")
 
 ### The memory, measured
 
-To see the difference without AWS in the way, I ran both paths locally on the same rows: synthetic Salesforce records with about 100 fields, parsed from JSON 2000 at a time, like the real client does. The pandas path goes up to the moment awswrangler would upload; the DuckDB path up to the moment it would write (the details are in the [appendix](#appendix-how-we-measured)).
+To see the difference without AWS in the way, I ran both loaders locally on the same rows: synthetic Salesforce records with about 100 fields, parsed from JSON 2000 at a time, like the real client does. Both stop right before sending anything to AWS, so the numbers are only the memory of preparing the rows (the details are in the [appendix](#appendix-how-we-measured)).
 
 | Rows in one write | 50k | 200k | 500k |
 | --- | --- | --- | --- |
-| pandas, peak memory | 0.74 GB | 2.45 GB | - |
+| pandas, peak memory | 0.74 GB | 2.45 GB | 5.64 GB |
 | Arrow + DuckDB, peak memory | 0.69 GB | 1.01 GB | 1.57 GB |
 
-![Peak memory of one write](../../images/posts/2026/0075-memory-paths.svg)
+<canvas id="memory-by-rows" style="width:100%;height:350px;"></canvas>
 
 With small chunks, both cost about the same. The difference is how fast they grow:
 
-* **pandas**: about **11 KB more for every row** in the write. Each row is alive as a dict and in the DataFrame at the same time.
+* **pandas**: about **11 KB more for every row** in the write. Each row is alive as a dict and in the DataFrame at the same time. At 500k rows it needs 5.6 GB: more than a 4 GB task has.
 * **Arrow + DuckDB**: about **2 KB more for every row**. Python only holds one page of dicts, and DuckDB keeps the staged rows in about 0.5 KB each.
 
-That's what changes the job. With pandas, the size of a write is limited by the machine, so a big run is many writes. With Arrow and DuckDB, a whole run fits in one.
+> [!success] About 5x less memory per row
+> Every extra row costs pandas about 11 KB, and Arrow + DuckDB about 2 KB. That's what changes the job: with pandas, the size of a write is limited by the machine, so a big run is many writes. With Arrow and DuckDB, a whole run fits in one.
 
 ### On the real jobs
 
-Then the same comparison on ECS, with the real Salesforce API, one run at a time so that Salesforce was equally fast for both:
+Then the same comparison on ECS, with the real Salesforce API (I explained how we extract from it in <FancyLink linkText="Extracting data from Salesforce with Python" url="https://villoro.com/blog/extracting-data-salesforce-python/" dark="true"/>), one run at a time so that Salesforce was equally fast for both:
 
 | Run | pandas | Arrow + DuckDB |
 | --- | --- | --- |
-| `Task`, 10 days (978k rows), merged into a table of 36M, on 8 GB | 6.0 GB peak, 5 merges | **3.2 GB** peak, **1 merge** (17 s) |
-| `Opportunity` (wide rows), 90 days (1.74M rows), on 4 GB | **killed** (out of memory) after 2 chunks | 3.7 GB peak, **1 write** (62 s) |
+| `Task`, 10 days (978k rows), merged into a table of 36M, on 8 GB | 6.0 GB peak, 5 merges | **3.2 GB** peak, **1 merge** |
+| `Opportunity` (wide rows), 90 days (1.74M rows), on 4 GB | **killed** (out of memory) after 2 chunks | 3.7 GB peak, **1 write** |
 
 > [!success] The short version
 > **Half the memory** on our biggest jobs, a wide table that now **fits on a smaller machine**, **one commit** per run instead of one per chunk, and the data lands **as it came**: no `.0`, real JSON.
