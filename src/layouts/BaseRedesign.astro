@@ -107,8 +107,12 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
       </>
     )}
 
-    {/* Fonts are self-hosted (src/styles/fonts.css). Preload only what the first paint needs. */}
+    {/* Fonts are self-hosted (src/styles/fonts.css). Preload what the first paint needs:
+        Heebo for the body, and Signika for headings. Signika is `font-display: optional`,
+        so without the preload it misses its short window on a first visit and every
+        heading stays in the fallback font. */}
     <link rel="preload" as="font" type="font/woff2" href="/fonts/heebo-latin.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/signika-latin.woff2" crossorigin />
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <title>{plainify(meta_title ? meta_title : title ? title : config.site.title)}</title>
