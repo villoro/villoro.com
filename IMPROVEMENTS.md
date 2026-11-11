@@ -20,7 +20,7 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 
 | PR | Topic | Goal | Effort | Impact | Who |
 | --- | :--- | :--- | --- | --- | :--- |
-| 1 | Fix wrong metadata in every post | SEO | Low | High | subagent |
+| 1 | Metadata leftovers | SEO | Low | Low | subagent |
 | 3 | Self-host the remaining fonts | Speed | Medium | High | subagent |
 | 4 | Shortcodes to `.astro` | Speed, maintenance | Medium | Medium | subagent |
 | 5 | Search without React, drop React | Speed, maintenance | Medium–High | High | senior |
@@ -37,22 +37,13 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 
 ---
 
-## PR 1. Fix wrong metadata in every post
+## PR 1. Metadata leftovers
 
-These are bugs, not polish. They are in the HTML of every published post today.
+The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas, home description, `og:site_name`, home `Person`/`WebSite`, `robots.txt`). What is left is small:
 
-- **Author is "Admin".** The blog schema defaults `author` to `"Admin"` (`src/content.config.ts`) and only one post sets it. So every post ships `<meta property="article:author" content="Admin">` and `"author":{"name":"Admin"}` in its JSON-LD. Change the default to `config.metadata.meta_author`.
-- **JSON-LD is outside the document.** `src/pages/blog/[single].astro` renders the `<script type="application/ld+json">` before `<ArticleLayout>`, so it lands between `<!DOCTYPE html>` and `<html>`. Pass it through the `head` slot of `BaseRedesign` instead.
-- **JSON-LD image is a 404.** It points to `https://villoro.com/images/blog/<file>.jpg`, which stopped being served when the images moved to `src/images` (#342). Reuse the URL `BaseRedesign` already resolves for `og:image`.
-- **Titles and descriptions end with a newline.** `og:title`, `twitter:title` and every `description` meta carry a trailing `\n` from the YAML block scalars. Trim in `plainify` (or at the call sites in `BaseRedesign`).
-- **`og:title` and `<title>` disagree with the JSON-LD headline.** The first two use `meta_title`, the headline uses `title`. Pick one on purpose (suggestion: `meta_title` for `<title>`/OG, `title` for the headline) and write the rule in `AGENTS.md`.
-- **Home page description is "Villoro's personal website".** That is the fallback `config.metadata.meta_description`, also used by the 404 and the RSS channel. Write a real one in `src/content/homepage/-index.md` (`meta.description` exists in the schema and is empty).
-- **No `og:site_name`, no `Person`/`WebSite` JSON-LD on the home page.** Add them in `BaseRedesign` / `index.astro`. The `Person` entry should list the social links from `social.json` as `sameAs`.
-- **`robots.txt`** has a `Disallow: /api/*` for a path that doesn't exist and doesn't reference the sitemap. Add `Sitemap: https://villoro.com/sitemap-index.xml`, drop the rule.
-- **Trailing-slash mismatch.** Canonicals have no trailing slash (`trailing_slash: false`), but the RSS feed and 42 in-post `FancyLink`s point to `https://villoro.com/blog/<slug>/`. Fix the RSS `link` in `src/pages/rss.xml.ts`; make `FancyLink` strip the slash for `villoro.com` URLs rather than editing 42 posts. Update the example in `AGENTS.md`, which teaches the slashed form.
-- **Category/tag descriptions are duplicated** across their paginated pages ("All posts in the 🐍 Python category."). Harmless because pages 2+ are `noindex`, but page 1 deserves a real sentence: add an optional `description` to `categoryMetadata.ts`.
-
-**Check:** PR 8 turns each of these into an assertion. Until then, grep the built HTML of one post.
+- **`og:title` and `<title>` use `meta_title`, the JSON-LD headline uses `title`.** Decide whether that is intended and write the rule in `AGENTS.md`.
+- **Trailing-slash links.** Canonicals have no trailing slash, but 42 in-post `FancyLink`s point to `https://villoro.com/blog/<slug>/`. Handled in PR 4 (FancyLink strips it). The RSS feed keeps the slash **on purpose**: the link is also the item GUID, and changing it makes feed readers show every old post as new.
+- **Category/tag descriptions are generic** ("All posts in the 🐍 Python category."). Add an optional `description` to `categoryMetadata.ts`.
 
 ## PR 3. Self-host the remaining fonts
 
@@ -123,7 +114,7 @@ First half of removing React. Nine shortcodes are auto-imported; usage across th
 
 ## PR 8. Tests on the built site
 
-There are no tests. For a static site the cheapest useful ones are **data-quality checks on the output**, the same idea as dbt tests on a model: build once, then assert things about `dist/`. All the bugs in PR 1 would have been caught by them.
+There are no tests. For a static site the cheapest useful ones are **data-quality checks on the output**, the same idea as dbt tests on a model: build once, then assert things about `dist/`. The metadata bugs fixed in November 2026 (author "Admin", JSON-LD outside `<html>`, a 404 image URL) would all have been caught by them.
 
 One script (`node --test`, no new dependency) that walks `dist/**/*.html` and asserts:
 
