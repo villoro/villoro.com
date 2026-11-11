@@ -122,7 +122,7 @@ Do this PR next, so the rest of the list is developed against it.
 - **Unknown frontmatter keys pass silently.** The schema is a plain `z.object`, so a typo like `update_date:` is ignored. Use `z.strictObject`. The memory of past sessions already records confusion about snake_case keys; `imageAlt` and `readingTime` are the two camelCase leftovers, rename them.
 - **`category` is a free string** defaulting to `"Others"`, which isn't a key in `categoryMetadata.ts` (the key is `others`). Make it `z.enum` over the keys of `categoryMetadata` so a wrong category fails the build instead of rendering a grey chip.
 - **The blog schema serves two things.** `src/content/blog/-index.md` (the listing's hero copy) lives in the same collection as the posts, so the post schema carries `hero` and `section` fields that no post uses, and every query has to filter the `-index` entry out by id. Move it to its own small collection. In the homepage schema, `banner`, `slogan` and `blog` look like template leftovers: confirm they have no consumer and delete.
-- **`getSinglePage(collectionName: string)`** casts everything to `"blog"`, and `similarItems` is typed `any`. Type them properly; `rss.xml.ts` and `search.json.ts` re-implement the draft filter and should call the same helper.
+- **`getSinglePage(collectionName: string)`** casts everything to `"blog"`. Type it properly; `rss.xml.ts` and `search.json.ts` re-implement the draft filter and should call the same helper.
 - **A `npm run new-post` script** that creates `9999-<slug>.mdx` with the full frontmatter would remove the copy-paste step. Optional.
 
 ## PR 11. Major dependency upgrades
