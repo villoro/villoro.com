@@ -365,8 +365,24 @@ If you've removed DataFrames from your jobs too, or found a case in production w
 
 ## Appendix: how we measured
 
-{/*
-The local benchmark (synthetic Salesforce-like rows, parsed from JSON 2000 at a time, RSS
-sampled every 5 ms, what each path includes and leaves out). The ECS runs (Fargate M and L,
-copies of production tables in a scratch database, one run at a time). Caveats.
-*/}
+### The local benchmark
+
+The [memory comparison](#the-memory-measured) ran on my laptop, so that AWS and the network wouldn't add noise.
+
+* **The rows** are synthetic, only for this local test (the ECS runs below use the real data). They are shaped like Salesforce `Task` records: about 100 fields (40 text fields, a third of them NULL; 30 numbers, half of them NULL; 15 booleans; 12 dates as ISO text) plus two nested objects, like the `attributes` the API adds to every record. They are parsed from JSON 2000 at a time, like the responses of the real client, so the key strings are shared the same way.
+* **The pandas path** does what our old writer did: `pd.DataFrame`, drop the rows without a key, `drop_duplicates`, `astype(str).where(notnull)`, and the conversion to Arrow that awswrangler does before writing. It gets the whole write as one list of dicts, as the old jobs did.
+* **The Arrow + DuckDB path** runs our loader's staging: pages of 10k rows, each converted to Arrow and added to the DuckDB temp table, then the duplicates check.
+* **Neither** includes sending anything to AWS, or the merge.
+* **Memory** is the peak resident memory of the process, sampled every 5 ms, each path in a fresh Python process.
+
+### The ECS runs
+
+* **Where:** AWS Fargate tasks of 4 GB (2 vCPU) and 8 GB (4 vCPU), the sizes our jobs run on. DuckDB gets 70% of the task's memory, and the task has about 20 GiB of disk for the spill.
+* **What:** the real Salesforce export and the real moodle export, reading real data from the real sources and writing to copies of the production tables in a scratch database, so the merges ran against tables of the real size (36M and 206M rows).
+* **How:** one run at a time, so that Salesforce answered at the same speed for both versions. Memory is the peak of the whole task, as reported in the job's logs.
+
+### Caveats
+
+* **The local benchmark uses synthetic rows.** Its absolute numbers depend on their shape: wider rows or longer texts move both lines up. What carries over is the difference in how fast each path grows. The ECS numbers come from real data.
+* **Resident memory is noisy.** Python's allocator keeps memory it has freed, so part of what the Arrow path shows is pages already gone, not live data. It makes the comparison a bit harder on our side, not easier.
+* **The ECS peaks are for the whole task**, including everything else the job does, not only the write.
