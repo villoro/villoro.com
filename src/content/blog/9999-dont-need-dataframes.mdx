@@ -206,16 +206,77 @@ The runs took about the same time with both. That's expected: Salesforce serves 
 
 ## What owning the load taught us
 
-{/*
-Dropping awswrangler means the write logic is ours. Short problem/fix callout pairs:
-- A merge costs what it joins (the one with its table and diagram): batches of 1M, oldest first,
-  ties together; "I was wrong about the disk" correction of the previous post.
-- Check for duplicates before deduplicating (7.5 min -> 0).
-- Backfill on a column that never changes (CreatedDate, not SystemModstamp).
-- Chunk size only costs memory (Salesforce serves 2000 rows a call).
-- Look at the whole memory curve before calling a leak.
-- The spill disk is part of the memory budget.
-*/}
+Dropping awswrangler means the write is our code now: the merge, the deduplication, the commits. And running DuckDB inside the job means its memory and its disk are our problem too. We found most of these lessons when we pushed the new loader: wider tables, smaller machines, and backfills of millions of rows into tables of tens of millions.
+
+### A merge costs what it joins, not the size of the table
+
+This is the one that took us longest to understand.
+
+> [!failure] Problem: a backfill that didn't fit, whatever we tried
+> A backfill of 5 months of Salesforce `Task` is 3.8M rows, merged into a table of 36M. Reading it was fine on a 4 GB task, but the `MERGE` wasn't: DuckDB spilled 9 GiB to disk and still ran out of memory. Giving DuckDB a smaller share of the memory, so it would spill earlier, only made it fail sooner.
+
+We assumed the size of the table was the problem. It wasn't: a merge of 978k rows into the same 36M took 17 seconds. As far as we can tell from these runs, the memory of a merge grows with **the rows you merge** (and how wide they are), not with the size of the table.
+
+> [!success] Fix: merge in batches
+> Split the staged rows in batches of 1M (`max_merge_rows`) and merge them one at a time, each one its own commit. The same 3.8M rows on the same 4 GB task: **4 merges, 6 minutes**, under 1 GiB spilled each.
+
+This also corrects the previous post. There, a moodle backfill failed after filling the disk, and I wrote that this was where one machine stops (the section "How much disk: where one machine stops"). It wasn't the machine, it was the single merge. The same test now, 27M rows into a table of 206M on an 8 GB task:
+
+| Write | Result |
+| --- | --- |
+| One merge | Failed after 2.5 min: memory full, and the whole spill disk (16.9 GiB) |
+| 27 merges of 1M | **10 min 38 s**, about 23 s each, 0.1 GiB spilled |
+
+![One merge against merges in batches](../../images/posts/2026/0075-batched-merges.svg)
+
+Batches have a risk: a run can now die halfway, with some batches committed and others not. Two details make that safe:
+
+* **Oldest first.** An incremental run starts where the table ends (from its highest `SystemModstamp`). If the batches go oldest first, a run that dies after batch 2 leaves the table complete up to that point, and the next run continues from there. In any other order, a crash leaves gaps below the highest value that no run would read again.
+* **Ties stay together.** A batch never ends in the middle of a value: if 30 rows share the same second, they go in the same batch. Otherwise, a job that reads `> last_value` would skip the rows of that second that weren't written.
+
+### Check for duplicates before removing them
+
+Before a merge, the staged rows need one row per key. We used to deduplicate every time, which rewrote the whole staged table.
+
+> [!failure] Problem: 7.5 minutes to remove nothing
+> On 1.74M wide `Opportunity` rows, the deduplication took 7.5 minutes, and almost always found nothing to remove.
+
+> [!success] Fix: count first
+> Count the repeated keys, reading only the key columns, which is cheap. If there are none, skip it. If there are, delete only the extra rows instead of rewriting the table. Locally, on 1M rows of 200 columns, it went from **13 s to 0.1 s**.
+
+### Backfill on a column that never changes
+
+The natural way to backfill an incremental table is to run it with an older `min_ts`, in windows on the same column it uses every day (`SystemModstamp` in Salesforce).
+
+> [!failure] Problem: a window that moves while you read it
+> `SystemModstamp` changes every time a row changes. A row edited while the backfill reads it moves to the end of the window, so it's read later or not at all, and the progress in the logs looks further along than it really is.
+
+> [!success] Fix: use the creation date
+> A backfill reads the rows **created** in each window (`CreatedDate`, which never changes), and merges them as usual, so the newest version still wins. 5 months of `Task` per run on a 4 GB task: 64 minutes reading, 6 minutes merging.
+
+### Chunk size only costs memory
+
+> [!failure] Problem: a wide table didn't fit before writing anything
+> Our Salesforce reader collected big chunks of rows before handing them to the loader. For `Opportunity`, with hundreds of columns, one chunk of dicts was already too much for a 4 GB task.
+
+> [!success] Fix: smaller chunks
+> Salesforce serves 2000 rows per call whatever chunk you ask for, so a bigger chunk is not faster: it only keeps more dicts in Python. With chunks of 10k rows, `Opportunity` fits. When the loader streams, use the smallest chunk that doesn't add calls.
+
+### Look at the whole memory curve
+
+While testing a long backfill, I looked at the first pages, saw the process grow about 18 MB per page, multiplied by the number of pages, and thought we had a memory leak. We didn't: the curve flattened at about 1.5–1.7 GB. It was Python's allocator warming up, plus DuckDB's staged rows, which spill to disk when needed.
+
+> [!tip]
+> Log the memory per page (DuckDB's `duckdb_memory()` gives what it holds and what it spilled) and look at the whole run before calling it a leak.
+
+### The spill disk is part of the memory budget
+
+Spilling to disk is what lets DuckDB work on small machines. But the disk is limited too (about 20 GiB on our tasks), and everything that spills shares it: the staged rows of every table running at once, a deduplication, a merge.
+
+Our old moodle backfill is a good example. It read the same table for three brands at the same time: two of them failed while deduplicating (the old version rewrote the staged table), and the third in its single merge. The errors said "out of memory", but the message mentioned `max_temp_directory_size`: it was the disk.
+
+> [!tip]
+> Count what spills at the same time, as you would with memory. With the cheaper deduplication and the batched merges, one big table at a time fits comfortably. For more, use time windows, or a task with more disk.
 
 ## Where DataFrames still belong: the notebook
 
