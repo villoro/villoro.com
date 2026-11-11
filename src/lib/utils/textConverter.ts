@@ -36,7 +36,7 @@ export const plainify = (content: string): string => {
   const parseMarkdown: any = marked.parse(content);
   const filterBrackets = parseMarkdown.replace(/<\/?[^>]+(>|$)/gm, "");
   const filterSpaces = filterBrackets.replace(/[\r\n]\s*[\r\n]/gm, "");
-  return htmlEntityDecoder(filterSpaces);
+  return htmlEntityDecoder(filterSpaces).trim();
 };
 
 // strip entities for plainify

@@ -35,7 +35,7 @@
 
   "metadata": {
     "meta_author": "Arnau Villoro",
-    "meta_description": "Villoro's personal website"
+    "meta_description": "Notes on data engineering from production: Python, SQL, dbt, DuckDB and AWS, written plainly by Arnau Villoro."
   },
 
   "footer": {

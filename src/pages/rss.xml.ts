@@ -19,7 +19,7 @@ export async function GET(context: { site?: URL }) {
       description: post.data.description,
       categories: post.data.tags,
       author: post.data.author,
-      link: `/blog/${post.data.slug || post.id}/`,
+      link: `/blog/${post.data.slug || post.id}`,
     })),
     customData: `<language>en</language>`,
   });
