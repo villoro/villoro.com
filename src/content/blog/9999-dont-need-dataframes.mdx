@@ -107,11 +107,16 @@ So we wrote our own loader, `write_records`. It takes the rows as Python has the
 
 1. **Each page of rows becomes an Arrow table.** One pass per column: each value is turned into text the way we want it, straight into an Arrow array. Arrow keeps a column of strings as one buffer of bytes, without a Python object per value.
 2. **DuckDB adds the page to a temp table.** It reads the Arrow table in place and copies the rows into its own storage, which spills to disk when it goes past its memory limit. Then the page, and the dicts behind it, are freed.
-3. **When every page is staged, DuckDB writes the Iceberg table**, through the Glue catalog: create, append, overwrite or merge. It's the same engine as in the previous post, so the deduplication, the merge and the metadata columns come for free. The whole run is **one commit**, or a few on a very big merge (more on that later).
+3. **When every page is staged, DuckDB writes the Iceberg table**, through the Glue catalog: create, append, overwrite or merge. It's the same engine as in the previous post, so the deduplication, the merge and the metadata columns come for free.
 
-![Where the rows go, before and after](../../images/posts/2026/0075-rows-path.svg)
+The rows go in and out in different sizes, because each side has a different limit:
 
-At any moment, Python only holds one page of rows. Everything else is in DuckDB.
+* **`In`: small pages of 10k rows.** The limit here is Python's memory: a page is a list of dicts, the expensive part, so it should be small. Since a page only goes into the temp table, a small one costs nothing extra.
+* **`Out`: big merges of 1M rows.** The limit here is the merge: it needs memory for every row it merges at once. Before merging, the staged rows are deduplicated and sorted by the filter column, and then merged oldest first, each batch its own commit.
+
+![Small pages in, big batches out](../../images/posts/2026/0075-pages-in-batches-out.svg)
+
+For a normal run, this is a handful of pages and **one merge**: one commit for the whole run. The batches only show up in a backfill, with millions of rows (more on why in the lessons below). At any moment, Python only holds one page of rows. Everything else is in DuckDB.
 
 For the jobs, the change is small. This is our Salesforce export now: it reads the API in chunks and hands them to the loader as they arrive.
 
