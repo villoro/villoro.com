@@ -53,26 +53,22 @@ const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
 const formattedUpdatedDate = updatedDate ? dateFormat(updatedDate, "MMMM d, yyyy") : "";
 const publishedTime = date ? new Date(date).toISOString() : undefined;
 const modifiedTime = updatedDate ? new Date(updatedDate).toISOString() : undefined;
-const author = post.data.author || config.metadata.meta_author;
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
   headline: title,
   description,
-  image: image ? `${config.site.base_url}${image}` : undefined,
   datePublished: date ? new Date(date).toISOString() : undefined,
   dateModified: updatedDate ? new Date(updatedDate).toISOString() : (date ? new Date(date).toISOString() : undefined),
   author: {
     "@type": "Person",
-    name: post.data.author || config.metadata.meta_author,
+    name: post.data.author,
   },
   mainEntityOfPage: canonical,
   keywords: tags.join(", ") || undefined,
 };
 ---
-
-<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
 
 <ArticleLayout
   title={title}
@@ -82,7 +78,8 @@ const jsonLd = {
   canonical={canonical}
   publishedTime={publishedTime}
   modifiedTime={modifiedTime}
-  author={author}
+  author={post.data.author}
+  jsonLd={jsonLd}
   category={category}
   catName={catName}
   catColor={catColor}

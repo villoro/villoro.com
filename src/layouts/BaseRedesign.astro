@@ -67,6 +67,8 @@ export interface Props {
   publishedTime?: string;
   modifiedTime?: string;
   author?: string;
+  /** schema.org object(s) emitted as JSON-LD in <head>. A BlogPosting without `image` gets the resolved og image. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
@@ -82,6 +84,7 @@ const {
   publishedTime,
   modifiedTime,
   author,
+  jsonLd,
 } = Astro.props;
 
 const resolvedCanonical = canonical ?? `${config.site.base_url}${Astro.url.pathname}`;
@@ -98,6 +101,11 @@ if (ogLoader) {
   const og = await getImage({ src: mod.default, width: 1200, format: "jpg" });
   ogImageUrl = `${config.site.base_url}${og.src}`;
 }
+
+// Same URL as og:image, so structured data never points at a path that 404s
+const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).map((item) =>
+  item["@type"] === "BlogPosting" && !item.image && ogImageUrl ? { ...item, image: ogImageUrl } : item,
+);
 ---
 
 <!doctype html>
@@ -192,6 +200,7 @@ if (ogLoader) {
     <meta name="author" content={config.metadata.meta_author} />
     <meta property="og:title" content={plainify(meta_title ? meta_title : title ? title : config.site.title)} />
     <meta property="og:description" content={plainify(description ? description : config.metadata.meta_description)} />
+    <meta property="og:site_name" content={config.site.title} />
     <meta property="og:type" content={ogType} />
     {ogType === "article" && publishedTime && (
       <meta property="article:published_time" content={publishedTime} />
@@ -208,6 +217,7 @@ if (ogLoader) {
     <meta property="og:image" content={ogImageUrl} />
     <meta name="twitter:image" content={ogImageUrl} />
     <meta name="twitter:card" content="summary_large_image" />
+    {jsonLdItems.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)} is:inline />)}
     <slot name="head" />
   </head>
   <body>
