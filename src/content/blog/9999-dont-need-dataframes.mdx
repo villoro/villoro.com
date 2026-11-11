@@ -1,0 +1,111 @@
+---
+slug: dont-need-dataframes
+title: You Don't Need DataFrames for Data Engineering
+meta_title: "You don't need pandas or Polars in production data engineering: EL with Arrow and DuckDB"
+description: "Modern data engineering is ELT: the T lives in dbt, in SQL, so the extraction job only moves rows. A DataFrame in the middle costs memory and changes the data. How we load our lake with Arrow and DuckDB instead, and what owning the load taught us."
+date: 2026-11-11
+writing_date: 2026-11-11
+category: DE
+tags: [DE, DuckDB, Arrow, Iceberg, Python, pandas]
+draft: false
+---
+
+{/*
+Target: ~450 lines, the depth and punch of "You Probably Don't Need Spark".
+Audience: data engineers who write extraction jobs in Python and reach for pandas out of habit.
+Thesis: modern DE is ELT. The E and the L only move rows, and the T is SQL in dbt (or an
+equivalent), so a DataFrame has no job left in production: it's a bag for rows that costs memory
+and changes the data. Arrow builds the table, DuckDB writes it. DataFrames belong in notebooks,
+and notebooks don't go to production.
+Controversial on purpose, backed only by numbers we measured (ECS runs and a local benchmark).
+Reference draft (not to publish): 9999-no-dataframes.mdx.
+TODO before release: hero image (16:9 jpg in src/images/blog/), date, slug check.
+*/}
+
+## ETL is over, and so is the DataFrame in the middle
+
+{/*
+Hook: the three lines every extraction job has (records -> pd.DataFrame -> write).
+ETL vs ELT: the DataFrame was the T of ETL. In ELT the E and L load raw data and the T is dbt,
+so the frame no longer transforms anything: it's a bag the rows travel in.
+The claim, then the headline numbers up front (abstract callout): ~5x less memory per row,
+half the memory on the real jobs, one commit instead of N, a wide table that fits where pandas
+was killed.
+Link to the Spark post: there DuckDB moved database rows without Python; here the source is an
+API, so the rows must pass through Python, and the question is what shape they take there.
+*/}
+
+## What the bag costs
+
+{/*
+What the DataFrame really does in an EL job: holds the rows, lowercases columns, drops
+duplicates, casts to text, hands them to the writer (write_iceberg / awswrangler).
+Where the memory goes, step by step: dicts (the biggest cost), DataFrame (pointers over the same
+strings), filters and drop_duplicates (new frames, keeps the first row not the newest),
+astype(str) (really allocates), Arrow + Parquet in awswrangler.
+What it changes on the way: "1.0" for nullable ints, Python reprs instead of JSON.
+Why 50k chunks were a pandas limit, not a design choice: N writes, N commits.
+*/}
+
+## "But Polars…"
+
+{/*
+Short. Polars fixes the memory and the types, but it's still a frame with nothing to do; Arrow is
+already the format DuckDB, Parquet and Iceberg speak. pa.Table.from_pylist: close to what we do,
+but it infers types; we decide how each value lands as text.
+*/}
+
+## EL without a frame: rows in Arrow, writes in DuckDB
+
+{/*
+The design with the diagram: a page of dicts -> Arrow table -> DuckDB temp table (spills) -> one
+write into Iceberg (Glue). Python holds one page at a time.
+The code, short: the Salesforce job barely changes (write_records call). Page and to_text in an
+Accordion.
+One-way door callout (metadata columns).
+*/}
+
+## What we got
+
+{/*
+Local benchmark: the slope chart (11 KB vs 2 KB a row; ~0.7 GB both at the old 50k chunk).
+ECS table: Task 10 days into 36M (6.0 vs 3.2 GB), Opportunity 90 days on 4 GB (pandas killed,
+DuckDB 3.7 GB). Faithful data, one commit, same speed: the source decides it.
+*/}
+
+## What owning the load taught us
+
+{/*
+Dropping awswrangler means the write logic is ours. Short problem/fix callout pairs:
+- A merge costs what it joins (the one with its table and diagram): batches of 1M, oldest first,
+  ties together; "I was wrong about the disk" correction of the previous post.
+- Check for duplicates before deduplicating (7.5 min -> 0).
+- Backfill on a column that never changes (CreatedDate, not SystemModstamp).
+- Chunk size only costs memory (Salesforce serves 2000 rows a call).
+- Look at the whole memory curve before calling a leak.
+- The spill disk is part of the memory budget.
+*/}
+
+## Where DataFrames still belong: the notebook
+
+{/*
+Exploration, prototyping, ML experiments: great there, and they should stay there.
+Notebooks don't go to production: once the logic becomes a pipeline, the T is SQL in dbt and
+the job around it is EL.
+"My ML library needs a DataFrame": build it at the edge, from Arrow, when the library asks for
+it (close to free); the frame doesn't carry the data through the pipeline.
+*/}
+
+## Conclusion
+
+{/*
+EL moves rows, the T is SQL, so the frame has no job left in production. Closing quote.
+*/}
+
+## Appendix: how we measured
+
+{/*
+The local benchmark (synthetic Salesforce-like rows, parsed from JSON 2000 at a time, RSS
+sampled every 5 ms, what each path includes and leaves out). The ECS runs (Fargate M and L,
+copies of production tables in a scratch database, one run at a time). Caveats.
+*/}
