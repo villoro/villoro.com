@@ -25,7 +25,7 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 | 9 | Draft previews and strict frontmatter | Writing | Medium | Medium | senior |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low | subagent |
 | 12 | Lighthouse budget on previews | Speed | Medium | Medium | later |
-| 13 | Colour contrast | Accessibility | Low | Medium | later |
+| 13 | Accessibility leftovers | Accessibility | Low | Low | subagent |
 
 "Senior" means the item needs design judgement; "subagent" means the change is specified well enough below to hand over.
 
@@ -67,9 +67,13 @@ Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native S
 
 Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). There is a good number to protect now: 42 KB of JavaScript in total after Brotli. The fonts are self-hosted since v3.2.32 and PageSpeed hasn't been re-run since: the last numbers (June 2026, mobile) were Perf 70, FCP 3.8 s, LCP 5.1 s. Also check CLS, because the metric-adjusted fallback fonts that `astro-font` generated are gone.
 
-## PR 13. Colour contrast
+## PR 13. Accessibility leftovers
 
-Carried over from the June audit and **not re-verified**: PageSpeed flagged insufficient contrast, probably the muted greys of card metadata (`pc-*__meta`, `bl-grid-meta`, `hp-stats__label`). Run axe on `/`, `/blog` and one post in both themes, and darken the failing tokens in `tokens.css`.
+An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in v3.2.42: muted labels, category names and chips, footer text, the 404 page in dark theme, code comments. What is left:
+
+- **The brand blue is below the contrast standard, on purpose.** White on `#3a76ff` is 4.02:1 and `#3a76ff` on the page background is 3.89:1, against a required 4.5:1. It affects links, the active nav item, kickers, primary buttons and table headers. **Villoro decided to keep `#3a76ff` everywhere (November 2026): don't change it.** If that is ever revisited, the fix that keeps the logo is a slightly darker blue only where it carries text (about `#2f67e8`). Audit tools will keep reporting these.
+- **Wide tables can't be scrolled with the keyboard.** axe reports `scrollable-region-focusable` on a table in the numba post: a scrollable table needs `tabindex="0"`. Add it to tables in `prose.css`/the markdown pipeline.
+- **`shikiConfig.theme: "monokai"` has no visible effect.** Code blocks are painted with github-dark token colours on a background forced to `#272822` by `prose.css`. Either make the theme setting real or delete it; today the comment colour is patched with a CSS override.
 
 ---
 
