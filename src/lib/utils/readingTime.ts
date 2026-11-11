@@ -33,12 +33,6 @@ const readingTime = (content: string): string => {
   }
 };
 
-export const readingTimeForPost = (post: { body?: string } | unknown): string => {
-  try {
-    return readingTime((post as { body?: string })?.body ?? "");
-  } catch {
-    return "";
-  }
-};
+export const readingTimeForPost = (post: { body?: string }): string => readingTime(post.body ?? "");
 
 export default readingTime;

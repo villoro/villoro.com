@@ -1,7 +1,7 @@
 ---
 import ArticleLayout from "@/layouts/ArticleLayout.astro";
 import { render } from "astro:content";
-import { getSinglePage } from "@/lib/contentParser.astro";
+import { getPublishedPosts, postSlug } from "@/lib/posts";
 import similarItems from "@/lib/utils/similarItems";
 import { readingTimeForPost } from "@/lib/utils/readingTime";
 import dateFormat from "@/lib/utils/dateFormat";
@@ -12,10 +12,9 @@ import { withTrailingSlash } from "@/lib/utils/url";
 import type { TocItem } from "@/components/ArticleTOC.astro";
 
 export async function getStaticPaths() {
-  const { blog_folder } = config.settings;
-  const items = await getSinglePage(blog_folder);
+  const items = await getPublishedPosts();
   return items.map((post) => ({
-    params: { single: post.data.slug || post.id },
+    params: { single: postSlug(post) },
     props: { post },
   }));
 }
@@ -23,10 +22,10 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { blog_folder, similar_items_length } = config.settings;
 const { title, description, image, date, updated_date: updatedDate, tags = [], category } = post.data;
-const slug     = post.data.slug || post.id;
+const slug     = postSlug(post);
 const canonical = withTrailingSlash(`${config.site.base_url}${Astro.url.pathname}`);
 
-const posts        = await getSinglePage(blog_folder);
+const posts        = await getPublishedPosts();
 const similarPosts = similarItems(post, posts, similar_items_length);
 const { Content, headings } = await render(post);
 

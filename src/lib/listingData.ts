@@ -2,6 +2,7 @@
  * listingData.ts — shared helpers for blog/category/tag listing pages.
  */
 import { categoryMetadata } from "@/lib/categoryMetadata";
+import type { BlogPost } from "@/lib/posts";
 import config from "@/config/config.json";
 
 export type CategoryItem = { key: string; name: string; count: number };
@@ -10,7 +11,7 @@ export type CategoryItem = { key: string; name: string; count: number };
  * Build the category ribbon data from ALL sorted posts.
  * Returns the total post count + ordered category list (with "All" first).
  */
-export function getCategoryRibbonData(sortedPosts: any[]): {
+export function getCategoryRibbonData(sortedPosts: BlogPost[]): {
   postCount: number;
   categories: CategoryItem[];
 } {

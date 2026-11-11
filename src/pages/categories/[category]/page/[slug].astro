@@ -1,8 +1,8 @@
 ---
 import BlogListingLayout from "@/layouts/BlogListingLayout.astro";
-import { getSinglePage } from "@/lib/contentParser.astro";
+import { getPublishedPosts } from "@/lib/posts";
 import { sortByDate } from "@/lib/utils/sortFunctions";
-import { getTaxonomy } from "@/lib/taxonomyParser.astro";
+import { getTaxonomy } from "@/lib/taxonomy";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
 import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
 import { categoryMetadata } from "@/lib/categoryMetadata";
@@ -10,14 +10,14 @@ import { slugify, humanize } from "@/lib/utils/textConverter";
 import config from "@/config/config.json";
 import { getBlogListingCopy } from "@/lib/listingCopy";
 
-const { blog_folder, pagination } = config.settings;
+const { pagination } = config.settings;
 
 export async function getStaticPaths() {
-  const { blog_folder, pagination } = (await import("@/config/config.json")).settings;
-  const categories = await getTaxonomy(blog_folder, "category");
+  const { pagination } = (await import("@/config/config.json")).settings;
+  const categories = await getTaxonomy("category");
   const paths = [];
+  const items = await getPublishedPosts();
   for (const category of categories) {
-    const items = await getSinglePage(blog_folder);
     const filtered = taxonomyFilter(items, "category", category);
     const totalPages = Math.ceil(filtered.length / pagination);
     // Page 1 is the bare listing URL: start at 2, or /page/1/ would duplicate it
@@ -31,7 +31,7 @@ export async function getStaticPaths() {
 const { category, slug } = Astro.params;
 const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
 
-const allPosts = await getSinglePage(blog_folder);
+const allPosts = await getPublishedPosts();
 const sorted   = sortByDate(allPosts);
 
 const filtered     = taxonomyFilter(allPosts, "category", category!);

@@ -1,6 +1,6 @@
 ---
 import BlogListingLayout from "@/layouts/BlogListingLayout.astro";
-import { getSinglePage } from "@/lib/contentParser.astro";
+import { getPublishedPosts } from "@/lib/posts";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
 import config from "@/config/config.json";
@@ -9,8 +9,8 @@ import { getBlogListingCopy } from "@/lib/listingCopy";
 const { blog_folder, pagination } = config.settings;
 
 export async function getStaticPaths() {
-  const { blog_folder, pagination } = (await import("@/config/config.json")).settings;
-  const posts = await getSinglePage(blog_folder);
+  const { pagination } = (await import("@/config/config.json")).settings;
+  const posts = await getPublishedPosts();
   const totalPages = Math.ceil(posts.length / pagination);
   // Page 1 is /blog/ itself: start at 2, or /blog/page/1/ would duplicate it
   return Array.from({ length: Math.max(totalPages - 1, 0) }, (_, i) => ({
@@ -21,7 +21,7 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
 
-const allPosts    = await getSinglePage(blog_folder);
+const allPosts    = await getPublishedPosts();
 const sorted      = sortByDate(allPosts);
 const totalPages  = Math.ceil(sorted.length / pagination);
 const start       = (currentPage - 1) * pagination;

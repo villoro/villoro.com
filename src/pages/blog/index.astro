@@ -1,13 +1,13 @@
 ---
 import BlogListingLayout from "@/layouts/BlogListingLayout.astro";
-import { getSinglePage } from "@/lib/contentParser.astro";
+import { getPublishedPosts } from "@/lib/posts";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
 import config from "@/config/config.json";
 import { getBlogListingCopy } from "@/lib/listingCopy";
 
 const { blog_folder, pagination } = config.settings;
-const allPosts    = await getSinglePage(blog_folder);
+const allPosts    = await getPublishedPosts();
 const sorted      = sortByDate(allPosts);
 const totalPages  = Math.ceil(sorted.length / pagination);
 const currentPosts = sorted.slice(0, pagination);

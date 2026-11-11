@@ -1,4 +1,4 @@
-import { getCollection } from "astro:content";
+import { getPublishedPosts, postSlug } from "@/lib/posts";
 import { getImage } from "astro:assets";
 import { resolveImage } from "@/lib/utils/blogImages";
 import { plainifyMdx } from "@/lib/utils/searchText";
@@ -14,7 +14,7 @@ const MAX_CONTENT_LENGTH = 5000;
 const THUMB_WIDTH = 320;
 
 export async function GET() {
-  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  const posts = await getPublishedPosts();
 
   const items = await Promise.all(
     posts.map(async (post) => {
@@ -31,7 +31,7 @@ export async function GET() {
       return {
         group: "blog",
         // same slug rule as rss.xml.ts and the blog routes
-        slug: post.data.slug || post.id,
+        slug: postSlug(post),
         frontmatter: {
           title: post.data.title,
           description: post.data.description,
@@ -39,11 +39,7 @@ export async function GET() {
           category: post.data.category,
           tags: post.data.tags,
         },
-        // Astro collection types do not expose body publicly — see AGENTS.md
-        content: plainifyMdx((post as { body?: string }).body ?? "").slice(
-          0,
-          MAX_CONTENT_LENGTH,
-        ),
+        content: plainifyMdx(post.body ?? "").slice(0, MAX_CONTENT_LENGTH),
       };
     }),
   );

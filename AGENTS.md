@@ -91,10 +91,9 @@ src/
 ├── lib/
 │   ├── categoryMetadata.ts         category slug → display name + color (10 categories)
 │   ├── blogIndex.mjs               plain .mjs (astro.config.mjs can't import .ts/.astro): published posts from frontmatter, thin-tag rule, sitemap lastmod
-│   ├── contentParser.astro         getSinglePage(folder) — main collection helper
+│   ├── posts.ts                    getPublishedPosts() — THE way to get posts; BlogPost type, postSlug()
 │   ├── listingCopy.ts              getBlogListingCopy() — the `listing` collection entry
-│   ├── blogUtils.astro             blog-specific queries
-│   ├── taxonomyParser.astro        getTaxonomy() for tags/categories
+│   ├── taxonomy.ts                 getTaxonomy("tags" | "category") over published posts
 │   ├── listingData.ts              CategoryItem type + ribbon data
 │   └── utils/                      blogImages (resolveImage), dateFormat, readingTime, similarItems, sortFunctions, taxonomyFilter, textConverter (humanize, slugify, plainify), url (withTrailingSlash), searchText (plainifyMdx)
 ├── config/
@@ -190,7 +189,7 @@ Types: `abstract` (alias `summary`), `tip` (`hint`), `success` (`check`), `quest
 
 Schemas in `src/content.config.ts` (Zod). Four collections:
 
-- **blog** — flat folder of `*.mdx` (not subfolder-by-year). Filenames like `0067-marimo-notebooks.mdx`. The `9999-*` prefix is convention for drafts/WIP. Real drafts use frontmatter `draft: true` (filtered by `getSinglePage`).
+- **blog** — flat folder of `*.mdx` (not subfolder-by-year). Filenames like `0067-marimo-notebooks.mdx`. The `9999-*` prefix is convention for drafts/WIP. Real drafts use frontmatter `draft: true` (`getPublishedPosts()` leaves them out).
 - **listing** — `listing/blog.md`: hero and section copy of the `/blog` listing (and of the category listings), read with `getBlogListingCopy()`. It is its own collection so the post schema only has post fields.
 - **about** — single `-index.md` with rich schema (hero/story/timeline/hobbies).
 - **homepage** — single `-index.md` with hero + ribbon + latest + companies blocks.
@@ -352,7 +351,7 @@ Posts are co-written, not generated in one go:
 - **Two color systems** — see the styling section. Don't reflexively unify them; the Tailwind class consumers depend on `generated-theme.css`.
 - **`description` is no longer a `ShareRow` prop** (cleaned up). Don't pass it.
 - **`ThemeSwitcher` takes no props** (`className` was removed; it was always undefined).
-- **Reading time** comes from `readingTimeForPost(post)` (`src/lib/utils/readingTime.ts`), used by `[single].astro`, the home page and `BlogListingLayout`. It reads `post.body`, which Astro's collection types don't expose publicly, hence the cast and the `try/catch` returning `""` inside it.
+- **Reading time** is computed by `readingTimeForPost(post)` from the raw MDX `post.body` (typed on collection entries since Astro 7).
 - **Tailwind v4** — config is in the `@theme` block (in `generated-theme.css`); there is no `tailwind.config.js`.
 - **Astro 7 requires Node 22.x.** If you see `Node.js v20.x is not supported`, that's a local env issue, not the repo (`nvm use` reads `.nvmrc`).
 - **Pages are cached network-first by the service worker** (`astro.config.mjs`, `AstroPWA`). A stale page after a deploy means the network was slow or offline, not a precache bug; don't add HTML to `globPatterns`.
