@@ -5,6 +5,7 @@ import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getTaxonomy } from "@/lib/taxonomyParser.astro";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
 import { slugify } from "@/lib/utils/textConverter";
+import { isThinTag } from "@/lib/blogIndex.mjs";
 import config from "@/config/config.json";
 
 const { blog_folder, pagination } = config.settings;
@@ -66,4 +67,5 @@ const currentPosts = sortedPosts.slice(start, start + pagination);
   currentPage={currentPage}
   totalPages={totalPages}
   paginationSection={`tags/${tag}`}
+  noindex={isThinTag(sortedPosts.length)}
 />
