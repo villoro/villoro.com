@@ -6,7 +6,7 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 
 **Decisions already taken with Villoro** (don't re-open them):
 
-- **React goes away.** Search is rewritten in plain JS and the shortcodes become `.astro` components.
+- **No React.** Done in v3.2.38: search is plain JS and the shortcodes are `.astro` components. Don't add a UI framework back.
 - **The PWA stays.** Only audit it for correctness.
 - **GA4 stays as it is.** No consent banner, no replacement.
 
@@ -22,12 +22,11 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 | --- | :--- | :--- | --- | --- | :--- |
 | 0 | Canonical URLs redirect (trailing slash) | SEO | Medium | High | senior |
 | 1 | Metadata leftovers | SEO | Low | Low | subagent |
-| 5 | Search without React, drop React | Speed, maintenance | Medium–High | High | senior |
 | 6 | Dead config and stale docs | Maintenance | Low | Low | subagent |
 | 7 | CI: one build job, real budgets, no audit noise | Maintenance | Medium | Medium | subagent |
 | 8 | Tests on the built site | Maintenance | Medium | High | senior designs, subagent writes |
 | 9 | Draft previews and strict frontmatter | Writing | Medium | Medium | senior |
-| 11 | Major dependency upgrades | Maintenance | Medium | Low | subagent, after PR 5 |
+| 11 | Major dependency upgrades | Maintenance | Medium | Low | subagent |
 | 12 | Lighthouse budget on previews | Speed | Medium | Medium | later |
 | 13 | Colour contrast | Accessibility | Low | Medium | later |
 
@@ -59,19 +58,6 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 - **`og:title` and `<title>` use `meta_title`, the JSON-LD headline uses `title`.** Decide whether that is intended and write the rule in `AGENTS.md`.
 - **Category/tag descriptions are generic** ("All posts in the 🐍 Python category."). Add an optional `description` to `categoryMetadata.ts`.
 
-## PR 5. Search without React, drop React
-
-`SearchModal client:idle` in `BaseRedesign` is the last island: the shortcodes are `.astro` components since v3.2.34 and `react-icons` is gone. Because of it **every page downloads `client.*.js`, 213 KB (React + ReactDOM)**, for a modal most visitors never open.
-
-- Rewrite `SearchModal.tsx` + `SearchResult.tsx` (389 lines) as one `.astro` component with a `<dialog>` and a plain `<script>`. Keep the behaviour: lazy fetch of `/search.json` on first open, keyboard shortcut, arrow-key navigation, highlighted matches.
-- Load the script **on first open** (dynamic `import()` from the search trigger), not on idle.
-- It must survive `ClientRouter` navigations: bind on `astro:page-load`, or mark the dialog `transition:persist`.
-- `search.json` is 370 KB uncompressed for 76 posts and grows with every post. It's fetched lazily, so it isn't urgent, but lower the per-post text cap or drop the body and index title + description + headings + tags.
-- Then remove `react`, `react-dom`, `@astrojs/react`, `@types/react*`, `eslint-plugin-react*`, the `react()` integration, `"jsx": "react"` in `tsconfig.json`, and the React blocks in `eslint.config.js`.
-- `marked` is imported by `SearchResult.tsx`, `textConverter.ts` and `search.json.ts`; check whether it is still needed once the first is gone. `gray-matter` and `github-slugger` are used by `src/lib/blogIndex.mjs` (sitemap rules), so they stay.
-
-**Check:** the JS budget of PR 7 should drop from 300 KB to well under 50 KB. Test search in the preview build on a phone-sized viewport, in both themes, after a soft navigation.
-
 ## PR 6. Dead config and stale docs
 
 - `tailwind.config.js`: inert under Tailwind 4. Delete.
@@ -81,14 +67,13 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 - `src/styles/components.css` still has `.tab-content-panel` rules for the deleted `Tabs` shortcode. Delete.
 - **Ten `http://` outbound links** (numba, flask.pocoo.org, jinja.pocoo.org, supervisord, eepurl…). Move to `https://` where the site supports it, including `subscribe.link` in `config.json`.
 - `.github/labeler.yml` lists paths that no longer exist (`postcss.config.js`, `src/content/config.ts`, `src/hooks/**`, `src/content/contact/**`). Bring it in line with the tree.
-- **`AGENTS.md` is out of date**: says Astro 6 and React 18 (it's Astro 7; React 19 until PR 5), still lists the dead `@/partials/*` alias as present (already removed from `tsconfig.json`), says the prose styles live in `ArticleLayout.astro` at "~700 lines" (it's 373 lines; they moved to `src/styles/prose.css`), and doesn't mention the PWA, `rss.xml.ts`, `npm run lint`/`typecheck`/`size`, or the `bundle_size` and `lint_and_typecheck` CI jobs. Rewrite those parts.
+- **`AGENTS.md` is out of date**: says Astro 6 and React 18 (it's Astro 7, and there is no React any more), still lists the dead `@/partials/*` alias as present (already removed from `tsconfig.json`), says the prose styles live in `ArticleLayout.astro` at "~700 lines" (it's 373 lines; they moved to `src/styles/prose.css`), and doesn't mention the PWA, `rss.xml.ts`, `npm run lint`/`typecheck`/`size`, or the `bundle_size` and `lint_and_typecheck` CI jobs. Rewrite those parts.
 - `README.md` still credits the Astroplate template and layout that the redesign removed. Refresh.
 - Add `.nvmrc` with `22`: the repo requires Node 22 and it's easy to run it with another version locally.
 
 ## PR 7. CI: one build job, real budgets, no audit noise
 
 - **`npm audit` reports 29 vulnerabilities (14 high) and none are in the site.** They come from `@size-limit/preset-app`, which installs Puppeteer and Chromium to time page loads we don't measure. Swap it for `@size-limit/file` (size only). This also makes `npm ci` much faster in CI and on Netlify.
-- **The budgets don't guard anything.** They are measured after Brotli: JS is 104 KB against a 300 KB limit, CSS is 19 KB against 100 KB. Either could triple without failing. After PR 5, set each close to the real number (measured + 15%).
 - **Three jobs each run `npm ci`**, and the build only happens inside `bundle_size`. Merge `lint_and_typecheck` and `bundle_size` into one `build` job: lint, typecheck, build, size, then the tests of PR 8.
 - **Old action versions**: `actions/checkout@v3`, `actions/setup-python@v4`, `actions/labeler@v4`, `dorny/paths-filter@v2`. Update them.
 - **Dependabot**: three PRs have been open since August (#360, #361, #363). There is no `.github/dependabot.yml`, so these are ungrouped security updates. Add a config that groups npm updates weekly into one PR and also covers `github-actions`, then close the stale ones.
@@ -106,7 +91,12 @@ One script (`node --test`, no new dependency) that walks `dist/**/*.html` and as
 - every post has JSON-LD inside `<head>` that parses, with an author that isn't "Admin" and an image URL that exists in `dist/`;
 - every URL in the sitemap exists and isn't `noindex`;
 - no draft slug appears in the sitemap, RSS or `search.json`;
-- no request to Google Fonts, and no `client.*.js` (after PR 5).
+- no request to Google Fonts and no `<astro-island>`.
+
+Two search leftovers to fix alongside those tests, both in `src/pages/search.json.ts`:
+
+- **Callout markers leak into the index.** Snippets show the literal `[!abstract]` because the MDX-to-text step doesn't strip the callout syntax.
+- **`search.json` is 370 KB uncompressed** for 74 posts and grows with each one. It is fetched only when search opens, so it isn't urgent; lower the per-post cap (5,000 characters today) if it becomes one.
 
 Then a few unit tests with Vitest for the pure functions that have subtle logic: `plainify` in `textConverter.ts`, the MDX-to-text code in `search.json.ts`, `similarItems`, `readingTime`.
 
@@ -123,13 +113,13 @@ Do this PR next, so the rest of the list is developed against it.
 
 ## PR 11. Major dependency upgrades
 
-After PR 5 (several of these disappear with React). Outdated by a major today: `@astrojs/mdx` 7 → 8, `@vite-pwa/astro` 1 → 2, `eslint` 9 → 10, `eslint-plugin-astro` 1 → 3, `prettier-plugin-astro` 0.14 → 1, `typescript` 6 → 7, `astro-auto-import` 0.5 → 0.6. One PR per risky one (mdx, PWA), the lint/format tooling together.
+Outdated by a major today: `@astrojs/mdx` 7 → 8, `@vite-pwa/astro` 1 → 2, `eslint` 9 → 10, `eslint-plugin-astro` 1 → 3, `prettier-plugin-astro` 0.14 → 1, `typescript` 6 → 7, `astro-auto-import` 0.5 → 0.6. One PR per risky one (mdx, PWA), the lint/format tooling together.
 
 Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native Sätteri markdown pipeline and the site pins the `unified` one for three plugins (`remark-callouts`, `remark-toc` + `remark-collapse`, `rehype-sectionize`). No file in `src/content` has a "Table of contents" heading (`ArticleTOC` replaced it), so `remark-toc` and `remark-collapse` do nothing and can be removed.
 
 ## PR 12. Lighthouse budget on previews
 
-Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). Worth doing only after PR 5, when there is a good number to protect. The fonts are self-hosted since v3.2.32 and PageSpeed hasn't been re-run since: the last numbers (June 2026, mobile) were Perf 70, FCP 3.8 s, LCP 5.1 s. Also check CLS, because the metric-adjusted fallback fonts that `astro-font` generated are gone.
+Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). There is a good number to protect now: 42 KB of JavaScript in total after Brotli. The fonts are self-hosted since v3.2.32 and PageSpeed hasn't been re-run since: the last numbers (June 2026, mobile) were Perf 70, FCP 3.8 s, LCP 5.1 s. Also check CLS, because the metric-adjusted fallback fonts that `astro-font` generated are gone.
 
 ## PR 13. Colour contrast
 
