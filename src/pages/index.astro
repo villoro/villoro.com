@@ -68,7 +68,7 @@ const latestDateISO = latestPost?.data?.date
 const getReadTime = readingTimeForPost;
 
 
-const siteUrl = config.site.base_url;
+const siteUrl = `${config.site.base_url}/`;
 const jsonLd = [
   { "@context": "https://schema.org", "@type": "WebSite", name: config.site.title, url: siteUrl },
   {
@@ -120,11 +120,11 @@ const jsonLd = [
 
           <!-- CTAs -->
           <div class="hp-hero__ctas">
-            <a href={`/${blog_folder}`} class="hp-btn hp-btn--blue">
+            <a href={`/${blog_folder}/`} class="hp-btn hp-btn--blue">
               {hp.hero.cta_blog}
               <IconArrow size={14} />
             </a>
-            <a href="/about" class="hp-btn hp-btn--blue">{hp.hero.cta_about}</a>
+            <a href="/about/" class="hp-btn hp-btn--blue">{hp.hero.cta_about}</a>
           </div>
         </div>
 
@@ -148,7 +148,7 @@ const jsonLd = [
           <!-- Latest post pill -->
           {latestPost && (
             <a
-              href={`/${blog_folder}/${latestPost.data.slug || latestPost.id}`}
+              href={`/${blog_folder}/${latestPost.data.slug || latestPost.id}/`}
               class="hp-hero__new-pill"
             >
               <span class="hp-hero__new-dot"></span>
@@ -202,7 +202,7 @@ const jsonLd = [
           </h2>
           <p class="hp-posts__sub">{hp.latest.sub}</p>
         </div>
-        <a href={`/${blog_folder}`} class="hp-btn hp-btn--blue">
+        <a href={`/${blog_folder}/`} class="hp-btn hp-btn--blue">
           {hp.latest.cta.replace('{posts}', String(postCount))}
           <IconArrow size={14} />
         </a>

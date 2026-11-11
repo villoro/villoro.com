@@ -53,8 +53,8 @@ const currentPosts = sortedPosts.slice(start, start + pagination);
   description={`All posts tagged with ${originalTag}.`}
   breadcrumbs={[
     { href: "/",           label: "Villoro" },
-    { href: "/blog",       label: "Blog" },
-    { href: `/tags/${tag}`, label: `#${originalTag}` },
+    { href: "/blog/",       label: "Blog" },
+    { href: `/tags/${tag}/`, label: `#${originalTag}` },
     { label: `Page ${currentPage}` },
   ]}
   heroVariant="simple"

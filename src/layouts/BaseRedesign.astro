@@ -8,6 +8,7 @@ import TwSizeIndicator from "@/components/TwSizeIndicator.astro";
 import config from "@/config/config.json";
 import { plainify } from "@/lib/utils/textConverter";
 import { resolveImage } from "@/lib/utils/blogImages";
+import { withTrailingSlash } from "@/lib/utils/url";
 import { getImage } from "astro:assets";
 import "@/styles/main.css";
 import { ClientRouter } from "astro:transitions";
@@ -47,7 +48,7 @@ const {
   jsonLd,
 } = Astro.props;
 
-const resolvedCanonical = canonical ?? `${config.site.base_url}${Astro.url.pathname}`;
+const resolvedCanonical = withTrailingSlash(canonical ?? `${config.site.base_url}${Astro.url.pathname}`);
 
 // OG/Twitter image must be an absolute URL to a real served file. Blog images
 // live in src/images/blog (not served verbatim), so resolve through the image
@@ -117,8 +118,8 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <title>{plainify(meta_title ? meta_title : title ? title : config.site.title)}</title>
     <link rel="canonical" href={resolvedCanonical} item-prop="url" />
-    {prevHref && <link rel="prev" href={prevHref} />}
-    {nextHref && <link rel="next" href={nextHref} />}
+    {prevHref && <link rel="prev" href={withTrailingSlash(prevHref)} />}
+    {nextHref && <link rel="next" href={withTrailingSlash(nextHref)} />}
     {noindex && <meta name="robots" content="noindex,follow" />}
     <meta name="description" content={plainify(description ? description : config.metadata.meta_description)} />
     <ClientRouter />

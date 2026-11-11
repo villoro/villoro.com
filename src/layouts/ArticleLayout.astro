@@ -90,8 +90,8 @@ const catSlug = slugify(category);
 
 const breadcrumbs = [
   { href: "/",    label: "Villoro" },
-  { href: "/blog", label: "Blog" },
-  { href: `/categories/${catSlug}`, label: catName },
+  { href: "/blog/", label: "Blog" },
+  { href: `/categories/${catSlug}/`, label: catName },
 ];
 
 // Hero LCP preload — mirrors the Picture in ImageMod so the browser
@@ -171,7 +171,7 @@ if (image) {
         {tags.length > 0 && (
           <div class="al-hero__tags">
             {tags.map((t: string) => (
-              <a href={`/tags/${slugify(t)}`} class="al-hero__tag">#{t}</a>
+              <a href={`/tags/${slugify(t)}/`} class="al-hero__tag">#{t}</a>
             ))}
           </div>
         )}

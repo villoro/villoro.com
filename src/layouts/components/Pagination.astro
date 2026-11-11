@@ -16,8 +16,8 @@ const hasPrevPage = currentPage > 1;
 const hasNextPage = totalPages > currentPage;
 
 function pageUrl(page: number) {
-  if (page === 1) return section ? `/${section}` : "/";
-  return `${section ? "/" + section : ""}/${page_name}/${page}`;
+  if (page === 1) return section ? `/${section}/` : "/";
+  return `${section ? "/" + section : ""}/${page_name}/${page}/`;
 }
 
 // Build the list of page entries to render: numbers or "ellipsis" markers

@@ -54,8 +54,8 @@ const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
   description={`All posts in the ${categoryName} category.`}
   breadcrumbs={[
     { href: "/",                        label: "Villoro" },
-    { href: "/blog",                    label: "Blog" },
-    { href: `/categories/${category}`,  label: categoryName },
+    { href: "/blog/",                    label: "Blog" },
+    { href: `/categories/${category}/`,  label: categoryName },
     { label: `Page ${currentPage}` },
   ]}
   postCount={postCount}
