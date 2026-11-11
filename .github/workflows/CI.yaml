@@ -11,21 +11,8 @@ jobs:
   pre_commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: j178/prek-action@v1
-
-
-  lint_and_typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
+      - uses: actions/checkout@v7
+      - uses: j178/prek-action@v3.1.0
 
 
   labeler:
@@ -34,7 +21,7 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/labeler@v4
+      - uses: actions/labeler@v7
 
 
   check_version:
@@ -54,9 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@v4
         id: changes
         with:
           filters: |
@@ -67,7 +54,7 @@ jobs:
 
       - name: Set up Python
         if: steps.changes.outputs.images == 'true'
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
 
       - name: Install dependencies
         if: steps.changes.outputs.images == 'true'
@@ -86,10 +73,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -97,12 +84,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
       # Astro's optimized-image cache, saved from main by
       # warm_image_cache.yaml. Restored after `npm ci` (which wipes
       # node_modules) so the build only encodes images this PR changes.
       # Restore only: a cache saved from a PR can't be read by other PRs.
       - name: Restore Astro image cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: node_modules/.astro
           key: astro-images-${{ github.sha }}

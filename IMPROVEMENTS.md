@@ -21,7 +21,7 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 | PR | Topic | Goal | Effort | Impact | Who |
 | --- | :--- | :--- | --- | --- | :--- |
 | 1 | Metadata leftovers | SEO | Low | Low | subagent |
-| 7 | CI: one build job, real budgets, no audit noise | Maintenance | Medium | Medium | subagent |
+| 7 | Build and CI leftovers | Maintenance | Low | Low | subagent |
 | 9 | Draft previews and strict frontmatter | Writing | Medium | Medium | senior |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low | subagent |
 | 12 | Lighthouse budget on previews | Speed | Medium | Medium | later |
@@ -38,12 +38,12 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 - **`og:title` and `<title>` use `meta_title`, the JSON-LD headline uses `title`.** Decide whether that is intended and write the rule in `AGENTS.md`.
 - **Category/tag descriptions are generic** ("All posts in the 🐍 Python category."). Add an optional `description` to `categoryMetadata.ts`.
 
-## PR 7. CI: one build job, real budgets, no audit noise
+## PR 7. Build and CI leftovers
 
-- **`npm audit` reports 29 vulnerabilities (14 high) and none are in the site.** They come from `@size-limit/preset-app`, which installs Puppeteer and Chromium to time page loads we don't measure. Swap it for `@size-limit/file` (size only). This also makes `npm ci` much faster in CI and on Netlify.
-- **Three jobs each run `npm ci`**, and the build only happens inside `tests`. Merge `lint_and_typecheck` and `tests` into one `build` job: lint, typecheck, build, size, then `npm test`.
-- **Old action versions**: `actions/checkout@v3`, `actions/setup-python@v4`, `actions/labeler@v4`, `dorny/paths-filter@v2`. Update them.
-- **Dependabot**: three PRs have been open since August (#360, #361, #363). There is no `.github/dependabot.yml`, so these are ungrouped security updates. Add a config that groups npm updates weekly into one PR and also covers `github-actions`, then close the stale ones.
+CI is one `tests` job since v3.2.43 (lint, typecheck, build, size, tests), the size check no longer installs Puppeteer, actions are on current majors and Dependabot opens one grouped PR a week. What is left:
+
+- **Dependabot PRs fail `check_version`.** Every PR must bump the version by one and Dependabot doesn't. Until that is automated (a small workflow that bumps the version on `dependabot/*` branches), bump it by hand on the PR branch.
+- **`npm audit` still reports 15 findings (13 moderate, 2 low)**, down from 29. They are in build tooling (`deepmerge`, `glob`, `minimatch`, `postcss-selector-parser`), not in what the site ships. Check them again after the major upgrades of PR 11.
 - **Build time**: a build with an empty image cache takes 6 to 10 minutes and one with a warm cache about 20 seconds, because each build writes ~1,800 optimized images (524 AVIF, 660 WebP, 591 JPG). Since v3.2.30 the cache is kept between builds on Netlify, and since v3.2.31 in CI (`warm_image_cache.yaml` saves it from `main`, the build job restores it). If builds get slow again, the next lever is fewer variants: dropping WebP (AVIF plus the JPG fallback covers every browser) removes a third of the files.
 - **Search index size**: `search.json` is 370 KB uncompressed for 74 posts and grows with each one. It is fetched only when search opens, so it isn't urgent; lower the per-post cap in `src/pages/search.json.ts` (5,000 characters today) if it becomes one.
 - **Image weight**: `src/images/blog` is 23 MB; 29 hero images are over 300 KB and `0001-personal-web.png` is 945 KB. The originals don't ship, so this only costs build time and repo size. Add a size limit (400 KB, matching the hero-image rule in `AGENTS.md`) to `check_aspect_ratio.py` and recompress the ones over it. Low priority within this PR; split it out if it gets noisy.
@@ -59,7 +59,7 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 
 ## PR 11. Major dependency upgrades
 
-Outdated by a major today: `@astrojs/mdx` 7 → 8, `@vite-pwa/astro` 1 → 2, `eslint` 9 → 10, `eslint-plugin-astro` 1 → 3, `prettier-plugin-astro` 0.14 → 1, `typescript` 6 → 7, `astro-auto-import` 0.5 → 0.6. One PR per risky one (mdx, PWA), the lint/format tooling together.
+`size-limit` and `@size-limit/file` must move together (12 → 14). Outdated by a major today: `@astrojs/mdx` 7 → 8, `@vite-pwa/astro` 1 → 2, `eslint` 9 → 10, `eslint-plugin-astro` 1 → 3, `prettier-plugin-astro` 0.14 → 1, `typescript` 6 → 7, `astro-auto-import` 0.5 → 0.6. One PR per risky one (mdx, PWA), the lint/format tooling together.
 
 Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native Sätteri markdown pipeline and the site pins the `unified` one for three plugins (`remark-callouts`, `remark-toc` + `remark-collapse`, `rehype-sectionize`). No file in `src/content` has a "Table of contents" heading (`ArticleTOC` replaced it), so `remark-toc` and `remark-collapse` do nothing and can be removed.
 

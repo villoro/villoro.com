@@ -47,7 +47,7 @@ The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `di
 
 - **`tests/site.test.mjs`** checks the built `dist/`, like dbt tests on a model: every internal link resolves and ends with `/`, one `<h1>` and a unique title per page, canonicals and sitemap URLs point to real indexable pages, every post has valid JSON-LD, drafts are published nowhere, the search index is plain text, no Google Fonts and no framework islands. **When you fix a bug that shows in the built HTML, add an assertion here.**
 - **`tests/unit.test.mjs`** covers the pure helpers (`withTrailingSlash`, `plainify`, `plainifyMdx`, `similarItems`). It imports the `.ts` sources directly (Node strips the types), so those helpers must not import through the `@/` alias.
-- CI runs it in the `tests` job, after the build and the bundle-size check.
+- CI runs it in the single `tests` job (install once, then lint, typecheck, build, bundle size, tests).
 
 ## Path aliases (`tsconfig.json`)
 
@@ -267,11 +267,12 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - Netlify deploys from `main`. PR previews are configured.
 - CI (`.github/workflows/CI.yaml`) runs on every PR:
   - `pre_commit` (code quality)
-  - `lint_and_typecheck` (`npm run lint` + `npm run typecheck`)
+  - `tests` (one job, one `npm ci`: lint, typecheck, build with the image cache saved by `warm_image_cache.yaml`, `npm run size` against `.size-limit.json`, `npm test`)
   - `labeler` (auto PR labels from `.github/labeler.yml`)
   - `check_version` (`package.json` and `package-lock.json` version must be exactly one above `main`)
   - `aspect_ratio_check` — `python .github/scripts/check_aspect_ratio.py` validates blog images are 16:9, favicons 1:1
-  - `tests` — builds the site (restoring the image cache saved by `warm_image_cache.yaml`), runs `npm run size` against `.size-limit.json`, then `npm test`
+- Dependabot (`.github/dependabot.yml`) opens one weekly PR per ecosystem (npm minor/patch only, GitHub Actions); majors are upgraded by hand.
+  Dependabot PRs don't bump `package.json`, so `check_version` fails on them: bump the version on the PR branch (`npm version patch --no-git-tag-version`) before merging.
 - `tag_commits_on_main.yaml` auto-tags commits on main if `package.json` version bumped.
 
 ## Image conventions
