@@ -1,7 +1,6 @@
 ---
 /**
  * BaseRedesign — head-only layout wrapper for redesign 3.0 pages.
- * Same <head> as Base.astro but without the legacy Header/Footer.
  * Each page using this layout renders its own SiteNav and footer.
  */
 import TwSizeIndicator from "@/components/TwSizeIndicator.astro";
@@ -72,16 +71,15 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
 <!doctype html>
 <html lang="en">
   <head>
+    <meta charset="utf-8" />
     <link rel="shortcut icon" href={config.site.favicon} />
     <link rel="alternate" type="application/rss+xml" title={config.site.title} href={`${config.site.base_url}/rss.xml`} />
     <link rel="apple-touch-icon" href="/pwa/pwa-192x192.png" />
     {pwaInfo && <Fragment set:html={pwaInfo.webManifest.linkTag} />}
-    <meta name="theme-name" content="astroplate" />
     <meta name="msapplication-TileColor" content="#000000" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
     <meta name="generator" content={Astro.generator} />
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
     {/* Inline theme init — runs before stylesheets to avoid a post-paint class flip / forced reflow. */}
     <script is:inline define:vars={{ defaultTheme: config.settings?.default_theme ?? "system" }}>
@@ -117,7 +115,7 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <title>{plainify(meta_title ? meta_title : title ? title : config.site.title)}</title>
-    <link rel="canonical" href={resolvedCanonical} item-prop="url" />
+    <link rel="canonical" href={resolvedCanonical} />
     {prevHref && <link rel="prev" href={withTrailingSlash(prevHref)} />}
     {nextHref && <link rel="next" href={withTrailingSlash(nextHref)} />}
     {noindex && <meta name="robots" content="noindex,follow" />}
