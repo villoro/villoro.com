@@ -177,7 +177,7 @@ Blog post frontmatter (commonly used):
 title: string                  # required
 description: string            # optional, used in <meta> and cards
 date: ISO date                 # optional, used for sorting
-image: string                  # "/images/blog/<file>" — file lives in src/images/blog/
+image: string                  # optional ("/images/blog/<file>", file in src/images/blog/); falls back to 0000-default.jpg
 category: string               # MUST match a key in categoryMetadata.ts (else falls back to humanize(slug))
 tags: [string]                 # default ["Others"]
 draft: boolean                 # if true, filtered out of listings
@@ -251,6 +251,8 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - Blog post hero images: 16:9 (CI enforced), in `src/images/blog/`. Frontmatter keeps the `/images/blog/...` path; `resolveImage` (`src/lib/utils/blogImages.ts`) maps it to `src/images/blog` first, then `public/images` (logo, favicon).
 - Post-body images: `src/images/posts/<year>/...`, imported directly in the MDX. SVG diagrams need an opaque background (see "SVG diagrams" below).
 - `src/images/` → optimized via `astro:assets` (use `ImageMod` or `<Image>`); originals never ship in `dist`. `public/` → served verbatim.
+- `image:` is optional: a post without it gets `/images/blog/0000-default.jpg` (white logo on brand blue, `DEFAULT_POST_IMAGE` in `src/content.config.ts`, applied as a schema default), so a new draft renders before its real hero exists. That JPG was rendered with sharp from `public/images/logo-white.svg`.
+- Logo SVGs in `public/images/`: `logo.svg` / `logo-white.svg` (horizontal) and `logo-square.svg` / `logo-square-white.svg` (square AV mark). Every blue logo uses `#3a76ff`; don't change the fills.
 - Company logos: `src/images/companies/<name>.png` and `<name>_dark.png` for dark variant.
 
 ## Workflow preferences (how Villoro wants agents to work)
