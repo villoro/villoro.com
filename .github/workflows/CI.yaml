@@ -97,6 +97,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Astro's optimized-image cache. Restored after `npm ci` (which wipes
+      # node_modules) so the build only encodes images that changed.
+      - name: Restore Astro image cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.astro
+          key: astro-images-${{ hashFiles('src/images/**') }}
+          restore-keys: astro-images-
+
       - name: Build project
         run: npm run build
 
