@@ -1,5 +1,7 @@
 docs:
   - README.md
+  - AGENTS.md
+  - IMPROVEMENTS.md
   - LICENSE
 
 CI-CD:
@@ -8,24 +10,23 @@ CI-CD:
 
 config:
   - astro.config.mjs
-  - postcss.config.js
-  - tailwind.config.js
+  - eslint.config.js
+  - netlify.toml
+  - package.json
   - tsconfig.json
   - src/config/**
-  - src/content/config.ts
-  - src/hooks/hooks/**
+  - src/content.config.ts
 
 content/general:
   - src/content/about/**
-  - src/content/contact/**
   - src/content/homepage/**
-  - src/content/sections/**
 
 content/blog:
   - src/content/blog/**
 
 layout:
   - src/layouts/**
+  - src/pages/**
 
 styles:
   - src/styles/**
