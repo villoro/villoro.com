@@ -1,0 +1,329 @@
+---
+/**
+ * Search modal — static markup plus a small script, no framework.
+ *
+ * The index (/search.json, built by src/pages/search.json.ts) is fetched the
+ * first time the modal opens. Styles live in src/styles/search.css.
+ *
+ * The script listens on `document` and looks elements up when an event
+ * fires, so it keeps working after ClientRouter swaps the page: nothing has
+ * to be re-bound to the new nodes.
+ */
+---
+
+<div id="searchModal" class="search-modal" role="dialog" aria-modal="true" aria-label="Search">
+  <div id="searchModalOverlay" class="search-modal-overlay"></div>
+  <div class="search-wrapper">
+    <div class="search-wrapper-header">
+      <div class="absolute left-7 top-[calc(50%-7px)]">
+        <svg id="searchIcon" viewBox="0 0 512 512" height="18" width="18" class="-mt-0.5" aria-hidden="true">
+          <path
+            fill="currentcolor"
+            d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 100-288 144 144 0 100 288z"
+          ></path>
+        </svg>
+        <button id="searchClear" type="button" aria-label="Clear search" class="hover:text-red-500 block cursor-pointer" hidden>
+          <svg viewBox="0 0 512 512" height="18" width="18" class="-mt-0.5" aria-hidden="true">
+            <path
+              fill="currentcolor"
+              d="M256 512A256 256 0 10256 0a256 256 0 100 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      <input
+        id="searchInput"
+        placeholder="Search..."
+        class="search-wrapper-header-input"
+        type="text"
+        name="search"
+        aria-label="Search the blog"
+        autocomplete="off"
+      />
+    </div>
+    <div id="searchBody" class="search-wrapper-body" aria-live="polite">
+      <div class="py-8 text-center">Type something to search...</div>
+    </div>
+    <div class="search-wrapper-footer">
+      <span class="flex items-center">
+        <kbd>
+          <svg width="14" height="14" fill="currentcolor" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="M3.204 11h9.592L8 5.519 3.204 11zm-.753-.659 4.796-5.48a1 1 0 011.506 0l4.796 5.48c.566.647.106 1.659-.753 1.659H3.204a1 1 0 01-.753-1.659z"
+            ></path>
+          </svg>
+        </kbd>
+        <kbd>
+          <svg width="14" height="14" fill="currentcolor" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="M3.204 5h9.592L8 10.481 3.204 5zm-.753.659 4.796 5.48a1 1 0 001.506 0l4.796-5.48c.566-.647.106-1.659-.753-1.659H3.204a1 1 0 00-.753 1.659z"
+            ></path>
+          </svg>
+        </kbd>
+        to navigate
+      </span>
+      <span class="flex items-center">
+        <kbd>
+          <svg width="12" height="12" fill="currentcolor" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              fill-rule="evenodd"
+              d="M14.5 1.5a.5.5 0 01.5.5v4.8a2.5 2.5 0 01-2.5 2.5H2.707l3.347 3.346a.5.5 0 01-.708.708l-4.2-4.2a.5.5 0 010-.708l4-4a.5.5 0 11.708.708L2.707 8.3H12.5A1.5 1.5 0 0014 6.8V2a.5.5 0 01.5-.5z"
+            ></path>
+          </svg>
+        </kbd>
+        to select
+      </span>
+      <span id="searchStats" hidden></span>
+      <span><kbd>ESC</kbd> to close</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  interface SearchItem {
+    group: string;
+    slug: string;
+    frontmatter: {
+      title: string;
+      image?: string;
+      description?: string;
+      category?: string;
+      tags?: string[];
+    };
+    // plain text, pre-converted from MDX at build time
+    content: string;
+  }
+
+  const SNIPPET_LENGTH = 80;
+  const ACTIVE = "search-result-item-active";
+
+  // Module state. It survives ClientRouter navigations (the module runs
+  // once), so the index is fetched a single time per visit.
+  let index: SearchItem[] | null = null;
+  let loading = false;
+  let selected = -1;
+
+  const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+  const isOpen = () => el("searchModal")?.classList.contains("show") ?? false;
+
+  const escapeHtml = (text: string) =>
+    text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  // The query is user text, never a pattern: "c++" or "(" must not throw.
+  const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // Wrap every occurrence of `query` in `text` with the given tag. Both the
+  // text and the matches are HTML-escaped.
+  const highlight = (text: string, query: string, open: string, close: string) =>
+    text
+      .split(new RegExp(`(${escapeRegExp(query)})`, "gi"))
+      .map((part) =>
+        part.toLowerCase() === query ? `${open}${escapeHtml(part)}${close}` : escapeHtml(part),
+      )
+      .join("");
+
+  const underline = (text: string, query: string) =>
+    highlight(text, query, '<span class="underline">', "</span>");
+
+  // A snippet around the first match, starting at the beginning of its word.
+  // When the match was on the title, description or taxonomy only, show the
+  // start of the post instead.
+  const snippet = (content: string, query: string) => {
+    const position = content.toLowerCase().indexOf(query);
+    if (position === -1) return escapeHtml(content.substring(0, SNIPPET_LENGTH));
+
+    let wordStart = position;
+    while (wordStart > 0 && content[wordStart - 1] !== " ") wordStart--;
+
+    const matchEnd = position + query.length;
+    return (
+      highlight(content.substring(wordStart, matchEnd), query, "<mark>", "</mark>") +
+      escapeHtml(content.substring(matchEnd, matchEnd + SNIPPET_LENGTH))
+    );
+  };
+
+  const titleify = (text: string) =>
+    text
+      .replace(/^[\s_-]+|[\s_-]+$/g, "")
+      .replace(/[_\s-]+/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
+  const matches = (item: SearchItem, query: string) => {
+    const { title, description, category, tags } = item.frontmatter;
+    return [title, description, category, tags?.join(" "), item.content].some((field) =>
+      field?.toLowerCase().includes(query),
+    );
+  };
+
+  const CATEGORY_ICON =
+    '<svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M11 0H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2 2 2 0 0 0 2-2V4a2 2 0 0 0-2-2 2 2 0 0 0-2-2zm2 3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1V3zM2 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2z"></path></svg>';
+
+  const renderItem = (item: SearchItem, query: string) => {
+    const { title, image, description, category, tags } = item.frontmatter;
+    const taxonomies = [
+      category && `<div class="mr-2">${CATEGORY_ICON}<span>${underline(category, query)}</span></div>`,
+      tags?.length &&
+        `<div class="mr-2">${tags.map((tag) => `<span>#${underline(tag, query)}</span>`).join(" ")}</div>`,
+    ]
+      .filter(Boolean)
+      .join("");
+
+    return `
+      <div class="search-result-item">
+        ${
+          image
+            ? `<div class="search-result-item-image"><img src="${escapeHtml(image)}" alt="" loading="lazy" /></div>`
+            : ""
+        }
+        <div class="search-result-item-body">
+          <a href="/blog/${encodeURI(item.slug)}/" class="search-result-item-title search-result-item-link">${underline(title, query)}</a>
+          ${description ? `<p class="search-result-item-description">${underline(description, query)}</p>` : ""}
+          ${item.content ? `<p class="search-result-item-content">${snippet(item.content, query)}</p>` : ""}
+          <div class="search-result-item-taxonomies">${taxonomies}</div>
+        </div>
+      </div>`;
+  };
+
+  const renderGroups = (items: SearchItem[], query: string) => {
+    const groups = new Map<string, SearchItem[]>();
+    for (const item of items) {
+      groups.set(item.group, [...(groups.get(item.group) ?? []), item]);
+    }
+    return [...groups]
+      .map(
+        ([group, groupItems]) => `
+          <div class="search-result-group">
+            <p class="search-result-group-title">${escapeHtml(titleify(group))}</p>
+            ${groupItems.map((item) => renderItem(item, query)).join("")}
+          </div>`,
+      )
+      .join("");
+  };
+
+  const message = (html: string) => `<div class="py-8 text-center">${html}</div>`;
+
+  const render = () => {
+    const input = el<HTMLInputElement>("searchInput");
+    const body = el("searchBody");
+    const stats = el("searchStats");
+    if (!input || !body || !stats) return;
+
+    const query = input.value.trim().toLowerCase();
+    selected = -1;
+
+    const searchIcon = el("searchIcon");
+    const clearButton = el("searchClear");
+    if (searchIcon) searchIcon.style.display = query ? "none" : "";
+    if (clearButton) clearButton.hidden = !query;
+
+    if (!query) {
+      stats.hidden = true;
+      body.innerHTML = message("Type something to search...");
+      return;
+    }
+    if (!index) {
+      stats.hidden = true;
+      body.innerHTML = message(loading ? "Loading..." : "Search is not available right now.");
+      return;
+    }
+
+    const start = performance.now();
+    const results = index.filter((item) => matches(item, query));
+    const seconds = ((performance.now() - start) / 1000).toFixed(3);
+
+    stats.hidden = false;
+    stats.innerHTML = `<strong>${results.length} </strong> results - in <strong>${seconds} </strong> seconds`;
+    body.innerHTML = results.length
+      ? `<div class="search-result">${renderGroups(results, query)}</div>`
+      : `<div class="search-result"><div class="search-result-empty"><p class="mt-4">No results for &quot;<strong>${escapeHtml(query)}</strong>&quot;</p></div></div>`;
+    body.scrollTop = 0;
+  };
+
+  const loadIndex = () => {
+    if (index || loading) return;
+    loading = true;
+    fetch("/search.json")
+      .then((response) => response.json())
+      .then((data: SearchItem[]) => {
+        index = data;
+      })
+      .catch(() => {
+        // leave `index` empty: the next open retries
+      })
+      .finally(() => {
+        loading = false;
+        render();
+      });
+  };
+
+  const open = () => {
+    el("searchModal")?.classList.add("show");
+    el<HTMLInputElement>("searchInput")?.focus();
+    loadIndex();
+    render();
+  };
+
+  const close = () => {
+    el("searchModal")?.classList.remove("show");
+    // Otherwise the hidden input keeps the focus and swallows the arrow keys
+    el<HTMLInputElement>("searchInput")?.blur();
+  };
+
+  const select = (next: number) => {
+    const items = document.querySelectorAll(".search-result-item");
+    if (!items.length) return;
+    selected = Math.max(0, Math.min(next, items.length - 1));
+    items.forEach((item, i) => item.classList.toggle(ACTIVE, i === selected));
+    items[selected].scrollIntoView({ block: "nearest" });
+  };
+
+  document.addEventListener("click", (event) => {
+    const target = event.target as Element | null;
+    if (!target) return;
+    if (target.closest("[data-search-trigger]")) open();
+    else if (target.closest("#searchModalOverlay")) close();
+    else if (target.closest("#searchClear")) {
+      const input = el<HTMLInputElement>("searchInput");
+      if (input) input.value = "";
+      input?.focus();
+      render();
+    }
+  });
+
+  document.addEventListener("input", (event) => {
+    if ((event.target as Element | null)?.id === "searchInput") render();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      open();
+      return;
+    }
+    // Everything below only applies while the modal is open, so the arrow
+    // keys keep scrolling the page the rest of the time.
+    if (!isOpen()) return;
+
+    if (event.key === "Escape") {
+      close();
+    } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      select(selected + 1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      select(selected - 1);
+    } else if (event.key === "Enter") {
+      // With nothing selected, Enter opens the first result.
+      const items = document.querySelectorAll(".search-result-item");
+      const item = items[selected === -1 ? 0 : selected];
+      item?.querySelector<HTMLAnchorElement>("a")?.click();
+    }
+  });
+</script>
