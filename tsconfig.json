@@ -7,14 +7,12 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "jsx": "react",
     "isolatedModules": true,
     "incremental": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@/components/*": ["./src/layouts/components/*"],
       "@/shortcodes/*": ["./src/layouts/shortcodes/*"],
-      "@/helpers/*": ["./src/layouts/helpers/*"],
       "@/*": ["./src/*"]
     }
   },

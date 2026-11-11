@@ -1,5 +1,4 @@
 import mdx from "@astrojs/mdx";
-import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import AstroPWA from "@vite-pwa/astro";
 import tailwindcss from "@tailwindcss/vite";
@@ -33,7 +32,6 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   integrations: [
-    react(),
     sitemap({
       // Paginated listings are noindex; thin tag pages are noindex too.
       filter: (url) => {
