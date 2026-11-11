@@ -6,7 +6,7 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 
 **Decisions already taken with Villoro** (don't re-open them):
 
-- **No React.** Done in v3.2.38: search is plain JS and the shortcodes are `.astro` components. Don't add a UI framework back.
+- **No React.** Done in v3.2.37: search is plain JS and the shortcodes are `.astro` components. Don't add a UI framework back.
 - **The PWA stays.** Only audit it for correctness.
 - **GA4 stays as it is.** No consent banner, no replacement.
 
