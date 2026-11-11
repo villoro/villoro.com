@@ -195,20 +195,26 @@ Schemas in `src/content.config.ts` (Zod). Four collections:
 - **about** — single `-index.md` with rich schema (hero/story/timeline/hobbies).
 - **homepage** — single `-index.md` with hero + ribbon + latest + companies blocks.
 
+All three schemas are **strict** (`z.strictObject`, nested objects too): an unknown key, e.g. the typo `update_date:` for `updated_date:`, fails the build with `Unrecognized key`. Keys are snake_case. To add a field, add it to the schema first.
+
 Blog post frontmatter (commonly used):
 
 ```yaml
 title: string                  # required
-meta_title: string             # optional, used for <title> and og:title
+slug: string                   # URL slug. Always set it: the default is the whole filename (e.g. `0067-marimo-notebooks`)
+meta_title: string             # optional, <title> / og:title (default: title)
 description: string            # optional, used in <meta> and cards
-date: ISO date                 # optional, publication date, used for sorting
+date: ISO date                 # optional, used for sorting
 updated_date: ISO date         # optional, shown as "Updated ..."
-writing_date: ISO date         # optional, internal (drafting start), never rendered
+writing_date: ISO date         # optional, internal only (when drafting started), never rendered
 image: string                  # optional ("/images/blog/<file>", file in src/images/blog/); falls back to 0000-default.jpg
-category: string               # MUST match a key in categoryMetadata.ts (else falls back to humanize(slug))
+image_alt: string              # optional (not rendered today)
+reading_time: number           # optional (not used: reading time is computed from the body)
+author: string                 # default: config.metadata.meta_author
+category: enum                 # one of the keys of categoryMetadata.ts (default `others`); anything else fails the build
 tags: [string]                 # default ["Others"]
+highlight: boolean             # the post shown in the home page's "Most read" card
 draft: boolean                 # if true: no page on the live site; previewable in dev/deploy previews, never listed
-slug: string                   # optional override (default = filename minus prefix)
 ```
 
 ## Categories (`src/lib/categoryMetadata.ts`)
@@ -217,7 +223,7 @@ Currently 10 categories. Adding a new one:
 1. Add an entry: `{ name: "🎯 Display Name", color: "#hex" }`
 2. Use that key in blog post frontmatter `category:` field
 
-Existing keys: `AI`, `API`, `DE`, `cloud_devops`, `git`, `hardware`, `others`, `python`, `tools`, `web`.
+The schema takes its allowed values from these keys (`categoryKeys`), so a typo in a post's `category:` fails the build. Existing keys: `AI`, `API`, `DE`, `cloud_devops`, `git`, `hardware`, `others`, `python`, `tools`, `web`.
 
 ## Styling
 

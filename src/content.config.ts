@@ -2,14 +2,17 @@ import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "zod";
 import config from "./config/config.json";
+import { categoryKeys } from "./lib/categoryMetadata";
 
 // Hero used by posts that set no `image:` (e.g. a new draft). Same
 // "/images/blog/<file>" convention as frontmatter; see resolveImage.
 export const DEFAULT_POST_IMAGE = "/images/blog/0000-default.jpg";
 
+// Strict on purpose: a typo like `update_date:` fails the build instead of being
+// silently ignored. Keys are snake_case.
 const blogCollection = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
-  schema: z.object({
+  schema: z.strictObject({
     title: z.string(),
     meta_title: z.string().optional(),
     description: z.string().optional(),
@@ -18,11 +21,12 @@ const blogCollection = defineCollection({
     // Internal only: when the post was written; never rendered
     writing_date: z.date().optional(),
     image: z.string().default(DEFAULT_POST_IMAGE),
-    imageAlt: z.string().optional(),
-    readingTime: z.number().int().positive().optional(),
+    image_alt: z.string().optional(),
+    reading_time: z.number().int().positive().optional(),
     slug: z.string().optional(),
     author: z.string().default(config.metadata.meta_author),
-    category: z.string().default("Others"),
+    // A key of categoryMetadata (src/lib/categoryMetadata.ts)
+    category: z.enum(categoryKeys).default("others"),
     tags: z.array(z.string()).default(["Others"]),
     draft: z.boolean().optional(),
     highlight: z.boolean().optional(),
@@ -50,7 +54,7 @@ const listingCollection = defineCollection({
 
 const aboutCollection = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/about" }),
-  schema: z.object({
+  schema: z.strictObject({
     title: z.string(),
     meta_title: z.string().optional(),
     description: z.string().optional(),
@@ -58,25 +62,25 @@ const aboutCollection = defineCollection({
     image: z.string().optional(),
     draft: z.boolean().optional(),
 
-    hero: z.object({
+    hero: z.strictObject({
       watermark: z.string(),
       h1: z.tuple([z.string(), z.string()]),
       lede: z.string(),
       badge: z.string(),
     }),
 
-    story: z.object({
+    story: z.strictObject({
       kicker: z.string(),
       label: z.string(),
       paragraphs: z.array(z.string()),
     }),
 
-    timeline: z.object({
+    timeline: z.strictObject({
       kicker: z.string(),
       heading_suffix: z.string(),
       sub: z.string(),
       entries: z.array(
-        z.object({
+        z.strictObject({
           year: z.string(),
           role: z.string(),
           co: z.string(),
@@ -85,36 +89,29 @@ const aboutCollection = defineCollection({
       ),
     }),
 
-    hobbies: z.object({
+    hobbies: z.strictObject({
       kicker: z.string(),
       heading: z.string(),
       entries: z.array(
-        z.object({
+        z.strictObject({
           emoji: z.string(),
           title: z.string(),
           text: z.string(),
         }),
       ),
     }),
-
-    info: z
-      .object({
-        title: z.string().optional(),
-        imageAlt: z.string().optional(),
-      })
-      .optional(),
   }),
 });
 
 const homepageCollection = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/homepage" }),
-  schema: z.object({
-    meta: z.object({
+  schema: z.strictObject({
+    meta: z.strictObject({
       title: z.string(),
       description: z.string().optional(),
     }),
 
-    hero: z.object({
+    hero: z.strictObject({
       h1_lines: z.tuple([z.string(), z.string(), z.string()]),
       lede: z.string(),
       cta_blog: z.string(),
@@ -125,45 +122,24 @@ const homepageCollection = defineCollection({
       stats_years_label: z.string(),
     }),
 
-    ribbon: z.object({
+    ribbon: z.strictObject({
       slogan: z.string(),
       slogan_em: z.string(),
     }),
 
-    latest: z.object({
+    latest: z.strictObject({
       heading: z.string(),
       sub: z.string(),
       badge: z.string(),
       cta: z.string(),
     }),
 
-    banner: z
-      .object({
-        image: z.string().optional(),
-        title: z.string(),
-        content: z.string().optional(),
-      })
-      .optional(),
-
-    slogan: z
-      .object({
-        title: z.string().optional(),
-      })
-      .optional(),
-
-    blog: z
-      .object({
-        title: z.string().optional(),
-        button: z.string().optional(),
-      })
-      .optional(),
-
     companies: z
       .object({
         title: z.string().optional(),
         logos: z
           .array(
-            z.object({
+            z.strictObject({
               name: z.string(),
               image: z.string().optional(),
               link: z.url().optional(),

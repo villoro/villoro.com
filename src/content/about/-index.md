@@ -54,8 +54,4 @@ hobbies:
     - emoji: "⚡"
       title: "Electrical installations"
       text: "Hands-on DIY — combining my technical skills with projects where a mistake trips the breaker instead of a CI pipeline."
-
-info:
-  title: A Bit About Me
-  imageAlt: A picture of myself
 ---

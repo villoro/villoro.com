@@ -6,7 +6,6 @@ import similarItems from "@/lib/utils/similarItems";
 import { readingTimeForPost } from "@/lib/utils/readingTime";
 import dateFormat from "@/lib/utils/dateFormat";
 import { categoryMetadata } from "@/lib/categoryMetadata";
-import { humanize } from "@/lib/utils/textConverter";
 import config from "@/config/config.json";
 import { withTrailingSlash } from "@/lib/utils/url";
 import type { TocItem } from "@/components/ArticleTOC.astro";
@@ -29,9 +28,9 @@ const posts        = await getPublishedPosts();
 const similarPosts = similarItems(post, posts, similar_items_length);
 const { Content, headings } = await render(post);
 
-const catMeta  = categoryMetadata[category] || { name: humanize(category) };
+const catMeta  = categoryMetadata[category];
 const catName  = catMeta.name;
-const catColor = catMeta.color ?? "var(--color-grey-500)";
+const catColor = catMeta.color;
 
 // Build numbered, hierarchical TOC (depth 2 + 3)
 const toc: TocItem[] = [];

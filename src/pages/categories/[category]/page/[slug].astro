@@ -6,7 +6,7 @@ import { getTaxonomy } from "@/lib/taxonomy";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
 import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
 import { categoryMetadata } from "@/lib/categoryMetadata";
-import { slugify, humanize } from "@/lib/utils/textConverter";
+import { slugify } from "@/lib/utils/textConverter";
 import config from "@/config/config.json";
 import { getBlogListingCopy } from "@/lib/listingCopy";
 
@@ -41,7 +41,8 @@ const start        = (currentPage - 1) * pagination;
 const currentPosts = sortedPosts.slice(start, start + pagination);
 
 const metaEntry    = Object.entries(categoryMetadata).find(([key]) => slugify(key) === category);
-const categoryName = metaEntry?.[1].name ?? humanize(category!);
+// Routes come from the categories of published posts, which are categoryMetadata keys
+const categoryName = metaEntry![1].name;
 
 const { postCount, categories } = getCategoryRibbonData(sorted);
 const yearsWriting = getYearsWriting();
