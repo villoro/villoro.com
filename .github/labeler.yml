@@ -1,32 +1,46 @@
 docs:
-  - README.md
-  - AGENTS.md
-  - IMPROVEMENTS.md
-  - LICENSE
+  - changed-files:
+      - any-glob-to-any-file:
+          - README.md
+          - AGENTS.md
+          - IMPROVEMENTS.md
+          - LICENSE
 
 CI-CD:
-  - .github/**
-  - .pre-commit-config.yaml
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+          - .pre-commit-config.yaml
 
 config:
-  - astro.config.mjs
-  - eslint.config.js
-  - netlify.toml
-  - package.json
-  - tsconfig.json
-  - src/config/**
-  - src/content.config.ts
+  - changed-files:
+      - any-glob-to-any-file:
+          - astro.config.mjs
+          - eslint.config.js
+          - netlify.toml
+          - package.json
+          - tsconfig.json
+          - src/config/**
+          - src/content.config.ts
 
 content/general:
-  - src/content/about/**
-  - src/content/homepage/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/content/about/**
+          - src/content/homepage/**
 
 content/blog:
-  - src/content/blog/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/content/blog/**
 
 layout:
-  - src/layouts/**
-  - src/pages/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/layouts/**
+          - src/pages/**
 
 styles:
-  - src/styles/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/styles/**

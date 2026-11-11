@@ -19,9 +19,9 @@ jobs:
   warm_image_cache:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -31,7 +31,7 @@ jobs:
       # A new key per commit, so the cache always matches main. The previous
       # one is restored first: only new images are encoded.
       - name: Astro image cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules/.astro
           key: astro-images-${{ github.sha }}
