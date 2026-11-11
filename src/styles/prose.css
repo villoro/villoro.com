@@ -356,10 +356,11 @@
 .al-body .article-content .notice > span:last-child { margin-left: 0; }
 .al-body .article-content .notice p           { margin: 0; }
 .al-body .article-content .notice p + p       { margin-top: 8px; }
+/* No `display` here: it would beat Tailwind's `.hidden` / `dark:hidden`, which
+   FancyLink uses to show only the light or the dark favicon. */
 .al-body .article-content .notice img {
   margin: 0;
   border-radius: 2px;
-  display: inline-block;
   vertical-align: middle;
 }
 
