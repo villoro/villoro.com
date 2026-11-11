@@ -19,11 +19,9 @@
   --color-success: #10b981;  /* "active" dot indicator */
 
   /* --- Font families --- */
-  --font-display: "Fraunces", Georgia, serif;           /* display headlines — hero H1s, section H2s, post titles */
   --font-body: "Heebo", system-ui, sans-serif;          /* body text, UI (default font-family) */
   --font-ui: "Signika", system-ui, sans-serif;          /* button labels, stat labels, nav links */
   --font-mono: "JetBrains Mono", "Fira Code", monospace; /* code blocks, inline code */
-  --font-accent: "Instrument Serif", Georgia, serif;    /* small accent italics */
 
   /* --- Type scale (desktop) --- */
   --text-hero: 7.25rem;         /* 116px / lh 0.9  / tracking -0.045em — hero H1 */

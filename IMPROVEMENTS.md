@@ -21,7 +21,6 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 | PR | Topic | Goal | Effort | Impact | Who |
 | --- | :--- | :--- | --- | --- | :--- |
 | 1 | Metadata leftovers | SEO | Low | Low | subagent |
-| 3 | Self-host the remaining fonts | Speed | Medium | High | subagent |
 | 4 | Shortcodes to `.astro` | Speed, maintenance | Medium | Medium | subagent |
 | 5 | Search without React, drop React | Speed, maintenance | Medium–High | High | senior |
 | 6 | Dead config and stale docs | Maintenance | Low | Low | subagent |
@@ -44,18 +43,6 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 - **`og:title` and `<title>` use `meta_title`, the JSON-LD headline uses `title`.** Decide whether that is intended and write the rule in `AGENTS.md`.
 - **Trailing-slash links.** Canonicals have no trailing slash, but 42 in-post `FancyLink`s point to `https://villoro.com/blog/<slug>/`. Handled in PR 4 (FancyLink strips it). The RSS feed keeps the slash **on purpose**: the link is also the item GUID, and changing it makes feed readers show every old post as new.
 - **Category/tag descriptions are generic** ("All posts in the 🐍 Python category."). Add an optional `description` to `categoryMetadata.ts`.
-
-## PR 3. Self-host the remaining fonts
-
-Heebo and Signika are already self-hosted (#371). The rest still comes from Google on every page:
-
-- **Instrument Serif is downloaded and never used.** `--font-accent` has no consumer in `src/`. Remove the request and the token.
-- **Fraunces** (display, used for every H1) loads through a `preload as="style"` + `onload` swap from `fonts.googleapis.com`, full axis range `300..800`, roman and italic. Self-host the variable `woff2` (latin + latin-ext) in `public/fonts`, the same way as Heebo, and preload the latin roman file only.
-- **JetBrains Mono** is requested on every page but only used in posts and the TOC. Self-host it and declare it from `ArticleLayout`, not `BaseRedesign`.
-- Once nothing is fetched from Google, delete both `preconnect` links and the `<noscript>` block.
-- **`astro-font` can go.** It is only a wrapper that prints `@font-face` rules and it already broke the build once. Plain `@font-face` in a CSS file plus one `<link rel="preload">` does the same with no dependency. Also remove the `fontPrimary`/`fontSecondary` regex parsing of `theme.json` in `BaseRedesign`.
-
-**Check:** no request to `fonts.googleapis.com` or `fonts.gstatic.com` in the built HTML; re-run PageSpeed on the home page and write the new numbers in the PR. The last measurement (June 2026, mobile) was Perf 70, FCP 3.8 s, LCP 5.1 s.
 
 ## PR 4. Shortcodes to `.astro`
 
@@ -124,7 +111,7 @@ One script (`node --test`, no new dependency) that walks `dist/**/*.html` and as
 - every post has JSON-LD inside `<head>` that parses, with an author that isn't "Admin" and an image URL that exists in `dist/`;
 - every URL in the sitemap exists and isn't `noindex`;
 - no draft slug appears in the sitemap, RSS or `search.json`;
-- no request to Google Fonts (after PR 3) and no `client.*.js` (after PR 5).
+- no request to Google Fonts, and no `client.*.js` (after PR 5).
 
 Then a few unit tests with Vitest for the pure functions that have subtle logic: `plainify` in `textConverter.ts`, the MDX-to-text code in `search.json.ts`, `similarItems`, `readingTime`.
 
@@ -151,7 +138,7 @@ Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native S
 
 ## PR 12. Lighthouse budget on previews
 
-Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). Worth doing only after PRs 3 and 5, when there is a good number to protect.
+Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). Worth doing only after PR 5, when there is a good number to protect. The fonts are self-hosted since v3.2.32 and PageSpeed hasn't been re-run since: the last numbers (June 2026, mobile) were Perf 70, FCP 3.8 s, LCP 5.1 s. Also check CLS, because the metric-adjusted fallback fonts that `astro-font` generated are gone.
 
 ## PR 13. Colour contrast
 

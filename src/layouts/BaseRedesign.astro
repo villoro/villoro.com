@@ -6,53 +6,13 @@
  */
 import TwSizeIndicator from "@/components/TwSizeIndicator.astro";
 import config from "@/config/config.json";
-import theme from "@/config/theme.json";
 import { plainify } from "@/lib/utils/textConverter";
 import { resolveImage } from "@/lib/utils/blogImages";
 import { getImage } from "astro:assets";
 import "@/styles/main.css";
-import { AstroFont } from "astro-font";
 import { ClientRouter } from "astro:transitions";
 import { pwaInfo } from "virtual:pwa-info";
 import SearchModal from "./helpers/SearchModal";
-
-// Heebo + Signika are self-hosted in public/fonts (latin + latin-ext subsets of
-// the variable fonts). Fetching them from Google at build time broke the build:
-// Google sometimes returns extensionless /l/font?kit=... URLs that astro-font rejects.
-const LATIN =
-  "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD";
-const LATIN_EXT =
-  "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF";
-
-// One variable file per subset serves every weight; preload only the latin file
-const fontSources = (file: string, weights: number[], preload = false) =>
-  weights.flatMap((weight, i) => [
-    {
-      path: `./public/fonts/${file}-latin.woff2`,
-      weight,
-      style: "normal",
-      css: { "unicode-range": LATIN },
-      preload: preload && i === 0,
-    },
-    {
-      path: `./public/fonts/${file}-latin-ext.woff2`,
-      weight,
-      style: "normal",
-      css: { "unicode-range": LATIN_EXT },
-    },
-  ]);
-
-let fontPrimary, fontSecondary;
-if (theme.fonts.font_family.primary) {
-  fontPrimary = theme.fonts.font_family.primary
-    .replace(/\+/g, " ")
-    .replace(/:[ital,]*[ital@]*[wght@]*[0-9,;]+/gi, "");
-}
-if (theme.fonts.font_family.secondary) {
-  fontSecondary = theme.fonts.font_family.secondary
-    .replace(/\+/g, " ")
-    .replace(/:[ital,]*[ital@]*[wght@]*[0-9,;]+/gi, "");
-}
 
 export interface Props {
   title?: string;
@@ -147,47 +107,12 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
       </>
     )}
 
-    <!-- Fraunces (display) preloaded; Instrument Serif + JetBrains Mono async via display:optional -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=optional"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&display=swap" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;700&display=optional" />
-    </noscript>
-
-    <!-- Heebo + Signika via AstroFont -->
-    <AstroFont
-      config={[
-        {
-          src: fontSources("heebo", [400, 600], true),
-          preload: false,
-          display: "swap",
-          name: fontPrimary!,
-          fallback: "sans-serif",
-          cssVariable: "font-primary",
-        },
-        {
-          src: fontSources("signika", [500, 700]),
-          preload: false,
-          display: "optional",
-          name: fontSecondary!,
-          fallback: "sans-serif",
-          cssVariable: "font-secondary",
-        },
-      ]}
-    />
+    {/* Fonts are self-hosted (src/styles/fonts.css). Preload what the first paint needs:
+        Heebo for the body, and Signika for headings. Signika is `font-display: optional`,
+        so without the preload it misses its short window on a first visit and every
+        heading stays in the fallback font. */}
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/heebo-latin.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/signika-latin.woff2" crossorigin />
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <title>{plainify(meta_title ? meta_title : title ? title : config.site.title)}</title>
