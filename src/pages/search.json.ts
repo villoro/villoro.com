@@ -42,7 +42,7 @@ export async function GET() {
           category: post.data.category,
           tags: post.data.tags,
         },
-        // Astro 6 collection types don't expose body publicly — see AGENTS.md
+        // Astro collection types do not expose body publicly — see AGENTS.md
         content: plainifyMdx((post as { body?: string }).body ?? "").slice(
           0,
           MAX_CONTENT_LENGTH,
