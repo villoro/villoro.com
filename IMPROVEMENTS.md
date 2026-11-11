@@ -20,8 +20,8 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 
 | PR | Topic | Goal | Effort | Impact | Who |
 | --- | :--- | :--- | --- | --- | :--- |
+| 0 | Canonical URLs redirect (trailing slash) | SEO | Medium | High | senior |
 | 1 | Metadata leftovers | SEO | Low | Low | subagent |
-| 4 | Shortcodes to `.astro` | Speed, maintenance | Medium | Medium | subagent |
 | 5 | Search without React, drop React | Speed, maintenance | Medium–High | High | senior |
 | 6 | Dead config and stale docs | Maintenance | Low | Low | subagent |
 | 7 | CI: one build job, real budgets, no audit noise | Maintenance | Medium | Medium | subagent |
@@ -35,37 +35,33 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 
 ---
 
+## PR 0. Canonical URLs redirect (trailing slash)
+
+Found while checking a deploy preview, and the most important SEO item left.
+
+**Netlify serves every page with a trailing slash and redirects the other form:** `https://villoro.com/blog/duckdb-instead-of-spark` answers `301` to `/blog/duckdb-instead-of-spark/`. But the site is configured with `trailing_slash: false`, so everything it generates uses the form that redirects:
+
+- the `<link rel="canonical">` and `og:url` of every page, so each page declares as canonical a URL that redirects back to itself;
+- every URL in the sitemap;
+- `mainEntityOfPage` in the JSON-LD;
+- every internal link (nav, cards, pagination, TOC), so each click costs an extra redirect.
+
+Only the RSS feed and the in-post `FancyLink`s (which are written with the slash) point to the URL that answers `200`.
+
+**Change:** set `trailing_slash: true` in `src/config/config.json` (Astro `trailingSlash: "always"`), then fix what assumes the old form: the canonical in `BaseRedesign`, hard-coded `/blog/${slug}` style hrefs in components and pages, pagination hrefs, the sitemap `filter`/`serialize` regexes in `astro.config.mjs` (they strip the slash before matching, check they still do), and `src/pages/search.json.ts`.
+
+**Check:** on the deploy preview, `curl -I` the canonical of the home page, a post, a tag and a paginated listing: all must answer `200`, not `301`. PR 8 should assert that every internal `href` ends with `/` or has a file extension.
+
 ## PR 1. Metadata leftovers
 
 The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas, home description, `og:site_name`, home `Person`/`WebSite`, `robots.txt`). What is left is small:
 
 - **`og:title` and `<title>` use `meta_title`, the JSON-LD headline uses `title`.** Decide whether that is intended and write the rule in `AGENTS.md`.
-- **Trailing-slash links.** Canonicals have no trailing slash, but 42 in-post `FancyLink`s point to `https://villoro.com/blog/<slug>/`. Handled in PR 4 (FancyLink strips it). The RSS feed keeps the slash **on purpose**: the link is also the item GUID, and changing it makes feed readers show every old post as new.
 - **Category/tag descriptions are generic** ("All posts in the 🐍 Python category."). Add an optional `description` to `categoryMetadata.ts`.
-
-## PR 4. Shortcodes to `.astro`
-
-First half of removing React. Nine shortcodes are auto-imported; usage across the 82 MDX files:
-
-| Shortcode | Posts using it | Action |
-| --- | --- | :--- |
-| `FancyLink` | 73 | port to `.astro` |
-| `FileName` | 31 | port to `.astro` |
-| `TerminalOutput` | 7 | port to `.astro` |
-| `Accordion` | 6 | port to `.astro` on top of `<details>`/`<summary>` |
-| `Button` | 4 | port to `.astro` |
-| `Tabs`, `Tab`, `Video`, `Notice` | 0 | delete |
-
-- `Accordion` is the only one hydrated (`client:load` in 6 posts, 15 places). With `<details>` it needs no JS; remove the `client:load` attributes from those posts.
-- `helpers/DynamicIcon.tsx` has no consumer: delete it. With `Notice` gone, **`react-icons` has no consumer either**: remove the dependency.
-- Deleting `Tabs.tsx` also clears the only two ESLint warnings in the repo.
-- `astro-auto-import` accepts `.astro` files; update the list in `astro.config.mjs` and the shortcode section of `AGENTS.md`.
-
-**Check:** build, then compare the rendered HTML of one post per shortcode before and after (`0073` for Accordion, `0054` for the most `client:load`s).
 
 ## PR 5. Search without React, drop React
 
-`SearchModal client:idle` in `BaseRedesign` is the last island. Because of it **every page downloads `client.*.js`, 213 KB (React + ReactDOM)**, for a modal most visitors never open.
+`SearchModal client:idle` in `BaseRedesign` is the last island: the shortcodes are `.astro` components since v3.2.34 and `react-icons` is gone. Because of it **every page downloads `client.*.js`, 213 KB (React + ReactDOM)**, for a modal most visitors never open.
 
 - Rewrite `SearchModal.tsx` + `SearchResult.tsx` (389 lines) as one `.astro` component with a `<dialog>` and a plain `<script>`. Keep the behaviour: lazy fetch of `/search.json` on first open, keyboard shortcut, arrow-key navigation, highlighted matches.
 - Load the script **on first open** (dynamic `import()` from the search trigger), not on idle.
@@ -82,7 +78,7 @@ First half of removing React. Nine shortcodes are auto-imported; usage across th
 - `scripts/removeDarkmode.js` and the `remove-darkmode` npm script. Delete.
 - `BaseRedesign.astro`: `<meta name="theme-name" content="astroplate">`, `<meta http-equiv="Content-Type">`, `item-prop="url"` on the canonical, and the header comment that mentions the removed `Base.astro`. Delete.
 - Root `images/` folder (`logo.png`, `mockup_*.jpg`, `pagespeed_rating.png`): only the README uses it. Keep what the README shows, delete the rest.
-- **Two broken favicons**: posts reference `/favicons/apache.ico` and `/favicons/aws-dark.ico`, which don't exist. Fix the mapping in `FancyLink` (or add the files).
+- `src/styles/components.css` still has `.tab-content-panel` rules for the deleted `Tabs` shortcode. Delete.
 - **Ten `http://` outbound links** (numba, flask.pocoo.org, jinja.pocoo.org, supervisord, eepurl…). Move to `https://` where the site supports it, including `subscribe.link` in `config.json`.
 - `.github/labeler.yml` lists paths that no longer exist (`postcss.config.js`, `src/content/config.ts`, `src/hooks/**`, `src/content/contact/**`). Bring it in line with the tree.
 - **`AGENTS.md` is out of date**: says Astro 6 and React 18 (it's Astro 7; React 19 until PR 5), still lists the dead `@/partials/*` alias as present (already removed from `tsconfig.json`), says the prose styles live in `ArticleLayout.astro` at "~700 lines" (it's 373 lines; they moved to `src/styles/prose.css`), and doesn't mention the PWA, `rss.xml.ts`, `npm run lint`/`typecheck`/`size`, or the `bundle_size` and `lint_and_typecheck` CI jobs. Rewrite those parts.
@@ -105,7 +101,7 @@ There are no tests. For a static site the cheapest useful ones are **data-qualit
 
 One script (`node --test`, no new dependency) that walks `dist/**/*.html` and asserts:
 
-- every internal `href`/`src` resolves to a file (today: 2 failures, the favicons of PR 6);
+- every internal `href`/`src` resolves to a file (it passes today);
 - every page has exactly one `<h1>`, a unique `<title>`, a non-empty description without leading/trailing whitespace, and a canonical;
 - every post has JSON-LD inside `<head>` that parses, with an author that isn't "Admin" and an image URL that exists in `dist/`;
 - every URL in the sitemap exists and isn't `noindex`;

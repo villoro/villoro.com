@@ -16,9 +16,9 @@ Personal website/blog for Arnau Villoro (Data Engineer, Barcelona). Static Astro
 | Framework   | Astro 6 (static SSG)                              |
 | Content     | MDX + Astro content collections (Zod schemas)     |
 | Language    | TypeScript (strict)                               |
-| UI islands  | React 18 (search modal, shortcodes)               |
+| UI islands  | React 19 (search modal only; shortcodes are Astro) |
 | Styling     | Tailwind CSS 4 (`@theme` block) + custom tokens   |
-| Icons       | `react-icons` (FA6, `Fa*` prefix), inline SVGs    |
+| Icons       | Inline SVGs (no icon library)                     |
 | Images      | `astro:assets` + Sharp                            |
 | Comments    | Giscus                                            |
 | Deploy      | Netlify (auto on push to `main`)                  |
@@ -69,8 +69,8 @@ src/
 │   ├── ArticleLayout.astro         single-post layout (~700 lines, prose styles inside)
 │   ├── BlogListingLayout.astro     blog/category/tag listing layout (heroVariant: "full" | "simple")
 │   ├── components/                 reusable .astro UI (see "Components" below)
-│   ├── shortcodes/                 auto-imported MDX components (.tsx)
-│   └── helpers/                    React islands: SearchModal, SearchResult, DynamicIcon
+│   ├── shortcodes/                 auto-imported MDX components (.astro, no client JS)
+│   └── helpers/                    React island: SearchModal, SearchResult, useSearchKeyboard
 ├── content/                        Astro content collections (schemas in src/content.config.ts)
 │   ├── blog/                       *.mdx, FLAT (not by year). `9999-*` prefix = drafts/WIP
 │   ├── about/-index.md
@@ -141,11 +141,13 @@ Three top-level layouts; every page picks one:
 
 Listed in `astro.config.mjs` under `AutoImport.imports` — available in any `.mdx` without import:
 
-`Accordion`, `Button`, `FancyLink`, `FileName`, `Notice`, `Tab`, `Tabs`, `TerminalOutput`, `Video`
+`Accordion`, `Button`, `FancyLink`, `FileName`, `Notice`, `TerminalOutput`
 
-Source files are `src/layouts/shortcodes/*.tsx`. To add a new shortcode: drop a `.tsx` in that folder and add `"@/shortcodes/Name"` to the `AutoImport` list.
+`Notice` is what `remark-callouts` emits for `> [!TYPE]` blocks, so it is used by almost every post even though no post writes `<Notice>`. `Accordion` is a native `<details>`/`<summary>` (no JS, no `client:` directive); styles in `components.css`.
 
-**`FancyLink` `company` prop:** the component picks a favicon based on `company`. When linking to a site without a dedicated favicon mapping, set `company="default"` (used for generic links like RFCs, IETF, MDN, etc.). Existing `company="..."` values in posts (e.g. `iceberg`) map to specific brand icons.
+Source files are `src/layouts/shortcodes/*.astro`. To add a new shortcode: drop a `.astro` in that folder and add `"@/shortcodes/Name.astro"` (explicit extension) to the `AutoImport` list. Don't use `client:*` directives in MDX.
+
+**`FancyLink` `company` prop:** the component picks a favicon from `public/favicons` based on `company` (default: derived from the host; `x.apache.org` maps to `x`). A missing `-dark` file falls back to the light icon and a missing icon to `default`. When linking to a site without a dedicated favicon mapping, set `company="default"` (used for generic links like RFCs, IETF, MDN, etc.). Existing `company="..."` values in posts (e.g. `iceberg`) map to specific brand icons.
 
 ## Custom callout syntax (remark-callouts)
 
@@ -306,7 +308,7 @@ Posts are co-written, not generated in one go:
 | Edit nav / footer                           | `src/layouts/components/SiteNav.astro` / `SiteFooter.astro`.                                |
 | Edit colors                                 | `src/styles/tokens.css` (preferred) or `src/config/theme.json` → regenerates generated-theme.css. |
 | Edit pagination size, similar-items count   | `src/config/config.json` → `settings`.                                                      |
-| Add a shortcode                             | New `.tsx` in `src/layouts/shortcodes/` + add to `AutoImport.imports` in `astro.config.mjs`. |
+| Add a shortcode                             | New `.astro` in `src/layouts/shortcodes/` + add `"@/shortcodes/Name.astro"` to `AutoImport.imports` in `astro.config.mjs`. |
 | Add a callout type                          | `src/plugins/remark-callouts.mjs`.                                                          |
 | Add a new icon (right-arrow / social)       | Use `<IconArrow />` / `<SocialIcon name="…" />`. Add a new `name` case to `SocialIcon` if needed. |
 | Add a layout-level field to about/homepage  | Update Zod schema in `src/content.config.ts` AND the corresponding `-index.md`.             |

@@ -1,0 +1,15 @@
+---
+interface Props {
+  class?: string;
+  className?: string;
+  color?: "yellow" | "grey" | "gray" | "stone" | "red" | "green";
+}
+
+const { class: cls = "", className = "", color = "yellow" } = Astro.props;
+const tone = color === "gray" || color === "stone" ? "grey" : color || "yellow";
+const extra = `${cls} ${className}`.trim();
+---
+
+<div class={`terminal-output terminal-output--${tone} ${extra}`.trim()}>
+  <div class="terminal-output__body"><slot /></div>
+</div>
