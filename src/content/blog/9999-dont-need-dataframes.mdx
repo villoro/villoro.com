@@ -349,6 +349,9 @@ Spark is the other DataFrame that shows up in data engineering, and my answer is
 
 And even when you do need it, that's for the T. The E and the L of an API still move rows, and those still don't need a frame.
 
+> [!tip] An API decides the speed, not your cluster
+> When you read from an API, an SDK or any other external service, the limit is almost always the service: how many rows it returns per call, how many calls it allows, and how fast it answers. Salesforce serves 2000 rows per call whatever you do. A cluster doesn't make those calls faster, it only adds machines that wait.
+
 ## Conclusion
 
 The DataFrame got into our extraction jobs with ETL, when the job did the transformation and pandas was the tool for it. With ELT the transformation moved to SQL, but the DataFrame stayed, and all it did was carry rows from the extract to the load, using several times their memory and changing some values on the way.
