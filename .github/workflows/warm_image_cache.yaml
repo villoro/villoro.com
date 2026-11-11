@@ -1,0 +1,40 @@
+name: Warm image cache
+
+# GitHub only shares a cache between pull requests when it was saved from the
+# default branch. CI.yaml runs on pull requests only, so this workflow builds
+# the site on every push to main and saves Astro's optimized-image cache
+# there. The build job in CI.yaml restores it and only encodes the images a
+# pull request adds or changes.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  warm_image_cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # A new key per commit, so the cache always matches main. The previous
+      # one is restored first: only new images are encoded.
+      - name: Astro image cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.astro
+          key: astro-images-${{ github.sha }}
+          restore-keys: astro-images-
+
+      - run: npm run build

@@ -99,7 +99,8 @@ scripts/
 .github/
 ├── workflows/
 │   ├── CI.yaml                     PR checks: pre-commit, labeler, version bump, image aspect-ratio
-│   └── tag_commits_on_main.yaml    auto-tag if package.json version changed
+│   ├── tag_commits_on_main.yaml    auto-tag if package.json version changed
+│   └── warm_image_cache.yaml       builds on main to save Astro's image cache for PR builds
 ├── scripts/check_aspect_ratio.py   asserts blog images are 16:9, favicon 1:1
 └── labeler.yml                     PR auto-labels
 ```

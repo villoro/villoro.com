@@ -97,13 +97,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Astro's optimized-image cache. Restored after `npm ci` (which wipes
-      # node_modules) so the build only encodes images that changed.
+      # Astro's optimized-image cache, saved from main by
+      # warm_image_cache.yaml. Restored after `npm ci` (which wipes
+      # node_modules) so the build only encodes images this PR changes.
+      # Restore only: a cache saved from a PR can't be read by other PRs.
       - name: Restore Astro image cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: node_modules/.astro
-          key: astro-images-${{ hashFiles('src/images/**') }}
+          key: astro-images-${{ github.sha }}
           restore-keys: astro-images-
 
       - name: Build project
