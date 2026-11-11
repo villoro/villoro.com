@@ -3,10 +3,10 @@ import { getImage } from "astro:assets";
 import { resolveImage } from "@/lib/utils/blogImages";
 import { plainifyMdx } from "@/lib/utils/searchText";
 
-// Static endpoint: built once into dist/search.json and lazy-fetched by
-// SearchModal on first open. Replaces the old scripts/jsonGenerator.js —
-// being inside Astro lets thumbnails go through the image pipeline (blog
-// images in src/images/blog are no longer served at their raw paths).
+// Static endpoint: built once into dist/search.json and fetched by
+// SearchModal.astro the first time search opens. Being an Astro endpoint
+// lets the thumbnails go through the image pipeline (blog images in
+// src/images/blog are not served at their raw paths).
 
 // Cap the indexed body per post so search.json stays small. Plain text only —
 // long posts lose tail-end recall, which is an acceptable trade-off.

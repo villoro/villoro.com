@@ -94,7 +94,7 @@ src/
 │   ├── blogUtils.astro             blog-specific queries
 │   ├── taxonomyParser.astro        getTaxonomy() for tags/categories
 │   ├── listingData.ts              CategoryItem type + ribbon data
-│   └── utils/                      blogImages (resolveImage), dateFormat, readingTime, similarItems, sortFunctions, taxonomyFilter, textConverter (humanize, slugify, plainify)
+│   └── utils/                      blogImages (resolveImage), dateFormat, readingTime, similarItems, sortFunctions, taxonomyFilter, textConverter (humanize, slugify, plainify), url (withTrailingSlash), searchText (plainifyMdx)
 ├── config/
 │   ├── config.json                 site, settings (pagination=9, blog_folder="blog"), giscus, subscribe, buymeacoffee
 │   ├── theme.json                  legacy colors + fonts (consumed by generated-theme.css)
@@ -269,7 +269,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
   - `labeler` (auto PR labels from `.github/labeler.yml`)
   - `check_version` (`package.json` and `package-lock.json` version must be exactly one above `main`)
   - `aspect_ratio_check` — `python .github/scripts/check_aspect_ratio.py` validates blog images are 16:9, favicons 1:1
-  - `bundle_size` — builds the site (restoring the image cache saved by `warm_image_cache.yaml`) and runs `npm run size` against `.size-limit.json`
+  - `tests` — builds the site (restoring the image cache saved by `warm_image_cache.yaml`), runs `npm run size` against `.size-limit.json`, then `npm test`
 - `tag_commits_on_main.yaml` auto-tags commits on main if `package.json` version bumped.
 
 ## Image conventions
