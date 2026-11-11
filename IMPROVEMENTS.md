@@ -21,7 +21,6 @@ Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c`
 | PR | Topic | Goal | Effort | Impact | Who |
 | --- | :--- | :--- | --- | --- | :--- |
 | 1 | Fix wrong metadata in every post | SEO | Low | High | subagent |
-| 2 | Sitemap and thin pages | SEO | Low | Medium | subagent |
 | 3 | Self-host the remaining fonts | Speed | Medium | High | subagent |
 | 4 | Shortcodes to `.astro` | Speed, maintenance | Medium | Medium | subagent |
 | 5 | Search without React, drop React | Speed, maintenance | Medium–High | High | senior |
@@ -54,13 +53,6 @@ These are bugs, not polish. They are in the HTML of every published post today.
 - **Category/tag descriptions are duplicated** across their paginated pages ("All posts in the 🐍 Python category."). Harmless because pages 2+ are `noindex`, but page 1 deserves a real sentence: add an optional `description` to `categoryMetadata.ts`.
 
 **Check:** PR 8 turns each of these into an assertion. Until then, grep the built HTML of one post.
-
-## PR 2. Sitemap and thin pages
-
-- **The sitemap lists pages that are `noindex`.** 137 of its 215 URLs are tag, category and `page/N` URLs; the paginated ones carry `noindex,nofollow`. Give `sitemap()` a `filter` that drops `/page/`.
-- **No `lastmod`.** Posts already have `date` and `updated_date`. Use the `serialize` hook of `@astrojs/sitemap` with a slug-to-date map built from the collection.
-- **27 of the 46 tags have one or two posts.** Each is a page with a hero and one card. Mark tag pages with fewer than 3 posts `noindex,follow` and drop them from the sitemap. Don't delete the tags: they still drive related posts.
-- **`noindex,nofollow` on paginated listings** stops crawlers from following links to older posts. Use `noindex,follow`.
 
 ## PR 3. Self-host the remaining fonts
 
@@ -103,7 +95,7 @@ First half of removing React. Nine shortcodes are auto-imported; usage across th
 - It must survive `ClientRouter` navigations: bind on `astro:page-load`, or mark the dialog `transition:persist`.
 - `search.json` is 370 KB uncompressed for 76 posts and grows with every post. It's fetched lazily, so it isn't urgent, but lower the per-post text cap or drop the body and index title + description + headings + tags.
 - Then remove `react`, `react-dom`, `@astrojs/react`, `@types/react*`, `eslint-plugin-react*`, the `react()` integration, `"jsx": "react"` in `tsconfig.json`, and the React blocks in `eslint.config.js`.
-- `marked` is imported by `SearchResult.tsx`, `textConverter.ts` and `search.json.ts`; check whether it is still needed once the first is gone. `gray-matter` is already unused: remove it.
+- `marked` is imported by `SearchResult.tsx`, `textConverter.ts` and `search.json.ts`; check whether it is still needed once the first is gone. `gray-matter` and `github-slugger` are used by `src/lib/blogIndex.mjs` (sitemap rules), so they stay.
 
 **Check:** the JS budget of PR 7 should drop from 300 KB to well under 50 KB. Test search in the preview build on a phone-sized viewport, in both themes, after a soft navigation.
 
