@@ -11,6 +11,14 @@ import remarkCollapse from "remark-collapse";
 import remarkToc from "remark-toc";
 import sectionize from "@hbsnow/rehype-sectionize";
 import config from "./src/config/config.json";
+import { isThinTag, readPublishedPosts, tagCounts } from "./src/lib/blogIndex.mjs";
+
+const posts = readPublishedPosts();
+const counts = tagCounts(posts);
+const lastmodBySlug = new Map(
+  posts.filter((p) => p.date).map((p) => [p.slug, new Date(p.date).toISOString()]),
+);
+const pathOf = (url) => url.replace(/^https?:\/\/[^/]+/, "").replace(/\/$/, "");
 
 export default defineConfig({
   site: config.site.base_url ? config.site.base_url : "http://examplesite.com",
@@ -26,7 +34,20 @@ export default defineConfig({
   },
   integrations: [
     react(),
-    sitemap(),
+    sitemap({
+      // Paginated listings are noindex; thin tag pages are noindex too.
+      filter: (url) => {
+        const pathname = pathOf(url);
+        if (pathname.includes("/page/")) return false;
+        const tag = pathname.match(/^\/tags\/([^/]+)$/)?.[1];
+        return !(tag && isThinTag(counts.get(tag) ?? 0));
+      },
+      serialize: (item) => {
+        const slug = pathOf(item.url).match(/^\/blog\/([^/]+)$/)?.[1];
+        const lastmod = slug && lastmodBySlug.get(slug);
+        return lastmod ? { ...item, lastmod } : item;
+      },
+    }),
     AstroPWA({
       registerType: "autoUpdate",
       includeAssets: ["images/favicon.png"],
