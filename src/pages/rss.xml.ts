@@ -21,6 +21,7 @@ export async function GET(context: { site?: URL }) {
       author: post.data.author,
       link: `/blog/${post.data.slug || post.id}`,
     })),
+    trailingSlash: false,
     customData: `<language>en</language>`,
   });
 }
