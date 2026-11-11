@@ -345,9 +345,14 @@ None of this means DataFrames are bad. I still use them every week, in notebooks
 
 ## Conclusion
 
-{/*
-EL moves rows, the T is SQL, so the frame has no job left in production. Closing quote.
-*/}
+The DataFrame got into our extraction jobs with ETL, when the job did the transformation and pandas was the tool for it. With ELT the transformation moved to SQL, but the DataFrame stayed, and all it did was carry rows from the extract to the load, using several times their memory and changing some values on the way.
+
+Arrow and DuckDB do that job better. Python keeps one small page of rows at a time, DuckDB stages the rest, and the lake gets one write per run. For us that meant about 5x less memory per row, half the memory on our biggest Salesforce jobs, a wide table that now fits on a smaller machine, and values that land as they came. The price was owning the write logic, and learning a few things about merges, backfills and disks on the way.
+
+> [!tip] Next time you write an extraction job
+> Look at what the DataFrame in it actually does. If it only carries rows from the source to the lake, you probably don't need it: build Arrow pages and let DuckDB write them.
+
+If you've removed DataFrames from your jobs too, or found a case in production where you really need one, I'd love to hear about it in the comments.
 
 ## Appendix: how we measured
 
