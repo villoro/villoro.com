@@ -91,7 +91,7 @@ The first answer I usually get is: use Polars instead of pandas. Polars is much 
 But it's still a DataFrame, and the problem is not which one. In an EL job there is nothing for a frame to do. And for writing Iceberg, it doesn't help much either:
 
 * **Writing Iceberg is experimental.** Polars' `write_iceberg` is still marked as unstable, and it goes through pyiceberg, which is one more dependency.
-* **We want to control the merge.** As I explained in the [previous post](https://villoro.com/blog/duckdb-instead-of-spark/#the-trade-off-you-write-the-write-logic), writing the merge ourselves with DuckDB is what lets us add metadata to every row (how many times it was written, when it was first exported) and decide how rows behave: which version wins, and what happens to a key that comes twice.
+* **We want to control the merge.** As I explained in <FancyLink linkText="the trade-off of the previous post" url="https://villoro.com/blog/duckdb-instead-of-spark/#the-trade-off-you-write-the-write-logic" dark="true"/>, writing the merge ourselves with DuckDB is what lets us add metadata to every row (how many times it was written, when it was first exported) and decide how rows behave: which version wins, and what happens to a key that comes twice.
 * **Its type inference doesn't like API data**, where the same field can be a number in one row and a string in the next.
 
 What the job really needs is a table in a format the writer understands, and that format is **Arrow**: DuckDB, Parquet and Iceberg all speak it.
@@ -101,13 +101,71 @@ What the job really needs is a table in a format the writer understands, and tha
 
 ## EL without a frame: rows in Arrow, writes in DuckDB
 
-{/*
-The design with the diagram: a page of dicts -> Arrow table -> DuckDB temp table (spills) -> one
-write into Iceberg (Glue). Python holds one page at a time.
-The code, short: the Salesforce job barely changes (write_records call). Page and to_text in an
-Accordion.
-One-way door callout (metadata columns).
-*/}
+So we wrote our own loader, `write_records`. It takes the rows as Python has them, a list of dicts or an iterator of pages of dicts, and never builds a frame:
+
+1. **Each page of rows becomes an Arrow table.** One pass per column: each value is turned into text the way we want it, straight into an Arrow array. Arrow keeps a column of strings as one buffer of bytes, without a Python object per value.
+2. **DuckDB adds the page to a temp table.** It reads the Arrow table in place and copies the rows into its own storage, which spills to disk when it goes past its memory limit. Then the page, and the dicts behind it, are freed.
+3. **When every page is staged, DuckDB writes the Iceberg table**, through the Glue catalog: create, append, overwrite or merge. It's the same engine as in the previous post, so the deduplication, the merge and the metadata columns come for free. The whole run is **one commit**, or a few on a very big merge (more on that later).
+
+![Where the rows go, before and after](../../images/posts/2026/0075-rows-path.svg)
+
+At any moment, Python only holds one page of rows. Everything else is in DuckDB.
+
+For the jobs, the change is small. This is our Salesforce export now: it reads the API in chunks and hands them to the loader as they arrive.
+
+```python
+chunks = iter_chunks(sf, batches, table, cols)  # yields lists of dicts, as the API serves them
+write_records(
+    chunks,
+    table.schema_out,
+    table.table_out,
+    merge_cols=table.merge_cols,
+    order_cols=[table.filter_col],  # if an id comes twice, the newest wins
+)
+```
+
+<Accordion client:load title="The page and the text, in code">
+
+```python
+def page_table(rows, as_snake_case=True):
+    """The Arrow table of a page of rows. A key missing in a row is NULL."""
+    keys = list(dict.fromkeys(key for row in rows for key in row))
+    columns = {
+        column_name(key, as_snake_case): pa.array(
+            [to_text(row.get(key)) for row in rows], pa.string()
+        )
+        for key in keys
+    }
+    return pa.table(columns)
+
+
+def to_text(value):
+    """How a value lands in the lake. An integer stays an integer (pandas made it a float)."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if isinstance(value, float):
+        return None if math.isnan(value) else repr(value)
+    if isinstance(value, (dict, list, tuple)):
+        return json.dumps(value, ensure_ascii=False, default=to_text)  # JSON, not a repr
+    if isinstance(value, datetime):
+        return value.isoformat(sep=" ")
+    return str(value)  # integers and booleans
+```
+
+DuckDB reads the Arrow table by name:
+
+```python
+con.register("page", page)
+con.execute("INSERT INTO staged BY NAME SELECT *, ? AS p_extracted_at FROM page", [extracted_at])
+con.unregister("page")
+```
+
+</Accordion>
+
+> [!warning] A one-way door
+> Like our database extractions, `write_records` adds two columns to every row: how many times it was written, and when it was first exported. The old writer fails on a table that has them, so a table moves once, for good. We moved one job at a time, and compared each table with production before moving it.
 
 ## What we got
 
