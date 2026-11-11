@@ -1,0 +1,92 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, -apple-system, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">ETL vs ELT</title>
+  <desc id="d">ETL: a Python job extracts, transforms with a DataFrame, and loads the result into the warehouse. ELT: a Python job extracts and loads the raw data into the lake, and dbt transforms it in SQL. In ELT, a DataFrame in the Python job has nothing left to transform.</desc>
+  <style>
+    .card { fill: #ffffff; }
+    .ttl, .txt { fill: #1f2333; }
+    .mut { fill: #6a6e82; }
+    .box { fill: #f3f5fb; stroke: #a6accb; }
+    .cont { fill: #fafbfe; stroke: #6a6e82; }
+    .e { fill: #e3ecff; stroke: #3a76ff; } .et { fill: #1f4fbf; }
+    .t { fill: #fdecc8; stroke: #d97706; } .tt { fill: #9a5300; }
+    .l { fill: #dcf5ea; stroke: #0f9d6b; } .lt { fill: #0b6b49; }
+    .idle { fill: none; stroke: #a6accb; }
+    .gln { stroke: #6a6e82; }
+    @media (prefers-color-scheme: dark) {
+      .card { fill: #171a2b; }
+      .ttl, .txt { fill: #e8eaf6; }
+      .mut { fill: #b4afb6; }
+      .box { fill: #23263a; stroke: #6a6e82; }
+      .cont { fill: #1d2034; stroke: #9aa0b5; }
+      .e { fill: #1c2a4d; stroke: #5b8cff; } .et { fill: #b9ceff; }
+      .t { fill: #3a2a12; stroke: #d97706; } .tt { fill: #f5c27a; }
+      .l { fill: #12352a; stroke: #1fae7a; } .lt { fill: #9fe3c6; }
+      .idle { stroke: #6a6e82; }
+      .gln { stroke: #9aa0b5; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M1 1 L10 6 L1 11 z" fill="#6a6e82"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="900" rx="24" class="card"/>
+
+  <text x="800" y="66" text-anchor="middle" font-size="40" font-weight="700" class="ttl">ETL vs ELT</text>
+  <text x="800" y="106" text-anchor="middle" font-size="23" class="mut">the transformation moved out of the Python job, the DataFrame didn't</text>
+
+  <!-- ETL -->
+  <text x="60" y="185" font-size="28" font-weight="700" class="txt">ETL</text>
+  <rect x="60" y="250" width="180" height="100" rx="14" class="box" stroke-width="2"/>
+  <text x="150" y="307" text-anchor="middle" font-size="22" font-weight="600" class="txt">Source</text>
+  <rect x="290" y="200" width="880" height="200" rx="20" class="cont" stroke-width="2.5"/>
+  <text x="315" y="238" font-size="22" font-weight="700" class="txt">Python job</text>
+  <rect x="320" y="255" width="230" height="110" rx="12" class="e" stroke-width="2.5"/>
+  <text x="435" y="303" text-anchor="middle" font-size="24" font-weight="700" class="et">E</text>
+  <text x="435" y="333" text-anchor="middle" font-size="19" class="et">extract</text>
+  <rect x="610" y="255" width="250" height="110" rx="12" class="t" stroke-width="2.5"/>
+  <text x="735" y="303" text-anchor="middle" font-size="24" font-weight="700" class="tt">T</text>
+  <text x="735" y="333" text-anchor="middle" font-size="19" class="tt">DataFrame</text>
+  <rect x="920" y="255" width="220" height="110" rx="12" class="l" stroke-width="2.5"/>
+  <text x="1030" y="303" text-anchor="middle" font-size="24" font-weight="700" class="lt">L</text>
+  <text x="1030" y="333" text-anchor="middle" font-size="19" class="lt">load</text>
+  <rect x="1240" y="250" width="300" height="100" rx="14" class="box" stroke-width="2"/>
+  <text x="1390" y="295" text-anchor="middle" font-size="22" font-weight="600" class="txt">Warehouse</text>
+  <text x="1390" y="323" text-anchor="middle" font-size="19" class="mut">modelled tables</text>
+  <g class="gln" stroke-width="2.5" marker-end="url(#a)">
+    <line x1="242" y1="300" x2="314" y2="300"/><line x1="552" y1="310" x2="604" y2="310"/>
+    <line x1="862" y1="310" x2="914" y2="310"/><line x1="1172" y1="300" x2="1234" y2="300"/>
+  </g>
+
+  <!-- ELT -->
+  <text x="60" y="490" font-size="28" font-weight="700" class="txt">ELT</text>
+  <rect x="60" y="555" width="180" height="100" rx="14" class="box" stroke-width="2"/>
+  <text x="150" y="612" text-anchor="middle" font-size="22" font-weight="600" class="txt">Source</text>
+  <rect x="290" y="505" width="580" height="200" rx="20" class="cont" stroke-width="2.5"/>
+  <text x="315" y="543" font-size="22" font-weight="700" class="txt">Python job</text>
+  <rect x="320" y="560" width="230" height="110" rx="12" class="e" stroke-width="2.5"/>
+  <text x="435" y="608" text-anchor="middle" font-size="24" font-weight="700" class="et">E</text>
+  <text x="435" y="638" text-anchor="middle" font-size="19" class="et">extract</text>
+  <rect x="610" y="560" width="230" height="110" rx="12" class="l" stroke-width="2.5"/>
+  <text x="725" y="608" text-anchor="middle" font-size="24" font-weight="700" class="lt">L</text>
+  <text x="725" y="638" text-anchor="middle" font-size="19" class="lt">load</text>
+  <rect x="930" y="555" width="230" height="100" rx="14" class="box" stroke-width="2"/>
+  <text x="1045" y="600" text-anchor="middle" font-size="22" font-weight="600" class="txt">Lake</text>
+  <text x="1045" y="628" text-anchor="middle" font-size="19" class="mut">raw tables</text>
+  <rect x="1220" y="505" width="320" height="200" rx="20" class="cont" stroke-width="2.5"/>
+  <text x="1245" y="543" font-size="22" font-weight="700" class="txt">dbt</text>
+  <rect x="1250" y="560" width="260" height="110" rx="12" class="t" stroke-width="2.5"/>
+  <text x="1380" y="608" text-anchor="middle" font-size="24" font-weight="700" class="tt">T</text>
+  <text x="1380" y="638" text-anchor="middle" font-size="19" class="tt">SQL models</text>
+  <g class="gln" stroke-width="2.5" marker-end="url(#a)">
+    <line x1="242" y1="605" x2="314" y2="605"/><line x1="552" y1="615" x2="604" y2="615"/>
+    <line x1="872" y1="605" x2="924" y2="605"/><line x1="1162" y1="605" x2="1214" y2="605"/>
+  </g>
+
+  <!-- the idle DataFrame -->
+  <rect x="465" y="760" width="230" height="74" rx="12" class="idle" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="580" y="805" text-anchor="middle" font-size="21" font-weight="600" class="mut">DataFrame?</text>
+  <line x1="580" y1="756" x2="580" y2="711" class="gln" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+  <text x="730" y="790" font-size="21" class="txt">Still in most Python jobs, with nothing left to transform:</text>
+  <text x="730" y="820" font-size="21" class="txt">it only carries the rows from E to L.</text>
+</svg>
