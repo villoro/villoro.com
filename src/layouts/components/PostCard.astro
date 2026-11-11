@@ -13,6 +13,7 @@ import type { CollectionEntry } from "astro:content";
 import ImageMod from "@/components/ImageMod.astro";
 import IconArrow from "@/components/IconArrow.astro";
 import { categoryMetadata } from "@/lib/categoryMetadata";
+import { getCategoryColors } from "@/lib/categoryColors";
 import { humanize } from "@/lib/utils/textConverter";
 import dateFormat from "@/lib/utils/dateFormat";
 import config from "@/config/config.json";
@@ -72,6 +73,11 @@ const href = `/${blog_folder}/${slug}/`;
 const catMeta = categoryMetadata[category] || { name: humanize(category) };
 const catName = catMeta.name;
 const catColor = catMeta.color ?? "var(--color-grey-500)";
+// Text colours derived from the hue so the category name reaches 4.5:1 in both themes
+const catText = getCategoryColors(category);
+const catStyle = catText
+  ? `--cat: ${catColor}; --cat-text: ${catText.text}; --cat-text-dark: ${catText.textDark}`
+  : "";
 
 const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 ---
@@ -100,7 +106,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       <div class="pc-big__meta-row">
         {badge && <span class="pc-chip">{badge}</span>}
         <span class="pc-big__meta-text">
-          <span style={`color: ${catColor}`}>{catName}</span>
+          <span class="pc-cat" style={catStyle}>{catName}</span>
           {formattedDate && <> · {formattedDate}</>}
           {readTime && <> · {readTime}</>}
         </span>
@@ -170,7 +176,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       )}
     </a>
     <div class="pc-small__body">
-      <span class="pc-small__cat" style={`color: ${catColor}`}>{catName}</span>
+      <span class="pc-small__cat pc-cat" style={catStyle}>{catName}</span>
       <h3 class="pc-small__title">
         <a href={href} class="pc-small__title-link">{title}</a>
       </h3>
@@ -183,8 +189,15 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 )}
 
 <style is:global>
-  /* Badge chip: token-yellow → blue in dark; ensure dark text stays readable */
-  .dark .pc-chip { background: var(--color-yellow-400); color: var(--color-on-accent); }
+  /* Category name as text: the derived accessible colour per theme.
+     Categories without a hue inherit the surrounding colour. */
+  .pc-cat { color: var(--cat-text, var(--color-grey-500)); }
+  .dark .pc-cat { color: var(--cat-text-dark, var(--color-grey-500)); }
+  /* The featured card is a dark surface on desktop: the raw hue reads well there */
+  .pc-big .pc-cat { color: var(--cat, var(--color-grey-500)); }
+  /* Badge chip: token-yellow → blue in dark, with pure white text on it.
+     (html.dark outweighs the scoped .pc-chip rule below, which would otherwise win.) */
+  html.dark .pc-chip { color: var(--color-on-dark); }
 
   .pc-big__img,
   .pc-med__img,
@@ -353,6 +366,8 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       padding: 20px 22px 22px;
     }
     .pc-big__meta-text { color: var(--color-grey-500); }
+    .pc-big .pc-cat { color: var(--cat-text, var(--color-grey-500)); }
+    .dark .pc-big .pc-cat { color: var(--cat-text-dark, var(--color-grey-500)); }
     .pc-big__title {
       font-size: var(--text-card-title);
       line-height: 1.2;

@@ -32,6 +32,7 @@ import { resolveImage } from "@/lib/utils/blogImages";
 import { getImage } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import type { TocItem } from "@/components/ArticleTOC.astro";
+import { getCategoryColors } from "@/lib/categoryColors";
 
 interface Props {
   // SEO
@@ -87,6 +88,12 @@ const {
 } = Astro.props;
 
 const catSlug = slugify(category);
+
+// Chip colours are derived from the hue so the label reaches 4.5:1
+const catChip = getCategoryColors(category);
+const heroCatStyle = catChip
+  ? `background: ${catChip.chipBg}; color: ${catChip.chipFg}`
+  : `background: ${catColor}`;
 
 const breadcrumbs = [
   { href: "/",    label: "Villoro" },
@@ -165,7 +172,7 @@ if (image) {
       />
 
       <div class="al-hero__body">
-        <span class="al-hero__cat" style={`background: ${catColor}`}>{catName}</span>
+        <span class="al-hero__cat" style={heroCatStyle}>{catName}</span>
         <h1 class="al-hero__title">{title}</h1>
 
         {tags.length > 0 && (
