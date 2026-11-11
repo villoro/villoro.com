@@ -85,12 +85,14 @@ src/
 │   └── shortcodes/                 auto-imported MDX components (.astro, no client JS)
 ├── content/                        Astro content collections (schemas in src/content.config.ts)
 │   ├── blog/                       *.mdx, FLAT (not by year). `9999-*` prefix = drafts/WIP
+│   ├── listing/blog.md             hero + section copy of the /blog listing (own collection)
 │   ├── about/-index.md
 │   └── homepage/-index.md
 ├── lib/
 │   ├── categoryMetadata.ts         category slug → display name + color (10 categories)
 │   ├── blogIndex.mjs               plain .mjs (astro.config.mjs can't import .ts/.astro): published posts from frontmatter, thin-tag rule, sitemap lastmod
 │   ├── contentParser.astro         getSinglePage(folder) — main collection helper
+│   ├── listingCopy.ts              getBlogListingCopy() — the `listing` collection entry
 │   ├── blogUtils.astro             blog-specific queries
 │   ├── taxonomyParser.astro        getTaxonomy() for tags/categories
 │   ├── listingData.ts              CategoryItem type + ribbon data
@@ -186,9 +188,10 @@ Types: `abstract` (alias `summary`), `tip` (`hint`), `success` (`check`), `quest
 
 ## Content collections
 
-Schemas in `src/content.config.ts` (Zod). Three collections:
+Schemas in `src/content.config.ts` (Zod). Four collections:
 
 - **blog** — flat folder of `*.mdx` (not subfolder-by-year). Filenames like `0067-marimo-notebooks.mdx`. The `9999-*` prefix is convention for drafts/WIP. Real drafts use frontmatter `draft: true` (filtered by `getSinglePage`).
+- **listing** — `listing/blog.md`: hero and section copy of the `/blog` listing (and of the category listings), read with `getBlogListingCopy()`. It is its own collection so the post schema only has post fields.
 - **about** — single `-index.md` with rich schema (hero/story/timeline/hobbies).
 - **homepage** — single `-index.md` with hero + ribbon + latest + companies blocks.
 

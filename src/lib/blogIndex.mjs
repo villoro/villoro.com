@@ -12,11 +12,11 @@ export const isThinTag = (count) => count < MIN_POSTS_TO_INDEX_TAG;
 
 const BLOG_DIR = path.resolve("src/content/blog");
 
-/** Published posts (no `-` index files, no drafts) read straight from frontmatter. */
+/** Published posts (no drafts) read straight from frontmatter. */
 export function readPublishedPosts(dir = BLOG_DIR) {
   return fs
     .readdirSync(dir)
-    .filter((f) => /\.mdx?$/.test(f) && !f.startsWith("-"))
+    .filter((f) => /\.mdx?$/.test(f))
     .map((f) => ({ file: f, data: matter(fs.readFileSync(path.join(dir, f), "utf8")).data }))
     .filter((p) => !p.data.draft)
     .map((p) => ({

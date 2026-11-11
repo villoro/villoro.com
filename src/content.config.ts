@@ -26,21 +26,25 @@ const blogCollection = defineCollection({
     tags: z.array(z.string()).default(["Others"]),
     draft: z.boolean().optional(),
     highlight: z.boolean().optional(),
+  }),
+});
 
-    hero: z
-      .object({
-        h1: z.array(z.string()).optional(),
-        lede: z.string().optional(),
-        count_label: z.string().optional(),
-      })
-      .optional(),
-
-    section: z
-      .object({
-        title: z.string().optional(),
-        meta: z.string().optional(),
-      })
-      .optional(),
+// Hero and section copy of the /blog listing, which lives apart from the posts
+const listingCollection = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/listing" }),
+  schema: z.strictObject({
+    title: z.string(),
+    meta_title: z.string().optional(),
+    description: z.string(),
+    hero: z.strictObject({
+      h1: z.tuple([z.string(), z.string()]),
+      lede: z.string(),
+      count_label: z.string(),
+    }),
+    section: z.strictObject({
+      title: z.string(),
+      meta: z.string(),
+    }),
   }),
 });
 
@@ -173,6 +177,7 @@ const homepageCollection = defineCollection({
 
 export const collections = {
   blog: blogCollection,
+  listing: listingCollection,
   about: aboutCollection,
   homepage: homepageCollection,
 };

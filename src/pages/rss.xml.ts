@@ -6,7 +6,7 @@ import { sortByDate } from "@/lib/utils/sortFunctions";
 export async function GET(context: { site?: URL }) {
   const all = await getCollection("blog");
   const posts = sortByDate(
-    all.filter((p) => p.id.match(/^(?!-)/) && !p.data.draft),
+    all.filter((p) => !p.data.draft),
   );
 
   return rss({

@@ -246,7 +246,7 @@ test("every published post is in the sitemap, with a lastmod", () => {
 test("drafts are not published anywhere", () => {
   const drafts = fs
     .readdirSync(BLOG_SRC)
-    .filter((file) => /\.mdx?$/.test(file) && !file.startsWith("-"))
+    .filter((file) => /\.mdx?$/.test(file))
     .map((file) => ({ file, data: matter(fs.readFileSync(path.join(BLOG_SRC, file), "utf8")).data }))
     .filter(({ data }) => data.draft)
     .map(({ file, data }) => data.slug || file.replace(/^\d+-/, "").replace(/\.mdx?$/, ""));

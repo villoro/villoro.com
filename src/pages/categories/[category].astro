@@ -8,7 +8,7 @@ import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 import { slugify, humanize } from "@/lib/utils/textConverter";
 import config from "@/config/config.json";
-import { getCollection } from "astro:content";
+import { getBlogListingCopy } from "@/lib/listingCopy";
 
 const { blog_folder, pagination } = config.settings;
 
@@ -42,8 +42,7 @@ const categoryName = metaEntry?.[1].name ?? humanize(category!);
 const { postCount, categories } = getCategoryRibbonData(sorted);
 const yearsWriting = getYearsWriting();
 
-const allBlogEntries = await getCollection("blog");
-const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
+const bi = await getBlogListingCopy();
 ---
 
 <BlogListingLayout
@@ -56,9 +55,9 @@ const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
   ]}
   postCount={postCount}
   yearsWriting={yearsWriting}
-  heroH1={bi.hero?.h1}
-  heroLede={bi.hero?.lede}
-  heroCountLabel={bi.hero?.count_label}
+  heroH1={bi.hero.h1}
+  heroLede={bi.hero.lede}
+  heroCountLabel={bi.hero.count_label}
   categories={categories}
   activeCategory={category}
   sectionTitle={categoryName}

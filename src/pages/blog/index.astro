@@ -4,7 +4,7 @@ import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
 import config from "@/config/config.json";
-import { getCollection } from "astro:content";
+import { getBlogListingCopy } from "@/lib/listingCopy";
 
 const { blog_folder, pagination } = config.settings;
 const allPosts    = await getSinglePage(blog_folder);
@@ -15,8 +15,7 @@ const currentPosts = sorted.slice(0, pagination);
 const { postCount, categories } = getCategoryRibbonData(sorted);
 const yearsWriting = getYearsWriting();
 
-const allBlogEntries = await getCollection("blog");
-const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
+const bi = await getBlogListingCopy();
 ---
 
 <BlogListingLayout
@@ -25,13 +24,13 @@ const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
   breadcrumbs={[{ href: "/", label: "Villoro" }, { label: "Blog" }]}
   postCount={postCount}
   yearsWriting={yearsWriting}
-  heroH1={bi.hero?.h1}
-  heroLede={bi.hero?.lede}
-  heroCountLabel={bi.hero?.count_label}
+  heroH1={bi.hero.h1}
+  heroLede={bi.hero.lede}
+  heroCountLabel={bi.hero.count_label}
   categories={categories}
   activeCategory="all"
-  sectionTitle={bi.section?.title}
-  sectionMeta={bi.section?.meta}
+  sectionTitle={bi.section.title}
+  sectionMeta={bi.section.meta}
   currentPosts={currentPosts}
   currentPage={1}
   totalPages={totalPages}

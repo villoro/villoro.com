@@ -14,10 +14,7 @@ const MAX_CONTENT_LENGTH = 5000;
 const THUMB_WIDTH = 320;
 
 export async function GET() {
-  const posts = await getCollection(
-    "blog",
-    ({ id, data }) => !id.startsWith("-") && !data.draft,
-  );
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
 
   const items = await Promise.all(
     posts.map(async (post) => {
