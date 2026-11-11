@@ -272,10 +272,26 @@ Posts are co-written, not generated in one go:
 - **Link generously.** Earlier posts on the same topic (`<FancyLink url="https://villoro.com/blog/<slug>/" dark="true"/>`) and official docs for any tool, extension or connector mentioned.
 - **Be honest with numbers.** Use only figures from a source (the code, a measurement, Villoro). If you assume something (same workload, production vs. rehearsal, cluster size), say so in your summary so Villoro can confirm it. Never invent a statistic to make a claim stronger.
 - **Rewriting an existing draft:** start a new `9999-*.mdx` on a branch from fresh `origin/main` and read the old draft with `git show <branch>:<path>` instead of building on top of it.
+- **When the free draft lacks punch, agree the thesis before the index.** A draft with good material but no single claim to defend reads flat. Propose two or three thesis options with the number that backs each, let Villoro pick, then agree the index, commit a skeleton (the headings, each with its intent as a `{/* */}` comment, no prose) and write it section by section. When Villoro says "commit, then fix", commit the version they reviewed first, so the fix shows as its own diff.
+- **Top callouts:** if the post continues an earlier one, say so in an `[!info]` callout before the first heading. The `[!abstract]` states the claim and what the post covers; keep the numbers for the results section instead of spoiling them up front.
+- **Independent review before the PR.** Have a different model (Codex, say) review the whole post against the code and the measurements it quotes, reporting findings without committing. It catches what the author can't: in `0075` it found a bug in our own benchmark (repeated ids) that had inflated a figure. Apply the findings Villoro agrees with as one uncommitted round.
+- **Releasing a draft:** rename `9999-*.mdx` to the next number, set `draft: true` (so it can be checked live before it shows in listings), and bump `package.json` (`npm version patch --no-git-tag-version`) in the PR.
+
+### Hero image
+
+- Propose a prompt in the style of the recent hero images (`0073`, `0074`): photorealistic, one playful visual metaphor for the thesis, wide 16:9. Short text in the image is fine (the SQL tree of `0073` has it). Offering three scenes plus one left to the generator works well.
+- Villoro generates the images and leaves them as PNGs in the repo root. Convert the chosen one to a 1920×1080 JPG (quality about 80, so it stays under ~400 KB) at `src/images/blog/<nnnn>-<name>.jpg`, set `image:` in the frontmatter, and delete the PNGs.
+
+### Charts and tables
+
+- **Data charts use Chart.js**, not SVG: a `public/js/posts/<nnnn>-plots-<topic>.js` that loads Chart.js from the CDN (copy `0060-plots-duckdb.js`), a `<script type="module" src="/js/posts/...">` after the frontmatter, and a `<canvas id=...>` where the chart goes. Give the canvas `role="img"`, an `aria-label` with the numbers, and fallback text. Keep pandas in `#FF764D` as in earlier posts.
+- **Tables right-align every column but the first** (`prose.css`), which suits numbers. For a column of text, mark it left-aligned in the Markdown (`| --- | :--- |`): it renders as an inline `text-align:left`, which wins over the stylesheet.
 
 ### SVG diagrams
 
 - Live in `src/images/posts/<year>/`, embedded with `![alt](../../images/posts/<year>/name.svg)`. Copy the style of an existing one (`0074-duckdb-three-zones.svg`): `viewBox` 1600 wide, Inter font, `.ttl`/`.mut`/`.txt` classes, blue `#3a76ff` as the accent.
+- **Colour means one thing per post.** When colours stand for concepts (in `0075`: E blue, T amber, L green), use them the same way in every diagram, and keep titles and labels neutral. A colour for "before/after" that is also a concept colour confuses the reader.
+- Avoid glyphs like `→`, `≈` or `⋮` in SVG text: some renderers draw them as empty boxes. Use words, or draw the shape (three circles for an ellipsis).
 - **They must have an opaque background card** (`<rect class="card" …/>` right after `<defs>`). An SVG loaded as `<img>` follows the OS `prefers-color-scheme`, not the site's `.dark` class, so dark text on a transparent background becomes unreadable when the site and OS themes differ.
 - Check them by rendering to PNG with `sharp` (already a dependency). Sharp ignores `@media`, so to preview the dark variant, unwrap the `prefers-color-scheme` block into a scratch copy first.
 
