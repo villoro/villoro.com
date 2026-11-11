@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import matter from "gray-matter";
+import { slug as slugify } from "github-slugger";
 
 const DIST = path.resolve("dist");
 const SITE = "https://villoro.com";
@@ -49,6 +50,18 @@ const pages = walk(DIST)
 
 const pageByUrl = new Map(pages.map((page) => [page.url, page]));
 const postPages = pages.filter((page) => /^\/blog\/[^/]+\/$/.test(page.url));
+
+// Posts with `draft: true`. Dev and deploy previews build a noindex page for
+// each; the live site and a plain `npm run build` build none.
+const draftSlugs = fs
+  .readdirSync(BLOG_SRC)
+  .filter((file) => /\.mdx?$/.test(file))
+  .map((file) => ({ file, data: matter(fs.readFileSync(path.join(BLOG_SRC, file), "utf8")).data }))
+  .filter(({ data }) => data.draft)
+  .map(({ file, data }) => data.slug || slugify(file.replace(/\.mdx?$/, "")));
+const draftUrls = new Set(draftSlugs.map((slug) => `/blog/${slug}/`));
+const isNoindex = (page) => /<meta name="robots" content="[^"]*noindex/.test(page.head);
+const publishedPostPages = postPages.filter((page) => !draftUrls.has(page.url));
 
 // A local path resolves when it is a file in dist/ or a directory with an index.html
 const resolves = (urlPath) => {
@@ -237,41 +250,50 @@ test("every published post is in the sitemap, with a lastmod", () => {
     .map((file) => fs.readFileSync(path.join(DIST, file), "utf8"))
     .join("");
   expectNone(
-    postPages
+    publishedPostPages
       .filter((page) => !sitemap.includes(`<loc>${SITE}${page.url}</loc><lastmod>`))
       .map((page) => page.url),
   );
 });
 
-test("drafts are not published anywhere", () => {
-  const drafts = fs
-    .readdirSync(BLOG_SRC)
-    .filter((file) => /\.mdx?$/.test(file))
-    .map((file) => ({ file, data: matter(fs.readFileSync(path.join(BLOG_SRC, file), "utf8")).data }))
-    .filter(({ data }) => data.draft)
-    .map(({ file, data }) => data.slug || file.replace(/^\d+-/, "").replace(/\.mdx?$/, ""));
-  assert.ok(drafts.length >= 0);
-
+test("drafts are never published, only previewed as noindex pages", () => {
   const published = {
     "sitemap": sitemapUrls.join("\n"),
     "rss.xml": fs.readFileSync(path.join(DIST, "rss.xml"), "utf8"),
     "search.json": fs.readFileSync(path.join(DIST, "search.json"), "utf8"),
   };
   const offenders = [];
-  for (const slug of drafts) {
-    if (pageByUrl.has(`/blog/${slug}/`)) offenders.push(`${slug}: has a page`);
+  const withPage = draftSlugs.filter((slug) => pageByUrl.has(`/blog/${slug}/`));
+  // A preview build has a page for every draft; the live site for none
+  if (withPage.length !== 0 && withPage.length !== draftSlugs.length) {
+    const missing = draftSlugs.filter((slug) => !withPage.includes(slug));
+    offenders.push(`only some drafts have a page, missing: ${missing.join(", ")}`);
+  }
+  for (const slug of draftSlugs) {
+    const url = `/blog/${slug}/`;
+    const page = pageByUrl.get(url);
+    if (page && !isNoindex(page)) offenders.push(`${slug}: page is indexable`);
+    if (page && !page.body.includes("data-draft-banner")) offenders.push(`${slug}: page has no draft marker`);
     for (const [name, content] of Object.entries(published)) {
-      if (content.includes(`/blog/${slug}/`) || content.includes(`"slug":"${slug}"`)) {
+      if (content.includes(url) || content.includes(`"slug":"${slug}"`)) {
         offenders.push(`${slug}: appears in ${name}`);
       }
     }
+    // Drafts may link to each other (a series); no published page may link to one
+    for (const other of pages.filter((other) => !draftUrls.has(other.url))) {
+      if (other.html.includes(url)) offenders.push(`${slug}: linked from ${other.file}`);
+    }
+  }
+  // The marker belongs to drafts only
+  for (const page of publishedPostPages) {
+    if (page.body.includes("data-draft-banner")) offenders.push(`${page.url}: published post with a draft marker`);
   }
   expectNone(offenders);
 });
 
 test("the search index covers every post and holds plain text", () => {
   const index = JSON.parse(fs.readFileSync(path.join(DIST, "search.json"), "utf8"));
-  assert.equal(index.length, postPages.length, "one entry per published post");
+  assert.equal(index.length, publishedPostPages.length, "one entry per published post");
   const offenders = [];
   for (const item of index) {
     if (!pageByUrl.has(`/blog/${item.slug}/`)) offenders.push(`${item.slug}: no such page`);

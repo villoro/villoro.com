@@ -28,6 +28,7 @@ import ShareRow from "@/components/ShareRow.astro";
 import RelatedPostsGrid from "@/components/RelatedPostsGrid.astro";
 import GiscusComments from "@/components/GiscusComments.astro";
 import { slugify } from "@/lib/utils/textConverter";
+import { getTaxonomy } from "@/lib/taxonomy";
 import { resolveImage } from "@/lib/utils/blogImages";
 import { getImage } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
@@ -45,6 +46,9 @@ interface Props {
   modifiedTime?: string;
   author?: string;
   jsonLd?: Record<string, unknown>;
+
+  // Draft preview: marker below the hero, and the page is noindex
+  draft?: boolean;
 
   // Post metadata (for hero)
   category: string;
@@ -78,6 +82,7 @@ const {
   catName,
   catColor,
   tags,
+  draft = false,
   formattedDate,
   formattedUpdatedDate,
   readTime,
@@ -95,10 +100,17 @@ const heroCatStyle = catChip
   ? `background: ${catChip.chipBg}; color: ${catChip.chipFg}`
   : `background: ${catColor}`;
 
+// Tag and category pages are built from published posts only, so a draft may
+// carry a tag or category that has no page yet: show it, but don't link it.
+const liveTags = draft ? new Set(await getTaxonomy("tags")) : undefined;
+const liveCategories = draft ? new Set(await getTaxonomy("category")) : undefined;
+const hasTagPage = (tag: string) => !liveTags || liveTags.has(slugify(tag));
+const hasCategoryPage = !liveCategories || liveCategories.has(catSlug);
+
 const breadcrumbs = [
   { href: "/",    label: "Villoro" },
   { href: "/blog/", label: "Blog" },
-  { href: `/categories/${catSlug}/`, label: catName },
+  { href: hasCategoryPage ? `/categories/${catSlug}/` : undefined, label: catName },
 ];
 
 // Hero LCP preload — mirrors the Picture in ImageMod so the browser
@@ -129,6 +141,7 @@ if (image) {
   image={image}
   canonical={canonical}
   ogType="article"
+  noindex={draft}
   publishedTime={publishedTime}
   modifiedTime={modifiedTime}
   author={author}
@@ -177,9 +190,11 @@ if (image) {
 
         {tags.length > 0 && (
           <div class="al-hero__tags">
-            {tags.map((t: string) => (
-              <a href={`/tags/${slugify(t)}/`} class="al-hero__tag">#{t}</a>
-            ))}
+            {tags.map((t: string) =>
+              hasTagPage(t)
+                ? <a href={`/tags/${slugify(t)}/`} class="al-hero__tag">#{t}</a>
+                : <span class="al-hero__tag">#{t}</span>
+            )}
           </div>
         )}
 
@@ -197,6 +212,13 @@ if (image) {
         </div>
       </div>
     </section>
+
+    {draft && (
+      <div class="al-draft" data-draft-banner role="status">
+        <strong class="al-draft__label">Draft — not published</strong>
+        <span class="al-draft__note">Only visible locally and in deploy previews. Not listed anywhere, and hidden from search engines.</span>
+      </div>
+    )}
 
     <!-- ═══════════════════ ARTICLE ═════════════════════════ -->
     <main class="al-article" id="main">
@@ -259,6 +281,27 @@ if (image) {
       rgba(var(--color-surface-dark-rgb), 0.5)  55%,
       rgba(var(--color-surface-dark-rgb), 0.92) 100%
     );
+  }
+
+  /* ── Draft marker ─────────────────────────────────────── */
+  .al-draft {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 16px;
+    padding: 12px var(--container-px);
+    background: var(--color-yellow-400);
+    color: var(--color-surface-dark);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  /* yellow-400 turns blue in dark mode; blue-500 is the yellow there */
+  :global(.dark) .al-draft { background: var(--color-blue-500); }
+  .al-draft__label {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   /* Breadcrumb positioned top-left over the image */
@@ -326,7 +369,7 @@ if (image) {
     text-decoration: none;
     transition: background 0.15s;
   }
-  .al-hero__tag:hover { background: rgba(255, 255, 255, 0.25); }
+  a.al-hero__tag:hover { background: rgba(255, 255, 255, 0.25); }
 
   .al-hero__meta {
     margin-top: 22px;

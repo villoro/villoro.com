@@ -45,7 +45,7 @@ The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `di
 
 `npm test` runs Node's built-in test runner on `tests/*.test.mjs`. No test framework.
 
-- **`tests/site.test.mjs`** checks the built `dist/`, like dbt tests on a model: every internal link resolves and ends with `/`, one `<h1>` and a unique title per page, canonicals and sitemap URLs point to real indexable pages, every post has valid JSON-LD, drafts are published nowhere, the search index is plain text, no Google Fonts and no framework islands. **When you fix a bug that shows in the built HTML, add an assertion here.**
+- **`tests/site.test.mjs`** checks the built `dist/`, like dbt tests on a model: every internal link resolves and ends with `/`, one `<h1>` and a unique title per page, canonicals and sitemap URLs point to real indexable pages, every post has valid JSON-LD, drafts are published nowhere (a draft may only have a `noindex` page with its marker, and only in a preview build: run `CONTEXT=deploy-preview npm run build` then `npm test` to check that mode), the search index is plain text, no Google Fonts and no framework islands. **When you fix a bug that shows in the built HTML, add an assertion here.**
 - **`tests/unit.test.mjs`** covers the pure helpers (`withTrailingSlash`, `plainify`, `plainifyMdx`, `similarItems`). It imports the `.ts` sources directly (Node strips the types), so those helpers must not import through the `@/` alias.
 - CI runs it in the single `tests` job (install once, then lint, typecheck, build, bundle size, tests).
 
@@ -89,9 +89,10 @@ src/
 │   ├── about/-index.md
 │   └── homepage/-index.md
 ├── lib/
+│   ├── drafts.ts                   SHOW_DRAFTS flag (dev + Netlify previews build draft pages)
 │   ├── categoryMetadata.ts         category slug → display name + color (10 categories)
 │   ├── blogIndex.mjs               plain .mjs (astro.config.mjs can't import .ts/.astro): published posts from frontmatter, thin-tag rule, sitemap lastmod
-│   ├── posts.ts                    getPublishedPosts() — THE way to get posts; BlogPost type, postSlug()
+│   ├── posts.ts                    getPublishedPosts() — THE way to get posts; getPostsToBuild() (+drafts) is only for /blog/[single] routes; BlogPost type, postSlug()
 │   ├── listingCopy.ts              getBlogListingCopy() — the `listing` collection entry
 │   ├── taxonomy.ts                 getTaxonomy("tags" | "category") over published posts
 │   ├── listingData.ts              CategoryItem type + ribbon data
@@ -206,7 +207,7 @@ writing_date: ISO date         # optional, internal (drafting start), never rend
 image: string                  # optional ("/images/blog/<file>", file in src/images/blog/); falls back to 0000-default.jpg
 category: string               # MUST match a key in categoryMetadata.ts (else falls back to humanize(slug))
 tags: [string]                 # default ["Others"]
-draft: boolean                 # if true, filtered out of listings
+draft: boolean                 # if true: no page on the live site; previewable in dev/deploy previews, never listed
 slug: string                   # optional override (default = filename minus prefix)
 ```
 
@@ -311,7 +312,7 @@ Posts are co-written, not generated in one go:
 - **When the free draft lacks punch, agree the thesis before the index.** A draft with good material but no single claim to defend reads flat. Propose two or three thesis options with the number that backs each, let Villoro pick, then agree the index, commit a skeleton (the headings, each with its intent as a `{/* */}` comment, no prose) and write it section by section. When Villoro says "commit, then fix", commit the version they reviewed first, so the fix shows as its own diff.
 - **Top callouts:** if the post continues an earlier one, say so in an `[!info]` callout before the first heading. The `[!abstract]` states the claim and what the post covers; keep the numbers for the results section instead of spoiling them up front.
 - **Independent review before the PR.** Have a different model (Codex, say) review the whole post against the code and the measurements it quotes, reporting findings without committing. It catches what the author can't: in `0075` it found a bug in our own benchmark (repeated ids) that had inflated a figure. Apply the findings Villoro agrees with as one uncommitted round.
-- **Releasing a draft:** rename `9999-*.mdx` to the next number, set `draft: true` (so it can be checked live before it shows in listings), and bump `package.json` (`npm version patch --no-git-tag-version`) in the PR.
+- **Previewing and releasing a draft:** a post with `draft: true` has a page at its normal URL (`/blog/<slug>/`) in `npm run dev` and in Netlify deploy/branch previews (`SHOW_DRAFTS`, `src/lib/drafts.ts`, true when Netlify's `CONTEXT` is `deploy-preview` or `branch-deploy`), so it can be checked live before it is published. That page is `noindex`, shows a "Draft — not published" banner under the hero, and exists nowhere else: not in the home page, listings, tags, categories, related posts, RSS, the sitemap or `search.json`. On the live site (`CONTEXT=production`), in CI and in a plain local `npm run build` it has no page at all. To release: rename `9999-*.mdx` to the next number, keep `draft: true` while you check the page in the PR's deploy preview, remove it to publish, and bump `package.json` (`npm version patch --no-git-tag-version`) in the PR.
 
 ### Hero image
 

@@ -1,7 +1,7 @@
 ---
 import ArticleLayout from "@/layouts/ArticleLayout.astro";
 import { render } from "astro:content";
-import { getPublishedPosts, postSlug } from "@/lib/posts";
+import { getPostsToBuild, getPublishedPosts, postSlug } from "@/lib/posts";
 import similarItems from "@/lib/utils/similarItems";
 import { readingTimeForPost } from "@/lib/utils/readingTime";
 import dateFormat from "@/lib/utils/dateFormat";
@@ -12,7 +12,7 @@ import { withTrailingSlash } from "@/lib/utils/url";
 import type { TocItem } from "@/components/ArticleTOC.astro";
 
 export async function getStaticPaths() {
-  const items = await getPublishedPosts();
+  const items = await getPostsToBuild();
   return items.map((post) => ({
     params: { single: postSlug(post) },
     props: { post },
@@ -84,6 +84,7 @@ const jsonLd = {
   catName={catName}
   catColor={catColor}
   tags={tags}
+  draft={post.data.draft}
   formattedDate={formattedDate}
   formattedUpdatedDate={formattedUpdatedDate}
   readTime={readTime}
