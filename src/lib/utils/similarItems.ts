@@ -1,66 +1,33 @@
-// Fisher-Yates shuffle algorithm to get N random elements from an array
-function getRandomElements<T>(arr: T[], n: number): T[] {
-  const shuffled = arr.slice();
-  let currentIndex = shuffled.length;
-  let temporaryValue: T;
-  let randomIndex: number;
+import type { CollectionEntry } from "astro:content";
 
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
+type BlogEntry = CollectionEntry<"blog">;
 
-    temporaryValue = shuffled[currentIndex];
-    shuffled[currentIndex] = shuffled[randomIndex];
-    shuffled[randomIndex] = temporaryValue;
-  }
+const timestamp = (item: BlogEntry): number => (item.data.date ? new Date(item.data.date).getTime() : 0);
 
-  return shuffled.slice(0, n);
-}
+// Score by shared category (+3) and shared tags (+1 each). Ties go to the newest post,
+// so the output is deterministic.
+const similarItems = (currentItem: BlogEntry, allItems: BlogEntry[], limit: number = 3): BlogEntry[] => {
+  const category = currentItem.data.category;
+  const tags: string[] = currentItem.data.tags ?? [];
+  const currentKey = currentItem.data.slug || currentItem.id;
 
-const similarItems = (
-  currentItem: any,
-  allItems: any[],
-  limit: number = 3
-) => {
-  let categories: string[] = [];
-  let tags: string[] = [];
+  const scoredItems: { item: BlogEntry; score: number }[] = [];
 
-  if (currentItem.data.category) {
-    categories = [currentItem.data.category];
-  }
+  allItems.forEach((item) => {
+    if ((item.data.slug || item.id) === currentKey) return;
 
-  if (currentItem.data.tags && currentItem.data.tags.length > 0) {
-    tags = currentItem.data.tags;
-  }
-
-  const scoredItems: { item: any; score: number }[] = [];
-
-  allItems.forEach((item: any) => {
-    if ((item.data?.slug || item.id) === (currentItem.data?.slug || currentItem.id)) return;
-
-    const itemCategories = item.data.category ? [item.data.category] : [];
-    const itemTags = item.data.tags ? item.data.tags : [];
+    const itemTags: string[] = item.data.tags ?? [];
 
     let score = 0;
-
-    if (categories.some((category) => itemCategories.includes(category))) {
-      score += 3;
-    }
-
+    if (category && item.data.category === category) score += 3;
     score += tags.filter((tag) => itemTags.includes(tag)).length;
 
-    if (score > 0) {
-      scoredItems.push({ item, score });
-    }
+    if (score > 0) scoredItems.push({ item, score });
   });
 
-  scoredItems.sort((a, b) => b.score - a.score);
+  scoredItems.sort((a, b) => b.score - a.score || timestamp(b.item) - timestamp(a.item));
 
-  const uniqueItems = scoredItems.slice(0, limit).map((scoredItem) => scoredItem.item);
-
-  const randomResults = getRandomElements(uniqueItems, limit);
-
-  return randomResults;
+  return scoredItems.slice(0, limit).map((scored) => scored.item);
 };
 
 export default similarItems;
