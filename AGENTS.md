@@ -43,7 +43,7 @@ The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `di
 
 - **`tests/site.test.mjs`** checks the built `dist/`, like dbt tests on a model: every internal link resolves and ends with `/`, one `<h1>` and a unique title per page, canonicals and sitemap URLs point to real indexable pages, every post has valid JSON-LD, drafts are published nowhere, the search index is plain text, no Google Fonts and no framework islands. **When you fix a bug that shows in the built HTML, add an assertion here.**
 - **`tests/unit.test.mjs`** covers the pure helpers (`withTrailingSlash`, `plainify`, `plainifyMdx`, `similarItems`). It imports the `.ts` sources directly (Node strips the types), so those helpers must not import through the `@/` alias.
-- CI runs it in the `bundle_size` job, after the build.
+- CI runs it in the `tests` job, after the build and the bundle-size check.
 
 ## Path aliases (`tsconfig.json`)
 

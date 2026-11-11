@@ -55,7 +55,7 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 ## PR 7. CI: one build job, real budgets, no audit noise
 
 - **`npm audit` reports 29 vulnerabilities (14 high) and none are in the site.** They come from `@size-limit/preset-app`, which installs Puppeteer and Chromium to time page loads we don't measure. Swap it for `@size-limit/file` (size only). This also makes `npm ci` much faster in CI and on Netlify.
-- **Three jobs each run `npm ci`**, and the build only happens inside `bundle_size`. Merge `lint_and_typecheck` and `bundle_size` into one `build` job: lint, typecheck, build, size, then `npm test`.
+- **Three jobs each run `npm ci`**, and the build only happens inside `tests`. Merge `lint_and_typecheck` and `tests` into one `build` job: lint, typecheck, build, size, then `npm test`.
 - **Old action versions**: `actions/checkout@v3`, `actions/setup-python@v4`, `actions/labeler@v4`, `dorny/paths-filter@v2`. Update them.
 - **Dependabot**: three PRs have been open since August (#360, #361, #363). There is no `.github/dependabot.yml`, so these are ungrouped security updates. Add a config that groups npm updates weekly into one PR and also covers `github-actions`, then close the stale ones.
 - **Build time**: a build with an empty image cache takes 6 to 10 minutes and one with a warm cache about 20 seconds, because each build writes ~1,800 optimized images (524 AVIF, 660 WebP, 591 JPG). Since v3.2.30 the cache is kept between builds on Netlify, and since v3.2.31 in CI (`warm_image_cache.yaml` saves it from `main`, the build job restores it). If builds get slow again, the next lever is fewer variants: dropping WebP (AVIF plus the JPG fallback covers every browser) removes a third of the files.
