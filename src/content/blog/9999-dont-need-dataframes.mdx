@@ -164,16 +164,42 @@ con.unregister("page")
 
 </Accordion>
 
-> [!warning] A one-way door
-> Like our database extractions, `write_records` adds two columns to every row: how many times it was written, and when it was first exported. The old writer fails on a table that has them, so a table moves once, for good. We moved one job at a time, and compared each table with production before moving it.
+> [!note] Three metadata columns
+> As in our database extractions, every row gets three columns: when it was extracted (`p_extracted_at`), how many times it was written (`_num_writes`), and when it was first exported (`_first_exported_at`).
 
 ## What we got
 
-{/*
-Local benchmark: the slope chart (11 KB vs 2 KB a row; ~0.7 GB both at the old 50k chunk).
-ECS table: Task 10 days into 36M (6.0 vs 3.2 GB), Opportunity 90 days on 4 GB (pandas killed,
-DuckDB 3.7 GB). Faithful data, one commit, same speed: the source decides it.
-*/}
+### The memory, measured
+
+To see the difference without AWS in the way, I ran both paths locally on the same rows: synthetic Salesforce records with about 100 fields, parsed from JSON 2000 at a time, like the real client does. The pandas path goes up to the moment awswrangler would upload; the DuckDB path up to the moment it would write (the details are in the [appendix](#appendix-how-we-measured)).
+
+| Rows in one write | 50k | 200k | 500k |
+| --- | --- | --- | --- |
+| pandas, peak memory | 0.74 GB | 2.45 GB | - |
+| Arrow + DuckDB, peak memory | 0.69 GB | 1.01 GB | 1.57 GB |
+
+![Peak memory of one write](../../images/posts/2026/0075-memory-paths.svg)
+
+With small chunks, both cost about the same. The difference is how fast they grow:
+
+* **pandas**: about **11 KB more for every row** in the write. Each row is alive as a dict and in the DataFrame at the same time.
+* **Arrow + DuckDB**: about **2 KB more for every row**. Python only holds one page of dicts, and DuckDB keeps the staged rows in about 0.5 KB each.
+
+That's what changes the job. With pandas, the size of a write is limited by the machine, so a big run is many writes. With Arrow and DuckDB, a whole run fits in one.
+
+### On the real jobs
+
+Then the same comparison on ECS, with the real Salesforce API, one run at a time so that Salesforce was equally fast for both:
+
+| Run | pandas | Arrow + DuckDB |
+| --- | --- | --- |
+| `Task`, 10 days (978k rows), merged into a table of 36M, on 8 GB | 6.0 GB peak, 5 merges | **3.2 GB** peak, **1 merge** (17 s) |
+| `Opportunity` (wide rows), 90 days (1.74M rows), on 4 GB | **killed** (out of memory) after 2 chunks | 3.7 GB peak, **1 write** (62 s) |
+
+> [!success] The short version
+> **Half the memory** on our biggest jobs, a wide table that now **fits on a smaller machine**, **one commit** per run instead of one per chunk, and the data lands **as it came**: no `.0`, real JSON.
+
+The runs took about the same time with both. That's expected: Salesforce serves 2000 rows per call, and that decides the speed. As in the previous post, **no engine makes a source answer faster**. The win here is not speed: it's that the job needs a smaller machine, writes once, and writes the right values.
 
 ## What owning the load taught us
 
