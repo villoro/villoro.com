@@ -113,3 +113,7 @@ jobs:
 
       - name: Check bundle size
         run: npm run size
+
+      # Data-quality checks on dist/ plus unit tests (see tests/)
+      - name: Test the built site
+        run: npm test

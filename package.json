@@ -16,6 +16,7 @@
     "format": "prettier -w ./src",
     "lint": "eslint .",
     "typecheck": "astro check",
+    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"tests/*.test.mjs\"",
     "remove-darkmode": "node scripts/removeDarkmode.js && npm run format"
   },
   "dependencies": {
