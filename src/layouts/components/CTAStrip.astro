@@ -103,7 +103,7 @@ const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`
 
   /* Dark mode: yellow stays yellow, navy text remaps to white via tokens
      — but we want dark text on yellow regardless. Pin the text colour. */
-  :global(.dark) .cta__coffee { color: #1a1a1a; }
+  :global(.dark) .cta__coffee { color: var(--color-on-dark); } /* the accent is blue in dark: white reads better than near-black */
 
   .cta__subscribe {
     display: inline-flex;
