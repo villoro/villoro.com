@@ -1,0 +1,5 @@
+# Posts and page copy are hand-written Markdown/MDX: Prettier would reflow
+# tables and rewrite list/emphasis markers across every post.
+src/content/
+# Generated from src/config/theme.json
+src/styles/generated-theme.css
