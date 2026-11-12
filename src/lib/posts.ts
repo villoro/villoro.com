@@ -18,5 +18,5 @@ export const getPublishedPosts = (): Promise<BlogPost[]> =>
 export const getPostsToBuild = (): Promise<BlogPost[]> =>
   SHOW_DRAFTS ? getCollection("blog") : getPublishedPosts();
 
-/** URL slug of a post: the frontmatter `slug`, else the filename minus its numeric prefix. */
+/** URL slug of a post: the frontmatter `slug`, else the whole filename (so always set `slug`). */
 export const postSlug = (post: BlogPost): string => post.data.slug || post.id;
