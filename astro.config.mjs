@@ -7,8 +7,6 @@ import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
 import remarkCallouts from "./src/plugins/remark-callouts.mjs";
 import rehypeTableFocus from "./src/plugins/rehype-table-focus.mjs";
-import remarkCollapse from "remark-collapse";
-import remarkToc from "remark-toc";
 import sectionize from "@hbsnow/rehype-sectionize";
 import config from "./src/config/config.json";
 import { isThinTag, readDraftSlugs, readPublishedPosts, tagCounts } from "./src/lib/blogIndex.mjs";
@@ -154,13 +152,10 @@ export default defineConfig({
   ],
   markdown: {
     // Astro 7 defaults to the native Sätteri pipeline; keep the unified
-    // (remark/rehype) processor so our custom plugins keep working.
+    // (remark/rehype) processor for remark-callouts, rehype-sectionize and
+    // rehype-table-focus.
     processor: unified({
-      remarkPlugins: [
-        remarkCallouts,
-        remarkToc,
-        [remarkCollapse, { test: "Table of contents" }],
-      ],
+      remarkPlugins: [remarkCallouts],
       rehypePlugins: [sectionize, rehypeTableFocus],
     }),
     // No `shikiConfig`: code blocks use Shiki's default theme (github-dark)

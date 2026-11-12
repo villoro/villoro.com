@@ -41,7 +41,7 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 
 ### Suggested order for what is left
 
-1. PR 11, the major upgrades, one risky package per PR.
+1. PR 11: the PWA plugin and TypeScript 7 are waiting on upstream (see the item).
 2. PR 12: measured; decide whether a 1280w post hero is worth an extra image variant.
 
 ## Summary
@@ -68,9 +68,10 @@ CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests),
 
 ## PR 11. Major dependency upgrades
 
-The lint, format and size tooling is upgraded (ESLint 10, `eslint-plugin-astro` 3, `prettier-plugin-astro` 1, `size-limit` 14). Still outdated by a major: `@astrojs/mdx` 7 → 8 with `astro-auto-import` 0.5 → 0.6, `@vite-pwa/astro` 1 → 2, `typescript` 6 → 7. One PR each.
+Done: `@astrojs/mdx` 8 with `astro-auto-import` 0.6 (and `remark-toc`/`remark-collapse` removed), and the lint, format and size tooling (ESLint 10, `eslint-plugin-astro` 3, `prettier-plugin-astro` 1, `size-limit` 14). Two majors are **deliberately left for later** (checked 2026-11-12):
 
-Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native Sätteri markdown pipeline and the site pins the `unified` one for three plugins (`remark-callouts`, `remark-toc` + `remark-collapse`, `rehype-sectionize`). No file in `src/content` has a "Table of contents" heading (`ArticleTOC` replaced it), so `remark-toc` and `remark-collapse` do nothing and can be removed.
+- **`@vite-pwa/astro` 1 → 2: wait.** v2 (released 2026-10-31) is a rewrite on `@unplugin-pwa` 0.0.x, which replaces Google Workbox, renames the export (`AstroPWAIntegration`) and changes the docs. A service-worker regression stays cached on visitors' devices, so wait until `@unplugin-pwa` reaches 1.0. v1.2 works with Astro 7; npm reports only a peer-range warning (`astro ^1–^5`).
+- **`typescript` 6 → 7: blocked.** `typescript-eslint` accepts `<6.1` and `@astrojs/check` accepts `^5 || ^6`. Upgrade when both support 7.
 
 ## PR 12. Post hero image on phones
 
