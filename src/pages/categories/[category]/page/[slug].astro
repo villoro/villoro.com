@@ -43,6 +43,7 @@ const currentPosts = sortedPosts.slice(start, start + pagination);
 const metaEntry    = Object.entries(categoryMetadata).find(([key]) => slugify(key) === category);
 // Routes come from the categories of published posts, which are categoryMetadata keys
 const categoryName = metaEntry![1].name;
+const categoryDescription = metaEntry![1].description;
 
 const { postCount, categories } = getCategoryRibbonData(sorted);
 const yearsWriting = getYearsWriting();
@@ -52,7 +53,7 @@ const bi = await getBlogListingCopy();
 
 <BlogListingLayout
   title={`${categoryName} — Page ${currentPage} — Villoro`}
-  description={`All posts in the ${categoryName} category.`}
+  description={categoryDescription}
   breadcrumbs={[
     { href: "/",                        label: "Villoro" },
     { href: "/blog/",                    label: "Blog" },
@@ -67,6 +68,7 @@ const bi = await getBlogListingCopy();
   categories={categories}
   activeCategory={category}
   sectionTitle={categoryName}
+  sectionLede={categoryDescription}
   sectionMeta={`Page ${currentPage} of ${totalPages} · newest first`}
   currentPosts={currentPosts}
   currentPage={currentPage}
