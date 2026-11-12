@@ -29,7 +29,7 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 
 | PR | What | State |
 | --- | :--- | :--- |
-| branch `feat/draft-previews` | Draft previews, strict frontmatter, typed post helpers, `npm run new-post` (PR 9 below) | verified locally in both build modes (production and `CONTEXT=deploy-preview`); look for its PR, or open one from the branch |
+| the PR from `feat/draft-previews` | Draft previews, strict frontmatter, typed post helpers, `npm run new-post` | verified locally in both build modes (production and `CONTEXT=deploy-preview`); merge it first. Its deploy preview is the first place where draft pages are really built by Netlify: open `/blog/hard-deletes/` there and check the banner |
 | #399, #400 | Dependabot (GitHub Actions group, npm group) | each needs a version bump on its branch before it can merge (see PR 7) |
 
 ### How the work was done, and what to keep doing
@@ -46,7 +46,7 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 
 ### Suggested order for what is left
 
-1. Land the draft-previews PR.
+1. Land the draft-previews PR, and check a draft page on its Netlify preview.
 2. PR 7 leftovers: the Dependabot version bump (it unblocks #399 and #400 and every future weekly PR), then the image size limit.
 3. PR 1 leftovers (category descriptions need Villoro's wording).
 4. PR 13 leftovers (keyboard-scrollable tables, the code theme setting).
@@ -59,7 +59,7 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 | --- | :--- | :--- | --- | --- |
 | 1 | Metadata leftovers | SEO | Low | Low |
 | 7 | Build and CI leftovers | Maintenance | Low | Medium |
-| 9 | Draft previews and strict frontmatter | Writing | Medium | Medium |
+| 9 | Content model leftovers | Writing | Low | Low |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low |
 | 12 | Measure page speed once | Speed | Low | Low |
 | 13 | Accessibility leftovers | Accessibility | Low | Low |
@@ -85,14 +85,13 @@ CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests),
 - **Search index size**: `search.json` is 370 KB uncompressed for 74 posts and grows with each one. It is fetched only when search opens, so it isn't urgent; lower the per-post cap in `src/pages/search.json.ts` (5,000 characters today) if it becomes one.
 - **Image weight**: `src/images/blog` is 23 MB; 29 hero images are over 300 KB and `0001-personal-web.png` is 945 KB. The originals don't ship, so this only costs build time and repo size. Add a size limit (400 KB, matching the hero-image rule in `AGENTS.md`) to `check_aspect_ratio.py` and recompress the ones over it. Low priority within this PR; split it out if it gets noisy.
 
-## PR 9. Draft previews and strict frontmatter
+## PR 9. Content model leftovers
 
-- **Drafts can't be previewed.** `AGENTS.md` says to release a post with `draft: true` "so it can be checked live before it shows in listings", but `getSinglePage` filters drafts out of `getStaticPaths`, so a draft has no page at all, live or in the deploy preview. Build draft pages when `CONTEXT` isn't `production` (Netlify sets it to `deploy-preview` on PRs), always `noindex`, never in listings, RSS, sitemap or search. In dev, show them too.
-- **Unknown frontmatter keys pass silently.** The schema is a plain `z.object`, so a typo like `update_date:` is ignored. Use `z.strictObject`. The memory of past sessions already records confusion about snake_case keys; `imageAlt` and `readingTime` are the two camelCase leftovers, rename them.
-- **`category` is a free string** defaulting to `"Others"`, which isn't a key in `categoryMetadata.ts` (the key is `others`). Make it `z.enum` over the keys of `categoryMetadata` so a wrong category fails the build instead of rendering a grey chip.
-- **The blog schema serves two things.** `src/content/blog/-index.md` (the listing's hero copy) lives in the same collection as the posts, so the post schema carries `hero` and `section` fields that no post uses, and every query has to filter the `-index` entry out by id. Move it to its own small collection. In the homepage schema, `banner`, `slogan` and `blog` look like template leftovers: confirm they have no consumer and delete.
-- **`getSinglePage(collectionName: string)`** casts everything to `"blog"`. Type it properly; `rss.xml.ts` and `search.json.ts` re-implement the draft filter and should call the same helper.
-- **A `npm run new-post` script** that creates `9999-<slug>.mdx` with the full frontmatter would remove the copy-paste step. Optional.
+Drafts are previewable, frontmatter is strict and posts come from one typed helper (`src/lib/posts.ts`). Small things noticed on the way and left alone:
+
+- **Unused schema fields**: `image_alt` and `reading_time` in the post schema (nothing renders them), and `date`, `image`, `draft` in the about schema. Delete them or use them.
+- **The home page `companies` block** is in the schema and in `src/content/homepage/-index.md`, but no page renders it. Render it or remove it.
+- **`SHOW_DRAFTS` in `astro dev`** (`import.meta.env.DEV`) was not exercised, only the `CONTEXT=deploy-preview` build. Open a draft in `npm run dev` once to confirm.
 
 ## PR 11. Major dependency upgrades
 
