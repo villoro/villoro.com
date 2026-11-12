@@ -60,9 +60,9 @@ jobs:
         if: steps.changes.outputs.images == 'true'
         run: pip install pillow loguru click
 
-      - name: Check blog images aspect ratio
+      - name: Check blog images aspect ratio and size
         if: steps.changes.outputs.images == 'true'
-        run: python .github/scripts/check_aspect_ratio.py --directory src/images/blog --aspect-ratio 16:9
+        run: python .github/scripts/check_aspect_ratio.py --directory src/images/blog --aspect-ratio 16:9 --max-kb 400
 
       - name: Check favicons aspect ratio
         if: steps.changes.outputs.images == 'true'

@@ -12,7 +12,7 @@ def parse_aspect_ratio(aspect_ratio_str):
     return width / height
 
 
-def check_aspect_ratio(directory, target_aspect_ratio_str):
+def check_aspect_ratio(directory, target_aspect_ratio_str, max_kb=None):
     target_aspect_ratio = parse_aspect_ratio(target_aspect_ratio_str)
 
     failures = 0
@@ -20,8 +20,14 @@ def check_aspect_ratio(directory, target_aspect_ratio_str):
         if not filename.lower().endswith(IMAGE_EXTENSIONS):
             continue
 
-        with Image.open(os.path.join(directory, filename)) as img:
+        path = os.path.join(directory, filename)
+        with Image.open(path) as img:
             width, height = img.size
+
+        size_kb = os.path.getsize(path) / 1024
+        if max_kb is not None and size_kb > max_kb:
+            logger.warning(f"{filename} weighs {size_kb:.0f} KB, over the {max_kb} KB limit")
+            failures += 1
 
         aspect_ratio = width / height
         if not (aspect_ratio == target_aspect_ratio):
@@ -43,13 +49,14 @@ def check_aspect_ratio(directory, target_aspect_ratio_str):
     required=True,
     help='Target aspect ratio to validate against (e.g., "16:9" or "1:1")',
 )
-def validate_images(directory, aspect_ratio):
-    failures = check_aspect_ratio(directory, aspect_ratio)
+@click.option("--max-kb", type=int, default=None, help="Maximum file size in KB (optional)")
+def validate_images(directory, aspect_ratio, max_kb):
+    failures = check_aspect_ratio(directory, aspect_ratio, max_kb)
     if failures == 0:
-        logger.success(f"All images have the target aspect ratio")
+        logger.success("All images have the target aspect ratio and size")
         exit(0)
 
-    logger.error(f"There are {failures} images that don't have the the {aspect_ratio=}")
+    logger.error(f"There are {failures} failures ({aspect_ratio=}, {max_kb=})")
     exit(1)
 
 

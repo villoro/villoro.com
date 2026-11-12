@@ -21,15 +21,11 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 ### Done since the audit
 
-Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
+Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; a 400 KB limit on hero images; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
 
 ### Open pull requests
 
-Only Dependabot's. Each PR must carry a version exactly one above `main` at the moment it merges.
-
-| PR | What | State |
-| --- | :--- | :--- |
-| #399, #400 | Dependabot (GitHub Actions group, npm group) | each needs a version bump on its branch before it can merge (see PR 7) |
+None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of all dependencies when one shows up, so leave them alone.
 
 ### How the work was done, and what to keep doing
 
@@ -45,11 +41,10 @@ Only Dependabot's. Each PR must carry a version exactly one above `main` at the 
 
 ### Suggested order for what is left
 
-1. PR 7 leftovers: the Dependabot version bump (it unblocks #399 and #400 and every future weekly PR), then the image size limit.
+1. PR 13 leftovers (the post hero on phones first, then keyboard-scrollable tables and the code theme setting).
 2. PR 1 leftovers (category descriptions need Villoro's wording).
-3. PR 13 leftovers (the post hero on phones first, then keyboard-scrollable tables and the code theme setting).
-4. PR 11, the major upgrades, one risky package per PR.
-5. PR 12 as a one-off measurement.
+3. PR 11, the major upgrades, one risky package per PR.
+4. PR 12 as a one-off measurement.
 
 ## Summary
 
@@ -75,13 +70,11 @@ The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas,
 
 ## PR 7. Build and CI leftovers
 
-CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests), the size check no longer installs Puppeteer, actions are on current majors and Dependabot opens one grouped PR a week. What is left:
+CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests), the size check no longer installs Puppeteer, actions are on current majors and Dependabot opens one grouped PR a week. Blog hero images over 400 KB fail CI (`check_aspect_ratio.py --max-kb`). What is left:
 
-- **Dependabot PRs fail `check_version`.** Every PR must bump the version by one and Dependabot doesn't. Until that is automated (a small workflow that bumps the version on `dependabot/*` branches), bump it by hand on the PR branch.
 - **`npm audit` still reports 15 findings (13 moderate, 2 low)**, down from 29. They are in build tooling (`deepmerge`, `glob`, `minimatch`, `postcss-selector-parser`), not in what the site ships. Check them again after the major upgrades of PR 11.
 - **Build time**: a build with an empty image cache takes 6 to 10 minutes and one with a warm cache about 20 seconds, because each build writes ~1,800 optimized images (524 AVIF, 660 WebP, 591 JPG). Since v3.2.30 the cache is kept between builds on Netlify, and since v3.2.31 in CI (`warm_image_cache.yaml` saves it from `main`, the build job restores it). If builds get slow again, the next lever is fewer variants: dropping WebP (AVIF plus the JPG fallback covers every browser) removes a third of the files.
 - **Search index size**: `search.json` is 370 KB uncompressed for 74 posts and grows with each one. It is fetched only when search opens, so it isn't urgent; lower the per-post cap in `src/pages/search.json.ts` (5,000 characters today) if it becomes one.
-- **Image weight**: `src/images/blog` is 23 MB; 29 hero images are over 300 KB and `0001-personal-web.png` is 945 KB. The originals don't ship, so this only costs build time and repo size. Add a size limit (400 KB, matching the hero-image rule in `AGENTS.md`) to `check_aspect_ratio.py` and recompress the ones over it. Low priority within this PR; split it out if it gets noisy.
 
 ## PR 9. Content model leftovers
 
