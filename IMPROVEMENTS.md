@@ -21,15 +21,14 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 ### Done since the audit
 
-Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue).
+Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
 
 ### Open pull requests
 
-Merge in this order. Each one must carry a version exactly one above `main` at the moment it merges.
+Only Dependabot's. Each PR must carry a version exactly one above `main` at the moment it merges.
 
 | PR | What | State |
 | --- | :--- | :--- |
-| the PR from `feat/draft-previews` | Draft previews, strict frontmatter, typed post helpers, `npm run new-post` | verified locally in both build modes (production and `CONTEXT=deploy-preview`); merge it first. Its deploy preview is the first place where draft pages are really built by Netlify: open `/blog/hard-deletes/` there and check the banner |
 | #399, #400 | Dependabot (GitHub Actions group, npm group) | each needs a version bump on its branch before it can merge (see PR 7) |
 
 ### How the work was done, and what to keep doing
@@ -46,12 +45,11 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 
 ### Suggested order for what is left
 
-1. Land the draft-previews PR, and check a draft page on its Netlify preview.
-2. PR 7 leftovers: the Dependabot version bump (it unblocks #399 and #400 and every future weekly PR), then the image size limit.
-3. PR 1 leftovers (category descriptions need Villoro's wording).
-4. PR 13 leftovers (the post hero on phones first, then keyboard-scrollable tables and the code theme setting).
-5. PR 11, the major upgrades, one risky package per PR.
-6. PR 12 as a one-off measurement.
+1. PR 7 leftovers: the Dependabot version bump (it unblocks #399 and #400 and every future weekly PR), then the image size limit.
+2. PR 1 leftovers (category descriptions need Villoro's wording).
+3. PR 13 leftovers (the post hero on phones first, then keyboard-scrollable tables and the code theme setting).
+4. PR 11, the major upgrades, one risky package per PR.
+5. PR 12 as a one-off measurement.
 
 ## Summary
 
