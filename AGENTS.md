@@ -103,7 +103,7 @@ src/
 │   ├── menu.json                   nav links
 │   └── social.json                 social links + icon name (used by SocialIcon)
 ├── styles/                         see "Styling" below
-├── plugins/remark-callouts.mjs     custom callout syntax plugin
+├── plugins/                        remark-callouts.mjs (callout syntax), rehype-table-focus.mjs (tabindex on tables)
 ├── images/                         astro:assets-optimized
 ├── content.config.ts               Zod schemas for blog/about/homepage collections
 └── env.d.ts

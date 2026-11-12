@@ -306,6 +306,17 @@ test("the search index covers every post and holds plain text", () => {
   expectNone(offenders);
 });
 
+test("every table in a post can take keyboard focus, so it can be scrolled", () => {
+  // Tables are their own scroll container (prose.css); without a tabindex
+  // they can't be scrolled with the keyboard (axe: scrollable-region-focusable).
+  const offenders = postPages.flatMap((page) =>
+    all(page.body, /<table([^>]*)>/g)
+      .filter((attrs) => !/\btabindex="0"/.test(attrs))
+      .map(() => page.url),
+  );
+  assert.deepEqual([...new Set(offenders)], []);
+});
+
 test("no page loads Google Fonts or a framework island", () => {
   const offenders = [];
   for (const page of pages) {

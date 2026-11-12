@@ -6,6 +6,7 @@ import AutoImport from "astro-auto-import";
 import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
 import remarkCallouts from "./src/plugins/remark-callouts.mjs";
+import rehypeTableFocus from "./src/plugins/rehype-table-focus.mjs";
 import remarkCollapse from "remark-collapse";
 import remarkToc from "remark-toc";
 import sectionize from "@hbsnow/rehype-sectionize";
@@ -160,7 +161,7 @@ export default defineConfig({
         remarkToc,
         [remarkCollapse, { test: "Table of contents" }],
       ],
-      rehypePlugins: [sectionize],
+      rehypePlugins: [sectionize, rehypeTableFocus],
       shikiConfig: {
         theme: "monokai",
         wrap: true,
