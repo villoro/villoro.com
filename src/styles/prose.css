@@ -37,6 +37,11 @@
   color: inherit;
   font-size: inherit;
 }
+/* Comments: the Shiki theme paints them #6a737d, 3.08:1 on the #272822 block.
+   Same muted blue-grey, lightened to 4.8:1. Shiki writes the colour inline, hence !important. */
+.al-body .article-content pre span[style*="6A737D" i] {
+  color: #8b949e !important;
+}
 .al-body .article-content .astro-code,
 .al-body .article-content figure.expressive-code,
 .al-body .article-content pre {

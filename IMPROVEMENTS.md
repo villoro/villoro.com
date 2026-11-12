@@ -1,33 +1,70 @@
 # Improvement Proposals
 
-Audit of `villoro.com` done on **2026-11-11** against `origin/main` at `d17fa2c` (v3.2.26, Astro 7, 76 published posts, 215 built pages). It replaces the June 2026 audit.
+What is left to improve on `villoro.com`, and how to carry on. It started as an audit on 2026-11-11 (v3.2.26); most of it is done. **Start with "Handover", then pick an item.**
 
 **Goals, in the order they drive priority:** reach/SEO, speed, low maintenance, writing workflow.
 
 **Decisions already taken with Villoro** (don't re-open them):
 
-- **No React.** Done in v3.2.37: search is plain JS and the shortcodes are `.astro` components. Don't add a UI framework back.
+- **No React**, and no other UI framework. Search is plain JS and the shortcodes are `.astro` components.
 - **The PWA stays.** Only audit it for correctness.
 - **GA4 stays as it is.** No consent banner, no replacement.
+- **The brand blue `#3a76ff` stays everywhere**, logos included, even where it is under the contrast standard (see PR 13). Don't change it or anything drawn with it.
 
 **Rules for this file:**
 
-- When an item is implemented, **remove it** in the same PR and fix cross-references.
-- Every figure below was measured on the built `dist/` of the commit above. Re-check before implementing: some may have moved.
-- Items are grouped into **one PR each**. Every PR bumps the version, so two open PRs always conflict on `package.json`: merge them one at a time and rebase the next.
+- When an item is implemented, **remove it** in the same PR and fix cross-references. Don't strike it through.
+- Don't write version numbers in it ("since v3.2.x"): they go stale on every rebase.
+- Figures were measured on the built `dist/` when the item was written. Re-check before implementing.
+
+## Handover (state on 2026-11-12)
+
+### Done since the audit
+
+Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue).
+
+### Open pull requests
+
+Merge in this order. Each one must carry a version exactly one above `main` at the moment it merges.
+
+| PR | What | State |
+| --- | :--- | :--- |
+| branch `feat/draft-previews` | Draft previews, strict frontmatter, typed post helpers, `npm run new-post` (PR 9 below) | verified locally in both build modes (production and `CONTEXT=deploy-preview`); look for its PR, or open one from the branch |
+| #399, #400 | Dependabot (GitHub Actions group, npm group) | each needs a version bump on its branch before it can merge (see PR 7) |
+
+### How the work was done, and what to keep doing
+
+- **One PR per topic, opened by the agent with `gh pr create`; Villoro reviews and merges**, or says "merge it" and the agent merges after checking the deploy preview. Delete merged branches and fast-forward local `main` afterwards.
+- **`check_version` only accepts `main` + 1.** Two open PRs can't both be mergeable: after one merges, rebase the next and bump it. Open them anyway so Villoro can review, and say which is next.
+- **Required checks on `main`** (ruleset `main-protection`): `check_version`, `netlify/villoro/deploy-preview`, `aspect_ratio_check`, `pre_commit`, `tests`. If a PR renames or removes a CI job, update the ruleset in the same breath (`gh api repos/villoro/villoro.com/rulesets/<id>`), and tell Villoro.
+- **"CI green" includes the Netlify deploy preview**, not only GitHub Actions. Look at the preview before saying a PR is ready, and before merging on Villoro's behalf.
+- **Subagents did the mechanical PRs; the main agent reviews every diff and re-runs the checks itself.** Things review caught that the subagent's own report missed: headings silently falling back to another font (it compared computed styles, not pixels), a change that would have re-flagged every post in RSS readers, changes that altered the brand blue. Look at screenshots for anything visual.
+- **Verify on the built site**: `npm run build`, `npm test`, and a headless Chrome run for behaviour (`playwright-core` with the system Chrome works; nothing needs to be added to the repo).
+- **Node**: the repo needs Node 22 (`.nvmrc`). On Villoro's machine the default is Node 24 and the installed Node 22 patch is older than Astro accepts, so: run `npm ci` with Node 22, then build, lint, typecheck and test with Node 24. `npm ci` under Node 24 leaves `astro check` stuck at an install prompt (always run it with `CI=true` and a timeout).
+- **Builds are fast only with a warm image cache** (`node_modules/.astro`). `npm ci` wipes it: copy it aside and back, or expect one build of several minutes.
+- **Agent worktrees** (`.claude/worktrees/`) hold full `node_modules` copies: remove them when the subagent is done, and lint with `--ignore-pattern '.claude/**'` while they exist.
+
+### Suggested order for what is left
+
+1. Land the draft-previews PR.
+2. PR 7 leftovers: the Dependabot version bump (it unblocks #399 and #400 and every future weekly PR), then the image size limit.
+3. PR 1 leftovers (category descriptions need Villoro's wording).
+4. PR 13 leftovers (keyboard-scrollable tables, the code theme setting).
+5. PR 11, the major upgrades, one risky package per PR.
+6. PR 12 as a one-off measurement.
 
 ## Summary
 
-| PR | Topic | Goal | Effort | Impact | Who |
-| --- | :--- | :--- | --- | --- | :--- |
-| 1 | Metadata leftovers | SEO | Low | Low | subagent |
-| 7 | Build and CI leftovers | Maintenance | Low | Low | subagent |
-| 9 | Draft previews and strict frontmatter | Writing | Medium | Medium | senior |
-| 11 | Major dependency upgrades | Maintenance | Medium | Low | subagent |
-| 12 | Lighthouse budget on previews | Speed | Medium | Medium | later |
-| 13 | Colour contrast | Accessibility | Low | Medium | later |
+| PR | Topic | Goal | Effort | Impact |
+| --- | :--- | :--- | --- | --- |
+| 1 | Metadata leftovers | SEO | Low | Low |
+| 7 | Build and CI leftovers | Maintenance | Low | Medium |
+| 9 | Draft previews and strict frontmatter | Writing | Medium | Medium |
+| 11 | Major dependency upgrades | Maintenance | Medium | Low |
+| 12 | Measure page speed once | Speed | Low | Low |
+| 13 | Accessibility leftovers | Accessibility | Low | Low |
 
-"Senior" means the item needs design judgement; "subagent" means the change is specified well enough below to hand over.
+The numbers are the ones the items had in the original audit; the gaps are items already done.
 
 ---
 
@@ -63,13 +100,19 @@ CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests),
 
 Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native Sätteri markdown pipeline and the site pins the `unified` one for three plugins (`remark-callouts`, `remark-toc` + `remark-collapse`, `rehype-sectionize`). No file in `src/content` has a "Table of contents" heading (`ArticleTOC` replaced it), so `remark-toc` and `remark-collapse` do nothing and can be removed.
 
-## PR 12. Lighthouse budget on previews
+## PR 12. Measure page speed once
 
-Run Lighthouse against the Netlify deploy preview of each PR and fail on a budget (LCP, total JS). There is a good number to protect now: 42 KB of JavaScript in total after Brotli. The fonts are self-hosted since v3.2.32 and PageSpeed hasn't been re-run since: the last numbers (June 2026, mobile) were Perf 70, FCP 3.8 s, LCP 5.1 s. Also check CLS, because the metric-adjusted fallback fonts that `astro-font` generated are gone.
+The audit proposed a Lighthouse budget on every deploy preview. **Recommendation: don't add it.** The size budgets (`.size-limit.json`: 50 KB of JS, 23 KB of CSS after Brotli) and `npm test` already catch regressions, cheaply and without flakiness, while Lighthouse scores vary from run to run on CI machines.
 
-## PR 13. Colour contrast
+What is missing is one measurement. The last PageSpeed numbers are from June 2026 (mobile: Perf 70, FCP 3.8 s, LCP 5.1 s) and predate everything that should have moved them: self-hosted fonts, no React (JS went from 104 KB to 42 KB), trailing-slash URLs without a redirect. Run PageSpeed Insights (or `npx lighthouse` against the live site) on the home page and one post, mobile, and write the numbers here. Check CLS in particular: the metric-adjusted fallback fonts that `astro-font` generated are gone. If LCP is still over 2.5 s, the next suspects are the hero image and the 17 KB `ClientRouter` script.
 
-Carried over from the June audit and **not re-verified**: PageSpeed flagged insufficient contrast, probably the muted greys of card metadata (`pc-*__meta`, `bl-grid-meta`, `hp-stats__label`). Run axe on `/`, `/blog` and one post in both themes, and darken the failing tokens in `tokens.css`.
+## PR 13. Accessibility leftovers
+
+An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in November 2026: muted labels, category names and chips, footer text, the 404 page in dark theme, code comments. What is left:
+
+- **The brand blue is below the contrast standard, on purpose.** White on `#3a76ff` is 4.02:1 and `#3a76ff` on the page background is 3.89:1, against a required 4.5:1. It affects links, the active nav item, kickers, primary buttons and table headers. **Villoro decided to keep `#3a76ff` everywhere (November 2026): don't change it.** If that is ever revisited, the fix that keeps the logo is a slightly darker blue only where it carries text (about `#2f67e8`). Audit tools will keep reporting these.
+- **Wide tables can't be scrolled with the keyboard.** axe reports `scrollable-region-focusable` on a table in the numba post: a scrollable table needs `tabindex="0"`. Add it to tables in `prose.css`/the markdown pipeline.
+- **`shikiConfig.theme: "monokai"` has no visible effect.** Code blocks are painted with github-dark token colours on a background forced to `#272822` by `prose.css`. Either make the theme setting real or delete it; today the comment colour is patched with a CSS override.
 
 ---
 

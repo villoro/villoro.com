@@ -62,11 +62,11 @@ const { categories, activeKey } = Astro.props;
     font-size: 12px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.65);
+    color: #fff;
     flex-shrink: 0;
     padding-top: 8px; /* align with chip text */
   }
-  :global(.dark) .cr__label { color: rgba(0, 0, 0, 0.50); }
+  :global(.dark) .cr__label { color: rgba(0, 0, 0, 0.80); }
 
   .cr__chips {
     display: flex;
@@ -103,9 +103,9 @@ const { categories, activeKey } = Astro.props;
   .cr__chip-count {
     font-size: 11px;
     font-weight: 700;
-    opacity: 0.65;
+    opacity: 0.95;
   }
-  .cr__chip.is-active .cr__chip-count { opacity: 0.45; }
+  .cr__chip.is-active .cr__chip-count { opacity: 0.7; }
 
   @media (max-width: 767px) {
     .cr { position: static; }

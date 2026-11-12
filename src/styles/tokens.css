@@ -71,6 +71,8 @@
   --color-on-dark-body:       rgba(255, 255, 255, 0.85);
   --color-on-dark-secondary:  rgba(255, 255, 255, 0.70);
   --color-on-dark-faint:      rgba(255, 255, 255, 0.55);
+  --color-on-dark-muted:      #a6accb;      /* footer text: same as light grey-400, but stays put in dark mode */
+
 
   /* Text ON the accent color (blue in light / yellow in dark) — must switch */
   --color-on-accent:          #fff;         /* white on blue */
