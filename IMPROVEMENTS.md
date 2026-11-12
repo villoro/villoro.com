@@ -21,7 +21,7 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 ### Done since the audit
 
-Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; a 400 KB limit on hero images; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
+Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; a 400 KB limit on hero images; the post hero no longer overlaps its breadcrumb on phones; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
 
 ### Open pull requests
 
@@ -41,7 +41,7 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 
 ### Suggested order for what is left
 
-1. PR 13 leftovers (the post hero on phones first, then keyboard-scrollable tables and the code theme setting).
+1. PR 13 leftovers (keyboard-scrollable tables, then the code theme setting).
 2. PR 1 leftovers (category descriptions need Villoro's wording).
 3. PR 11, the major upgrades, one risky package per PR.
 4. PR 12 as a one-off measurement.
@@ -101,7 +101,6 @@ What is missing is one measurement. The last PageSpeed numbers are from June 202
 An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in November 2026: muted labels, category names and chips, footer text, the 404 page in dark theme, code comments. What is left:
 
 - **The brand blue is below the contrast standard, on purpose.** White on `#3a76ff` is 4.02:1 and `#3a76ff` on the page background is 3.89:1, against a required 4.5:1. It affects links, the active nav item, kickers, primary buttons and table headers. **Villoro decided to keep `#3a76ff` everywhere (November 2026): don't change it.** If that is ever revisited, the fix that keeps the logo is a slightly darker blue only where it carries text (about `#2f67e8`). Audit tools will keep reporting these.
-- **On phones the post hero overlaps itself.** At 390 px wide the category chip sits on top of the breadcrumb and is cut off by the top of the hero (seen on the live site on `/blog/duckdb-instead-of-spark/`, in `ArticleLayout.astro`). Long titles push the chip up into the breadcrumb: give the hero content a top padding that clears the breadcrumb, or drop the breadcrumb below a breakpoint.
 - **Wide tables can't be scrolled with the keyboard.** axe reports `scrollable-region-focusable` on a table in the numba post: a scrollable table needs `tabindex="0"`. Add it to tables in `prose.css`/the markdown pipeline.
 - **`shikiConfig.theme: "monokai"` has no visible effect.** Code blocks are painted with github-dark token colours on a background forced to `#272822` by `prose.css`. Either make the theme setting real or delete it; today the comment colour is patched with a CSS override.
 
