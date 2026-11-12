@@ -162,10 +162,10 @@ export default defineConfig({
         [remarkCollapse, { test: "Table of contents" }],
       ],
       rehypePlugins: [sectionize, rehypeTableFocus],
-      shikiConfig: {
-        theme: "monokai",
-        wrap: true,
-      },
     }),
+    // No `shikiConfig`: code blocks use Shiki's default theme (github-dark)
+    // token colours on the dark background set in src/styles/prose.css.
+    // (A `shikiConfig` inside unified() is silently ignored; it belongs
+    // directly under `markdown`.)
   },
 });
