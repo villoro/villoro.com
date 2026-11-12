@@ -61,13 +61,14 @@ The numbers are the ones the items had in the original audit; the gaps are items
 
 CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests), the size check no longer installs Puppeteer, actions are on current majors and Dependabot opens one grouped PR a week. Blog hero images over 400 KB fail CI (`check_aspect_ratio.py --max-kb`). What is left:
 
-- **`npm audit` still reports 15 findings (13 moderate, 2 low)**, down from 29. They are in build tooling (`deepmerge`, `glob`, `minimatch`, `postcss-selector-parser`), not in what the site ships. Check them again after the major upgrades of PR 11.
+- **`npm audit` reports 17 findings (15 moderate, 2 low)**, down from 29. They are in build tooling (`deepmerge`, `glob`, `minimatch`, `postcss-selector-parser`), not in what the site ships. Check them again after the major upgrades of PR 11. ESLint 10 adds two entries (`eslint`, `@eslint/config-array`), but they are the same `minimatch` advisory reached through a new path.
+- **Prettier is not configured.** There is no `.prettierrc`, so `prettier-plugin-astro` and `prettier-plugin-tailwindcss` never load, `npm run format` fails on `.astro` files ("No parser could be inferred"), and `prettier --check src` reports 106 unformatted files. Either add a config and format everything once, in a PR of its own, or drop Prettier and its plugins.
 - **Build time**: a build with an empty image cache takes 6 to 10 minutes and one with a warm cache about 20 seconds, because each build writes ~1,800 optimized images (524 AVIF, 660 WebP, 591 JPG). Since v3.2.30 the cache is kept between builds on Netlify, and since v3.2.31 in CI (`warm_image_cache.yaml` saves it from `main`, the build job restores it). If builds get slow again, the next lever is fewer variants: dropping WebP (AVIF plus the JPG fallback covers every browser) removes a third of the files.
 - **Search index size**: `search.json` is 370 KB uncompressed for 74 posts and grows with each one. It is fetched only when search opens, so it isn't urgent; lower the per-post cap in `src/pages/search.json.ts` (5,000 characters today) if it becomes one.
 
 ## PR 11. Major dependency upgrades
 
-`size-limit` and `@size-limit/file` must move together (12 → 14). Outdated by a major today: `@astrojs/mdx` 7 → 8, `@vite-pwa/astro` 1 → 2, `eslint` 9 → 10, `eslint-plugin-astro` 1 → 3, `prettier-plugin-astro` 0.14 → 1, `typescript` 6 → 7, `astro-auto-import` 0.5 → 0.6. One PR per risky one (mdx, PWA), the lint/format tooling together.
+The lint, format and size tooling is upgraded (ESLint 10, `eslint-plugin-astro` 3, `prettier-plugin-astro` 1, `size-limit` 14). Still outdated by a major: `@astrojs/mdx` 7 → 8 with `astro-auto-import` 0.5 → 0.6, `@vite-pwa/astro` 1 → 2, `typescript` 6 → 7. One PR each.
 
 Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native Sätteri markdown pipeline and the site pins the `unified` one for three plugins (`remark-callouts`, `remark-toc` + `remark-collapse`, `rehype-sectionize`). No file in `src/content` has a "Table of contents" heading (`ArticleTOC` replaced it), so `remark-toc` and `remark-collapse` do nothing and can be removed.
 
