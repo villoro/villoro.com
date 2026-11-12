@@ -6,7 +6,7 @@
    ──────────────────────────────────────────────────────────────── */
 
 .btn {
-  @apply inline-block px-5 py-2 font-semibold capitalize rounded border border-transparent transition-all duration-150 cursor-pointer;
+  @apply inline-block cursor-pointer rounded border border-transparent px-5 py-2 font-semibold capitalize transition-all duration-150;
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
@@ -19,7 +19,7 @@
 
 /* Disabled state */
 .btn:disabled {
-  @apply opacity-50 cursor-not-allowed;
+  @apply cursor-not-allowed opacity-50;
 }
 
 /* ────────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@
    ──────────────────────────────────────────────────────────────── */
 
 .btn-primary {
-  @apply no-underline border-primary bg-primary text-white dark:border-darkmode-primary dark:bg-darkmode-primary dark:text-dark transition-colors;
+  @apply border-primary bg-primary text-white no-underline transition-colors dark:border-darkmode-primary dark:bg-darkmode-primary dark:text-dark;
 }
 
 /* Explicitly override prose `a` link colour for all states */
@@ -71,7 +71,7 @@
    ──────────────────────────────────────────────────────────────── */
 
 .btn-outline-primary {
-  @apply no-underline border-dark bg-transparent text-dark dark:border-white dark:text-white transition-colors;
+  @apply border-dark bg-transparent text-dark no-underline transition-colors dark:border-white dark:text-white;
 }
 
 .btn-outline-primary:hover:not(:disabled) {
@@ -81,4 +81,3 @@
 .btn-outline-primary:active:not(:disabled) {
   @apply scale-95;
 }
-

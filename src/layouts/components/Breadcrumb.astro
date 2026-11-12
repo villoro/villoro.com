@@ -33,17 +33,19 @@ interface Props {
 const { items, variant = "dark", class: cls = "" } = Astro.props;
 ---
 
-<nav
-  class:list={["bc", `bc--${variant}`, cls]}
-  aria-label="breadcrumb"
->
+<nav class:list={["bc", `bc--${variant}`, cls]} aria-label="breadcrumb">
   {items.map((item, i) => (
     <>
       {i > 0 && <IconArrow size={10} />}
-      {item.href
-        ? <a href={withTrailingSlash(item.href)} class="bc__link">{item.label}</a>
-        : <span class="bc__current" aria-current="page">{item.label}</span>
-      }
+      {item.href ? (
+        <a href={withTrailingSlash(item.href)} class="bc__link">
+          {item.label}
+        </a>
+      ) : (
+        <span class="bc__current" aria-current="page">
+          {item.label}
+        </span>
+      )}
     </>
   ))}
 </nav>
@@ -62,19 +64,35 @@ const { items, variant = "dark", class: cls = "" } = Astro.props;
   }
 
   /* Dark variant (listing hero, white bg) */
-  .bc--dark { color: var(--color-grey-500); }
-  .bc--dark .bc__link    { color: var(--color-grey-500); }
-  .bc--dark .bc__current { color: var(--color-blue-500); }
+  .bc--dark {
+    color: var(--color-grey-500);
+  }
+  .bc--dark .bc__link {
+    color: var(--color-grey-500);
+  }
+  .bc--dark .bc__current {
+    color: var(--color-blue-500);
+  }
 
   /* Light variant (article hero, dark image bg) */
-  .bc--light { color: rgba(255, 255, 255, 0.75); }
-  .bc--light .bc__link    { color: rgba(255, 255, 255, 0.75); }
-  .bc--light .bc__current { color: var(--color-yellow-400); }
+  .bc--light {
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .bc--light .bc__link {
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .bc--light .bc__current {
+    color: var(--color-yellow-400);
+  }
 
   .bc__link {
     text-decoration: none;
     transition: color 0.15s;
   }
-  .bc--dark  .bc__link:hover { color: var(--color-blue-500); }
-  .bc--light .bc__link:hover { color: var(--color-yellow-400); }
+  .bc--dark .bc__link:hover {
+    color: var(--color-blue-500);
+  }
+  .bc--light .bc__link:hover {
+    color: var(--color-yellow-400);
+  }
 </style>

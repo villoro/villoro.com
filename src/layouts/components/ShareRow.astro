@@ -8,17 +8,13 @@ import SocialIcon from "@/components/SocialIcon.astro";
 
 interface Props {
   title: string;
-  slug: string;         // e.g. "querying-apis-best-practices"
-  blogFolder?: string;  // default: config.settings.blog_folder
+  slug: string; // e.g. "querying-apis-best-practices"
+  blogFolder?: string; // default: config.settings.blog_folder
 }
 
-const {
-  title,
-  slug,
-  blogFolder = config.settings.blog_folder,
-} = Astro.props;
+const { title, slug, blogFolder = config.settings.blog_folder } = Astro.props;
 
-const base    = config.site.base_url;
+const base = config.site.base_url;
 const postUrl = `${base}/${blogFolder}/${slug}/`;
 ---
 
@@ -26,12 +22,7 @@ const postUrl = `${base}/${blogFolder}/${slug}/`;
   <span class="sr__label">Share this post</span>
   <div class="sr__btns">
     <!-- Copy link -->
-    <button
-      type="button"
-      class="icon-btn"
-      aria-label="Copy link"
-      data-sr-copy
-    >
+    <button type="button" class="icon-btn" aria-label="Copy link" data-sr-copy>
       <SocialIcon name="copy" size={16} />
     </button>
 
@@ -40,7 +31,8 @@ const postUrl = `${base}/${blogFolder}/${slug}/`;
       class="icon-btn icon-btn-blue"
       aria-label="Share on LinkedIn"
       href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(title)}`}
-      target="_blank" rel="noopener noreferrer"
+      target="_blank"
+      rel="noopener noreferrer"
     >
       <SocialIcon name="linkedin" />
     </a>
@@ -50,7 +42,8 @@ const postUrl = `${base}/${blogFolder}/${slug}/`;
       class="icon-btn icon-btn-blue"
       aria-label="Share on Twitter"
       href={`https://twitter.com/intent/tweet/?text=${encodeURIComponent(title)}&url=${encodeURIComponent(postUrl)}`}
-      target="_blank" rel="noopener noreferrer"
+      target="_blank"
+      rel="noopener noreferrer"
     >
       <SocialIcon name="twitter" size={16} />
     </a>
@@ -68,18 +61,20 @@ const postUrl = `${base}/${blogFolder}/${slug}/`;
 
 <script>
   function initCopyBtn() {
-    document.querySelectorAll('[data-sr-copy]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
+    document.querySelectorAll("[data-sr-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(window.location.href);
-          (btn as HTMLElement).style.background = 'var(--color-blue-500)';
-          setTimeout(() => { (btn as HTMLElement).style.background = ''; }, 800);
+          (btn as HTMLElement).style.background = "var(--color-blue-500)";
+          setTimeout(() => {
+            (btn as HTMLElement).style.background = "";
+          }, 800);
         } catch {}
       });
     });
   }
-  document.addEventListener('astro:page-load', initCopyBtn);
-  document.addEventListener('astro:after-swap', initCopyBtn);
+  document.addEventListener("astro:page-load", initCopyBtn);
+  document.addEventListener("astro:after-swap", initCopyBtn);
 </script>
 
 <style>
@@ -110,6 +105,10 @@ const postUrl = `${base}/${blogFolder}/${slug}/`;
   }
 
   @media (max-width: 767px) {
-    .sr { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .sr {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+    }
   }
 </style>

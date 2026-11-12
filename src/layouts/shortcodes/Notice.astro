@@ -43,10 +43,14 @@ const ICONS: Record<string, string> = {
 
 const canonical = TYPE_ALIASES[type] ?? type;
 const icon = ICONS[canonical] ?? ICONS.info;
-const classNames = ["notice", canonical, "text-md", cls, className].filter(Boolean).join(" ");
+const classNames = ["notice", canonical, "text-md", cls, className]
+  .filter(Boolean)
+  .join(" ");
 ---
 
 <div class={classNames}>
   <span set:html={icon} />
-  <span class="ml-4"><slot /></span>
+  <span class="ml-4">
+    <slot />
+  </span>
 </div>

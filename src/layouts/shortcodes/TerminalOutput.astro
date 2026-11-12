@@ -11,5 +11,7 @@ const extra = `${cls} ${className}`.trim();
 ---
 
 <div class={`terminal-output terminal-output--${tone} ${extra}`.trim()}>
-  <div class="terminal-output__body"><slot /></div>
+  <div class="terminal-output__body">
+    <slot />
+  </div>
 </div>

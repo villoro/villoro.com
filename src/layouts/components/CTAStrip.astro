@@ -12,7 +12,9 @@ const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`
 <div class="cta">
   <div class="cta__text">
     <div class="cta__kicker">Enjoyed this?</div>
-    <div class="cta__question">Support the blog or get the next one in your inbox.</div>
+    <div class="cta__question">
+      Support the blog or get the next one in your inbox.
+    </div>
   </div>
   <div class="cta__buttons">
     <a
@@ -22,7 +24,9 @@ const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`
       class="cta__coffee"
       aria-label="Buy me a coffee"
     >
-      <span class="cta__coffee-icon" aria-hidden="true">☕</span>
+      <span class="cta__coffee-icon" aria-hidden="true">
+        ☕
+      </span>
       Buy me a coffee
     </a>
     <a
@@ -93,17 +97,24 @@ const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`
     font-weight: 700;
     text-decoration: none;
     white-space: nowrap;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
   }
   .cta__coffee:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
-  .cta__coffee-icon { font-size: 18px; line-height: 1; }
+  .cta__coffee-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
 
   /* Dark mode: yellow stays yellow, navy text remaps to white via tokens
      — but we want dark text on yellow regardless. Pin the text colour. */
-  :global(.dark) .cta__coffee { color: var(--color-on-dark); } /* the accent is blue in dark: white reads better than near-black */
+  :global(.dark) .cta__coffee {
+    color: var(--color-on-dark);
+  } /* the accent is blue in dark: white reads better than near-black */
 
   .cta__subscribe {
     display: inline-flex;
@@ -120,8 +131,18 @@ const coffeeUrl = `https://www.buymeacoffee.com/${config.buymeacoffee.username}`
      kicker both remap correctly via tokens.css. */
 
   @media (max-width: 767px) {
-    .cta { flex-direction: column; align-items: flex-start; padding: 22px; }
-    .cta__buttons { margin-left: 0; width: 100%; }
-    .cta__subscribe { flex: 1; justify-content: center; }
+    .cta {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 22px;
+    }
+    .cta__buttons {
+      margin-left: 0;
+      width: 100%;
+    }
+    .cta__subscribe {
+      flex: 1;
+      justify-content: center;
+    }
   }
 </style>

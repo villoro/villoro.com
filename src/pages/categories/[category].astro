@@ -29,14 +29,16 @@ export async function getStaticPaths() {
 
 const { category } = Astro.params;
 const allPosts = await getPublishedPosts();
-const sorted   = sortByDate(allPosts);
+const sorted = sortByDate(allPosts);
 
-const filtered     = taxonomyFilter(allPosts, "category", category!);
-const sortedPosts  = sortByDate(filtered);
-const totalPages   = Math.ceil(sortedPosts.length / pagination);
+const filtered = taxonomyFilter(allPosts, "category", category!);
+const sortedPosts = sortByDate(filtered);
+const totalPages = Math.ceil(sortedPosts.length / pagination);
 const currentPosts = sortedPosts.slice(0, pagination);
 
-const metaEntry    = Object.entries(categoryMetadata).find(([key]) => slugify(key) === category);
+const metaEntry = Object.entries(categoryMetadata).find(
+  ([key]) => slugify(key) === category,
+);
 // Routes come from the categories of published posts, which are categoryMetadata keys
 const categoryName = metaEntry![1].name;
 const categoryDescription = metaEntry![1].description;
@@ -51,7 +53,7 @@ const bi = await getBlogListingCopy();
   title={`${categoryName} — Villoro`}
   description={categoryDescription}
   breadcrumbs={[
-    { href: "/",     label: "Villoro" },
+    { href: "/", label: "Villoro" },
     { href: "/blog/", label: "Blog" },
     { label: categoryName },
   ]}

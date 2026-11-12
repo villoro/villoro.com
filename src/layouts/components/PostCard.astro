@@ -49,15 +49,18 @@ const {
 const imageDefaults = {
   big: {
     widths: [640, 960, 1280, 1920],
-    sizes: "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) calc(100vw - 64px), 1184px",
+    sizes:
+      "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) calc(100vw - 64px), 1184px",
   },
   medium: {
     widths: [320, 480, 640, 768, 1080],
-    sizes: "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) 42vw, 500px",
+    sizes:
+      "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) 42vw, 500px",
   },
   small: {
     widths: [240, 360, 480, 768],
-    sizes: "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) calc((100vw - 88px) / 2), 380px",
+    sizes:
+      "(max-width: 767px) calc(100vw - 40px), (max-width: 1023px) calc((100vw - 88px) / 2), 380px",
   },
 };
 
@@ -105,13 +108,17 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       <div class="pc-big__meta-row">
         {badge && <span class="pc-chip">{badge}</span>}
         <span class="pc-big__meta-text">
-          <span class="pc-cat" style={catStyle}>{catName}</span>
+          <span class="pc-cat" style={catStyle}>
+            {catName}
+          </span>
           {formattedDate && <> · {formattedDate}</>}
           {readTime && <> · {readTime}</>}
         </span>
       </div>
       <h3 class="pc-big__title">
-        <a href={href} class="pc-big__title-link">{title}</a>
+        <a href={href} class="pc-big__title-link">
+          {title}
+        </a>
       </h3>
       {description && <p class="pc-big__excerpt">{description}</p>}
       <a href={href} class="pc-cta-link">
@@ -138,16 +145,18 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
           class="pc-med__img"
         />
       )}
-      {badge && (
-        <span class="pc-chip pc-med__badge">{badge}</span>
-      )}
+      {badge && <span class="pc-chip pc-med__badge">{badge}</span>}
       <div class="pc-med__img-footer">
-        <span class="pc-med__img-meta">{catName} · {readTime}</span>
+        <span class="pc-med__img-meta">
+          {catName} · {readTime}
+        </span>
       </div>
     </a>
     <div class="pc-med__body">
       <h3 class="pc-med__title">
-        <a href={href} class="pc-med__title-link">{title}</a>
+        <a href={href} class="pc-med__title-link">
+          {title}
+        </a>
       </h3>
       {description && <p class="pc-med__excerpt">{description}</p>}
       <a href={href} class="pc-cta-link">
@@ -175,9 +184,13 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       )}
     </a>
     <div class="pc-small__body">
-      <span class="pc-small__cat pc-cat" style={catStyle}>{catName}</span>
+      <span class="pc-small__cat pc-cat" style={catStyle}>
+        {catName}
+      </span>
       <h3 class="pc-small__title">
-        <a href={href} class="pc-small__title-link">{title}</a>
+        <a href={href} class="pc-small__title-link">
+          {title}
+        </a>
       </h3>
       <div class="pc-small__meta">
         {formattedDate}
@@ -190,13 +203,21 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 <style is:global>
   /* Category name as text: the derived accessible colour per theme.
      Categories without a hue inherit the surrounding colour. */
-  .pc-cat { color: var(--cat-text, var(--color-grey-500)); }
-  .dark .pc-cat { color: var(--cat-text-dark, var(--color-grey-500)); }
+  .pc-cat {
+    color: var(--cat-text, var(--color-grey-500));
+  }
+  .dark .pc-cat {
+    color: var(--cat-text-dark, var(--color-grey-500));
+  }
   /* The featured card is a dark surface on desktop: the raw hue reads well there */
-  .pc-big .pc-cat { color: var(--cat, var(--color-grey-500)); }
+  .pc-big .pc-cat {
+    color: var(--cat, var(--color-grey-500));
+  }
   /* Badge chip: token-yellow → blue in dark, with pure white text on it.
      (html.dark outweighs the scoped .pc-chip rule below, which would otherwise win.) */
-  html.dark .pc-chip { color: var(--color-on-dark); }
+  html.dark .pc-chip {
+    color: var(--color-on-dark);
+  }
 
   .pc-big__img,
   .pc-med__img,
@@ -291,7 +312,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(var(--color-surface-dark-rgb), 0)    30%,
+      rgba(var(--color-surface-dark-rgb), 0) 30%,
       rgba(var(--color-surface-dark-rgb), 0.55) 65%,
       rgba(var(--color-surface-dark-rgb), 0.95) 100%
     );
@@ -359,20 +380,30 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       aspect-ratio: 16 / 9;
       max-height: none;
     }
-    .pc-big__overlay { display: none; }
+    .pc-big__overlay {
+      display: none;
+    }
     .pc-big__body {
       position: static;
       padding: 20px 22px 22px;
     }
-    .pc-big__meta-text { color: var(--color-grey-500); }
-    .pc-big .pc-cat { color: var(--cat-text, var(--color-grey-500)); }
-    .dark .pc-big .pc-cat { color: var(--cat-text-dark, var(--color-grey-500)); }
+    .pc-big__meta-text {
+      color: var(--color-grey-500);
+    }
+    .pc-big .pc-cat {
+      color: var(--cat-text, var(--color-grey-500));
+    }
+    .dark .pc-big .pc-cat {
+      color: var(--cat-text-dark, var(--color-grey-500));
+    }
     .pc-big__title {
       font-size: var(--text-card-title);
       line-height: 1.2;
       margin: 4px 0 10px;
     }
-    .pc-big__title-link { color: var(--color-navy-900); }
+    .pc-big__title-link {
+      color: var(--color-navy-900);
+    }
     .pc-big__excerpt {
       font-size: 15px;
       color: var(--color-ink-800);

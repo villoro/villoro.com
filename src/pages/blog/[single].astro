@@ -20,16 +20,26 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { blog_folder, similar_items_length } = config.settings;
-const { title, description, image, date, updated_date: updatedDate, tags = [], category } = post.data;
-const slug     = postSlug(post);
-const canonical = withTrailingSlash(`${config.site.base_url}${Astro.url.pathname}`);
+const {
+  title,
+  description,
+  image,
+  date,
+  updated_date: updatedDate,
+  tags = [],
+  category,
+} = post.data;
+const slug = postSlug(post);
+const canonical = withTrailingSlash(
+  `${config.site.base_url}${Astro.url.pathname}`,
+);
 
-const posts        = await getPublishedPosts();
+const posts = await getPublishedPosts();
 const similarPosts = similarItems(post, posts, similar_items_length);
 const { Content, headings } = await render(post);
 
-const catMeta  = categoryMetadata[category];
-const catName  = catMeta.name;
+const catMeta = categoryMetadata[category];
+const catName = catMeta.name;
 const catColor = catMeta.color;
 
 // Build numbered, hierarchical TOC (depth 2 + 3)
@@ -43,15 +53,24 @@ for (const h of headings) {
     toc.push({ num: `${h2Count}.`, text: h.text, slug: h.slug, depth: 2 });
   } else if (h.depth === 3 && h2Count > 0) {
     h3Count += 1;
-    toc.push({ num: `${h2Count}.${h3Count}.`, text: h.text, slug: h.slug, depth: 3 });
+    toc.push({
+      num: `${h2Count}.${h3Count}.`,
+      text: h.text,
+      slug: h.slug,
+      depth: 3,
+    });
   }
 }
 
-const readTime     = readingTimeForPost(post);
+const readTime = readingTimeForPost(post);
 const formattedDate = date ? dateFormat(date, "MMMM d, yyyy") : "";
-const formattedUpdatedDate = updatedDate ? dateFormat(updatedDate, "MMMM d, yyyy") : "";
+const formattedUpdatedDate = updatedDate
+  ? dateFormat(updatedDate, "MMMM d, yyyy")
+  : "";
 const publishedTime = date ? new Date(date).toISOString() : undefined;
-const modifiedTime = updatedDate ? new Date(updatedDate).toISOString() : undefined;
+const modifiedTime = updatedDate
+  ? new Date(updatedDate).toISOString()
+  : undefined;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -59,7 +78,11 @@ const jsonLd = {
   headline: title,
   description,
   datePublished: date ? new Date(date).toISOString() : undefined,
-  dateModified: updatedDate ? new Date(updatedDate).toISOString() : (date ? new Date(date).toISOString() : undefined),
+  dateModified: updatedDate
+    ? new Date(updatedDate).toISOString()
+    : date
+      ? new Date(date).toISOString()
+      : undefined,
   author: {
     "@type": "Person",
     name: post.data.author,

@@ -19,7 +19,9 @@ if (posts.length === 0) return;
   <div class="rp__inner">
     <div class="rp__head">
       <h2 class="rp__h">{heading}</h2>
-      <a href="/blog/" class="rp__all">All posts →</a>
+      <a href="/blog/" class="rp__all">
+        All posts →
+      </a>
     </div>
     <div class="rp__grid">
       {posts.map((p) => (
@@ -71,7 +73,9 @@ if (posts.length === 0) return;
     color: var(--color-blue-500);
     text-decoration: none;
   }
-  .rp__all:hover { text-decoration: underline; }
+  .rp__all:hover {
+    text-decoration: underline;
+  }
 
   .rp__grid {
     display: grid;
@@ -80,9 +84,13 @@ if (posts.length === 0) return;
   }
 
   @media (max-width: 1023px) {
-    .rp__grid { grid-template-columns: repeat(2, 1fr); }
+    .rp__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
   @media (max-width: 767px) {
-    .rp__grid { grid-template-columns: 1fr; }
+    .rp__grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

@@ -47,12 +47,15 @@ const {
   jsonLd,
 } = Astro.props;
 
-const resolvedCanonical = withTrailingSlash(canonical ?? `${config.site.base_url}${Astro.url.pathname}`);
+const resolvedCanonical = withTrailingSlash(
+  canonical ?? `${config.site.base_url}${Astro.url.pathname}`,
+);
 
 // OG/Twitter image must be an absolute URL to a real served file. Blog images
 // live in src/images/blog (not served verbatim), so resolve through the image
 // pipeline; public/ paths (e.g. a future meta_image) pass through unchanged.
-const rawOgImage = image ?? (config.metadata as { meta_image?: string }).meta_image ?? "";
+const rawOgImage =
+  image ?? (config.metadata as { meta_image?: string }).meta_image ?? "";
 let ogImageUrl = rawOgImage ? `${config.site.base_url}${rawOgImage}` : "";
 const ogLoader = rawOgImage ? resolveImage(rawOgImage) : undefined;
 if (ogLoader) {
@@ -63,8 +66,12 @@ if (ogLoader) {
 }
 
 // Same URL as og:image, so structured data never points at a path that 404s
-const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).map((item) =>
-  item["@type"] === "BlogPosting" && !item.image && ogImageUrl ? { ...item, image: ogImageUrl } : item,
+const jsonLdItems = (
+  Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []
+).map((item) =>
+  item["@type"] === "BlogPosting" && !item.image && ogImageUrl
+    ? { ...item, image: ogImageUrl }
+    : item,
 );
 ---
 
@@ -73,34 +80,68 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
   <head>
     <meta charset="utf-8" />
     <link rel="shortcut icon" href={config.site.favicon} />
-    <link rel="alternate" type="application/rss+xml" title={config.site.title} href={`${config.site.base_url}/rss.xml`} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={config.site.title}
+      href={`${config.site.base_url}/rss.xml`}
+    />
     <link rel="apple-touch-icon" href="/pwa/pwa-192x192.png" />
     {pwaInfo && <Fragment set:html={pwaInfo.webManifest.linkTag} />}
     <meta name="msapplication-TileColor" content="#000000" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#fff"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#000"
+    />
     <meta name="generator" content={Astro.generator} />
 
     {/* Inline theme init — runs before stylesheets to avoid a post-paint class flip / forced reflow. */}
-    <script is:inline define:vars={{ defaultTheme: config.settings?.default_theme ?? "system" }}>
+    <script
+      is:inline
+      define:vars={{ defaultTheme: config.settings?.default_theme ?? "system" }}
+    >
       try {
         const stored = localStorage.getItem("theme");
-        const sysDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const effective = stored || (defaultTheme === "system" ? (sysDark ? "dark" : "light") : defaultTheme);
-        if (effective === "dark") document.documentElement.classList.add("dark");
+        const sysDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        const effective =
+          stored ||
+          (defaultTheme === "system"
+            ? sysDark
+              ? "dark"
+              : "light"
+            : defaultTheme);
+        if (effective === "dark")
+          document.documentElement.classList.add("dark");
       } catch {}
     </script>
 
     {import.meta.env.PROD && (
       <>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-08V17G7ZDD"></script>
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-08V17G7ZDD"
+        ></script>
         <script is:inline>
-          if (window.location.host === "villoro.com" || window.location.host === "www.villoro.com") {
+          if (
+            window.location.host === "villoro.com" ||
+            window.location.host === "www.villoro.com"
+          ) {
             window.dataLayer = window.dataLayer || [];
-            // eslint-disable-next-line prefer-rest-params
-            function gtag(){window.dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-08V17G7ZDD');
+            function gtag() {
+              // gtag.js needs the arguments object itself, not an array
+              // eslint-disable-next-line prefer-rest-params
+              window.dataLayer.push(arguments);
+            }
+            gtag("js", new Date());
+            gtag("config", "G-08V17G7ZDD");
           }
         </script>
       </>
@@ -110,20 +151,50 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
         Heebo for the body, and Signika for headings. Signika is `font-display: optional`,
         so without the preload it misses its short window on a first visit and every
         heading stays in the fallback font. */}
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/heebo-latin.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/signika-latin.woff2" crossorigin />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/heebo-latin.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/signika-latin.woff2"
+      crossorigin
+    />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=5"
+    />
     <title>{plainify(meta_title ? meta_title : title ? title : config.site.title)}</title>
     <link rel="canonical" href={resolvedCanonical} />
     {prevHref && <link rel="prev" href={withTrailingSlash(prevHref)} />}
     {nextHref && <link rel="next" href={withTrailingSlash(nextHref)} />}
     {noindex && <meta name="robots" content="noindex,follow" />}
-    <meta name="description" content={plainify(description ? description : config.metadata.meta_description)} />
+    <meta
+      name="description"
+      content={plainify(
+        description ? description : config.metadata.meta_description,
+      )}
+    />
     <ClientRouter />
     <meta name="author" content={config.metadata.meta_author} />
-    <meta property="og:title" content={plainify(meta_title ? meta_title : title ? title : config.site.title)} />
-    <meta property="og:description" content={plainify(description ? description : config.metadata.meta_description)} />
+    <meta
+      property="og:title"
+      content={plainify(
+        meta_title ? meta_title : title ? title : config.site.title,
+      )}
+    />
+    <meta
+      property="og:description"
+      content={plainify(
+        description ? description : config.metadata.meta_description,
+      )}
+    />
     <meta property="og:site_name" content={config.site.title} />
     <meta property="og:type" content={ogType} />
     {ogType === "article" && publishedTime && (
@@ -136,16 +207,34 @@ const jsonLdItems = (Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []).ma
       <meta property="article:author" content={author} />
     )}
     <meta property="og:url" content={resolvedCanonical} />
-    <meta name="twitter:title" content={plainify(meta_title ? meta_title : title ? title : config.site.title)} />
-    <meta name="twitter:description" content={plainify(description ? description : config.metadata.meta_description)} />
+    <meta
+      name="twitter:title"
+      content={plainify(
+        meta_title ? meta_title : title ? title : config.site.title,
+      )}
+    />
+    <meta
+      name="twitter:description"
+      content={plainify(
+        description ? description : config.metadata.meta_description,
+      )}
+    />
     <meta property="og:image" content={ogImageUrl} />
     <meta name="twitter:image" content={ogImageUrl} />
     <meta name="twitter:card" content="summary_large_image" />
-    {jsonLdItems.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)} is:inline />)}
+    {jsonLdItems.map((item) => (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(item)}
+        is:inline
+      />
+    ))}
     <slot name="head" />
   </head>
   <body>
-    <a href="#main" class="sr-only focus:not-sr-only">Skip to main content</a>
+    <a href="#main" class="sr-only focus:not-sr-only">
+      Skip to main content
+    </a>
     <TwSizeIndicator />
     <SearchModal />
     <slot />

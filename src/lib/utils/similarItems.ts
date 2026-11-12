@@ -2,11 +2,16 @@ import type { CollectionEntry } from "astro:content";
 
 type BlogEntry = CollectionEntry<"blog">;
 
-const timestamp = (item: BlogEntry): number => (item.data.date ? new Date(item.data.date).getTime() : 0);
+const timestamp = (item: BlogEntry): number =>
+  item.data.date ? new Date(item.data.date).getTime() : 0;
 
 // Score by shared category (+3) and shared tags (+1 each). Ties go to the newest post,
 // so the output is deterministic.
-const similarItems = (currentItem: BlogEntry, allItems: BlogEntry[], limit: number = 3): BlogEntry[] => {
+const similarItems = (
+  currentItem: BlogEntry,
+  allItems: BlogEntry[],
+  limit: number = 3,
+): BlogEntry[] => {
   const category = currentItem.data.category;
   const tags: string[] = currentItem.data.tags ?? [];
   const currentKey = currentItem.data.slug || currentItem.id;
@@ -25,7 +30,9 @@ const similarItems = (currentItem: BlogEntry, allItems: BlogEntry[], limit: numb
     if (score > 0) scoredItems.push({ item, score });
   });
 
-  scoredItems.sort((a, b) => b.score - a.score || timestamp(b.item) - timestamp(a.item));
+  scoredItems.sort(
+    (a, b) => b.score - a.score || timestamp(b.item) - timestamp(a.item),
+  );
 
   return scoredItems.slice(0, limit).map((scored) => scored.item);
 };

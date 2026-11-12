@@ -21,7 +21,9 @@ export async function GET() {
       // thumbnail: optimized URL when the image resolves through the
       // pipeline, raw path otherwise (e.g. anything still in public/)
       let thumb = post.data.image;
-      const loader = post.data.image ? resolveImage(post.data.image) : undefined;
+      const loader = post.data.image
+        ? resolveImage(post.data.image)
+        : undefined;
       if (loader) {
         const mod = await loader();
         const img = await getImage({ src: mod.default, width: THUMB_WIDTH });

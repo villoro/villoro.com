@@ -19,7 +19,11 @@ export function withTrailingSlash(path: string): string {
   const rest = cut === -1 ? "" : path.slice(cut);
 
   // Strip the origin when checking the last segment of an absolute URL.
-  const lastSegment = pathname.replace(/^https?:\/\/[^/]+/, "").split("/").pop() ?? "";
+  const lastSegment =
+    pathname
+      .replace(/^https?:\/\/[^/]+/, "")
+      .split("/")
+      .pop() ?? "";
   if (pathname.endsWith("/") || /\.[a-z0-9]+$/i.test(lastSegment)) return path;
   // Bare origin ("https://villoro.com") becomes "https://villoro.com/".
   return `${pathname}/${rest}`;

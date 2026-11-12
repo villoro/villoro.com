@@ -32,15 +32,17 @@ const { category, slug } = Astro.params;
 const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
 
 const allPosts = await getPublishedPosts();
-const sorted   = sortByDate(allPosts);
+const sorted = sortByDate(allPosts);
 
-const filtered     = taxonomyFilter(allPosts, "category", category!);
-const sortedPosts  = sortByDate(filtered);
-const totalPages   = Math.ceil(sortedPosts.length / pagination);
-const start        = (currentPage - 1) * pagination;
+const filtered = taxonomyFilter(allPosts, "category", category!);
+const sortedPosts = sortByDate(filtered);
+const totalPages = Math.ceil(sortedPosts.length / pagination);
+const start = (currentPage - 1) * pagination;
 const currentPosts = sortedPosts.slice(start, start + pagination);
 
-const metaEntry    = Object.entries(categoryMetadata).find(([key]) => slugify(key) === category);
+const metaEntry = Object.entries(categoryMetadata).find(
+  ([key]) => slugify(key) === category,
+);
 // Routes come from the categories of published posts, which are categoryMetadata keys
 const categoryName = metaEntry![1].name;
 const categoryDescription = metaEntry![1].description;
@@ -55,9 +57,9 @@ const bi = await getBlogListingCopy();
   title={`${categoryName} — Page ${currentPage} — Villoro`}
   description={categoryDescription}
   breadcrumbs={[
-    { href: "/",                        label: "Villoro" },
-    { href: "/blog/",                    label: "Blog" },
-    { href: `/categories/${category}/`,  label: categoryName },
+    { href: "/", label: "Villoro" },
+    { href: "/blog/", label: "Blog" },
+    { href: `/categories/${category}/`, label: categoryName },
     { label: `Page ${currentPage}` },
   ]}
   postCount={postCount}
