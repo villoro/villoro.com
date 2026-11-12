@@ -29,7 +29,7 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 
 | PR | What | State |
 | --- | :--- | :--- |
-| branch `feat/draft-previews` | Draft previews, strict frontmatter, typed post helpers, `npm run new-post` (PR 9 below) | verified locally in both build modes (production and `CONTEXT=deploy-preview`); look for its PR, or open one from the branch |
+| the PR from `feat/draft-previews` | Draft previews, strict frontmatter, typed post helpers, `npm run new-post` | verified locally in both build modes (production and `CONTEXT=deploy-preview`); merge it first. Its deploy preview is the first place where draft pages are really built by Netlify: open `/blog/hard-deletes/` there and check the banner |
 | #399, #400 | Dependabot (GitHub Actions group, npm group) | each needs a version bump on its branch before it can merge (see PR 7) |
 
 ### How the work was done, and what to keep doing
@@ -46,10 +46,10 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 
 ### Suggested order for what is left
 
-1. Land the draft-previews PR.
+1. Land the draft-previews PR, and check a draft page on its Netlify preview.
 2. PR 7 leftovers: the Dependabot version bump (it unblocks #399 and #400 and every future weekly PR), then the image size limit.
 3. PR 1 leftovers (category descriptions need Villoro's wording).
-4. PR 13 leftovers (keyboard-scrollable tables, the code theme setting).
+4. PR 13 leftovers (the post hero on phones first, then keyboard-scrollable tables and the code theme setting).
 5. PR 11, the major upgrades, one risky package per PR.
 6. PR 12 as a one-off measurement.
 
@@ -59,10 +59,10 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 | --- | :--- | :--- | --- | --- |
 | 1 | Metadata leftovers | SEO | Low | Low |
 | 7 | Build and CI leftovers | Maintenance | Low | Medium |
-| 9 | Draft previews and strict frontmatter | Writing | Medium | Medium |
+| 9 | Content model leftovers | Writing | Low | Low |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low |
 | 12 | Measure page speed once | Speed | Low | Low |
-| 13 | Accessibility leftovers | Accessibility | Low | Low |
+| 13 | Accessibility and layout leftovers | Accessibility | Low | Medium |
 
 The numbers are the ones the items had in the original audit; the gaps are items already done.
 
@@ -85,14 +85,13 @@ CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests),
 - **Search index size**: `search.json` is 370 KB uncompressed for 74 posts and grows with each one. It is fetched only when search opens, so it isn't urgent; lower the per-post cap in `src/pages/search.json.ts` (5,000 characters today) if it becomes one.
 - **Image weight**: `src/images/blog` is 23 MB; 29 hero images are over 300 KB and `0001-personal-web.png` is 945 KB. The originals don't ship, so this only costs build time and repo size. Add a size limit (400 KB, matching the hero-image rule in `AGENTS.md`) to `check_aspect_ratio.py` and recompress the ones over it. Low priority within this PR; split it out if it gets noisy.
 
-## PR 9. Draft previews and strict frontmatter
+## PR 9. Content model leftovers
 
-- **Drafts can't be previewed.** `AGENTS.md` says to release a post with `draft: true` "so it can be checked live before it shows in listings", but `getSinglePage` filters drafts out of `getStaticPaths`, so a draft has no page at all, live or in the deploy preview. Build draft pages when `CONTEXT` isn't `production` (Netlify sets it to `deploy-preview` on PRs), always `noindex`, never in listings, RSS, sitemap or search. In dev, show them too.
-- **Unknown frontmatter keys pass silently.** The schema is a plain `z.object`, so a typo like `update_date:` is ignored. Use `z.strictObject`. The memory of past sessions already records confusion about snake_case keys; `imageAlt` and `readingTime` are the two camelCase leftovers, rename them.
-- **`category` is a free string** defaulting to `"Others"`, which isn't a key in `categoryMetadata.ts` (the key is `others`). Make it `z.enum` over the keys of `categoryMetadata` so a wrong category fails the build instead of rendering a grey chip.
-- **The blog schema serves two things.** `src/content/blog/-index.md` (the listing's hero copy) lives in the same collection as the posts, so the post schema carries `hero` and `section` fields that no post uses, and every query has to filter the `-index` entry out by id. Move it to its own small collection. In the homepage schema, `banner`, `slogan` and `blog` look like template leftovers: confirm they have no consumer and delete.
-- **`getSinglePage(collectionName: string)`** casts everything to `"blog"`. Type it properly; `rss.xml.ts` and `search.json.ts` re-implement the draft filter and should call the same helper.
-- **A `npm run new-post` script** that creates `9999-<slug>.mdx` with the full frontmatter would remove the copy-paste step. Optional.
+Drafts are previewable, frontmatter is strict and posts come from one typed helper (`src/lib/posts.ts`). Small things noticed on the way and left alone:
+
+- **Unused schema fields**: `image_alt` and `reading_time` in the post schema (nothing renders them), and `date`, `image`, `draft` in the about schema. Delete them or use them.
+- **The home page `companies` block** is in the schema and in `src/content/homepage/-index.md`, but no page renders it. Render it or remove it.
+- **`SHOW_DRAFTS` in `astro dev`** (`import.meta.env.DEV`) was not exercised, only the `CONTEXT=deploy-preview` build. Open a draft in `npm run dev` once to confirm.
 
 ## PR 11. Major dependency upgrades
 
@@ -106,11 +105,12 @@ The audit proposed a Lighthouse budget on every deploy preview. **Recommendation
 
 What is missing is one measurement. The last PageSpeed numbers are from June 2026 (mobile: Perf 70, FCP 3.8 s, LCP 5.1 s) and predate everything that should have moved them: self-hosted fonts, no React (JS went from 104 KB to 42 KB), trailing-slash URLs without a redirect. Run PageSpeed Insights (or `npx lighthouse` against the live site) on the home page and one post, mobile, and write the numbers here. Check CLS in particular: the metric-adjusted fallback fonts that `astro-font` generated are gone. If LCP is still over 2.5 s, the next suspects are the hero image and the 17 KB `ClientRouter` script.
 
-## PR 13. Accessibility leftovers
+## PR 13. Accessibility and layout leftovers
 
 An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in November 2026: muted labels, category names and chips, footer text, the 404 page in dark theme, code comments. What is left:
 
 - **The brand blue is below the contrast standard, on purpose.** White on `#3a76ff` is 4.02:1 and `#3a76ff` on the page background is 3.89:1, against a required 4.5:1. It affects links, the active nav item, kickers, primary buttons and table headers. **Villoro decided to keep `#3a76ff` everywhere (November 2026): don't change it.** If that is ever revisited, the fix that keeps the logo is a slightly darker blue only where it carries text (about `#2f67e8`). Audit tools will keep reporting these.
+- **On phones the post hero overlaps itself.** At 390 px wide the category chip sits on top of the breadcrumb and is cut off by the top of the hero (seen on the live site on `/blog/duckdb-instead-of-spark/`, in `ArticleLayout.astro`). Long titles push the chip up into the breadcrumb: give the hero content a top padding that clears the breadcrumb, or drop the breadcrumb below a breakpoint.
 - **Wide tables can't be scrolled with the keyboard.** axe reports `scrollable-region-focusable` on a table in the numba post: a scrollable table needs `tabindex="0"`. Add it to tables in `prose.css`/the markdown pipeline.
 - **`shikiConfig.theme: "monokai"` has no visible effect.** Code blocks are painted with github-dark token colours on a background forced to `#272822` by `prose.css`. Either make the theme setting real or delete it; today the comment colour is patched with a CSS override.
 

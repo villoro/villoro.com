@@ -45,7 +45,7 @@ The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `di
 
 `npm test` runs Node's built-in test runner on `tests/*.test.mjs`. No test framework.
 
-- **`tests/site.test.mjs`** checks the built `dist/`, like dbt tests on a model: every internal link resolves and ends with `/`, one `<h1>` and a unique title per page, canonicals and sitemap URLs point to real indexable pages, every post has valid JSON-LD, drafts are published nowhere, the search index is plain text, no Google Fonts and no framework islands. **When you fix a bug that shows in the built HTML, add an assertion here.**
+- **`tests/site.test.mjs`** checks the built `dist/`, like dbt tests on a model: every internal link resolves and ends with `/`, one `<h1>` and a unique title per page, canonicals and sitemap URLs point to real indexable pages, every post has valid JSON-LD, drafts are published nowhere (a draft may only have a `noindex` page with its marker, and only in a preview build: run `CONTEXT=deploy-preview npm run build` then `npm test` to check that mode), the search index is plain text, no Google Fonts and no framework islands. **When you fix a bug that shows in the built HTML, add an assertion here.**
 - **`tests/unit.test.mjs`** covers the pure helpers (`withTrailingSlash`, `plainify`, `plainifyMdx`, `similarItems`). It imports the `.ts` sources directly (Node strips the types), so those helpers must not import through the `@/` alias.
 - CI runs it in the single `tests` job (install once, then lint, typecheck, build, bundle size, tests).
 
@@ -85,14 +85,16 @@ src/
 │   └── shortcodes/                 auto-imported MDX components (.astro, no client JS)
 ├── content/                        Astro content collections (schemas in src/content.config.ts)
 │   ├── blog/                       *.mdx, FLAT (not by year). `9999-*` prefix = drafts/WIP
+│   ├── listing/blog.md             hero + section copy of the /blog listing (own collection)
 │   ├── about/-index.md
 │   └── homepage/-index.md
 ├── lib/
+│   ├── drafts.ts                   SHOW_DRAFTS flag (dev + Netlify previews build draft pages)
 │   ├── categoryMetadata.ts         category slug → display name + color (10 categories)
 │   ├── blogIndex.mjs               plain .mjs (astro.config.mjs can't import .ts/.astro): published posts from frontmatter, thin-tag rule, sitemap lastmod
-│   ├── contentParser.astro         getSinglePage(folder) — main collection helper
-│   ├── blogUtils.astro             blog-specific queries
-│   ├── taxonomyParser.astro        getTaxonomy() for tags/categories
+│   ├── posts.ts                    getPublishedPosts() — THE way to get posts; getPostsToBuild() (+drafts) is only for /blog/[single] routes; BlogPost type, postSlug()
+│   ├── listingCopy.ts              getBlogListingCopy() — the `listing` collection entry
+│   ├── taxonomy.ts                 getTaxonomy("tags" | "category") over published posts
 │   ├── listingData.ts              CategoryItem type + ribbon data
 │   └── utils/                      blogImages (resolveImage), dateFormat, readingTime, similarItems, sortFunctions, taxonomyFilter, textConverter (humanize, slugify, plainify), url (withTrailingSlash), searchText (plainifyMdx)
 ├── config/
@@ -115,6 +117,9 @@ public/                             served verbatim
 └── robots.txt
 
 tests/                              site.test.mjs (checks on dist/) + unit.test.mjs (pure helpers), see "Tests"
+
+scripts/
+└── new-post.mjs                    `npm run new-post -- "Title"`: creates a draft post
 
 .github/
 ├── workflows/
@@ -186,26 +191,33 @@ Types: `abstract` (alias `summary`), `tip` (`hint`), `success` (`check`), `quest
 
 ## Content collections
 
-Schemas in `src/content.config.ts` (Zod). Three collections:
+Schemas in `src/content.config.ts` (Zod). Four collections:
 
-- **blog** — flat folder of `*.mdx` (not subfolder-by-year). Filenames like `0067-marimo-notebooks.mdx`. The `9999-*` prefix is convention for drafts/WIP. Real drafts use frontmatter `draft: true` (filtered by `getSinglePage`).
+- **blog** — flat folder of `*.mdx` (not subfolder-by-year). Filenames like `0067-marimo-notebooks.mdx`. The `9999-*` prefix is convention for drafts/WIP. Real drafts use frontmatter `draft: true` (`getPublishedPosts()` leaves them out).
+- **listing** — `listing/blog.md`: hero and section copy of the `/blog` listing (and of the category listings), read with `getBlogListingCopy()`. It is its own collection so the post schema only has post fields.
 - **about** — single `-index.md` with rich schema (hero/story/timeline/hobbies).
 - **homepage** — single `-index.md` with hero + ribbon + latest + companies blocks.
+
+All three schemas are **strict** (`z.strictObject`, nested objects too): an unknown key, e.g. the typo `update_date:` for `updated_date:`, fails the build with `Unrecognized key`. Keys are snake_case. To add a field, add it to the schema first.
 
 Blog post frontmatter (commonly used):
 
 ```yaml
 title: string                  # required
-meta_title: string             # optional, used for <title> and og:title
+slug: string                   # URL slug. Always set it: the default is the whole filename (e.g. `0067-marimo-notebooks`)
+meta_title: string             # optional, <title> / og:title (default: title)
 description: string            # optional, used in <meta> and cards
-date: ISO date                 # optional, publication date, used for sorting
+date: ISO date                 # optional, used for sorting
 updated_date: ISO date         # optional, shown as "Updated ..."
-writing_date: ISO date         # optional, internal (drafting start), never rendered
+writing_date: ISO date         # optional, internal only (when drafting started), never rendered
 image: string                  # optional ("/images/blog/<file>", file in src/images/blog/); falls back to 0000-default.jpg
-category: string               # MUST match a key in categoryMetadata.ts (else falls back to humanize(slug))
+image_alt: string              # optional (not rendered today)
+reading_time: number           # optional (not used: reading time is computed from the body)
+author: string                 # default: config.metadata.meta_author
+category: enum                 # one of the keys of categoryMetadata.ts (default `others`); anything else fails the build
 tags: [string]                 # default ["Others"]
-draft: boolean                 # if true, filtered out of listings
-slug: string                   # optional override (default = filename minus prefix)
+highlight: boolean             # the post shown in the home page's "Most read" card
+draft: boolean                 # if true: no page on the live site; previewable in dev/deploy previews, never listed
 ```
 
 ## Categories (`src/lib/categoryMetadata.ts`)
@@ -214,7 +226,7 @@ Currently 10 categories. Adding a new one:
 1. Add an entry: `{ name: "🎯 Display Name", color: "#hex" }`
 2. Use that key in blog post frontmatter `category:` field
 
-Existing keys: `AI`, `API`, `DE`, `cloud_devops`, `git`, `hardware`, `others`, `python`, `tools`, `web`.
+The schema takes its allowed values from these keys (`categoryKeys`), so a typo in a post's `category:` fails the build. Existing keys: `AI`, `API`, `DE`, `cloud_devops`, `git`, `hardware`, `others`, `python`, `tools`, `web`.
 
 ## Styling
 
@@ -259,7 +271,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 
 - Listing pages take `Astro.params` like `[category]` or `[tag]` and call `getStaticPaths()` to enumerate them.
 - Pagination uses `[slug]` (the page number) under `page/`. Page 1 is always the bare URL (no `/page/1`).
-- Single posts use `slug` from frontmatter or filename (filename minus the numeric prefix, e.g. `0067-marimo-notebooks.mdx` → `marimo-notebooks`).
+- Single posts use `slug` from the frontmatter. Always set it: without it the URL is the whole filename (`0067-marimo-notebooks`), number included.
 - **Internal links always end with `/`.** Netlify serves every page with a trailing slash and 301-redirects the slashless form, so `trailing_slash` is `true` and every URL we generate (hrefs, canonical, sitemap, JSON-LD) must already be the final one. Build them with `withTrailingSlash()` from `src/lib/utils/url.ts` or write the `/` directly; do the same for links inside posts (`/blog/<slug>/`). Files with an extension (`/rss.xml`) and `#anchor` links are the exception.
 
 ## Build / deploy
@@ -297,6 +309,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 
 Posts are co-written, not generated in one go:
 
+- **Start from the script.** `npm run new-post -- "Working title"` creates `src/content/blog/9999-<slug>.mdx` with the full frontmatter of a draft (`slug`, `title`, `meta_title`, `description`, `date` = `writing_date` = today, `category`, `tags`, `draft: true`) and a `{/* TODO */}` body; it refuses to overwrite or reuse a slug and prints the path. There is no `image:`: the schema applies the default hero until the real one exists. Fix the `TODO`s in the frontmatter as the post takes shape.
 - **Free draft first, then direction, then section by section.** (1) Write the whole post freely as a proposal, from the sources (code, measurements, earlier posts), with `{/* TODO Villoro: … */}` comments wherever you assumed something. (2) Villoro reads it and you agree on the thesis, audience and index together. (3) Rewrite one or two sections per round, with Villoro's direction and corrections.
 - **Commit what Villoro accepts, then continue.** Leave each change uncommitted until Villoro says it's good, so they can review it as a diff. When they accept it, commit that part (message prefixed `Draft:`) and only then move on to the next thing they asked for. Don't run ahead to the next section.
 - **Length:** most posts are ~300–500 lines of MDX. Keep the main body lean; push detail (per-case numbers, tables of measurements) to an appendix and give the main text a headline figure.
@@ -309,7 +322,7 @@ Posts are co-written, not generated in one go:
 - **When the free draft lacks punch, agree the thesis before the index.** A draft with good material but no single claim to defend reads flat. Propose two or three thesis options with the number that backs each, let Villoro pick, then agree the index, commit a skeleton (the headings, each with its intent as a `{/* */}` comment, no prose) and write it section by section. When Villoro says "commit, then fix", commit the version they reviewed first, so the fix shows as its own diff.
 - **Top callouts:** if the post continues an earlier one, say so in an `[!info]` callout before the first heading. The `[!abstract]` states the claim and what the post covers; keep the numbers for the results section instead of spoiling them up front.
 - **Independent review before the PR.** Have a different model (Codex, say) review the whole post against the code and the measurements it quotes, reporting findings without committing. It catches what the author can't: in `0075` it found a bug in our own benchmark (repeated ids) that had inflated a figure. Apply the findings Villoro agrees with as one uncommitted round.
-- **Releasing a draft:** rename `9999-*.mdx` to the next number, set `draft: true` (so it can be checked live before it shows in listings), and bump `package.json` (`npm version patch --no-git-tag-version`) in the PR.
+- **Previewing and releasing a draft:** a post with `draft: true` has a page at its normal URL (`/blog/<slug>/`) in `npm run dev` and in Netlify deploy/branch previews (`SHOW_DRAFTS`, `src/lib/drafts.ts`, true when Netlify's `CONTEXT` is `deploy-preview` or `branch-deploy`), so it can be checked live before it is published. That page is `noindex`, shows a "Draft — not published" banner under the hero, and exists nowhere else: not in the home page, listings, tags, categories, related posts, RSS, the sitemap or `search.json`. On the live site (`CONTEXT=production`), in CI and in a plain local `npm run build` it has no page at all. To release: rename `9999-*.mdx` to the next number, keep `draft: true` while you check the page in the PR's deploy preview, remove it to publish, and bump `package.json` (`npm version patch --no-git-tag-version`) in the PR.
 
 ### Hero image
 
@@ -333,7 +346,7 @@ Posts are co-written, not generated in one go:
 
 | Task                                        | Touch                                                                                       |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Add a blog post                             | New `.mdx` in `src/content/blog/` with frontmatter. Done.                                   |
+| Add a blog post                             | `npm run new-post -- "Title"` creates `src/content/blog/9999-<slug>.mdx` (draft frontmatter, TODO body). |
 | Add a new category                          | `src/lib/categoryMetadata.ts` (add key + name + color). Use that key in post frontmatter.   |
 | Edit prose / typography for posts           | `src/styles/prose.css`.                                                                      |
 | Edit nav / footer                           | `src/layouts/components/SiteNav.astro` / `SiteFooter.astro`.                                |
@@ -349,7 +362,7 @@ Posts are co-written, not generated in one go:
 - **Two color systems** — see the styling section. Don't reflexively unify them; the Tailwind class consumers depend on `generated-theme.css`.
 - **`description` is no longer a `ShareRow` prop** (cleaned up). Don't pass it.
 - **`ThemeSwitcher` takes no props** (`className` was removed; it was always undefined).
-- **Reading time** comes from `readingTimeForPost(post)` (`src/lib/utils/readingTime.ts`), used by `[single].astro`, the home page and `BlogListingLayout`. It reads `post.body`, which Astro's collection types don't expose publicly, hence the cast and the `try/catch` returning `""` inside it.
+- **Reading time** is computed by `readingTimeForPost(post)` from the raw MDX `post.body` (typed on collection entries since Astro 7).
 - **Tailwind v4** — config is in the `@theme` block (in `generated-theme.css`); there is no `tailwind.config.js`.
 - **Astro 7 requires Node 22.x.** If you see `Node.js v20.x is not supported`, that's a local env issue, not the repo (`nvm use` reads `.nvmrc`).
 - **Pages are cached network-first by the service worker** (`astro.config.mjs`, `AstroPWA`). A stale page after a deploy means the network was slow or offline, not a precache bug; don't add HTML to `globPatterns`.

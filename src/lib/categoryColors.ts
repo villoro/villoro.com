@@ -1,4 +1,4 @@
-import { categoryMetadata } from "./categoryMetadata";
+import { categoryMetadata, type CategoryKey } from "./categoryMetadata";
 
 /* Accessible variants of the category hues (WCAG AA, 4.5:1).
    The raw hues in categoryMetadata.ts stay as they are for dots and borders;
@@ -49,9 +49,8 @@ export type CategoryColors = {
   chipFg: string;
 };
 
-export function getCategoryColors(category: string): CategoryColors | null {
-  const hue = categoryMetadata[category]?.color;
-  if (!hue) return null;
+export function getCategoryColors(category: CategoryKey): CategoryColors {
+  const hue = categoryMetadata[category].color;
 
   const text = shift(hue, [0, 0, 0], (c) => contrast(c, CARD_LIGHT) >= TARGET);
   const textDark = shift(hue, [255, 255, 255], (c) => contrast(c, CARD_DARK) >= TARGET);

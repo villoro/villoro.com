@@ -10,10 +10,11 @@ import remarkCollapse from "remark-collapse";
 import remarkToc from "remark-toc";
 import sectionize from "@hbsnow/rehype-sectionize";
 import config from "./src/config/config.json";
-import { isThinTag, readPublishedPosts, tagCounts } from "./src/lib/blogIndex.mjs";
+import { isThinTag, readDraftSlugs, readPublishedPosts, tagCounts } from "./src/lib/blogIndex.mjs";
 
 const posts = readPublishedPosts();
 const counts = tagCounts(posts);
+const draftSlugs = readDraftSlugs();
 const lastmodBySlug = new Map(
   posts.filter((p) => p.date).map((p) => [p.slug, new Date(p.date).toISOString()]),
 );
@@ -33,10 +34,13 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      // Paginated listings are noindex; thin tag pages are noindex too.
+      // Paginated listings are noindex; thin tag pages are noindex too; draft
+      // posts only have a page in dev and deploy previews, and it is noindex.
       filter: (url) => {
         const pathname = pathOf(url);
         if (pathname.includes("/page/")) return false;
+        const post = pathname.match(/^\/blog\/([^/]+)$/)?.[1];
+        if (post && draftSlugs.has(post)) return false;
         const tag = pathname.match(/^\/tags\/([^/]+)$/)?.[1];
         return !(tag && isThinTag(counts.get(tag) ?? 0));
       },

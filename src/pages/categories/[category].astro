@@ -1,23 +1,23 @@
 ---
 import BlogListingLayout from "@/layouts/BlogListingLayout.astro";
-import { getSinglePage } from "@/lib/contentParser.astro";
+import { getPublishedPosts } from "@/lib/posts";
 import { sortByDate } from "@/lib/utils/sortFunctions";
-import { getTaxonomy } from "@/lib/taxonomyParser.astro";
+import { getTaxonomy } from "@/lib/taxonomy";
 import taxonomyFilter from "@/lib/utils/taxonomyFilter";
 import { getCategoryRibbonData, getYearsWriting } from "@/lib/listingData";
 import { categoryMetadata } from "@/lib/categoryMetadata";
-import { slugify, humanize } from "@/lib/utils/textConverter";
+import { slugify } from "@/lib/utils/textConverter";
 import config from "@/config/config.json";
-import { getCollection } from "astro:content";
+import { getBlogListingCopy } from "@/lib/listingCopy";
 
-const { blog_folder, pagination } = config.settings;
+const { pagination } = config.settings;
 
 export async function getStaticPaths() {
-  const { blog_folder, pagination } = (await import("@/config/config.json")).settings;
-  const categories = await getTaxonomy(blog_folder, "category");
+  const { pagination } = (await import("@/config/config.json")).settings;
+  const categories = await getTaxonomy("category");
   const paths = [];
+  const items = await getPublishedPosts();
   for (const category of categories) {
-    const items = await getSinglePage(blog_folder);
     const filtered = taxonomyFilter(items, "category", category);
     const totalPages = Math.ceil(filtered.length / pagination);
     for (let i = 1; i <= totalPages; i++) {
@@ -28,7 +28,7 @@ export async function getStaticPaths() {
 }
 
 const { category } = Astro.params;
-const allPosts = await getSinglePage(blog_folder);
+const allPosts = await getPublishedPosts();
 const sorted   = sortByDate(allPosts);
 
 const filtered     = taxonomyFilter(allPosts, "category", category!);
@@ -37,13 +37,13 @@ const totalPages   = Math.ceil(sortedPosts.length / pagination);
 const currentPosts = sortedPosts.slice(0, pagination);
 
 const metaEntry    = Object.entries(categoryMetadata).find(([key]) => slugify(key) === category);
-const categoryName = metaEntry?.[1].name ?? humanize(category!);
+// Routes come from the categories of published posts, which are categoryMetadata keys
+const categoryName = metaEntry![1].name;
 
 const { postCount, categories } = getCategoryRibbonData(sorted);
 const yearsWriting = getYearsWriting();
 
-const allBlogEntries = await getCollection("blog");
-const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
+const bi = await getBlogListingCopy();
 ---
 
 <BlogListingLayout
@@ -56,9 +56,9 @@ const bi = allBlogEntries.find((e) => e.id === "-index")!.data;
   ]}
   postCount={postCount}
   yearsWriting={yearsWriting}
-  heroH1={bi.hero?.h1}
-  heroLede={bi.hero?.lede}
-  heroCountLabel={bi.hero?.count_label}
+  heroH1={bi.hero.h1}
+  heroLede={bi.hero.lede}
+  heroCountLabel={bi.hero.count_label}
   categories={categories}
   activeCategory={category}
   sectionTitle={categoryName}

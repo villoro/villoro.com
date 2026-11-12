@@ -4,7 +4,7 @@ import SiteNav from "@/components/SiteNav.astro";
 import PostCard from "@/components/PostCard.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
 import IconArrow from "@/components/IconArrow.astro";
-import { getSinglePage } from "@/lib/contentParser.astro";
+import { getPublishedPosts } from "@/lib/posts";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { readingTimeForPost } from "@/lib/utils/readingTime";
 import config from "@/config/config.json";
@@ -19,7 +19,7 @@ const hp = homepageEntry.data;
 
 // ---- Data ----
 const { blog_folder } = config.settings;
-const posts = await getSinglePage(blog_folder);
+const posts = await getPublishedPosts();
 const sortedPosts = sortByDate(posts);
 
 const latestPost   = sortedPosts[0];

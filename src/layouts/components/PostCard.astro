@@ -14,7 +14,6 @@ import ImageMod from "@/components/ImageMod.astro";
 import IconArrow from "@/components/IconArrow.astro";
 import { categoryMetadata } from "@/lib/categoryMetadata";
 import { getCategoryColors } from "@/lib/categoryColors";
-import { humanize } from "@/lib/utils/textConverter";
 import dateFormat from "@/lib/utils/dateFormat";
 import config from "@/config/config.json";
 
@@ -70,9 +69,9 @@ const { title, image, description, date, category } = post.data;
 const slug = post.data.slug || post.id;
 const href = `/${blog_folder}/${slug}/`;
 
-const catMeta = categoryMetadata[category] || { name: humanize(category) };
+const catMeta = categoryMetadata[category];
 const catName = catMeta.name;
-const catColor = catMeta.color ?? "var(--color-grey-500)";
+const catColor = catMeta.color;
 // Text colours derived from the hue so the category name reaches 4.5:1 in both themes
 const catText = getCategoryColors(category);
 const catStyle = catText

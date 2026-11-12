@@ -8,6 +8,7 @@ import { plainifyMdx } from "../src/lib/utils/searchText.ts";
 import similarItems from "../src/lib/utils/similarItems.ts";
 import { plainify, slugify } from "../src/lib/utils/textConverter.ts";
 import { withTrailingSlash } from "../src/lib/utils/url.ts";
+import { buildPost, slugifyTitle, yamlString } from "../scripts/new-post.mjs";
 import { isThinTag, MIN_POSTS_TO_INDEX_TAG } from "../src/lib/blogIndex.mjs";
 
 test("withTrailingSlash adds the slash to internal page URLs", () => {
@@ -113,4 +114,36 @@ test("similarItems gives the same answer whatever the input order", () => {
 test("tags need a minimum number of posts to be indexed", () => {
   assert.equal(isThinTag(MIN_POSTS_TO_INDEX_TAG - 1), true);
   assert.equal(isThinTag(MIN_POSTS_TO_INDEX_TAG), false);
+});
+
+test("slugifyTitle makes a URL slug from a title", () => {
+  const cases = {
+    "My post title": "my-post-title",
+    "You Don't Need DataFrames for Data Engineering": "you-dont-need-dataframes-for-data-engineering",
+    "Hard Deletes: The Rows Your Data Lake Never Hears About": "hard-deletes-the-rows-your-data-lake-never-hears-about",
+    "  Café -- and  crème?  ": "cafe-and-creme",
+    "DuckDB > Spark (2026)": "duckdb-spark-2026",
+    "???": "",
+  };
+  for (const [title, expected] of Object.entries(cases)) {
+    assert.equal(slugifyTitle(title), expected, title);
+  }
+});
+
+test("yamlString quotes only what YAML would misread", () => {
+  assert.equal(yamlString("Be nice to your data"), "Be nice to your data");
+  assert.equal(yamlString("You Don't Need DataFrames"), "You Don't Need DataFrames");
+  assert.equal(yamlString("Hard Deletes: the rows"), '"Hard Deletes: the rows"');
+  assert.equal(yamlString("true"), '"true"');
+  assert.equal(yamlString("2026"), '"2026"');
+  assert.equal(yamlString('Say "hi"'), '"Say \\"hi\\""');
+});
+
+test("buildPost writes the frontmatter of a draft with the schema's keys", () => {
+  const text = buildPost("My post title", "2026-11-11");
+  assert.match(text, /^---\nslug: my-post-title\ntitle: My post title\nmeta_title: My post title\n/);
+  assert.match(text, /\ndate: 2026-11-11\nwriting_date: 2026-11-11\n/);
+  assert.match(text, /\ndraft: true\n---\n/);
+  assert.doesNotMatch(text, /\nimage:/, "the default hero comes from the schema");
+  assert.match(text, /\{\/\* TODO/);
 });
