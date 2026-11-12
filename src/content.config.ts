@@ -21,8 +21,6 @@ const blogCollection = defineCollection({
     // Internal only: when the post was written; never rendered
     writing_date: z.date().optional(),
     image: z.string().default(DEFAULT_POST_IMAGE),
-    image_alt: z.string().optional(),
-    reading_time: z.number().int().positive().optional(),
     slug: z.string().optional(),
     author: z.string().default(config.metadata.meta_author),
     // A key of categoryMetadata (src/lib/categoryMetadata.ts)
@@ -58,9 +56,6 @@ const aboutCollection = defineCollection({
     title: z.string(),
     meta_title: z.string().optional(),
     description: z.string().optional(),
-    date: z.date().optional(),
-    image: z.string().optional(),
-    draft: z.boolean().optional(),
 
     hero: z.strictObject({
       watermark: z.string(),
@@ -133,21 +128,6 @@ const homepageCollection = defineCollection({
       badge: z.string(),
       cta: z.string(),
     }),
-
-    companies: z
-      .object({
-        title: z.string().optional(),
-        logos: z
-          .array(
-            z.strictObject({
-              name: z.string(),
-              image: z.string().optional(),
-              link: z.url().optional(),
-            }),
-          )
-          .optional(),
-      })
-      .optional(),
   }),
 });
 
