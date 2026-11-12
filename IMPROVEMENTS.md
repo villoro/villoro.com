@@ -49,7 +49,7 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 1. Land the draft-previews PR, and check a draft page on its Netlify preview.
 2. PR 7 leftovers: the Dependabot version bump (it unblocks #399 and #400 and every future weekly PR), then the image size limit.
 3. PR 1 leftovers (category descriptions need Villoro's wording).
-4. PR 13 leftovers (keyboard-scrollable tables, the code theme setting).
+4. PR 13 leftovers (the post hero on phones first, then keyboard-scrollable tables and the code theme setting).
 5. PR 11, the major upgrades, one risky package per PR.
 6. PR 12 as a one-off measurement.
 
@@ -62,7 +62,7 @@ Merge in this order. Each one must carry a version exactly one above `main` at t
 | 9 | Content model leftovers | Writing | Low | Low |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low |
 | 12 | Measure page speed once | Speed | Low | Low |
-| 13 | Accessibility leftovers | Accessibility | Low | Low |
+| 13 | Accessibility and layout leftovers | Accessibility | Low | Medium |
 
 The numbers are the ones the items had in the original audit; the gaps are items already done.
 
@@ -105,11 +105,12 @@ The audit proposed a Lighthouse budget on every deploy preview. **Recommendation
 
 What is missing is one measurement. The last PageSpeed numbers are from June 2026 (mobile: Perf 70, FCP 3.8 s, LCP 5.1 s) and predate everything that should have moved them: self-hosted fonts, no React (JS went from 104 KB to 42 KB), trailing-slash URLs without a redirect. Run PageSpeed Insights (or `npx lighthouse` against the live site) on the home page and one post, mobile, and write the numbers here. Check CLS in particular: the metric-adjusted fallback fonts that `astro-font` generated are gone. If LCP is still over 2.5 s, the next suspects are the hero image and the 17 KB `ClientRouter` script.
 
-## PR 13. Accessibility leftovers
+## PR 13. Accessibility and layout leftovers
 
 An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in November 2026: muted labels, category names and chips, footer text, the 404 page in dark theme, code comments. What is left:
 
 - **The brand blue is below the contrast standard, on purpose.** White on `#3a76ff` is 4.02:1 and `#3a76ff` on the page background is 3.89:1, against a required 4.5:1. It affects links, the active nav item, kickers, primary buttons and table headers. **Villoro decided to keep `#3a76ff` everywhere (November 2026): don't change it.** If that is ever revisited, the fix that keeps the logo is a slightly darker blue only where it carries text (about `#2f67e8`). Audit tools will keep reporting these.
+- **On phones the post hero overlaps itself.** At 390 px wide the category chip sits on top of the breadcrumb and is cut off by the top of the hero (seen on the live site on `/blog/duckdb-instead-of-spark/`, in `ArticleLayout.astro`). Long titles push the chip up into the breadcrumb: give the hero content a top padding that clears the breadcrumb, or drop the breadcrumb below a breakpoint.
 - **Wide tables can't be scrolled with the keyboard.** axe reports `scrollable-region-focusable` on a table in the numba post: a scrollable table needs `tabindex="0"`. Add it to tables in `prose.css`/the markdown pipeline.
 - **`shikiConfig.theme: "monokai"` has no visible effect.** Code blocks are painted with github-dark token colours on a background forced to `#272822` by `prose.css`. Either make the theme setting real or delete it; today the comment colour is patched with a CSS override.
 
