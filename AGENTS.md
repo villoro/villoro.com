@@ -200,12 +200,14 @@ Schemas in `src/content.config.ts` (Zod). Four collections:
 
 All three schemas are **strict** (`z.strictObject`, nested objects too): an unknown key, e.g. the typo `update_date:` for `updated_date:`, fails the build with `Unrecognized key`. Keys are snake_case. To add a field, add it to the schema first.
 
+**Titles:** `title` is the post's full title (the `<h1>`, cards and the JSON-LD `headline`). `meta_title` is an optional shorter form for the browser tab, `<title>` and `og:title`. They are allowed to differ on purpose.
+
 Blog post frontmatter (commonly used):
 
 ```yaml
 title: string                  # required
 slug: string                   # URL slug. Always set it: the default is the whole filename (e.g. `0067-marimo-notebooks`)
-meta_title: string             # optional, <title> / og:title (default: title)
+meta_title: string             # optional, <title> / og:title (default: title); the <h1> and JSON-LD headline use title
 description: string            # optional, used in <meta> and cards
 date: ISO date                 # optional, used for sorting
 updated_date: ISO date         # optional, shown as "Updated ..."
@@ -223,7 +225,7 @@ draft: boolean                 # if true: no page on the live site; previewable 
 ## Categories (`src/lib/categoryMetadata.ts`)
 
 Currently 10 categories. Adding a new one:
-1. Add an entry: `{ name: "🎯 Display Name", color: "#hex" }`
+1. Add an entry: `{ name: "🎯 Display Name", color: "#hex", description: "…" }`. The description is the category page's meta description and the line under its heading: describe the topic as a whole, not a list of posts.
 2. Use that key in blog post frontmatter `category:` field
 
 The schema takes its allowed values from these keys (`categoryKeys`), so a typo in a post's `category:` fails the build. Existing keys: `AI`, `API`, `DE`, `cloud_devops`, `git`, `hardware`, `others`, `python`, `tools`, `web`.

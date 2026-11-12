@@ -21,7 +21,7 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 ### Done since the audit
 
-Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; a 400 KB limit on hero images; the post hero no longer overlaps its breadcrumb on phones; tables scroll with the keyboard; the dead `shikiConfig` removed (code blocks are github-dark tokens on `#272822`, set in `prose.css`); default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
+Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; a 400 KB limit on hero images; the post hero no longer overlaps its breadcrumb on phones; tables scroll with the keyboard; the dead `shikiConfig` removed (code blocks are github-dark tokens on `#272822`, set in `prose.css`); category descriptions and the `title`/`meta_title` rule; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
 
 ### Open pull requests
 
@@ -41,15 +41,13 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 
 ### Suggested order for what is left
 
-1. PR 1 leftovers (category descriptions need Villoro's wording).
-2. PR 11, the major upgrades, one risky package per PR.
-3. PR 12 as a one-off measurement.
+1. PR 11, the major upgrades, one risky package per PR.
+2. PR 12 as a one-off measurement.
 
 ## Summary
 
 | PR | Topic | Goal | Effort | Impact |
 | --- | :--- | :--- | --- | --- |
-| 1 | Metadata leftovers | SEO | Low | Low |
 | 7 | Build and CI leftovers | Maintenance | Low | Medium |
 | 9 | Content model leftovers | Writing | Low | Low |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low |
@@ -59,13 +57,6 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 The numbers are the ones the items had in the original audit; the gaps are items already done.
 
 ---
-
-## PR 1. Metadata leftovers
-
-The metadata bugs are fixed (author, JSON-LD placement and image, trimmed metas, home description, `og:site_name`, home `Person`/`WebSite`, `robots.txt`). What is left is small:
-
-- **`og:title` and `<title>` use `meta_title`, the JSON-LD headline uses `title`.** Decide whether that is intended and write the rule in `AGENTS.md`.
-- **Category/tag descriptions are generic** ("All posts in the 🐍 Python category."). Add an optional `description` to `categoryMetadata.ts`.
 
 ## PR 7. Build and CI leftovers
 
