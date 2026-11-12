@@ -261,7 +261,7 @@ Class-based: `.dark` on `<html>`, set by `ThemeSwitcher.astro` (persists to `loc
 
 ### Where prose styles live
 
-`src/styles/prose.css`, imported by `ArticleLayout.astro`. That's where inline code, code blocks, h2-h5 numbered counters, blockquotes, tables, links, and the TerminalOutput/FileName/Notice shortcodes are styled. The `.al-body .article-content` selector scopes them to the article body.
+`src/styles/prose.css`, imported by `ArticleLayout.astro`. Code blocks use Shiki's default theme (github-dark tokens; there is no `shikiConfig`) on the `#272822` background set there. That's where inline code, code blocks, h2-h5 numbered counters, blockquotes, tables, links, and the TerminalOutput/FileName/Notice shortcodes are styled. The `.al-body .article-content` selector scopes them to the article body.
 
 ### Heading numbering
 

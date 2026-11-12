@@ -19,7 +19,7 @@
 }
 /* In dark mode, grey-100 becomes #2b2b2b — good contrast already */
 
-/* ── Code blocks (Shiki / monokai) ───────────────────── */
+/* ── Code blocks (Shiki github-dark tokens on #272822) ─ */
 .al-body .article-content pre {
   background: #272822 !important;
   color: #f8f8f2;
