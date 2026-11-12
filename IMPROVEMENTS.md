@@ -21,7 +21,7 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 ### Done since the audit
 
-Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; a 400 KB limit on hero images; the post hero no longer overlaps its breadcrumb on phones; tables scroll with the keyboard; the dead `shikiConfig` removed (code blocks are github-dark tokens on `#272822`, set in `prose.css`); category descriptions and the `title`/`meta_title` rule; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
+Sitemap without `noindex`/thin pages and with `lastmod`; post metadata bugs (author, JSON-LD, share image); all fonts self-hosted; related posts stable; shortcodes ported to `.astro`; search rewritten without React and React removed; trailing-slash URLs everywhere; a 400 KB limit on hero images; the post hero no longer overlaps its breadcrumb on phones; tables scroll with the keyboard; the dead `shikiConfig` removed (code blocks are github-dark tokens on `#272822`, set in `prose.css`); category descriptions and the `title`/`meta_title` rule; unused content fields and the unrendered `companies` block removed, draft previews confirmed in `npm run dev`; default hero image and SVG logos; image cache kept between builds (Netlify builds went from ~6.5 min to ~30 s, CI from ~7 min to under 2); tests on the built site; dead config and stale docs; CI as one job with grouped Dependabot; colour contrast (except the brand blue); draft previews (a `draft: true` post has a `noindex` page with a banner in dev and in Netlify previews only), strict frontmatter and `npm run new-post`.
 
 ### Open pull requests
 
@@ -49,7 +49,6 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 | PR | Topic | Goal | Effort | Impact |
 | --- | :--- | :--- | --- | --- |
 | 7 | Build and CI leftovers | Maintenance | Low | Medium |
-| 9 | Content model leftovers | Writing | Low | Low |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low |
 | 12 | Measure page speed once | Speed | Low | Low |
 | 13 | Accessibility and layout leftovers | Accessibility | Low | Medium |
@@ -65,14 +64,6 @@ CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests),
 - **`npm audit` still reports 15 findings (13 moderate, 2 low)**, down from 29. They are in build tooling (`deepmerge`, `glob`, `minimatch`, `postcss-selector-parser`), not in what the site ships. Check them again after the major upgrades of PR 11.
 - **Build time**: a build with an empty image cache takes 6 to 10 minutes and one with a warm cache about 20 seconds, because each build writes ~1,800 optimized images (524 AVIF, 660 WebP, 591 JPG). Since v3.2.30 the cache is kept between builds on Netlify, and since v3.2.31 in CI (`warm_image_cache.yaml` saves it from `main`, the build job restores it). If builds get slow again, the next lever is fewer variants: dropping WebP (AVIF plus the JPG fallback covers every browser) removes a third of the files.
 - **Search index size**: `search.json` is 370 KB uncompressed for 74 posts and grows with each one. It is fetched only when search opens, so it isn't urgent; lower the per-post cap in `src/pages/search.json.ts` (5,000 characters today) if it becomes one.
-
-## PR 9. Content model leftovers
-
-Drafts are previewable, frontmatter is strict and posts come from one typed helper (`src/lib/posts.ts`). Small things noticed on the way and left alone:
-
-- **Unused schema fields**: `image_alt` and `reading_time` in the post schema (nothing renders them), and `date`, `image`, `draft` in the about schema. Delete them or use them.
-- **The home page `companies` block** is in the schema and in `src/content/homepage/-index.md`, but no page renders it. Render it or remove it.
-- **`SHOW_DRAFTS` in `astro dev`** (`import.meta.env.DEV`) was not exercised, only the `CONTEXT=deploy-preview` build. Open a draft in `npm run dev` once to confirm.
 
 ## PR 11. Major dependency upgrades
 

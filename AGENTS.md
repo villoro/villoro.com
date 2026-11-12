@@ -196,7 +196,7 @@ Schemas in `src/content.config.ts` (Zod). Four collections:
 - **blog** — flat folder of `*.mdx` (not subfolder-by-year). Filenames like `0067-marimo-notebooks.mdx`. The `9999-*` prefix is convention for drafts/WIP. Real drafts use frontmatter `draft: true` (`getPublishedPosts()` leaves them out).
 - **listing** — `listing/blog.md`: hero and section copy of the `/blog` listing (and of the category listings), read with `getBlogListingCopy()`. It is its own collection so the post schema only has post fields.
 - **about** — single `-index.md` with rich schema (hero/story/timeline/hobbies).
-- **homepage** — single `-index.md` with hero + ribbon + latest + companies blocks.
+- **homepage** — single `-index.md` with hero + ribbon + latest blocks.
 
 All three schemas are **strict** (`z.strictObject`, nested objects too): an unknown key, e.g. the typo `update_date:` for `updated_date:`, fails the build with `Unrecognized key`. Keys are snake_case. To add a field, add it to the schema first.
 
@@ -213,8 +213,6 @@ date: ISO date                 # optional, used for sorting
 updated_date: ISO date         # optional, shown as "Updated ..."
 writing_date: ISO date         # optional, internal only (when drafting started), never rendered
 image: string                  # optional ("/images/blog/<file>", file in src/images/blog/); falls back to 0000-default.jpg
-image_alt: string              # optional (not rendered today)
-reading_time: number           # optional (not used: reading time is computed from the body)
 author: string                 # default: config.metadata.meta_author
 category: enum                 # one of the keys of categoryMetadata.ts (default `others`); anything else fails the build
 tags: [string]                 # default ["Others"]
@@ -296,7 +294,6 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - `src/images/` → optimized via `astro:assets` (use `ImageMod` or `<Image>`); originals never ship in `dist`. `public/` → served verbatim.
 - `image:` is optional: a post without it gets `/images/blog/0000-default.jpg` (white logo on brand blue, `DEFAULT_POST_IMAGE` in `src/content.config.ts`, applied as a schema default), so a new draft renders before its real hero exists. That JPG was rendered with sharp from `public/images/logo-white.svg`.
 - Logo SVGs in `public/images/`: `logo.svg` / `logo-white.svg` (horizontal) and `logo-square.svg` / `logo-square-white.svg` (square AV mark). Every blue logo uses `#3a76ff`; don't change the fills.
-- Company logos: `src/images/companies/<name>.png` and `<name>_dark.png` for dark variant.
 
 ## Workflow preferences (how Villoro wants agents to work)
 
