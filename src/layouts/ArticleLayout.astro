@@ -34,6 +34,7 @@ import { getImage } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import type { TocItem } from "@/components/ArticleTOC.astro";
 import { getCategoryColors } from "@/lib/categoryColors";
+import type { CategoryKey } from "@/lib/categoryMetadata";
 
 interface Props {
   // SEO
@@ -51,7 +52,7 @@ interface Props {
   draft?: boolean;
 
   // Post metadata (for hero)
-  category: string;
+  category: CategoryKey;
   catName: string;
   catColor: string;
   tags: string[];

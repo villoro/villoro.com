@@ -18,7 +18,7 @@ export default [
   ...tseslint.configs.recommended,
   ...astro.configs.recommended,
   {
-    files: ["**/*.{ts,astro}"],
+    files: ["**/*.{ts,astro}", "scripts/**/*.mjs", "tests/**/*.mjs"],
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
     },
