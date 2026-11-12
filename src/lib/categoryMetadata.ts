@@ -40,8 +40,7 @@ export const categoryMetadata = {
   others: {
     name: "📦 Others",
     color: "#6b7280",
-    description:
-      "Practical guides that don't fit in any other category.",
+    description: "Practical guides that don't fit in any other category.",
   },
   python: {
     name: "🐍 Python",
@@ -61,9 +60,15 @@ export const categoryMetadata = {
     description:
       "Building and serving websites: static sites, design, and putting Python apps on the web.",
   },
-} satisfies Record<string, { name: string; color: string; description: string }>;
+} satisfies Record<
+  string,
+  { name: string; color: string; description: string }
+>;
 
 export type CategoryKey = keyof typeof categoryMetadata;
 
 /** The keys, as the non-empty tuple z.enum() needs: the only valid post `category` values. */
-export const categoryKeys = Object.keys(categoryMetadata) as [CategoryKey, ...CategoryKey[]];
+export const categoryKeys = Object.keys(categoryMetadata) as [
+  CategoryKey,
+  ...CategoryKey[],
+];

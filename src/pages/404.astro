@@ -21,7 +21,9 @@ import IconArrow from "@/components/IconArrow.astro";
             Back to home
             <IconArrow size={12} />
           </a>
-          <a href="/blog/" class="nf-btn nf-btn--ghost">Browse the blog</a>
+          <a href="/blog/" class="nf-btn nf-btn--ghost">
+            Browse the blog
+          </a>
         </div>
       </div>
     </main>
@@ -40,7 +42,12 @@ import IconArrow from "@/components/IconArrow.astro";
     display: flex;
     flex-direction: column;
   }
-  .nf-sec { flex: 1; display: flex; align-items: center; padding: 80px 0; }
+  .nf-sec {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 80px 0;
+  }
   .nf-wrap {
     max-width: 1312px;
     margin: 0 auto;
@@ -59,7 +66,9 @@ import IconArrow from "@/components/IconArrow.astro";
   }
   /* Decorative giant "404" lives in CSS so contrast checkers don't treat it as text;
      the h1 below carries the message. */
-  .nf-big::before { content: "404"; }
+  .nf-big::before {
+    content: "404";
+  }
   .nf-h1 {
     font-family: var(--font-ui);
     font-weight: 700;
@@ -75,19 +84,40 @@ import IconArrow from "@/components/IconArrow.astro";
     max-width: 520px;
     margin: 0 auto 32px;
   }
-  .nf-actions { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-  .nf-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--font-ui); font-size: 14px; font-weight: 700;
-    padding: 12px 20px; border-radius: 10px;
-    text-decoration: none; transition: opacity 0.15s;
+  .nf-actions {
+    display: inline-flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
-  .nf-btn--blue { background: var(--color-blue-500); color: var(--color-on-accent); box-shadow: var(--shadow-cta); }
+  .nf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .nf-btn--blue {
+    background: var(--color-blue-500);
+    color: var(--color-on-accent);
+    box-shadow: var(--shadow-cta);
+  }
   .nf-btn--ghost {
     background: transparent;
     color: var(--color-navy-900);
     border: 1px solid var(--color-grey-100);
   }
-  .nf-btn:hover { opacity: 0.88; }
-  @media (max-width: 767px) { .nf { --container-px: 20px; } }
+  .nf-btn:hover {
+    opacity: 0.88;
+  }
+  @media (max-width: 767px) {
+    .nf {
+      --container-px: 20px;
+    }
+  }
 </style>

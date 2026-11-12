@@ -11,6 +11,5 @@ const publicImages = import.meta.glob("/public/images/**/*.{jpeg,jpg,png,gif}");
 
 export const resolveImage = (path: string): ImageLoader | undefined => {
   return (srcImages[`/src${path}`] ?? publicImages[`/public${path}`]) as
-    | ImageLoader
-    | undefined;
+    ImageLoader | undefined;
 };

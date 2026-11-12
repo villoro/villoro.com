@@ -3,14 +3,8 @@ import config from "@/config/config.json";
 import ImageMod from "./ImageMod.astro";
 
 const { src, srcDarkmode } = Astro.props;
-const {
-  logo,
-  logo_darkmode,
-  logo_width,
-  logo_height,
-  logo_text,
-  title,
-} = config.site;
+const { logo, logo_darkmode, logo_width, logo_height, logo_text, title } =
+  config.site;
 
 const { theme_switcher } = config.settings;
 ---

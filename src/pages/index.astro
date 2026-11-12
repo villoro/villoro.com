@@ -22,10 +22,10 @@ const { blog_folder } = config.settings;
 const posts = await getPublishedPosts();
 const sortedPosts = sortByDate(posts);
 
-const latestPost   = sortedPosts[0];
+const latestPost = sortedPosts[0];
 const featuredPost = latestPost;
-const gridPosts    = sortedPosts.filter(p => p !== featuredPost).slice(0, 6);
-const heroPost     = sortedPosts.find(p => p.data.highlight);
+const gridPosts = sortedPosts.filter((p) => p !== featuredPost).slice(0, 6);
+const heroPost = sortedPosts.find((p) => p.data.highlight);
 
 // Hero LCP preload — the "Most read" side-card image is the mobile LCP
 // element. Mirror ArticleLayout: precompute the avif srcset so the browser
@@ -50,14 +50,14 @@ if (heroPost?.data?.image) {
 }
 
 // Stats — all derived at build time, no magic constants
-const postCount    = sortedPosts.length;
+const postCount = sortedPosts.length;
 
 const today = new Date();
 
 // Years writing: from config.settings.writing_since to today
-const writingSince  = new Date(config.settings.writing_since);
-const yearsWriting  = Math.floor(
-  (today.getTime() - writingSince.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+const writingSince = new Date(config.settings.writing_since);
+const yearsWriting = Math.floor(
+  (today.getTime() - writingSince.getTime()) / (365.25 * 24 * 60 * 60 * 1000),
 );
 
 // Latest post date as ISO — days-ago is computed client-side so it stays fresh
@@ -67,22 +67,32 @@ const latestDateISO = latestPost?.data?.date
 
 const getReadTime = readingTimeForPost;
 
-
 const siteUrl = `${config.site.base_url}/`;
 const jsonLd = [
-  { "@context": "https://schema.org", "@type": "WebSite", name: config.site.title, url: siteUrl },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: config.site.title,
+    url: siteUrl,
+  },
   {
     "@context": "https://schema.org",
     "@type": "Person",
     name: config.metadata.meta_author,
     url: siteUrl,
     jobTitle: "Data Engineer",
-    sameAs: social.main.map((s) => s.link).filter((l) => !l.startsWith("mailto:")),
+    sameAs: social.main
+      .map((s) => s.link)
+      .filter((l) => !l.startsWith("mailto:")),
   },
 ];
 ---
 
-<BaseRedesign title={hp.meta.title} description={hp.meta.description} jsonLd={jsonLd}>
+<BaseRedesign
+  title={hp.meta.title}
+  description={hp.meta.description}
+  jsonLd={jsonLd}
+>
   {heroPreloadSrcset && (
     <link
       slot="head"
@@ -95,142 +105,171 @@ const jsonLd = [
     />
   )}
   <div class="hp">
-
     <!-- ═══════════════════════ NAV ═══════════════════════ -->
     <SiteNav />
 
     <!-- ═══════════════════════ HERO ══════════════════════ -->
     <section class="hp-hero">
       <!-- faint "villoro." watermark -->
-      <span class="hp-hero__watermark" aria-hidden="true">villoro.</span>
+      <span class="hp-hero__watermark" aria-hidden="true">
+        villoro.
+      </span>
 
       <div class="hp-wrap">
-      <div class="hp-hero__grid">
-        <!-- Left column -->
-        <div class="hp-hero__left">
-          <!-- Headline -->
-          <h1 class="hp-hero__h1">
-            {hp.hero.h1_lines[0].split(' ')[0]} <span class="hp-blue">{hp.hero.h1_lines[0].split(' ').slice(1).join(' ')}</span><br />
-            {hp.hero.h1_lines[1].split(' ')[0]} <span class="hp-yellow-chip">{hp.hero.h1_lines[1].split(' ').slice(1).join(' ')}</span><br />
-            {hp.hero.h1_lines[2]}
-          </h1>
+        <div class="hp-hero__grid">
+          <!-- Left column -->
+          <div class="hp-hero__left">
+            <!-- Headline -->
+            <h1 class="hp-hero__h1">
+              {hp.hero.h1_lines[0].split(" ")[0]}{" "}
+              <span class="hp-blue">
+                {hp.hero.h1_lines[0].split(" ").slice(1).join(" ")}
+              </span>
+              <br />
+              {hp.hero.h1_lines[1].split(" ")[0]}{" "}
+              <span class="hp-yellow-chip">
+                {hp.hero.h1_lines[1].split(" ").slice(1).join(" ")}
+              </span>
+              <br />
+              {hp.hero.h1_lines[2]}
+            </h1>
 
-          <!-- Lede -->
-          <p class="hp-hero__lede" set:html={hp.hero.lede.replace('{years}', String(yearsWriting)).replace('{posts}', String(postCount))} />
+            <!-- Lede -->
+            <p
+              class="hp-hero__lede"
+              set:html={hp.hero.lede
+                .replace("{years}", String(yearsWriting))
+                .replace("{posts}", String(postCount))}
+            />
 
-          <!-- CTAs -->
-          <div class="hp-hero__ctas">
-            <a href={`/${blog_folder}/`} class="hp-btn hp-btn--blue">
-              {hp.hero.cta_blog}
-              <IconArrow size={14} />
-            </a>
-            <a href="/about/" class="hp-btn hp-btn--blue">{hp.hero.cta_about}</a>
-          </div>
-        </div>
-
-        <!-- Right column: "Most read" side-card + latest pill + stats -->
-        <div class="hp-hero__right">
-          {heroPost && (
-            <div class="hp-hero__card-wrap">
-              <PostCard
-                post={heroPost}
-                variant="medium"
-                badge={hp.hero.badge_most_read}
-                readTime={getReadTime(heroPost)}
-                loading="eager"
-                fetchpriority="high"
-                widths={heroCardWidths}
-                sizes={heroCardSizes}
-              />
-            </div>
-          )}
-
-          <!-- Latest post pill -->
-          {latestPost && (
-            <a
-              href={`/${blog_folder}/${latestPost.data.slug || latestPost.id}/`}
-              class="hp-hero__new-pill"
-            >
-              <span class="hp-hero__new-dot"></span>
-              <span class="hp-hero__new-text">{hp.hero.new_post_prefix} {latestPost.data.title}</span>
-            </a>
-          )}
-
-          <!-- Stats row -->
-          <div class="hp-stats">
-            <div class="hp-stats__item">
-              <span class="hp-stats__num">{postCount}</span>
-              <span class="hp-stats__label">{hp.hero.stats_posts_label}</span>
-            </div>
-            <div class="hp-stats__item">
-              <span class="hp-stats__num">{yearsWriting}</span>
-              <span class="hp-stats__label">{hp.hero.stats_years_label}</span>
+            <!-- CTAs -->
+            <div class="hp-hero__ctas">
+              <a href={`/${blog_folder}/`} class="hp-btn hp-btn--blue">
+                {hp.hero.cta_blog}
+                <IconArrow size={14} />
+              </a>
+              <a href="/about/" class="hp-btn hp-btn--blue">
+                {hp.hero.cta_about}
+              </a>
             </div>
           </div>
+
+          <!-- Right column: "Most read" side-card + latest pill + stats -->
+          <div class="hp-hero__right">
+            {heroPost && (
+              <div class="hp-hero__card-wrap">
+                <PostCard
+                  post={heroPost}
+                  variant="medium"
+                  badge={hp.hero.badge_most_read}
+                  readTime={getReadTime(heroPost)}
+                  loading="eager"
+                  fetchpriority="high"
+                  widths={heroCardWidths}
+                  sizes={heroCardSizes}
+                />
+              </div>
+            )}
+
+            <!-- Latest post pill -->
+            {latestPost && (
+              <a
+                href={`/${blog_folder}/${latestPost.data.slug || latestPost.id}/`}
+                class="hp-hero__new-pill"
+              >
+                <span class="hp-hero__new-dot"></span>
+                <span class="hp-hero__new-text">
+                  {hp.hero.new_post_prefix} {latestPost.data.title}
+                </span>
+              </a>
+            )}
+
+            <!-- Stats row -->
+            <div class="hp-stats">
+              <div class="hp-stats__item">
+                <span class="hp-stats__num">{postCount}</span>
+                <span class="hp-stats__label">{hp.hero.stats_posts_label}</span>
+              </div>
+              <div class="hp-stats__item">
+                <span class="hp-stats__num">{yearsWriting}</span>
+                <span class="hp-stats__label">{hp.hero.stats_years_label}</span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
       </div>
     </section>
 
     <!-- ════════════════════ ACTIVITY RIBBON ══════════════════ -->
     <div class="hp-ribbon">
       <div class="hp-wrap hp-ribbon__flex">
-      <div class="hp-ribbon__left">
-        <span class="hp-ribbon__gear" aria-hidden="true">⚙</span>
-        <span class="hp-ribbon__slogan">
-          {hp.ribbon.slogan}
-          <em class="hp-ribbon__slogan-em">{hp.ribbon.slogan_em}</em>
-        </span>
-      </div>
-      <div class="hp-ribbon__right">
-        <span class="hp-ribbon__dot" aria-hidden="true"></span>
-        <span>
-          Latest: <strong data-latest-days-ago data-latest-date={latestDateISO}>…</strong>
-          {latestPost?.data?.category && <> · <strong>{latestPost.data.category}</strong></>}
-        </span>
-      </div>
+        <div class="hp-ribbon__left">
+          <span class="hp-ribbon__gear" aria-hidden="true">
+            ⚙
+          </span>
+          <span class="hp-ribbon__slogan">
+            {hp.ribbon.slogan}
+            <em class="hp-ribbon__slogan-em">{hp.ribbon.slogan_em}</em>
+          </span>
+        </div>
+        <div class="hp-ribbon__right">
+          <span class="hp-ribbon__dot" aria-hidden="true"></span>
+          <span>
+            Latest:{" "}
+            <strong data-latest-days-ago data-latest-date={latestDateISO}>
+              …
+            </strong>
+            {latestPost?.data?.category && (
+              <>
+                {" "}
+                · <strong>{latestPost.data.category}</strong>
+              </>
+            )}
+          </span>
+        </div>
       </div>
     </div>
 
     <!-- ══════════════════ LATEST WRITING ═════════════════════ -->
     <main class="hp-posts" id="main">
       <div class="hp-wrap">
-      <div class="hp-posts__head">
-        <div>
-          <h2 class="hp-posts__h2">
-            {hp.latest.heading.split(' ').slice(0, -1).join(' ')} <span class="hp-blue">{hp.latest.heading.split(' ').at(-1)}</span>
-          </h2>
-          <p class="hp-posts__sub">{hp.latest.sub}</p>
+        <div class="hp-posts__head">
+          <div>
+            <h2 class="hp-posts__h2">
+              {hp.latest.heading.split(" ").slice(0, -1).join(" ")}{" "}
+              <span class="hp-blue">{hp.latest.heading.split(" ").at(-1)}</span>
+            </h2>
+            <p class="hp-posts__sub">{hp.latest.sub}</p>
+          </div>
+          <a href={`/${blog_folder}/`} class="hp-btn hp-btn--blue">
+            {hp.latest.cta.replace("{posts}", String(postCount))}
+            <IconArrow size={14} />
+          </a>
         </div>
-        <a href={`/${blog_folder}/`} class="hp-btn hp-btn--blue">
-          {hp.latest.cta.replace('{posts}', String(postCount))}
-          <IconArrow size={14} />
-        </a>
-      </div>
 
-      <!-- Big featured card -->
-      {featuredPost && (
-        <div class="hp-posts__featured">
-          <PostCard
-            post={featuredPost}
-            variant="big"
-            badge={hp.latest.badge}
-            readTime={getReadTime(featuredPost)}
-            loading="lazy"
-          />
+        <!-- Big featured card -->
+        {featuredPost && (
+          <div class="hp-posts__featured">
+            <PostCard
+              post={featuredPost}
+              variant="big"
+              badge={hp.latest.badge}
+              readTime={getReadTime(featuredPost)}
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        <!-- 3×2 grid -->
+        <div class="hp-posts__grid">
+          {gridPosts.map((post) => (
+            <PostCard
+              post={post}
+              variant="small"
+              readTime={getReadTime(post)}
+            />
+          ))}
         </div>
-      )}
-
-      <!-- 3×2 grid -->
-      <div class="hp-posts__grid">
-        {gridPosts.map((post) => (
-          <PostCard
-            post={post}
-            variant="small"
-            readTime={getReadTime(post)}
-          />
-        ))}
-      </div>
       </div>
     </main>
 
@@ -239,11 +278,11 @@ const jsonLd = [
   </div>
 
   <script>
-    const el = document.querySelector<HTMLElement>('[data-latest-days-ago]');
+    const el = document.querySelector<HTMLElement>("[data-latest-days-ago]");
     if (el?.dataset.latestDate) {
       const diff = Date.now() - new Date(el.dataset.latestDate).getTime();
       const days = Math.max(0, Math.round(diff / 86_400_000));
-      el.textContent = `${days} day${days === 1 ? '' : 's'} ago`;
+      el.textContent = `${days} day${days === 1 ? "" : "s"} ago`;
     }
   </script>
 </BaseRedesign>
@@ -263,8 +302,12 @@ const jsonLd = [
   }
 
   /* ---- Shared utilities ---- */
-  .hp-blue       { color: var(--color-blue-500); }
-  .hp-yellow     { color: var(--color-yellow-400); }
+  .hp-blue {
+    color: var(--color-blue-500);
+  }
+  .hp-yellow {
+    color: var(--color-yellow-400);
+  }
 
   /* Centered content wrapper — used by every section */
   .hp-wrap {
@@ -298,7 +341,9 @@ const jsonLd = [
     cursor: pointer;
   }
 
-  .hp-btn:hover { opacity: 0.88; }
+  .hp-btn:hover {
+    opacity: 0.88;
+  }
 
   .hp-btn--blue {
     background: var(--color-blue-500);
@@ -546,8 +591,15 @@ const jsonLd = [
   }
 
   @keyframes pulse {
-    0%, 100% { transform: scale(1);   opacity: 1; }
-    50%       { transform: scale(1.5); opacity: 0.4; }
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.5);
+      opacity: 0.4;
+    }
   }
 
   .hp-ribbon__sep {
@@ -739,7 +791,6 @@ const jsonLd = [
     .hp-posts__grid {
       grid-template-columns: 1fr;
     }
-
   }
 
   @media (min-width: 768px) and (max-width: 1023px) {

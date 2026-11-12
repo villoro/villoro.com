@@ -33,5 +33,7 @@ export function getCategoryRibbonData(sortedPosts: BlogPost[]): {
 /** Integer years elapsed since the site's writing_since date. */
 export function getYearsWriting(): number {
   const d = new Date(config.settings.writing_since);
-  return Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  return Math.floor(
+    (Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000),
+  );
 }

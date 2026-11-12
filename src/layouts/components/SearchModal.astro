@@ -11,19 +11,44 @@
  */
 ---
 
-<div id="searchModal" class="search-modal" role="dialog" aria-modal="true" aria-label="Search">
+<div
+  id="searchModal"
+  class="search-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Search"
+>
   <div id="searchModalOverlay" class="search-modal-overlay"></div>
   <div class="search-wrapper">
     <div class="search-wrapper-header">
       <div class="absolute left-7 top-[calc(50%-7px)]">
-        <svg id="searchIcon" viewBox="0 0 512 512" height="18" width="18" class="-mt-0.5" aria-hidden="true">
+        <svg
+          id="searchIcon"
+          viewBox="0 0 512 512"
+          height="18"
+          width="18"
+          class="-mt-0.5"
+          aria-hidden="true"
+        >
           <path
             fill="currentcolor"
             d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 100-288 144 144 0 100 288z"
           ></path>
         </svg>
-        <button id="searchClear" type="button" aria-label="Clear search" class="hover:text-red-500 block cursor-pointer" hidden>
-          <svg viewBox="0 0 512 512" height="18" width="18" class="-mt-0.5" aria-hidden="true">
+        <button
+          id="searchClear"
+          type="button"
+          aria-label="Clear search"
+          class="hover:text-red-500 block cursor-pointer"
+          hidden
+        >
+          <svg
+            viewBox="0 0 512 512"
+            height="18"
+            width="18"
+            class="-mt-0.5"
+            aria-hidden="true"
+          >
             <path
               fill="currentcolor"
               d="M256 512A256 256 0 10256 0a256 256 0 100 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"
@@ -47,24 +72,38 @@
     <div class="search-wrapper-footer">
       <span class="flex items-center">
         <kbd>
-          <svg width="14" height="14" fill="currentcolor" viewBox="0 0 16 16" aria-hidden="true">
-            <path
-              d="M3.204 11h9.592L8 5.519 3.204 11zm-.753-.659 4.796-5.48a1 1 0 011.506 0l4.796 5.48c.566.647.106 1.659-.753 1.659H3.204a1 1 0 01-.753-1.659z"
-            ></path>
+          <svg
+            width="14"
+            height="14"
+            fill="currentcolor"
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+          >
+            <path d="M3.204 11h9.592L8 5.519 3.204 11zm-.753-.659 4.796-5.48a1 1 0 011.506 0l4.796 5.48c.566.647.106 1.659-.753 1.659H3.204a1 1 0 01-.753-1.659z"></path>
           </svg>
         </kbd>
         <kbd>
-          <svg width="14" height="14" fill="currentcolor" viewBox="0 0 16 16" aria-hidden="true">
-            <path
-              d="M3.204 5h9.592L8 10.481 3.204 5zm-.753.659 4.796 5.48a1 1 0 001.506 0l4.796-5.48c.566-.647.106-1.659-.753-1.659H3.204a1 1 0 00-.753 1.659z"
-            ></path>
+          <svg
+            width="14"
+            height="14"
+            fill="currentcolor"
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+          >
+            <path d="M3.204 5h9.592L8 10.481 3.204 5zm-.753.659 4.796 5.48a1 1 0 001.506 0l4.796-5.48c.566-.647.106-1.659-.753-1.659H3.204a1 1 0 00-.753 1.659z"></path>
           </svg>
         </kbd>
         to navigate
       </span>
       <span class="flex items-center">
         <kbd>
-          <svg width="12" height="12" fill="currentcolor" viewBox="0 0 16 16" aria-hidden="true">
+          <svg
+            width="12"
+            height="12"
+            fill="currentcolor"
+            viewBox="0 0 16 16"
+            aria-hidden="true"
+          >
             <path
               fill-rule="evenodd"
               d="M14.5 1.5a.5.5 0 01.5.5v4.8a2.5 2.5 0 01-2.5 2.5H2.707l3.347 3.346a.5.5 0 01-.708.708l-4.2-4.2a.5.5 0 010-.708l4-4a.5.5 0 11.708.708L2.707 8.3H12.5A1.5 1.5 0 0014 6.8V2a.5.5 0 01.5-.5z"
@@ -74,7 +113,9 @@
         to select
       </span>
       <span id="searchStats" hidden></span>
-      <span><kbd>ESC</kbd> to close</span>
+      <span>
+        <kbd>ESC</kbd> to close
+      </span>
     </div>
   </div>
 </div>
@@ -103,7 +144,8 @@
   let loading = false;
   let selected = -1;
 
-  const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+  const el = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T | null;
   const isOpen = () => el("searchModal")?.classList.contains("show") ?? false;
 
   const escapeHtml = (text: string) =>
@@ -115,15 +157,23 @@
       .replace(/'/g, "&#39;");
 
   // The query is user text, never a pattern: "c++" or "(" must not throw.
-  const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapeRegExp = (text: string) =>
+    text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
   // Wrap every occurrence of `query` in `text` with the given tag. Both the
   // text and the matches are HTML-escaped.
-  const highlight = (text: string, query: string, open: string, close: string) =>
+  const highlight = (
+    text: string,
+    query: string,
+    open: string,
+    close: string,
+  ) =>
     text
       .split(new RegExp(`(${escapeRegExp(query)})`, "gi"))
       .map((part) =>
-        part.toLowerCase() === query ? `${open}${escapeHtml(part)}${close}` : escapeHtml(part),
+        part.toLowerCase() === query
+          ? `${open}${escapeHtml(part)}${close}`
+          : escapeHtml(part),
       )
       .join("");
 
@@ -135,15 +185,20 @@
   // start of the post instead.
   const snippet = (content: string, query: string) => {
     const position = content.toLowerCase().indexOf(query);
-    if (position === -1) return escapeHtml(content.substring(0, SNIPPET_LENGTH));
+    if (position === -1)
+      return escapeHtml(content.substring(0, SNIPPET_LENGTH));
 
     let wordStart = position;
     while (wordStart > 0 && content[wordStart - 1] !== " ") wordStart--;
 
     const matchEnd = position + query.length;
     return (
-      highlight(content.substring(wordStart, matchEnd), query, "<mark>", "</mark>") +
-      escapeHtml(content.substring(matchEnd, matchEnd + SNIPPET_LENGTH))
+      highlight(
+        content.substring(wordStart, matchEnd),
+        query,
+        "<mark>",
+        "</mark>",
+      ) + escapeHtml(content.substring(matchEnd, matchEnd + SNIPPET_LENGTH))
     );
   };
 
@@ -157,8 +212,8 @@
 
   const matches = (item: SearchItem, query: string) => {
     const { title, description, category, tags } = item.frontmatter;
-    return [title, description, category, tags?.join(" "), item.content].some((field) =>
-      field?.toLowerCase().includes(query),
+    return [title, description, category, tags?.join(" "), item.content].some(
+      (field) => field?.toLowerCase().includes(query),
     );
   };
 
@@ -168,7 +223,8 @@
   const renderItem = (item: SearchItem, query: string) => {
     const { title, image, description, category, tags } = item.frontmatter;
     const taxonomies = [
-      category && `<div class="mr-2">${CATEGORY_ICON}<span>${underline(category, query)}</span></div>`,
+      category &&
+        `<div class="mr-2">${CATEGORY_ICON}<span>${underline(category, query)}</span></div>`,
       tags?.length &&
         `<div class="mr-2">${tags.map((tag) => `<span>#${underline(tag, query)}</span>`).join(" ")}</div>`,
     ]
@@ -207,7 +263,8 @@
       .join("");
   };
 
-  const message = (html: string) => `<div class="py-8 text-center">${html}</div>`;
+  const message = (html: string) =>
+    `<div class="py-8 text-center">${html}</div>`;
 
   const render = () => {
     const input = el<HTMLInputElement>("searchInput");
@@ -230,7 +287,9 @@
     }
     if (!index) {
       stats.hidden = true;
-      body.innerHTML = message(loading ? "Loading..." : "Search is not available right now.");
+      body.innerHTML = message(
+        loading ? "Loading..." : "Search is not available right now.",
+      );
       return;
     }
 

@@ -35,17 +35,21 @@ let originalTag = tag!;
 const normalizedTag = tag!.toLowerCase();
 const filtered = items.filter((item) => {
   const itemTags = item.data.tags;
-  if (itemTags?.some((t: string) => slugify(t).toLowerCase() === normalizedTag)) {
-    const match = itemTags.find((t: string) => slugify(t).toLowerCase() === normalizedTag);
+  if (
+    itemTags?.some((t: string) => slugify(t).toLowerCase() === normalizedTag)
+  ) {
+    const match = itemTags.find(
+      (t: string) => slugify(t).toLowerCase() === normalizedTag,
+    );
     if (match) originalTag = match;
     return true;
   }
   return false;
 });
 
-const sortedPosts  = sortByDate(filtered);
-const totalPages   = Math.ceil(sortedPosts.length / pagination);
-const start        = (currentPage - 1) * pagination;
+const sortedPosts = sortByDate(filtered);
+const totalPages = Math.ceil(sortedPosts.length / pagination);
+const start = (currentPage - 1) * pagination;
 const currentPosts = sortedPosts.slice(start, start + pagination);
 ---
 
@@ -53,8 +57,8 @@ const currentPosts = sortedPosts.slice(start, start + pagination);
   title={`Tag: ${originalTag} — Page ${currentPage} — Villoro`}
   description={`All posts tagged with ${originalTag}.`}
   breadcrumbs={[
-    { href: "/",           label: "Villoro" },
-    { href: "/blog/",       label: "Blog" },
+    { href: "/", label: "Villoro" },
+    { href: "/blog/", label: "Blog" },
     { href: `/tags/${tag}/`, label: `#${originalTag}` },
     { label: `Page ${currentPage}` },
   ]}

@@ -3,14 +3,12 @@ const readingTime = (content: string): string => {
   let images = 0;
   const regex = /\w/;
 
-  const words = content
-    .split(" ")
-    .filter((word) => {
-      if (word.includes("<img")) {
-        images += 1;
-      }
-      return regex.test(word);
-    }).length;
+  const words = content.split(" ").filter((word) => {
+    if (word.includes("<img")) {
+      images += 1;
+    }
+    return regex.test(word);
+  }).length;
 
   const imageAdjust = images * 4;
   let imageSecs = 0;
@@ -33,6 +31,7 @@ const readingTime = (content: string): string => {
   }
 };
 
-export const readingTimeForPost = (post: { body?: string }): string => readingTime(post.body ?? "");
+export const readingTimeForPost = (post: { body?: string }): string =>
+  readingTime(post.body ?? "");
 
 export default readingTime;

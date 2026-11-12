@@ -104,14 +104,19 @@ const heroCatStyle = catChip
 // Tag and category pages are built from published posts only, so a draft may
 // carry a tag or category that has no page yet: show it, but don't link it.
 const liveTags = draft ? new Set(await getTaxonomy("tags")) : undefined;
-const liveCategories = draft ? new Set(await getTaxonomy("category")) : undefined;
+const liveCategories = draft
+  ? new Set(await getTaxonomy("category"))
+  : undefined;
 const hasTagPage = (tag: string) => !liveTags || liveTags.has(slugify(tag));
 const hasCategoryPage = !liveCategories || liveCategories.has(catSlug);
 
 const breadcrumbs = [
-  { href: "/",    label: "Villoro" },
+  { href: "/", label: "Villoro" },
   { href: "/blog/", label: "Blog" },
-  { href: hasCategoryPage ? `/categories/${catSlug}/` : undefined, label: catName },
+  {
+    href: hasCategoryPage ? `/categories/${catSlug}/` : undefined,
+    label: catName,
+  },
 ];
 
 // Hero LCP preload — mirrors the Picture in ImageMod so the browser
@@ -119,7 +124,8 @@ const breadcrumbs = [
 // format are passed to the Picture below so the generated URLs match
 // the preload's imagesrcset.
 const heroWidths = [640, 1024, 1920];
-const heroSizes = "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px";
+const heroSizes =
+  "(max-width: 640px) 640px, (max-width: 1024px) 1024px, 1920px";
 let heroPreloadSrcset: string | null = null;
 if (image) {
   const loader = resolveImage(image);
@@ -187,15 +193,21 @@ if (image) {
         />
 
         <div class="al-hero__body">
-          <span class="al-hero__cat" style={heroCatStyle}>{catName}</span>
+          <span class="al-hero__cat" style={heroCatStyle}>
+            {catName}
+          </span>
           <h1 class="al-hero__title">{title}</h1>
 
           {tags.length > 0 && (
             <div class="al-hero__tags">
               {tags.map((t: string) =>
-                hasTagPage(t)
-                  ? <a href={`/tags/${slugify(t)}/`} class="al-hero__tag">#{t}</a>
-                  : <span class="al-hero__tag">#{t}</span>
+                hasTagPage(t) ? (
+                  <a href={`/tags/${slugify(t)}/`} class="al-hero__tag">
+                    #{t}
+                  </a>
+                ) : (
+                  <span class="al-hero__tag">#{t}</span>
+                ),
               )}
             </div>
           )}
@@ -203,13 +215,22 @@ if (image) {
           <div class="al-hero__meta">
             <span class="al-hero__author">Arnau Villoro</span>
             {formattedDate && (
-              <><span class="al-hero__dot">·</span><span>{formattedDate}</span></>
+              <>
+                <span class="al-hero__dot">·</span>
+                <span>{formattedDate}</span>
+              </>
             )}
             {formattedUpdatedDate && (
-              <><span class="al-hero__dot">·</span><span>Updated {formattedUpdatedDate}</span></>
+              <>
+                <span class="al-hero__dot">·</span>
+                <span>Updated {formattedUpdatedDate}</span>
+              </>
             )}
             {readTime && (
-              <><span class="al-hero__dot">·</span><span>{readTime}</span></>
+              <>
+                <span class="al-hero__dot">·</span>
+                <span>{readTime}</span>
+              </>
             )}
           </div>
         </div>
@@ -219,7 +240,10 @@ if (image) {
     {draft && (
       <div class="al-draft" data-draft-banner role="status">
         <strong class="al-draft__label">Draft — not published</strong>
-        <span class="al-draft__note">Only visible locally and in deploy previews. Not listed anywhere, and hidden from search engines.</span>
+        <span class="al-draft__note">
+          Only visible locally and in deploy previews. Not listed anywhere, and
+          hidden from search engines.
+        </span>
       </div>
     )}
 
@@ -244,7 +268,6 @@ if (image) {
     <SiteFooter />
   </div>
 </BaseRedesign>
-
 
 <style>
   .al {
@@ -299,8 +322,8 @@ if (image) {
     inset: 0;
     background: linear-gradient(
       180deg,
-      rgba(var(--color-surface-dark-rgb), 0.3)  0%,
-      rgba(var(--color-surface-dark-rgb), 0.5)  55%,
+      rgba(var(--color-surface-dark-rgb), 0.3) 0%,
+      rgba(var(--color-surface-dark-rgb), 0.5) 55%,
       rgba(var(--color-surface-dark-rgb), 0.92) 100%
     );
   }
@@ -321,7 +344,9 @@ if (image) {
     line-height: 1.4;
   }
   /* yellow-400 turns blue in dark mode; blue-500 is the yellow there */
-  :global(.dark) .al-draft { background: var(--color-blue-500); }
+  :global(.dark) .al-draft {
+    background: var(--color-blue-500);
+  }
   .al-draft__label {
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -387,7 +412,9 @@ if (image) {
     text-decoration: none;
     transition: background 0.15s;
   }
-  a.al-hero__tag:hover { background: rgba(255, 255, 255, 0.25); }
+  a.al-hero__tag:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
 
   .al-hero__meta {
     margin-top: 22px;
@@ -399,8 +426,13 @@ if (image) {
     font-size: 14px;
     color: var(--color-on-dark-body);
   }
-  .al-hero__author { font-weight: 700; color: var(--color-on-dark); }
-  .al-hero__dot    { opacity: 0.5; }
+  .al-hero__author {
+    font-weight: 700;
+    color: var(--color-on-dark);
+  }
+  .al-hero__dot {
+    opacity: 0.5;
+  }
 
   /* ── Article 2-col grid ───────────────────────────────── */
   .al-article {
@@ -418,11 +450,15 @@ if (image) {
     min-width: 0;
   }
 
-  .al-comments { padding: 8px 0 0; }
+  .al-comments {
+    padding: 8px 0 0;
+  }
 
   /* ── Responsive ────────────────────────────────────────── */
   @media (max-width: 1023px) {
-    .al { --container-px: 32px; }
+    .al {
+      --container-px: 32px;
+    }
     .al-article {
       grid-template-columns: 1fr;
       gap: 0px;
@@ -436,9 +472,18 @@ if (image) {
   }
 
   @media (max-width: 767px) {
-    .al { --container-px: 20px; }
-    .al-hero::before { min-height: 340px; }
-    .al-hero__body { padding: 28px var(--container-px) 32px; }
-    .al-hero :global(.al-hero__crumb) { margin-top: 16px; font-size: 11px; }
+    .al {
+      --container-px: 20px;
+    }
+    .al-hero::before {
+      min-height: 340px;
+    }
+    .al-hero__body {
+      padding: 28px var(--container-px) 32px;
+    }
+    .al-hero :global(.al-hero__crumb) {
+      margin-top: 16px;
+      font-size: 11px;
+    }
   }
 </style>

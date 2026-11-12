@@ -22,10 +22,12 @@ const { categories, activeKey } = Astro.props;
     <span class="cr__label">Category</span>
     <div class="cr__chips">
       {categories.map((cat) => {
-        const href = cat.key === "all" ? "/blog/" : `/categories/${slugify(cat.key)}/`;
-        const isActive = cat.key === "all"
-          ? activeKey === "all"
-          : slugify(cat.key) === activeKey;
+        const href =
+          cat.key === "all" ? "/blog/" : `/categories/${slugify(cat.key)}/`;
+        const isActive =
+          cat.key === "all"
+            ? activeKey === "all"
+            : slugify(cat.key) === activeKey;
         return (
           <a href={href} class:list={["cr__chip", { "is-active": isActive }]}>
             {cat.name}
@@ -66,7 +68,9 @@ const { categories, activeKey } = Astro.props;
     flex-shrink: 0;
     padding-top: 8px; /* align with chip text */
   }
-  :global(.dark) .cr__label { color: rgba(0, 0, 0, 0.80); }
+  :global(.dark) .cr__label {
+    color: rgba(0, 0, 0, 0.8);
+  }
 
   .cr__chips {
     display: flex;
@@ -89,25 +93,41 @@ const { categories, activeKey } = Astro.props;
     white-space: nowrap;
     transition: background 0.15s;
   }
-  .cr__chip:hover     { background: rgba(255, 255, 255, 0.22); }
-  .cr__chip.is-active { background: #fff; color: #1c1c1c; }
-
-  :global(.dark) .cr { box-shadow: 0 8px 24px -12px rgba(255, 195, 58, 0.3); }
-  :global(.dark) .cr__chip {
-    background: rgba(0, 0, 0, 0.10);
-    color: rgba(0, 0, 0, 0.80);
+  .cr__chip:hover {
+    background: rgba(255, 255, 255, 0.22);
   }
-  :global(.dark) .cr__chip:hover { background: rgba(0, 0, 0, 0.18); }
-  :global(.dark) .cr__chip.is-active { background: rgba(0, 0, 0, 0.75); color: #fff; }
+  .cr__chip.is-active {
+    background: #fff;
+    color: #1c1c1c;
+  }
+
+  :global(.dark) .cr {
+    box-shadow: 0 8px 24px -12px rgba(255, 195, 58, 0.3);
+  }
+  :global(.dark) .cr__chip {
+    background: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.8);
+  }
+  :global(.dark) .cr__chip:hover {
+    background: rgba(0, 0, 0, 0.18);
+  }
+  :global(.dark) .cr__chip.is-active {
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+  }
 
   .cr__chip-count {
     font-size: 11px;
     font-weight: 700;
     opacity: 0.95;
   }
-  .cr__chip.is-active .cr__chip-count { opacity: 0.7; }
+  .cr__chip.is-active .cr__chip-count {
+    opacity: 0.7;
+  }
 
   @media (max-width: 767px) {
-    .cr { position: static; }
+    .cr {
+      position: static;
+    }
   }
 </style>

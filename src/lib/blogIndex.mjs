@@ -39,7 +39,11 @@ export function readPublishedPosts(dir = BLOG_DIR) {
  * (see src/lib/drafts.ts); the sitemap must never list them.
  */
 export function readDraftSlugs(dir = BLOG_DIR) {
-  return new Set(readAllPosts(dir).filter((p) => p.draft).map((p) => p.slug));
+  return new Set(
+    readAllPosts(dir)
+      .filter((p) => p.draft)
+      .map((p) => p.slug),
+  );
 }
 
 /** Tag slug -> number of published posts. Slugified like the /tags/[tag] routes. */

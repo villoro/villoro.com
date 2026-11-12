@@ -14,13 +14,15 @@ const { url, linkText, company, dark = false } = Astro.props;
 
 // Favicons are looked up in public/favicons as <company>.ico (+ <company>-dark.ico).
 const faviconDir = path.join(process.cwd(), "public", "favicons");
-const hasFavicon = (name: string) => fs.existsSync(path.join(faviconDir, `${name}.ico`));
+const hasFavicon = (name: string) =>
+  fs.existsSync(path.join(faviconDir, `${name}.ico`));
 
 function extractCompanyName(url: string): string {
   if (company) return company;
   const parts = new URL(url).hostname.split(".");
   // "iceberg.apache.org" -> "iceberg", not "apache" (the foundation has no icon of its own).
-  if (parts.length > 2 && parts[parts.length - 2] === "apache") return parts[parts.length - 3];
+  if (parts.length > 2 && parts[parts.length - 2] === "apache")
+    return parts[parts.length - 3];
   return parts.length > 2 ? parts[parts.length - 2] : parts[0];
 }
 
@@ -28,24 +30,31 @@ const companyName = extractCompanyName(url);
 // Never point at a missing file: fall back to the generic icon.
 const lightName = hasFavicon(companyName) ? companyName : "default";
 // Not every company has a dark variant: reuse the light icon then.
-const darkName = hasFavicon(`${companyName}-dark`) ? `${companyName}-dark` : lightName;
+const darkName = hasFavicon(`${companyName}-dark`)
+  ? `${companyName}-dark`
+  : lightName;
 const domainLogoUrl = `/favicons/${lightName}.ico`;
 const darkDomainLogoUrl = `/favicons/${darkName}.ico`;
-
 
 const lightStyle = `width:14px;height:14px;${dark ? "" : "display:inline-block;"}flex-shrink:0`;
 ---
 
-<a href={url} role="button" class="fancy-link"
-  ><img src={domainLogoUrl} alt="" aria-hidden="true" style={lightStyle} class={dark ? "dark:hidden" : undefined} />{
-    dark && (
-      <img
-        src={darkDomainLogoUrl}
-        alt=""
-        aria-hidden="true"
-        style="width:14px;height:14px;flex-shrink:0"
-        class="hidden dark:inline-block"
-      />
-    )
-  }<span>{linkText}</span></a
->
+<a href={url} role="button" class="fancy-link">
+  <img
+    src={domainLogoUrl}
+    alt=""
+    aria-hidden="true"
+    style={lightStyle}
+    class={dark ? "dark:hidden" : undefined}
+  />
+  {dark && (
+    <img
+      src={darkDomainLogoUrl}
+      alt=""
+      aria-hidden="true"
+      style="width:14px;height:14px;flex-shrink:0"
+      class="hidden dark:inline-block"
+    />
+  )}
+  <span>{linkText}</span>
+</a>

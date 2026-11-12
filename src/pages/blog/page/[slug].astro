@@ -21,10 +21,10 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
 
-const allPosts    = await getPublishedPosts();
-const sorted      = sortByDate(allPosts);
-const totalPages  = Math.ceil(sorted.length / pagination);
-const start       = (currentPage - 1) * pagination;
+const allPosts = await getPublishedPosts();
+const sorted = sortByDate(allPosts);
+const totalPages = Math.ceil(sorted.length / pagination);
+const start = (currentPage - 1) * pagination;
 const currentPosts = sorted.slice(start, start + pagination);
 
 const { postCount, categories } = getCategoryRibbonData(sorted);
@@ -37,7 +37,7 @@ const bi = await getBlogListingCopy();
   title={`Blog — Page ${currentPage} — Villoro`}
   description={bi.description}
   breadcrumbs={[
-    { href: "/",     label: "Villoro" },
+    { href: "/", label: "Villoro" },
     { href: "/blog/", label: "Blog" },
     { label: `Page ${currentPage}` },
   ]}

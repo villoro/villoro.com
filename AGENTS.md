@@ -35,7 +35,8 @@ npm run preview        # serve dist/ locally
 npm run lint           # eslint .
 npm run typecheck      # astro check
 npm run size           # size-limit on dist/ (JS and CSS budgets); build first
-npm run format         # prettier on src/
+npm run format         # prettier -w on src/ (defaults + astro/tailwind plugins; src/content is ignored)
+npm run format:check   # what CI runs: fails if src/ isn't formatted
 npm test               # checks on the built site + unit tests (run `npm run build` first)
 ```
 
@@ -47,7 +48,7 @@ The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `di
 
 - **`tests/site.test.mjs`** checks the built `dist/`, like dbt tests on a model: every internal link resolves and ends with `/`, one `<h1>` and a unique title per page, canonicals and sitemap URLs point to real indexable pages, every post has valid JSON-LD, drafts are published nowhere (a draft may only have a `noindex` page with its marker, and only in a preview build: run `CONTEXT=deploy-preview npm run build` then `npm test` to check that mode), the search index is plain text, no Google Fonts and no framework islands. **When you fix a bug that shows in the built HTML, add an assertion here.**
 - **`tests/unit.test.mjs`** covers the pure helpers (`withTrailingSlash`, `plainify`, `plainifyMdx`, `similarItems`). It imports the `.ts` sources directly (Node strips the types), so those helpers must not import through the `@/` alias.
-- CI runs it in the single `tests` job (install once, then lint, typecheck, build, bundle size, tests).
+- CI runs it in the single `tests` job (install once, then lint, format check, typecheck, build, bundle size, tests).
 
 ## Path aliases (`tsconfig.json`)
 
@@ -279,7 +280,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - Netlify deploys from `main`. PR previews are configured.
 - CI (`.github/workflows/CI.yaml`) runs on every PR:
   - `pre_commit` (code quality)
-  - `tests` (one job, one `npm ci`: lint, typecheck, build with the image cache saved by `warm_image_cache.yaml`, `npm run size` against `.size-limit.json`, `npm test`)
+  - `tests` (one job, one `npm ci`: lint, `npm run format:check`, typecheck, build with the image cache saved by `warm_image_cache.yaml`, `npm run size` against `.size-limit.json`, `npm test`)
   - `labeler` (auto PR labels from `.github/labeler.yml`)
   - `check_version` (`package.json` and `package-lock.json` version must be exactly one above `main`)
   - `aspect_ratio_check` — `python .github/scripts/check_aspect_ratio.py` validates blog images are 16:9 and at most 400 KB, favicons 1:1
@@ -301,6 +302,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
 - **Incremental commits, like a developer.** Don't squash a whole task into one commit. Commit each logical step as you complete it (e.g. "move the files" → commit, "add the resolver" → commit, "fix the consumers" → commit, "update docs + version bump" → commit). Each commit message explains the why, not just the what.
 - **Bump the version** (`package.json` + `package-lock.json`, e.g. `npm version X.Y.Z --no-git-tag-version`) in every site-affecting PR — CI's `check_version` fails otherwise. Fold it into the final docs/cleanup commit.
 - **Keep `IMPROVEMENTS.md` current.** When implementing an item from it, remove that item (and fix cross-references) in the same PR.
+- **Run `npm run format` before committing** code in `src/` (CI checks it). Posts in `src/content/` are not formatted.
 - **Verify before opening a PR.** Build + typecheck + lint, and check the actual behavior in a browser against the built site (`npm run preview`), not just that the build passes.
 - **PRs:** push the branch and open the PR yourself with `gh pr create` (installed and logged in); don't hand Villoro a compare URL to click. The repo owner reviews/merges. `gh pr checks` / `gh run view --log-failed` show why CI failed.
 

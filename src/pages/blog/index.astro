@@ -7,9 +7,9 @@ import config from "@/config/config.json";
 import { getBlogListingCopy } from "@/lib/listingCopy";
 
 const { blog_folder, pagination } = config.settings;
-const allPosts    = await getPublishedPosts();
-const sorted      = sortByDate(allPosts);
-const totalPages  = Math.ceil(sorted.length / pagination);
+const allPosts = await getPublishedPosts();
+const sorted = sortByDate(allPosts);
+const totalPages = Math.ceil(sorted.length / pagination);
 const currentPosts = sorted.slice(0, pagination);
 
 const { postCount, categories } = getCategoryRibbonData(sorted);

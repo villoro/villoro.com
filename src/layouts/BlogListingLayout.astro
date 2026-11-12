@@ -40,9 +40,9 @@ interface Props {
   heroLede?: string;
   heroCountLabel?: string;
   // "simple" variant — plain h1 with optional accent span:
-  simpleH1?: string;       // e.g. "Tag:"
-  simpleAccent?: string;   // e.g. "#python"  (rendered in blue)
-  simpleLede?: string;     // e.g. "42 posts with this tag."
+  simpleH1?: string; // e.g. "Tag:"
+  simpleAccent?: string; // e.g. "#python"  (rendered in blue)
+  simpleLede?: string; // e.g. "42 posts with this tag."
 
   // ── Category ribbon (optional) ───────────────────────
   categories?: CategoryItem[];
@@ -51,7 +51,7 @@ interface Props {
   // ── Grid section ─────────────────────────────────────
   sectionTitle?: string;
   sectionMeta?: string;
-  sectionLede?: string;    // one line under the section title (category pages)
+  sectionLede?: string; // one line under the section title (category pages)
   currentPosts: CollectionEntry<"blog">[];
 
   // ── Pagination ───────────────────────────────────────
@@ -95,7 +95,8 @@ const pageHref = (page: number) => {
   return `${paginationSection ? "/" + paginationSection : ""}/${config.settings.page_name}/${page}/`;
 };
 const prevHref = currentPage > 1 ? pageHref(currentPage - 1) : undefined;
-const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefined;
+const nextHref =
+  currentPage < totalPages ? pageHref(currentPage + 1) : undefined;
 ---
 
 <BaseRedesign
@@ -111,7 +112,9 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
     <!-- ═══════════════════════════ HERO ════════════════════════════ -->
     <section class="bl-hero">
       {heroVariant === "full" && (
-        <span class="bl-hero__bg" aria-hidden="true">blog.</span>
+        <span class="bl-hero__bg" aria-hidden="true">
+          blog.
+        </span>
       )}
       <div class="bl-wrap">
         <Breadcrumb items={breadcrumbs} class="bl-hero__crumb" />
@@ -119,11 +122,15 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
         {heroVariant === "full" ? (
           <>
             <h1 class="bl-hero__h1">
-              {heroH1![0]}<br />
+              {heroH1![0]}
+              <br />
               <span class="bl-blue">{heroH1![1]}</span>
             </h1>
             <div class="bl-hero__row">
-              <p class="bl-hero__lede" set:html={heroLede!.replace('{years}', String(yearsWriting))} />
+              <p
+                class="bl-hero__lede"
+                set:html={heroLede!.replace("{years}", String(yearsWriting))}
+              />
               <div class="bl-hero__count">
                 <div class="bl-hero__count-num">
                   <span class="bl-hero__count-bg" aria-hidden="true"></span>
@@ -136,8 +143,12 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
         ) : (
           <>
             <h1 class="bl-hero__h1--simple">
-              {simpleH1}{simpleAccent && (
-                <> <span class="bl-blue">{simpleAccent}</span></>
+              {simpleH1}
+              {simpleAccent && (
+                <>
+                  {" "}
+                  <span class="bl-blue">{simpleAccent}</span>
+                </>
               )}
             </h1>
             {simpleLede && <p class="bl-hero__lede--simple">{simpleLede}</p>}
@@ -203,7 +214,9 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
     padding: 0 var(--container-px);
   }
 
-  .bl-blue { color: var(--color-blue-500); }
+  .bl-blue {
+    color: var(--color-blue-500);
+  }
 
   /* ── Hero ─────────────────────────────────────────────── */
   .bl-hero {
@@ -227,7 +240,9 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
   }
 
   /* Breadcrumb spacing override (component adds its own margin via class) */
-  .bl-hero :global(.bl-hero__crumb) { margin-bottom: 20px; }
+  .bl-hero :global(.bl-hero__crumb) {
+    margin-bottom: 20px;
+  }
 
   .bl-hero__h1 {
     font-family: var(--font-ui);
@@ -317,7 +332,9 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
   }
 
   /* ── Posts grid ────────────────────────────────────────── */
-  .bl-grid-sec { padding: 56px 0 80px; }
+  .bl-grid-sec {
+    padding: 56px 0 80px;
+  }
 
   .bl-grid-head {
     display: flex;
@@ -343,7 +360,9 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
     font-weight: 500;
   }
 
-  .bl-grid-head:has(+ .bl-grid-lede) { margin-bottom: 8px; }
+  .bl-grid-head:has(+ .bl-grid-lede) {
+    margin-bottom: 8px;
+  }
   .bl-grid-lede {
     max-width: 620px;
     margin: 0 0 36px;
@@ -360,20 +379,40 @@ const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : undefine
     gap: 32px;
   }
 
-  .bl-pagination { margin-top: 48px; }
+  .bl-pagination {
+    margin-top: 48px;
+  }
 
   /* ── Responsive ────────────────────────────────────────── */
   @media (max-width: 1023px) {
-    .bl { --container-px: 32px; }
-    .bl-grid { grid-template-columns: repeat(2, 1fr); }
+    .bl {
+      --container-px: 32px;
+    }
+    .bl-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   @media (max-width: 767px) {
-    .bl { --container-px: 20px; }
-    .bl-hero__h1  { font-size: clamp(2.5rem, 10vw, 56px); }
-    .bl-hero__row { flex-direction: column; align-items: flex-start; gap: 24px; }
-    .bl-hero__count { text-align: left; }
-    .bl-hero__bg  { display: none; }
-    .bl-grid      { grid-template-columns: 1fr; }
+    .bl {
+      --container-px: 20px;
+    }
+    .bl-hero__h1 {
+      font-size: clamp(2.5rem, 10vw, 56px);
+    }
+    .bl-hero__row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
+    }
+    .bl-hero__count {
+      text-align: left;
+    }
+    .bl-hero__bg {
+      display: none;
+    }
+    .bl-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

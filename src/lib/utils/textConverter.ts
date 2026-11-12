@@ -49,7 +49,10 @@ const htmlEntityDecoder = (htmlWithEntities: string): string => {
     "&quot;": '"',
     "&#39;": "'",
   };
-  return htmlWithEntities.replace(/(&amp;|&lt;|&gt;|&quot;|&#39;)/g, (entity) => {
-    return entityList[entity];
-  });
+  return htmlWithEntities.replace(
+    /(&amp;|&lt;|&gt;|&quot;|&#39;)/g,
+    (entity) => {
+      return entityList[entity];
+    },
+  );
 };
