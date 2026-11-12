@@ -285,7 +285,7 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
   - `check_version` (`package.json` and `package-lock.json` version must be exactly one above `main`)
   - `aspect_ratio_check` — `python .github/scripts/check_aspect_ratio.py` validates blog images are 16:9 and at most 400 KB, favicons 1:1
 - Dependabot (`.github/dependabot.yml`) opens one weekly PR per ecosystem (npm minor/patch only, GitHub Actions); majors are upgraded by hand.
-  Its PRs are not merged (they fail `check_version`, which is fine): Villoro runs an update of all dependencies when one shows up. Don't touch them.
+  Its PRs fail `check_version` (they don't bump the version), which is fine: they are Villoro's call. Usually Villoro updates all dependencies by hand when one shows up; don't touch them unless asked. To merge one when asked, rebase its branch onto `main`, bump the version on it (`npm version patch --no-git-tag-version`), push and wait for CI.
 - `tag_commits_on_main.yaml` auto-tags commits on main if `package.json` version bumped.
 
 ## Image conventions
