@@ -282,14 +282,14 @@ ArticleLayout uses CSS counters: H2 → "1.", H3 → "1.1", H4 → "1.1.1", H5 �
   - `tests` (one job, one `npm ci`: lint, typecheck, build with the image cache saved by `warm_image_cache.yaml`, `npm run size` against `.size-limit.json`, `npm test`)
   - `labeler` (auto PR labels from `.github/labeler.yml`)
   - `check_version` (`package.json` and `package-lock.json` version must be exactly one above `main`)
-  - `aspect_ratio_check` — `python .github/scripts/check_aspect_ratio.py` validates blog images are 16:9, favicons 1:1
+  - `aspect_ratio_check` — `python .github/scripts/check_aspect_ratio.py` validates blog images are 16:9 and at most 400 KB, favicons 1:1
 - Dependabot (`.github/dependabot.yml`) opens one weekly PR per ecosystem (npm minor/patch only, GitHub Actions); majors are upgraded by hand.
-  Dependabot PRs don't bump `package.json`, so `check_version` fails on them: bump the version on the PR branch (`npm version patch --no-git-tag-version`) before merging.
+  Its PRs are not merged (they fail `check_version`, which is fine): Villoro runs an update of all dependencies when one shows up. Don't touch them.
 - `tag_commits_on_main.yaml` auto-tags commits on main if `package.json` version bumped.
 
 ## Image conventions
 
-- Blog post hero images: 16:9 (CI enforced), in `src/images/blog/`. Frontmatter keeps the `/images/blog/...` path; `resolveImage` (`src/lib/utils/blogImages.ts`) maps it to `src/images/blog` first, then `public/images` (logo, favicon).
+- Blog post hero images: 16:9 and at most 400 KB (both CI enforced), in `src/images/blog/`. Frontmatter keeps the `/images/blog/...` path; `resolveImage` (`src/lib/utils/blogImages.ts`) maps it to `src/images/blog` first, then `public/images` (logo, favicon).
 - Post-body images: `src/images/posts/<year>/...`, imported directly in the MDX. SVG diagrams need an opaque background (see "SVG diagrams" below).
 - `src/images/` → optimized via `astro:assets` (use `ImageMod` or `<Image>`); originals never ship in `dist`. `public/` → served verbatim.
 - `image:` is optional: a post without it gets `/images/blog/0000-default.jpg` (white logo on brand blue, `DEFAULT_POST_IMAGE` in `src/content.config.ts`, applied as a schema default), so a new draft renders before its real hero exists. That JPG was rendered with sharp from `public/images/logo-white.svg`.
