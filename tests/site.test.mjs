@@ -317,6 +317,15 @@ test("every table in a post can take keyboard focus, so it can be scrolled", () 
   assert.deepEqual([...new Set(offenders)], []);
 });
 
+test("every category page has its own description", () => {
+  const categoryPages = pages.filter((page) => /^\/categories\/[^/]+\/$/.test(page.url));
+  assert.ok(categoryPages.length > 0, "no category pages found");
+  const descriptions = categoryPages.map((page) => first(page.head, /<meta name="description" content="([^"]*)"/));
+  const generic = categoryPages.filter((_, i) => !descriptions[i] || /^All posts in/.test(descriptions[i]));
+  assert.deepEqual(generic.map((page) => page.url), []);
+  assert.equal(new Set(descriptions).size, descriptions.length, "two categories share a description");
+});
+
 test("no page loads Google Fonts or a framework island", () => {
   const offenders = [];
   for (const page of pages) {
