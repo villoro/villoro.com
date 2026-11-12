@@ -152,7 +152,7 @@ const jsonLd = [
               class="hp-hero__new-pill"
             >
               <span class="hp-hero__new-dot"></span>
-              {hp.hero.new_post_prefix} {latestPost.data.title}
+              <span class="hp-hero__new-text">{hp.hero.new_post_prefix} {latestPost.data.title}</span>
             </a>
           )}
 
@@ -338,9 +338,12 @@ const jsonLd = [
     z-index: 0;
   }
 
+  /* minmax(0, …): a plain `fr` column can't shrink below its widest
+     unbreakable content, and the one-line "New post" pill (nowrap) would
+     widen the hero past the screen instead of showing its ellipsis. */
   .hp-hero__grid {
     display: grid;
-    grid-template-columns: 1.35fr 1fr;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: 48px;
     align-items: stretch;
     position: relative;
@@ -369,11 +372,17 @@ const jsonLd = [
     text-decoration: none;
     width: fit-content;
     max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
     transition: border-color 0.15s;
     align-self: center;
+  }
+
+  /* The ellipsis needs a block box around the text: text sitting directly
+     in the inline-flex pill is just clipped. */
+  .hp-hero__new-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .hp-hero__new-pill:hover {
@@ -697,7 +706,7 @@ const jsonLd = [
     }
 
     .hp-hero__grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .hp-hero__h1 {
