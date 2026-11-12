@@ -42,7 +42,7 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 ### Suggested order for what is left
 
 1. PR 11, the major upgrades, one risky package per PR.
-2. PR 12 as a one-off measurement.
+2. PR 12: measured; decide whether a 1280w post hero is worth an extra image variant.
 
 ## Summary
 
@@ -50,7 +50,7 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 | --- | :--- | :--- | --- | --- |
 | 7 | Build and CI leftovers | Maintenance | Low | Medium |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low |
-| 12 | Measure page speed once | Speed | Low | Low |
+| 12 | Post hero image on phones | Speed | Low | Low |
 | 13 | Accessibility and layout leftovers | Accessibility | Low | Medium |
 
 The numbers are the ones the items had in the original audit; the gaps are items already done.
@@ -71,11 +71,18 @@ CI is one `tests` job since November 2026 (lint, typecheck, build, size, tests),
 
 Also revisit the comment in `astro.config.mjs`: Astro 7 defaults to the native Sätteri markdown pipeline and the site pins the `unified` one for three plugins (`remark-callouts`, `remark-toc` + `remark-collapse`, `rehype-sectionize`). No file in `src/content` has a "Table of contents" heading (`ArticleTOC` replaced it), so `remark-toc` and `remark-collapse` do nothing and can be removed.
 
-## PR 12. Measure page speed once
+## PR 12. Post hero image on phones
 
-The audit proposed a Lighthouse budget on every deploy preview. **Recommendation: don't add it.** The size budgets (`.size-limit.json`: 50 KB of JS, 23 KB of CSS after Brotli) and `npm test` already catch regressions, cheaply and without flakiness, while Lighthouse scores vary from run to run on CI machines.
+**Measured on 2026-11-12** with Lighthouse 13 run locally (mobile, simulated slow 4G, 3 runs each) against the live site. These are lab numbers like PageSpeed's lab section, not field data:
 
-What is missing is one measurement. The last PageSpeed numbers are from June 2026 (mobile: Perf 70, FCP 3.8 s, LCP 5.1 s) and predate everything that should have moved them: self-hosted fonts, no React (JS went from 104 KB to 42 KB), trailing-slash URLs without a redirect. Run PageSpeed Insights (or `npx lighthouse` against the live site) on the home page and one post, mobile, and write the numbers here. Check CLS in particular: the metric-adjusted fallback fonts that `astro-font` generated are gone. If LCP is still over 2.5 s, the next suspects are the hero image and the 17 KB `ClientRouter` script.
+| Page | Perf | FCP | LCP | TBT | CLS |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `/` | 87–99 | 1.1–1.3 s | 1.5–1.6 s (one run 4.0 s) | 80–90 ms | 0 |
+| `/blog/duckdb-instead-of-spark/` | 86–89 | 1.1 s | 3.7 s | 110–190 ms | 0 |
+
+June 2026 (PageSpeed, mobile) was Perf 70, FCP 3.8 s, LCP 5.1 s. CLS is 0 without the old fallback fonts. **The size budgets stay; no Lighthouse budget in CI** (scores vary run to run).
+
+What is left is the post LCP (3.7 s, over 2.5 s). The LCP element is the hero `<img>`. On the emulated phone it downloads the **1920w AVIF (91 KB)**, and Lighthouse estimates 50 KB of waste. `sizes` in `ArticleLayout.astro` says the image is 640 px wide on phones, but the hero is `object-fit: cover` in a box about 412×340 px, so it really draws about 604 px wide (more for long titles, whose hero is taller). An accurate `sizes` alone doesn't help, because the candidates are 640/1024/1920 and about 1060 px is needed at pixel ratio 1.75. **The fix is a 1280w candidate plus an accurate `sizes`**, at the cost of one more image variant per post in each build. That's about 40–50 KB less on most phones; phones at pixel ratio 3 still need the 1920w file. Decide with Villoro whether that's worth it.
 
 ## PR 13. Accessibility and layout leftovers
 
