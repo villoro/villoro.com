@@ -179,37 +179,39 @@ if (image) {
       )}
       <div class="al-hero__overlay"></div>
 
-      <Breadcrumb
-        items={breadcrumbs}
-        variant="light"
-        class="al-hero__crumb"
-      />
+      <div class="al-hero__inner">
+        <Breadcrumb
+          items={breadcrumbs}
+          variant="light"
+          class="al-hero__crumb"
+        />
 
-      <div class="al-hero__body">
-        <span class="al-hero__cat" style={heroCatStyle}>{catName}</span>
-        <h1 class="al-hero__title">{title}</h1>
+        <div class="al-hero__body">
+          <span class="al-hero__cat" style={heroCatStyle}>{catName}</span>
+          <h1 class="al-hero__title">{title}</h1>
 
-        {tags.length > 0 && (
-          <div class="al-hero__tags">
-            {tags.map((t: string) =>
-              hasTagPage(t)
-                ? <a href={`/tags/${slugify(t)}/`} class="al-hero__tag">#{t}</a>
-                : <span class="al-hero__tag">#{t}</span>
+          {tags.length > 0 && (
+            <div class="al-hero__tags">
+              {tags.map((t: string) =>
+                hasTagPage(t)
+                  ? <a href={`/tags/${slugify(t)}/`} class="al-hero__tag">#{t}</a>
+                  : <span class="al-hero__tag">#{t}</span>
+              )}
+            </div>
+          )}
+
+          <div class="al-hero__meta">
+            <span class="al-hero__author">Arnau Villoro</span>
+            {formattedDate && (
+              <><span class="al-hero__dot">·</span><span>{formattedDate}</span></>
+            )}
+            {formattedUpdatedDate && (
+              <><span class="al-hero__dot">·</span><span>Updated {formattedUpdatedDate}</span></>
+            )}
+            {readTime && (
+              <><span class="al-hero__dot">·</span><span>{readTime}</span></>
             )}
           </div>
-        )}
-
-        <div class="al-hero__meta">
-          <span class="al-hero__author">Arnau Villoro</span>
-          {formattedDate && (
-            <><span class="al-hero__dot">·</span><span>{formattedDate}</span></>
-          )}
-          {formattedUpdatedDate && (
-            <><span class="al-hero__dot">·</span><span>Updated {formattedUpdatedDate}</span></>
-          )}
-          {readTime && (
-            <><span class="al-hero__dot">·</span><span>{readTime}</span></>
-          )}
         </div>
       </div>
     </section>
@@ -254,15 +256,34 @@ if (image) {
   }
 
   /* ── Hero ─────────────────────────────────────────────── */
+  /* The hero is a one-cell grid: an invisible 16:9 spacer sets its usual
+     height, and the content shares the cell, so a long title on a narrow
+     screen makes the hero taller instead of running into the breadcrumb. */
   .al-hero {
     position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
-    aspect-ratio: 16 / 9;
-    max-height: 620px;
-    min-height: 420px;
     overflow: hidden;
     color: var(--color-on-dark);
     background: var(--color-surface-dark);
+  }
+  .al-hero::before {
+    content: "";
+    grid-area: 1 / 1;
+    aspect-ratio: 16 / 9;
+    max-height: 620px;
+    min-height: 420px;
+    /* Without this the ratio turns min-height into a min-width */
+    min-width: 0;
+  }
+  .al-hero__inner {
+    grid-area: 1 / 1;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .al-hero :global(.al-hero__img) {
@@ -309,23 +330,17 @@ if (image) {
 
   /* Breadcrumb positioned top-left over the image */
   .al-hero :global(.al-hero__crumb) {
-    position: absolute;
-    top: 28px;
-    left: var(--container-px);
-    z-index: 3;
+    align-self: flex-start;
+    margin: 28px var(--container-px) 0;
     font-size: 12px;
     gap: 10px;
   }
 
   .al-hero__body {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    width: 100%;
     padding: 48px var(--container-px) 56px;
     max-width: 1440px;
-    margin: 0 auto;
-    z-index: 2;
+    margin: auto auto 0;
   }
 
   .al-hero__cat {
@@ -422,8 +437,8 @@ if (image) {
 
   @media (max-width: 767px) {
     .al { --container-px: 20px; }
-    .al-hero { min-height: 340px; }
+    .al-hero::before { min-height: 340px; }
     .al-hero__body { padding: 28px var(--container-px) 32px; }
-    .al-hero :global(.al-hero__crumb) { top: 16px; font-size: 11px; }
+    .al-hero :global(.al-hero__crumb) { margin-top: 16px; font-size: 11px; }
   }
 </style>
