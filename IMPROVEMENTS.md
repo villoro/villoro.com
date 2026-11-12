@@ -42,7 +42,6 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 ### Suggested order for what is left
 
 1. PR 11: the PWA plugin and TypeScript 7 are waiting on upstream (see the item).
-2. PR 12: measured; decide whether a 1280w post hero is worth an extra image variant.
 
 ## Summary
 
@@ -50,7 +49,6 @@ None of ours. Dependabot's weekly PRs are not merged: Villoro runs an update of 
 | --- | :--- | :--- | --- | --- |
 | 7 | Build and CI leftovers | Maintenance | Low | Medium |
 | 11 | Major dependency upgrades | Maintenance | Medium | Low |
-| 12 | Post hero image on phones | Speed | Low | Low |
 | 13 | Accessibility and layout leftovers | Accessibility | Low | Medium |
 
 The numbers are the ones the items had in the original audit; the gaps are items already done.
@@ -73,19 +71,6 @@ Done: `@astrojs/mdx` 8 with `astro-auto-import` 0.6 (and `remark-toc`/`remark-co
 - **`@vite-pwa/astro` 1 → 2: wait.** v2 (released 2026-10-31) is a rewrite on `@unplugin-pwa` 0.0.x, which replaces Google Workbox, renames the export (`AstroPWAIntegration`) and changes the docs. A service-worker regression stays cached on visitors' devices, so wait until `@unplugin-pwa` reaches 1.0. v1.2 works with Astro 7; npm reports only a peer-range warning (`astro ^1–^5`).
 - **`typescript` 6 → 7: blocked.** `typescript-eslint` accepts `<6.1` and `@astrojs/check` accepts `^5 || ^6`. Upgrade when both support 7.
 
-## PR 12. Post hero image on phones
-
-**Measured on 2026-11-12** with Lighthouse 13 run locally (mobile, simulated slow 4G, 3 runs each) against the live site. These are lab numbers like PageSpeed's lab section, not field data:
-
-| Page | Perf | FCP | LCP | TBT | CLS |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `/` | 87–99 | 1.1–1.3 s | 1.5–1.6 s (one run 4.0 s) | 80–90 ms | 0 |
-| `/blog/duckdb-instead-of-spark/` | 86–89 | 1.1 s | 3.7 s | 110–190 ms | 0 |
-
-June 2026 (PageSpeed, mobile) was Perf 70, FCP 3.8 s, LCP 5.1 s. CLS is 0 without the old fallback fonts. **The size budgets stay; no Lighthouse budget in CI** (scores vary run to run).
-
-What is left is the post LCP (3.7 s, over 2.5 s). The LCP element is the hero `<img>`. On the emulated phone it downloads the **1920w AVIF (91 KB)**, and Lighthouse estimates 50 KB of waste. `sizes` in `ArticleLayout.astro` says the image is 640 px wide on phones, but the hero is `object-fit: cover` in a box about 412×340 px, so it really draws about 604 px wide (more for long titles, whose hero is taller). An accurate `sizes` alone doesn't help, because the candidates are 640/1024/1920 and about 1060 px is needed at pixel ratio 1.75. **The fix is a 1280w candidate plus an accurate `sizes`**, at the cost of one more image variant per post in each build. That's about 40–50 KB less on most phones; phones at pixel ratio 3 still need the 1920w file. Decide with Villoro whether that's worth it.
-
 ## PR 13. Accessibility and layout leftovers
 
 An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in November 2026: muted labels, category names and chips, footer text, the 404 page in dark theme, code comments. What is left:
@@ -98,6 +83,14 @@ An axe audit (WCAG 2 A/AA) of 25 pages in both themes was fixed in November 2026
 
 So nobody audits these again soon:
 
+- **Page speed, measured on 2026-11-12** with Lighthouse 13 locally (mobile, simulated slow 4G, 3 runs each, live site). Lab numbers, not field data:
+
+  | Page | Perf | FCP | LCP | TBT | CLS |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | `/` | 87–99 | 1.1–1.3 s | 1.5–1.6 s (one run 4.0 s) | 80–90 ms | 0 |
+  | `/blog/duckdb-instead-of-spark/` | 86–89 | 1.1 s | 3.7 s | 110–190 ms | 0 |
+
+  Up from June 2026 (PageSpeed mobile: Perf 70, FCP 3.8 s, LCP 5.1 s). CLS is 0. The size budgets stay; no Lighthouse budget in CI (scores vary between runs). The post LCP (3.7 s) is the hero image, which phones download at 1920w. **A 1280w candidate was considered and rejected:** the hero is `object-fit: cover` in a box about 340 px tall, so it is drawn about 605 px wide on any phone. At pixel ratio 2.6–3 (most current phones) that needs 1600–1800 px, the 1920w file anyway. Only Lighthouse's emulated phone (ratio 1.75) and older ratio-2 phones would have gained, so it wasn't worth an extra variant per post.
 - Every page has exactly one `<h1>` and a unique `<title>`.
 - Drafts don't leak into the sitemap, RSS or search index.
 - The 577 images with empty `alt` are all decorative favicons inside `FancyLink`, where an empty `alt` is correct.
