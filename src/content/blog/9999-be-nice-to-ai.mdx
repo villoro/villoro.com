@@ -8,10 +8,11 @@ writing_date: 2026-11-24
 image: /images/blog/9999-aristotle-robot.jpg
 category: AI
 tags: [AI, Philosophy]
-draft: false
+draft: true
 ---
 
-{/* TODO Villoro: title alternatives considered: "Aristotle in the Age of AI Agents", "Are We Training AI, or Is AI Training Us?". */}
+> [!info]
+> This is not a technical post. If you want the technical side of how I work with agents, I wrote about it in <FancyLink linkText="A Multi-Agent Setup That Learns" url="https://villoro.com/blog/multi-agent-setup/" dark="true"/>. And yes, the `AGENTS.md` that the agent ignored in this story is the one described there.
 
 ## I apologised to a coding agent
 
@@ -21,15 +22,10 @@ It kept ignoring instructions that were explicitly written in the repo's `AGENTS
 
 A few minutes later I felt uncomfortable with how I had behaved, and **I apologised to the agent**.
 
-From a technical point of view, that apology makes little sense. It uses tokens and adds nothing to the task, and since I don't think the agent has feelings, there was nothing to repair.
-
-I wasn't apologising for the agent's benefit, though. I did it for mine. I didn't want to get used to behaving aggressively just because there were no social consequences for it. Being able to behave badly without hurting anyone doesn't mean I want to practise it.
+Technically, that apology makes little sense: it costs tokens, and since I don't think the agent has feelings, there was nothing to repair. I didn't do it for the agent. I did it because I didn't want to get used to behaving aggressively just because there were no social consequences for it.
 
 > [!abstract]
 > I think the way we treat AI matters mainly because of what it does to us, and much less because of what AI is or might become. This post explains why, with some help from Aristotle's ideas on habits.
-
-> [!info]
-> This is not a technical post. If you want the technical side of how I work with agents, I wrote about it in <FancyLink linkText="A Multi-Agent Setup That Learns" url="https://villoro.com/blog/multi-agent-setup/" dark="true"/>. And yes, the `AGENTS.md` that the agent ignored is the one described there.
 
 ## Two arguments I don't find convincing
 
@@ -40,67 +36,45 @@ When the topic of being polite to AI comes up, I usually hear one of two positio
 > [!quote]
 > Shouting at, insulting or cursing an AI is perfectly fine, because it cannot suffer.
 
-I agree with the premise. There is no established evidence that current LLMs experience suffering, gratitude, resentment or humiliation, and I'm not going to argue that they do.
-
-What I don't accept is the conclusion. **An action that causes no harm to its recipient can still have consequences**, because the recipient is only one of the two parties in the conversation. The other one is the person writing the messages, and that is the one I'm interested in here.
+I agree with the premise: there is no established evidence that current LLMs experience suffering, and I'm not going to argue that they do. What I don't accept is the conclusion. **An action that causes no harm to its recipient can still have consequences** for the person doing it, and that is the part I'm interested in.
 
 ### "Be nice, they will remember"
 
 > [!quote]
 > Be nice to AI, because one day machines may be powerful enough to punish those who mistreated them.
 
-People say this sometimes as a joke and sometimes seriously. I see no reason to think a future superintelligence would go through old chat logs to reward people who said "please" to a coding assistant in 2026. And if it did, I'm not sure "I was polite out of fear" would be a great defence.
-
-On a more serious note, behaving well because you fear a future punishment says very little about your values. I'd rather behave well because it's how I want to behave.
+I see no reason to think a future superintelligence would go through old chat logs to reward people who said "please" to a coding assistant in 2026. And even if it did, I'd rather behave well because it's how I want to behave, not out of fear.
 
 ## What Aristotle says about habits
 
-The best framework I've found for this comes from Book II of Aristotle's *Nicomachean Ethics*.
-
-Aristotle distinguishes between intellectual virtues, which come mostly from teaching, and moral virtues (roughly what we would call character), which in the W. D. Ross translation come about "as a result of habit". He even points out that the Greek word for this kind of virtue, *ethike*, comes from *ethos*, "habit".
-
-His argument is that we don't become brave or good-tempered by thinking about it, but by acting that way repeatedly until it becomes part of us. Anger is one of his examples: some people become good-tempered and others irascible depending on how they behave in the situations that provoke them. He sums it up like this:
+The best framework I've found for this comes from Book II of Aristotle's *Nicomachean Ethics*. Aristotle says that moral virtue, roughly what we would call character, comes about "as a result of habit". We don't become brave or good-tempered by thinking about it, but by acting that way repeatedly. Anger is one of his examples: some people become good-tempered and others irascible depending on how they behave in the situations that provoke them. He sums it up like this:
 
 > Thus, in one word, states of character arise out of like activities.
 >
 > Aristotle, *Nicomachean Ethics*, Book II, chapter 1 (<FancyLink linkText="W. D. Ross translation, MIT Classics" url="http://classics.mit.edu/Aristotle/nicomachaen.2.ii.html" company="default"/>)
 
 > [!note] About that famous quote
-> You have probably seen "We are what we repeatedly do. Excellence, then, is not an act, but a habit" attributed to Aristotle. Those are actually Will Durant's words, from his summary of Aristotle's ethics in <FancyLink linkText="The Story of Philosophy (1926)" url="https://en.wikipedia.org/wiki/The_Story_of_Philosophy" company="default"/>. It's a good summary of the idea, but it's not a quote from Aristotle.
+> You have probably seen "We are what we repeatedly do. Excellence, then, is not an act, but a habit" attributed to Aristotle. Those are actually Will Durant's words, from his summary of Aristotle's ethics in <FancyLink linkText="The Story of Philosophy (1926)" url="https://en.wikipedia.org/wiki/The_Story_of_Philosophy" company="default"/>.
 
-Aristotle obviously didn't anticipate AI, but I find that his framework fits this situation quite well. What shapes character, in his view, is the repetition of the action, so the person on the receiving end plays a smaller role than we tend to assume. That leads me to a few questions:
-
-* If I repeatedly express contempt, am I practising contempt?
-* If I answer frustration with aggression every day, am I training myself to be aggressive?
-* If I keep expressing gratitude, am I keeping a habit that I value?
-* Does it matter, for any of these, that nobody is on the other side?
-
-I don't think the last one has an obvious answer. But following Aristotle, the habit forms in the person who acts, and I don't see why that would stop being true when the other side is a model.
+Aristotle obviously didn't think about AI, and he was writing about how we act with other people. But his idea makes me wonder about my own case. If I answer frustration with contempt or aggression every day, even towards a model, **am I practising contempt and aggression?** I can't prove it, but I don't see a good reason why the habit would only form when there is a person on the other side.
 
 > [!tip]
-> Aristotle is not the only philosopher who reasoned this way. Kant held that we have no direct duties to animals, but still argued in his *Lectures on Ethics* that we should not be cruel to them, because someone who is cruel to animals tends to become hard with people too. His argument is about the effect on the person, not on the animal. Researchers like Kate Darling have applied similar reasoning to how we treat robots.
+> Kant made a similar argument about animals. He held that we have no direct duties to them, but that we still shouldn't be cruel to them, because cruelty to animals makes people harder in how they treat other people (<FancyLink linkText="Kantian Review on Kant's indirect duties" url="https://www.cambridge.org/core/journals/kantian-review/article/when-the-tail-wags-the-dog-animal-welfare-and-indirect-duty-in-kantian-ethics/8996CB804F6992D126F3DAA391A9A156" company="default"/>).
 
-{/* TODO Villoro: keep or drop the Kant callout? The Kate Darling sentence still needs a source (the Codex review is checking it). */}
+## Gratitude, and the tokens it costs
 
-## Gratitude works the same way
+The same applies to something more ordinary. When I finish a piece of work with an agent, I sometimes thank it or tell it that it did a good job. The agent doesn't need it, and it costs tokens.
 
-The apology was about accountability, about owning my behaviour when it doesn't match my values. I notice something similar with a more ordinary habit.
+That looks like a contradiction for an engineer. We optimise systems for cost and efficiency, and here I am spending tokens on thank-yous and apologies the system doesn't need. But **the human is also part of the system**. Gratitude is a habit I value with people, and a growing part of my working day is spent talking to machines. If I lose the habit there, I'm not sure I'd keep it intact everywhere else, so I'm happy to pay those few tokens.
 
-When I finish a piece of work with an agent, I sometimes feel like thanking it, or telling it that it did a good job. From a technical point of view this is also unnecessary: the agent doesn't need my appreciation, and the message costs tokens.
-
-But gratitude is something I value in my interactions with people, and **a growing part of my working day is spent talking to machines**. If I lose the habit there, I'm not sure I'd keep it intact everywhere else. Thanking someone is partly for the person who receives it, but it also reinforces something in the person who says it.
+> [!note]
+> There is research on whether polite prompts change the quality of LLM answers. That's a different question, and my argument doesn't depend on it.
 
 ## Kind is not the same as polite
 
-None of this means every prompt should start with "please" and end with "thank you". I value efficient and direct communication, and I avoid unnecessary boilerplate when I work with agents. I think three different things often get mixed up here:
+None of this means every prompt should start with "please". I value direct communication, and I avoid boilerplate when I work with agents. What I care about is **kindness** (treating others well and avoiding unnecessary hostility), not **politeness** (social conventions, which vary a lot between cultures) or **deference** (softening a demand so it doesn't sound confrontational).
 
-* **Kindness**: treating others well and avoiding unnecessary hostility.
-* **Politeness**: following social conventions, which depend a lot on culture.
-* **Deference**: softening a demand so that it doesn't sound confrontational.
-
-How much softening feels normal changes a lot between cultures, and even between companies. In some places professional feedback is expected to come wrapped in positive framing, while in others the same wrapping comes across as vague. I don't think one is better than the other; they are just different conventions.
-
-What I care about is kindness. As an example, here is the same feedback on a bad implementation written in three ways:
+Here is the same feedback on a bad implementation written in three ways:
 
 | Style                   | Message                                                                                                                  |
 | ----------------------- | :----------------------------------------------------------------------------------------------------------------------- |
@@ -108,52 +82,27 @@ What I care about is kindness. As an example, here is the same feedback on a bad
 | Constructive directness | "This implementation introduces unnecessary complexity. Simplify it and explain your reasoning."                         |
 | Aggression              | "What an idiotic implementation. Do it again."                                                                           |
 
-The second one is my default. It says what is wrong and what I expect next, without hiding the problem behind compliments. The first one takes more words to say less, and the third one says the same as the second plus an insult that doesn't help anyone.
+For feedback to an agent, the second one is my default: it says what is wrong and what I expect next. The third one says the same plus an insult that doesn't help anyone.
 
-This is the same idea I wrote about in <FancyLink linkText="How to Be Nice to the Data Team" url="https://villoro.com/blog/be-nice-to-data-team/" dark="true"/>. Being nice there had nothing to do with compliments or softening requests. It meant asking for the outcome you need, giving context and explaining the real urgency. I think the same applies to agents: a clear and specific request is kinder, and more useful, than a vague one wrapped in politeness.
-
-> [!tip]
-> Being friendly does not require being verbose, and being direct does not require being hostile.
-
-## The engineer in me objects
-
-There is an obvious contradiction here. As engineers we optimise systems for performance, cost and efficiency, and yet I'm spending tokens on apologies and thank-yous that the system doesn't need.
-
-The way I see it, **the human is also part of the system**. Something can be wasteful for the computer and still be useful for the person using it. A one-line apology has close to zero engineering value, but it may still be worth it for the human who writes it, and I'm happy to pay those few tokens.
-
-> [!note]
-> There is research on whether polite prompts change the quality of LLM answers. It's an interesting question, but it's not my argument here. Even if politeness made no difference to the output, I would still do it for the reasons above.
+This is the same idea I wrote about in <FancyLink linkText="How to Be Nice to the Data Team" url="https://villoro.com/blog/be-nice-to-data-team/" dark="true"/>. Being nice there had nothing to do with compliments. It meant asking for the outcome you need, giving context and explaining the real urgency. With agents it's the same: a clear and specific request is kinder, and more useful, than a vague one wrapped in politeness.
 
 ## A new kind of environment
 
-What makes this more than a curiosity is the amount of time involved. Many of us now spend several hours a day talking to systems that write like humans but don't react like humans. That is an unusual environment:
+What makes this more than a curiosity is the amount of time involved. I now spend several hours a day talking to systems that write like humans but don't react like humans. In that environment I can be aggressive, vent frustration or make demands without any of the usual consequences I'd face with people.
 
-* We can be aggressive without causing any apparent harm.
-* We can vent frustration without the usual consequences we'd face with people.
-* We can make demands without thinking about anyone's workload or mood.
-* We have human-like conversations without a human on the other side.
+Could habits formed there carry over to how we talk to colleagues? I don't know. The only evidence I found is small and about something else. In a <FancyLink linkText="2021 study from the University of Washington" url="https://faculty.washington.edu/alexisr/CATransfer.pdf" company="default"/>, a voice agent taught 22 children (aged 5 to 10) to say "bungo" to make it speak faster. Many of them later used "bungo" with their parents, often as a joke, but only a few used it with a researcher they didn't know. It shows that a routine learned with an agent can travel, and also that children are quite good at telling agents and people apart.
 
-Could habits formed there carry over to how we talk to colleagues? I don't know, and I don't think anyone knows yet. The evidence I found is small and early. In a <FancyLink linkText="2021 study from the University of Washington" url="https://faculty.washington.edu/alexisr/CATransfer.pdf" company="default"/>, a voice agent taught 22 children (aged 5 to 10) to say "bungo" to make it speak faster. Most of the children later used "bungo" with their parents, often as a joke, but only a few used it with a researcher they didn't know. The authors read this as children being quite good at telling agents and people apart.
-
-So I'm not claiming that being rude to an AI will make you rude to your team. **I see it as a plausible concern, not an established fact.** Still, habits usually form without us noticing, and the share of our daily communication that goes to machines keeps growing. So besides asking how we train these systems, I think it's worth asking which habits we are building while we use them.
+So I'm not claiming that being rude to an AI will make you rude to your team. **I see it as a plausible concern, not an established fact**, and one that grows as more of our daily communication goes to machines.
 
 ## What I try to do
 
-This is not a guide to AI etiquette, and I don't think everyone should work the way I do. It's just what I've settled on for myself:
+This is not a guide to AI etiquette. It's just what I've settled on for myself:
 
 * Be direct and precise, and skip the boilerplate.
-* Hold agents to high standards, and say clearly when something is wrong.
-* Criticise the work and not the worker, even when the worker is a model.
-* Accept that I'll get frustrated sometimes.
-* Notice when my behaviour doesn't match my values and correct it, even if that means apologising to a program.
+* Hold agents to high standards, and criticise the work, not the worker.
+* Accept that I'll get frustrated sometimes, and notice when my behaviour doesn't match my values.
 * Say thanks when I genuinely feel like it, not as a ritual.
 
 I don't always manage it, and the apology at the start of this post is proof of that. If I had to summarise the goal in one sentence, it would be: **be friendly without being performative, direct without being hostile, and demanding without being contemptuous.**
 
-## Back to the apology
-
-I still think that apology was technically pointless. The agent didn't feel better, and its next answer wasn't any different because of it.
-
-What it did was stop a bad habit from settling in just because nobody would hold me accountable for it.
-
-I don't treat AI well because I think it has feelings, or because I'm worried about what it might become. I do it because I care about the kind of person I'm becoming, and that is shaped by what I do repeatedly, including the hours I spend talking to machines.
+I wasn't apologising to get a better answer, and I don't treat AI well because I think it has feelings or because I'm worried about what it might become. I do it because I care about the kind of person I'm becoming, and that is shaped by what I do repeatedly, including the hours I spend talking to machines.
