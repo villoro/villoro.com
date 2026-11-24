@@ -350,3 +350,12 @@ test("paginated listings are noindex,follow and the first page is indexable", ()
   }
   expectNone(offenders);
 });
+
+test("the about page counts career years from the first timeline entry", () => {
+  const about = matter(fs.readFileSync(path.resolve("src/content/about/-index.md"), "utf8")).data;
+  const years = about.timeline.entries.flatMap((e) => (e.year.match(/\d{4}/g) ?? []).map(Number));
+  const expected = new Date().getFullYear() - Math.min(...years);
+  const html = fs.readFileSync(path.join(DIST, "about", "index.html"), "utf8");
+  const shown = Number(first(html, /(\d+)\s+years · \d+ employers/));
+  assert.equal(shown, expected, `career heading shows ${shown} years, expected ${expected}`);
+});
