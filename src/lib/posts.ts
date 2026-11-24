@@ -18,5 +18,14 @@ export const getPublishedPosts = (): Promise<BlogPost[]> =>
 export const getPostsToBuild = (): Promise<BlogPost[]> =>
   SHOW_DRAFTS ? getCollection("blog") : getPublishedPosts();
 
+/**
+ * Posts for the home page cards: the published ones, plus the drafts ONLY in
+ * `astro dev`, so a draft can be seen in context while writing it. Deploy
+ * previews and production never list drafts (unlike SHOW_DRAFTS, which also
+ * covers previews). PostCard marks drafts with a "Draft" chip.
+ */
+export const getPostsToList = (): Promise<BlogPost[]> =>
+  import.meta.env.DEV ? getCollection("blog") : getPublishedPosts();
+
 /** URL slug of a post: the frontmatter `slug`, else the whole filename (so always set `slug`). */
 export const postSlug = (post: BlogPost): string => post.data.slug || post.id;
