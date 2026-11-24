@@ -4,7 +4,7 @@ import SiteNav from "@/components/SiteNav.astro";
 import PostCard from "@/components/PostCard.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
 import IconArrow from "@/components/IconArrow.astro";
-import { getPublishedPosts } from "@/lib/posts";
+import { getPublishedPosts, getPostsToList } from "@/lib/posts";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import { readingTimeForPost } from "@/lib/utils/readingTime";
 import config from "@/config/config.json";
@@ -23,8 +23,11 @@ const posts = await getPublishedPosts();
 const sortedPosts = sortByDate(posts);
 
 const latestPost = sortedPosts[0];
-const featuredPost = latestPost;
-const gridPosts = sortedPosts.filter((p) => p !== featuredPost).slice(0, 6);
+// The cards also show drafts in `npm run dev` (getPostsToList); the stats and
+// the "latest" pill stay on published posts.
+const listedPosts = sortByDate(await getPostsToList());
+const featuredPost = listedPosts[0];
+const gridPosts = listedPosts.filter((p) => p !== featuredPost).slice(0, 6);
 const heroPost = sortedPosts.find((p) => p.data.highlight);
 
 // Hero LCP preload — the "Most read" side-card image is the mobile LCP
