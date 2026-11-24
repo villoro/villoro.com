@@ -27,6 +27,15 @@ const findSocial = (name: string) =>
   social.main.find((s) => s.name === name)?.link ?? "#";
 
 const timeline = ab.timeline?.entries ?? [];
+
+// Career length for the timeline heading: from the earliest year in the
+// timeline entries ("2015 — 2020"), not from writing_since (the blog's start).
+const careerStart = Math.min(
+  ...timeline.flatMap((e) => (e.year.match(/\d{4}/g) ?? []).map(Number)),
+);
+const yearsCareer = Number.isFinite(careerStart)
+  ? new Date().getFullYear() - careerStart
+  : yearsWriting;
 ---
 
 <BaseRedesign
@@ -158,7 +167,7 @@ const timeline = ab.timeline?.entries ?? [];
           <div>
             <div class="ab-tl-kicker">{ab.timeline.kicker}</div>
             <h2 class="ab-tl-h">
-              {yearsWriting} {ab.timeline.heading_suffix}
+              {yearsCareer} {ab.timeline.heading_suffix}
             </h2>
           </div>
           <p class="ab-tl-sub">{ab.timeline.sub}</p>
