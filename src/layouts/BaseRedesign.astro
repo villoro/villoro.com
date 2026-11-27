@@ -120,6 +120,13 @@ const jsonLdItems = (
             : defaultTheme);
         if (effective === "dark")
           document.documentElement.classList.add("dark");
+        // The theme-color metas above follow the OS: align them with the
+        // theme actually shown (ThemeSwitcher does the same on toggle).
+        document
+          .querySelectorAll('meta[name="theme-color"]')
+          .forEach(
+            (meta) => (meta.content = effective === "dark" ? "#000" : "#fff"),
+          );
       } catch {}
     </script>
 

@@ -3,24 +3,32 @@ import config from "@/config/config.json";
 ---
 
 <div class="flex justify-center pt-10">
-  <div class="w-full lg:w-10/12">
-    <script
-      is:inline
-      src="https://giscus.app/client.js"
-      data-repo={config.giscus.repo}
-      data-repo-id={config.giscus.repoId}
-      data-category={config.giscus.category}
-      data-category-id={config.giscus.categoryId}
-      data-mapping="pathname"
-      data-strict="0"
-      data-reactions-enabled="1"
-      data-emit-metadata="0"
-      data-input-position="top"
-      data-theme="preferred_color_scheme"
-      data-lang="en"
-      data-loading="lazy"
-      crossorigin="anonymous"
-      async
-    ></script>
+  <div class="w-full lg:w-10/12" id="giscus-host">
+    <script is:inline define:vars={{ giscus: config.giscus }}>
+      // Built here, not written as a <script src> tag, so data-theme can match
+      // the site theme (the toggle may differ from the OS, which is all
+      // "preferred_color_scheme" knows). ThemeSwitcher updates it afterwards.
+      const script = document.createElement("script");
+      script.src = "https://giscus.app/client.js";
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      Object.entries({
+        repo: giscus.repo,
+        "repo-id": giscus.repoId,
+        category: giscus.category,
+        "category-id": giscus.categoryId,
+        mapping: "pathname",
+        strict: "0",
+        "reactions-enabled": "1",
+        "emit-metadata": "0",
+        "input-position": "top",
+        theme: document.documentElement.classList.contains("dark")
+          ? "dark"
+          : "light",
+        lang: "en",
+        loading: "lazy",
+      }).forEach(([key, value]) => script.setAttribute(`data-${key}`, value));
+      document.getElementById("giscus-host").appendChild(script);
+    </script>
   </div>
 </div>
