@@ -38,7 +38,6 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 From the second pass over Chrome's [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) guides (2026-11-27). Everything cheap and safe from that pass is done; these need a decision or are low value. Ordered by value.
 
 2. **The sticky category ribbon uses a lot of the viewport** (design). At 1280x720 nav plus ribbon is 231 px (32%), because the 11 chips wrap to two rows; at 768 px the ribbon alone is 157 px. Its `top: 74px` is also a stale constant (the nav is 62-95 px). Make `.cr__chips` one scrollable row with a fade-mask hint and `scroll-initial-target` on the active chip, and replace the constant with a `--nav-h` variable. Guides: `single-line-overflow`, `content-first-noise-reduction`.
-6. **Search dialog has no open/close animation** (optional): `@starting-style` with `transition-behavior: allow-discrete`, off under `prefers-reduced-motion`. Guide: `animate-to-from-top-layer`.
 
 ## Waiting on upstream
 
