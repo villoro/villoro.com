@@ -257,6 +257,10 @@ There are **two** color systems on purpose. Use the right one for the right job:
 
 Don't try to merge the two — the values differ slightly and consumers depend on the Tailwind classes. If you find yourself wanting to pick a color, prefer `tokens.css` semantic names in component-scoped styles.
 
+### Font sizes
+
+Write `font-size` in `rem` (16px = 1rem), never `px`, so the visitor's browser font-size setting applies (WCAG 1.4.4). The exceptions are the giant decorative hero words (`320px` and the like), which are `aria-hidden` and clipped. Layout dimensions can stay in `px`.
+
 ### Dark mode
 
 Class-based: `.dark` on `<html>`, set by `ThemeSwitcher.astro` (a choice different from the OS is kept in `localStorage`). All dark overrides should go either in `tokens.css`'s `.dark { … }` block (preferred) or use `dark:` Tailwind variant.
