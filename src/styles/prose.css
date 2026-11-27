@@ -546,6 +546,24 @@
   outline: 2px solid var(--color-blue-500);
   outline-offset: 2px;
 }
+
+/* Fade the edge(s) with more content off-screen (data-more, set by
+   TableScrollHint.astro). The mask stays at the edge while the content scrolls. */
+.al-body .article-content table[data-more~="right"] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+.al-body .article-content table[data-more~="left"] {
+  mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent);
+}
+.al-body .article-content table[data-more~="left"][data-more~="right"] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 36px,
+    #000 calc(100% - 36px),
+    transparent
+  );
+}
 .al-body .article-content th,
 .al-body .article-content td {
   text-align: right;

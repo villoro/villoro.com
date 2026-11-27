@@ -157,6 +157,7 @@ Three top-level layouts; every page picks one:
 | `GiscusComments.astro`| ArticleLayout                  | reads giscus config from config.json                                 |
 | `RelatedPostsGrid.astro` | ArticleLayout               | bottom-of-post grid                                                  |
 | `CodeCopy.astro`      | ArticleLayout                  | script only: injects a copy button as first child of every post `<pre>` (not a wrapper: `.file-name + pre` sibling selectors); styles in `prose.css` |
+| `TableScrollHint.astro` | ArticleLayout                | script only: sets `data-more` on post tables that scroll sideways; prose.css fades that edge. Table names and `scope` come from `rehype-table-focus.mjs` |
 | `IconArrow.astro`     | many                           | shared right-arrow SVG. Props: `size?: number` (default 14), `class?` |
 | `SocialIcon.astro`    | SiteFooter, ShareRow           | shared SVGs. Props: `name: "github"\|"linkedin"\|"twitter"\|"email"\|"copy"`, `size?: number` (default 17) |
 | `SearchModal.astro`   | BaseRedesign                   | search dialog + its script; opened by any `[data-search-trigger]` or Ctrl/Cmd+K |
