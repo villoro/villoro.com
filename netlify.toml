@@ -20,6 +20,15 @@ ignore = "bash -c '[ \"${HEAD%%/*}\" = dependabot ]'"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Only the directives that can't break this site. A full script-src needs
+    # hashes for the inline GA4 and Giscus loaders (Chrome's security guide
+    # asks for it; see IMPROVEMENTS.md). frame-ancestors replaces
+    # X-Frame-Options in modern browsers; base-uri and object-src close two
+    # injection routes the site never uses.
+    Content-Security-Policy = "frame-ancestors 'none'; object-src 'none'; base-uri 'none'"
+    # Popups we open (share links) keep working; windows that open us lose
+    # their handle on this page.
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
 
 # General rules
 [[redirects]]
