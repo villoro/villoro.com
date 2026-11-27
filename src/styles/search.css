@@ -2,10 +2,13 @@
    focus and makes the page behind inert. It fills the viewport and is
    transparent; the dimming is its ::backdrop. */
 .search-modal {
-  @apply m-0 h-full max-h-none w-full max-w-none border-0 bg-transparent p-0 text-inherit;
+  @apply m-0 h-full max-h-none w-full max-w-none items-start justify-center border-0 bg-transparent p-0 text-inherit;
 }
+/* Only display is tied to [open]. The alignment above stays on the base rule:
+   while the dialog fades out [open] is already gone, and alignment declared on
+   [open] made the panel jump to the left edge for a few frames. */
 .search-modal[open] {
-  @apply flex items-start justify-center;
+  @apply flex;
 }
 
 /* Fade in and out. A dialog flips between display:none and display:flex and
@@ -54,6 +57,9 @@
 /* The page must not scroll under the open dialog */
 html:has(.search-modal[open]) {
   overflow: hidden;
+  /* Keep the scrollbar's space, so the page does not widen by a scrollbar
+     when the lock is released while the dialog is still fading out */
+  scrollbar-gutter: stable;
 }
 
 .search-wrapper {
