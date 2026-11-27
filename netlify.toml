@@ -30,6 +30,36 @@ ignore = "bash -c '[ \"${HEAD%%/*}\" = dependabot ]'"
     # their handle on this page.
     Cross-Origin-Opener-Policy = "same-origin-allow-popups"
 
+# Long-lived caching for static assets. Netlify's default is
+# `max-age=0, must-revalidate`, i.e. every repeat visit revalidates every file.
+# /_astro/* is content-hashed (a change means a new URL), so it is immutable.
+# The other folders keep their file names, so a month, not a year. HTML,
+# sw.js, manifest and search.json keep the default (revalidate on each visit).
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/pwa/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/favicons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
 # General rules
 [[redirects]]
   from = "https://villoro.netlify.com/*"
