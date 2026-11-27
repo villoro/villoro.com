@@ -24,6 +24,12 @@ html:has(.search-modal[open]) {
 .search-wrapper-header-input {
   @apply h-12 w-full rounded-[4px] border border-solid border-border pr-4 pl-10 transition duration-200 outline-none focus:border-dark focus:ring-0 dark:border-darkmode-border dark:bg-darkmode-theme-light dark:text-darkmode-text dark:focus:border-darkmode-primary;
 }
+/* type="search" draws its own clear button; the modal has its own */
+.search-wrapper-header-input::-webkit-search-cancel-button,
+.search-wrapper-header-input::-webkit-search-decoration {
+  appearance: none;
+  display: none;
+}
 .search-wrapper-body {
   @apply max-h-[calc(100vh-350px)] overflow-y-auto rounded bg-theme-light p-4 shadow-[inset_0_2px_18px_#ddd] dark:bg-darkmode-theme-light dark:shadow-none;
 }

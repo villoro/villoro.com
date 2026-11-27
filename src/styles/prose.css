@@ -284,13 +284,13 @@
 }
 
 /* FancyLink pill — no underline, uses .fancy-link border */
-.al-body .article-content a[role="button"] {
+.al-body .article-content a.fancy-link {
   text-decoration: none;
   vertical-align: baseline;
 }
 /* Do NOT set display here — it would override Tailwind's .hidden class
    (used to toggle light/dark logos). The flex container handles layout. */
-.al-body .article-content a[role="button"] img {
+.al-body .article-content a.fancy-link img {
   border-radius: 0;
   vertical-align: middle;
   /* margin is handled by .fancy-link gap — no override needed */

@@ -95,7 +95,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
         <div class="pc-big__img-wrap">
           <ImageMod
             src={image}
-            alt={title}
+            alt=""
             width={1280}
             height={720}
             widths={imgWidths}
@@ -126,7 +126,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       </h3>
       {description && <p class="pc-big__excerpt">{description}</p>}
       <a href={href} class="pc-cta-link">
-        Read the post
+        Read the post<span class="sr-only">: {title}</span>
         <IconArrow size={14} />
       </a>
     </div>
@@ -135,11 +135,11 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 
 {variant === "medium" && (
   <article class="pc-med">
-    <a href={href} class="pc-med__img-wrap">
+    <a href={href} class="pc-med__img-wrap" tabindex="-1" aria-hidden="true">
       {image && (
         <ImageMod
           src={image}
-          alt={title}
+          alt=""
           width={640}
           height={360}
           widths={imgWidths}
@@ -157,6 +157,9 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       </div>
     </a>
     <div class="pc-med__body">
+      <p class="sr-only">
+        {catName} · {readTime}
+      </p>
       <h3 class="pc-med__title">
         <a href={href} class="pc-med__title-link">
           {title}
@@ -164,7 +167,7 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
       </h3>
       {description && <p class="pc-med__excerpt">{description}</p>}
       <a href={href} class="pc-cta-link">
-        Read the post
+        Read the post<span class="sr-only">: {title}</span>
         <IconArrow size={12} />
       </a>
     </div>
@@ -173,11 +176,11 @@ const formattedDate = date ? dateFormat(date, "dd MMM yyyy") : "";
 
 {variant === "small" && (
   <article class="card pc-small">
-    <a href={href} class="pc-small__img-wrap">
+    <a href={href} class="pc-small__img-wrap" tabindex="-1" aria-hidden="true">
       {image && (
         <ImageMod
           src={image}
-          alt={title}
+          alt=""
           width={480}
           height={270}
           widths={imgWidths}

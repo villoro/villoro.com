@@ -39,11 +39,13 @@ const darkDomainLogoUrl = `/favicons/${darkName}.ico`;
 const lightStyle = `width:14px;height:14px;${dark ? "" : "display:inline-block;"}flex-shrink:0`;
 ---
 
-<a href={url} role="button" class="fancy-link">
+<a href={url} class="fancy-link">
   <img
     src={domainLogoUrl}
     alt=""
     aria-hidden="true"
+    loading="lazy"
+    decoding="async"
     style={lightStyle}
     class={dark ? "dark:hidden" : undefined}
   />
@@ -52,6 +54,8 @@ const lightStyle = `width:14px;height:14px;${dark ? "" : "display:inline-block;"
       src={darkDomainLogoUrl}
       alt=""
       aria-hidden="true"
+      loading="lazy"
+      decoding="async"
       style="width:14px;height:14px;flex-shrink:0"
       class="hidden dark:inline-block"
     />
