@@ -56,6 +56,9 @@ export default defineConfig({
         name: "Villoro",
         short_name: "Villoro",
         description: config.metadata.meta_description,
+        // Stable identity: installed copies keep being the same app even if
+        // start_url changes later
+        id: "/",
         start_url: "/",
         display: "standalone",
         theme_color: "#3a76ff",
