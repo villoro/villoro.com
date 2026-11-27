@@ -25,6 +25,7 @@ import Breadcrumb from "@/components/Breadcrumb.astro";
 import ArticleTOC from "@/components/ArticleTOC.astro";
 import CTAStrip from "@/components/CTAStrip.astro";
 import ShareRow from "@/components/ShareRow.astro";
+import CodeCopy from "@/components/CodeCopy.astro";
 import RelatedPostsGrid from "@/components/RelatedPostsGrid.astro";
 import GiscusComments from "@/components/GiscusComments.astro";
 import { slugify } from "@/lib/utils/textConverter";
@@ -254,6 +255,7 @@ if (image) {
       <article class="al-body">
         <div class="article-content">
           <slot />
+          <CodeCopy />
         </div>
 
         <CTAStrip />

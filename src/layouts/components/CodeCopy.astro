@@ -1,0 +1,78 @@
+---
+/**
+ * CodeCopy — adds a "copy" button to every code block of a post.
+ *
+ * Script only, no markup of its own. The button is injected as the first child
+ * of each `<pre>` (a sticky float, styled in prose.css) instead of wrapping the
+ * `<pre>`: the FileName and TerminalOutput shortcodes attach to code blocks
+ * with sibling selectors (`.file-name + pre`) that a wrapper would break.
+ *
+ * Follows Chrome's `copy-button` guidance: the confirmation bubble is a
+ * `role="status"` element outside the button, it is shown with opacity (never
+ * display/visibility, which would drop it from the accessibility tree), and
+ * both outcomes are announced. Clicks are handled on `document`, so the
+ * script survives ClientRouter swaps; only the injection re-runs per page.
+ */
+---
+
+<script>
+  const ICON_COPY =
+    '<svg class="code-copy__copy" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  const ICON_CHECK =
+    '<svg class="code-copy__done" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+
+  const timers = new WeakMap<HTMLElement, number>();
+
+  function addButtons() {
+    document
+      .querySelectorAll<HTMLPreElement>(".article-content pre")
+      .forEach((pre) => {
+        if (pre.querySelector(":scope > .code-copy")) return;
+        const wrap = document.createElement("span");
+        wrap.className = "code-copy";
+        wrap.innerHTML =
+          `<button type="button" class="code-copy__btn" aria-label="Copy code">${ICON_COPY}${ICON_CHECK}</button>` +
+          `<span class="code-copy__tip" role="status"></span>`;
+        pre.prepend(wrap);
+      });
+  }
+
+  function report(button: HTMLElement, tip: HTMLElement, ok: boolean) {
+    clearTimeout(timers.get(button));
+    button.removeAttribute("data-copied");
+    button.removeAttribute("data-failed");
+    tip.textContent = "";
+    // Set the text a frame later so the live region announces the change
+    requestAnimationFrame(() => {
+      button.setAttribute(ok ? "data-copied" : "data-failed", "");
+      tip.textContent = ok ? "Copied" : "Copy failed";
+    });
+    timers.set(
+      button,
+      window.setTimeout(() => {
+        button.removeAttribute("data-copied");
+        button.removeAttribute("data-failed");
+        tip.textContent = "";
+      }, 2000),
+    );
+  }
+
+  document.addEventListener("click", async (event) => {
+    const button = (event.target as Element).closest<HTMLElement>(
+      ".code-copy__btn",
+    );
+    if (!button) return;
+    const pre = button.closest("pre");
+    const tip = button.nextElementSibling as HTMLElement | null;
+    const text = pre?.querySelector("code")?.textContent;
+    if (!pre || !tip || !text) return;
+    try {
+      await navigator.clipboard.writeText(text.replace(/\n$/, ""));
+      report(button, tip, true);
+    } catch {
+      report(button, tip, false);
+    }
+  });
+
+  document.addEventListener("astro:page-load", addButtons);
+</script>

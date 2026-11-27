@@ -58,6 +58,82 @@
   overflow: hidden;
 }
 
+/* ── Copy button (injected by CodeCopy.astro) ────────── */
+/* Sticky float: stays at the top right of the visible part of the block,
+   even when long lines scroll sideways. Negative margins pull it into the
+   padding of the <pre>. */
+.al-body .article-content pre .code-copy {
+  position: sticky;
+  inset-inline-end: 8px;
+  float: right;
+  margin: -14px -18px 0 12px;
+  z-index: 1;
+}
+.al-body .article-content pre .code-copy__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 32px;
+  min-block-size: 32px;
+  padding: 0;
+  border: 1px solid #6b6a5c;
+  border-radius: 8px;
+  background: #3a3a32;
+  color: #f8f8f2;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.al-body .article-content pre .code-copy__btn:hover {
+  background: #4a4a40;
+}
+.al-body .article-content pre .code-copy__btn:focus-visible {
+  outline: 2px solid #ffc33a;
+  outline-offset: 2px;
+}
+.al-body .article-content pre .code-copy__done,
+.al-body .article-content pre .code-copy__btn[data-copied] .code-copy__copy {
+  display: none;
+}
+.al-body .article-content pre .code-copy__btn[data-copied] .code-copy__done {
+  display: block;
+  color: #7ee787;
+}
+/* The bubble is the live region: hidden with opacity, never display:none */
+.al-body .article-content pre .code-copy__tip {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: calc(100% + 8px);
+  transform: translateY(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #0b1026;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.al-body .article-content pre .code-copy__tip:not(:empty) {
+  opacity: 1;
+}
+/* With a mouse the button appears on hover or focus; touch screens have no
+   hover, so it stays visible there. Opacity only: it stays in the tab order. */
+@media (hover: hover) {
+  .al-body .article-content pre .code-copy__btn {
+    opacity: 0;
+  }
+  .al-body .article-content pre:hover .code-copy__btn,
+  .al-body .article-content pre:focus-within .code-copy__btn,
+  .al-body .article-content pre .code-copy__btn:focus-visible,
+  .al-body .article-content pre .code-copy__btn[data-copied],
+  .al-body .article-content pre .code-copy__btn[data-failed] {
+    opacity: 1;
+  }
+}
+
 /* ── Paragraphs, lists ───────────────────────────────── */
 .al-body .article-content {
   font-size: 17px;
