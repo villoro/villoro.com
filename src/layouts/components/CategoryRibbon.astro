@@ -18,9 +18,8 @@ const { categories, activeKey } = Astro.props;
 ---
 
 <div class="cr">
-  <div class="cr__inner">
-    <span class="cr__label">Category</span>
-    <div class="cr__chips">
+  <nav class="cr__inner" aria-label="Categories">
+    <div class="cr__chips" data-cr-chips>
       {categories.map((cat) => {
         const href =
           cat.key === "all" ? "/blog/" : `/categories/${slugify(cat.key)}/`;
@@ -40,14 +39,16 @@ const { categories, activeKey } = Astro.props;
         );
       })}
     </div>
-  </div>
+  </nav>
 </div>
 
 <style>
   .cr {
     background: var(--color-blue-500);
     position: sticky;
-    top: 74px;
+    /* Just under the sticky nav, whatever its height is today (set by the
+       script below; 87px is the desktop height at the default font size) */
+    top: calc(var(--nav-h, 87px) - 1px);
     z-index: 20;
     box-shadow: 0 8px 24px -12px rgba(58, 118, 255, 0.4);
   }
@@ -55,31 +56,43 @@ const { categories, activeKey } = Astro.props;
   .cr__inner {
     max-width: 1312px;
     margin: 0 auto;
-    padding: 16px var(--container-px);
+    padding: 12px var(--container-px);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
-    flex-wrap: wrap;
   }
 
-  .cr__label {
-    font-family: var(--font-ui);
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #fff;
-    flex-shrink: 0;
-    padding-top: 8px; /* align with chip text */
-  }
-  :global(.dark) .cr__label {
-    color: rgba(0, 0, 0, 0.8);
-  }
-
+  /* One row that scrolls sideways instead of wrapping: wrapped, the 11 chips
+     made the ribbon 157px tall, a third of a laptop screen while sticky. */
   .cr__chips {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
+    padding-bottom: 6px; /* room for the scrollbar */
+    margin-bottom: -6px;
+  }
+  :global(.dark) .cr__chips {
+    scrollbar-color: rgba(0, 0, 0, 0.4) transparent;
+  }
+  /* Fade the edge(s) with more chips off-screen (data-more, set below) */
+  .cr__chips[data-more~="right"] {
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+  .cr__chips[data-more~="left"] {
+    mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent);
+  }
+  .cr__chips[data-more~="left"][data-more~="right"] {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 40px,
+      #000 calc(100% - 40px),
+      transparent
+    );
   }
 
   .cr__chip {
@@ -135,3 +148,54 @@ const { categories, activeKey } = Astro.props;
     }
   }
 </style>
+
+<script>
+  const setup = () => {
+    // Sticky offset: the real height of the nav, which changes with the font size
+    const nav = document.querySelector<HTMLElement>(".sitenav");
+    if (nav)
+      document.documentElement.style.setProperty(
+        "--nav-h",
+        `${nav.offsetHeight}px`,
+      );
+
+    document
+      .querySelectorAll<HTMLElement>("[data-cr-chips]")
+      .forEach((chips) => {
+        const update = () => {
+          const max = chips.scrollWidth - chips.clientWidth;
+          const more: string[] = [];
+          if (max > 8 && chips.scrollLeft > 1) more.push("left");
+          if (max > 8 && chips.scrollLeft < max - 1) more.push("right");
+          if (more.length) chips.dataset.more = more.join(" ");
+          else delete chips.dataset.more;
+        };
+        if (!chips.dataset.bound) {
+          chips.dataset.bound = "true";
+          chips.addEventListener("scroll", update, { passive: true });
+          window.addEventListener("resize", update);
+        }
+        // Show the current category: centre its chip (scrollLeft, not
+        // scrollIntoView, so the page itself never scrolls)
+        const active = chips.querySelector<HTMLElement>(".is-active");
+        if (active) {
+          const left =
+            active.getBoundingClientRect().left -
+            chips.getBoundingClientRect().left +
+            chips.scrollLeft;
+          chips.scrollLeft =
+            left - (chips.clientWidth - active.offsetWidth) / 2;
+        }
+        update();
+      });
+  };
+  window.addEventListener("resize", () => {
+    const nav = document.querySelector<HTMLElement>(".sitenav");
+    if (nav)
+      document.documentElement.style.setProperty(
+        "--nav-h",
+        `${nav.offsetHeight}px`,
+      );
+  });
+  document.addEventListener("astro:page-load", setup);
+</script>
