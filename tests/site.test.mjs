@@ -357,6 +357,14 @@ test("every table has a name and column scopes, so a screen reader can announce 
   assert.deepEqual(offenders, []);
 });
 
+test("breadcrumbs are a list, so a screen reader announces the trail", () => {
+  const offenders = pages
+    .filter((page) => /aria-label="Breadcrumbs"/.test(page.body))
+    .filter((page) => !/aria-label="Breadcrumbs"[^>]*>\s*<ol\b/.test(page.body))
+    .map((page) => page.url);
+  assert.deepEqual(offenders, []);
+});
+
 test("every category page has its own description", () => {
   const categoryPages = pages.filter((page) => /^\/categories\/[^/]+\/$/.test(page.url));
   assert.ok(categoryPages.length > 0, "no category pages found");

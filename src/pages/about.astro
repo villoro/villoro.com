@@ -2,7 +2,7 @@
 import BaseRedesign from "@/layouts/BaseRedesign.astro";
 import SiteNav from "@/components/SiteNav.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
-import IconArrow from "@/components/IconArrow.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
 import { Image } from "astro:assets";
 import meImage from "../images/me.png";
 import { getPublishedPosts } from "@/lib/posts";
@@ -52,13 +52,10 @@ const yearsCareer = Number.isFinite(careerStart)
         {ab.hero.watermark}
       </span>
       <div class="ab-wrap">
-        <nav class="ab-crumb" aria-label="breadcrumb">
-          <a href="/" class="ab-crumb__link">
-            Villoro
-          </a>
-          <IconArrow size={10} />
-          <span class="ab-crumb__current">About</span>
-        </nav>
+        <Breadcrumb
+          items={[{ href: "/", label: "Villoro" }, { label: "About" }]}
+          class="ab-crumb"
+        />
 
         <div class="ab-hero__grid">
           <div class="ab-hero__left">
@@ -273,29 +270,9 @@ const yearsCareer = Number.isFinite(careerStart)
     user-select: none;
   }
 
-  .ab-crumb {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-ui);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--color-grey-500);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+  /* The breadcrumb is the shared component; only the spacing is local */
+  .ab-hero :global(.ab-crumb) {
     margin-bottom: 24px;
-  }
-
-  .ab-crumb__link {
-    color: var(--color-grey-500);
-    text-decoration: none;
-    transition: color 0.15s;
-  }
-  .ab-crumb__link:hover {
-    color: var(--color-blue-500);
-  }
-  .ab-crumb__current {
-    color: var(--color-blue-500);
   }
 
   .ab-hero__grid {
