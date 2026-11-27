@@ -33,34 +33,48 @@ interface Props {
 const { items, variant = "dark", class: cls = "" } = Astro.props;
 ---
 
-<nav class:list={["bc", `bc--${variant}`, cls]} aria-label="breadcrumb">
-  {items.map((item, i) => (
-    <>
-      {i > 0 && <IconArrow size={10} />}
-      {item.href ? (
-        <a href={withTrailingSlash(item.href)} class="bc__link">
-          {item.label}
-        </a>
-      ) : (
-        <span class="bc__current" aria-current="page">
-          {item.label}
-        </span>
-      )}
-    </>
-  ))}
+<nav class:list={["bc", `bc--${variant}`, cls]} aria-label="Breadcrumbs">
+  <ol class="bc__list">
+    {items.map((item, i) => (
+      <li class="bc__item">
+        {item.href ? (
+          <a href={withTrailingSlash(item.href)} class="bc__link">
+            {item.label}
+          </a>
+        ) : (
+          <span class="bc__current" aria-current="page">
+            {item.label}
+          </span>
+        )}
+        {i < items.length - 1 && <IconArrow size={10} />}
+      </li>
+    ))}
+  </ol>
 </nav>
 
 <style>
   .bc {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
     font-family: var(--font-ui);
     font-size: 0.8125rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+
+  /* A real list, so a screen reader announces "list, 3 items" */
+  .bc__list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bc__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
   }
 
   /* Dark variant (listing hero, white bg) */
