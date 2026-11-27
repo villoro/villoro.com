@@ -132,10 +132,6 @@ const jsonLdItems = (
 
     {import.meta.env.PROD && (
       <>
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-08V17G7ZDD"
-        ></script>
         <script is:inline>
           if (
             window.location.host === "villoro.com" ||
@@ -149,6 +145,21 @@ const jsonLdItems = (
             }
             gtag("js", new Date());
             gtag("config", "G-08V17G7ZDD");
+
+            // gtag.js (165 KB) is fetched after the page has loaded, not in
+            // <head>: it competed with the hero image for bandwidth and delayed
+            // LCP by about 450 ms on a slow phone. The calls above are queued
+            // in dataLayer and sent when it arrives. Visits that end before
+            // `load` are not counted.
+            const loadGtag = () => {
+              const script = document.createElement("script");
+              script.async = true;
+              script.src =
+                "https://www.googletagmanager.com/gtag/js?id=G-08V17G7ZDD";
+              document.head.appendChild(script);
+            };
+            if (document.readyState === "complete") loadGtag();
+            else window.addEventListener("load", loadGtag, { once: true });
           }
         </script>
       </>
