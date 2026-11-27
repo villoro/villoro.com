@@ -18,8 +18,7 @@ const { categories, activeKey } = Astro.props;
 ---
 
 <div class="cr">
-  <div class="cr__inner">
-    <span class="cr__label">Category</span>
+  <nav class="cr__inner" aria-label="Categories">
     <div class="cr__chips" data-cr-chips>
       {categories.map((cat) => {
         const href =
@@ -40,7 +39,7 @@ const { categories, activeKey } = Astro.props;
         );
       })}
     </div>
-  </div>
+  </nav>
 </div>
 
 <style>
@@ -63,24 +62,11 @@ const { categories, activeKey } = Astro.props;
     gap: 16px;
   }
 
-  .cr__label {
-    font-family: var(--font-ui);
-    font-weight: 700;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #fff;
-    flex-shrink: 0;
-  }
-  :global(.dark) .cr__label {
-    color: rgba(0, 0, 0, 0.8);
-  }
-
   /* One row that scrolls sideways instead of wrapping: wrapped, the 11 chips
      made the ribbon 157px tall, a third of a laptop screen while sticky. */
   .cr__chips {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex: 1;
     min-width: 0;
     overflow-x: auto;
@@ -159,15 +145,6 @@ const { categories, activeKey } = Astro.props;
   @media (max-width: 767px) {
     .cr {
       position: static;
-    }
-    /* The chips need the width; the label stays for screen readers */
-    .cr__label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
     }
   }
 </style>
