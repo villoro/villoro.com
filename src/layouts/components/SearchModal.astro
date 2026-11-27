@@ -53,8 +53,12 @@
         id="searchInput"
         placeholder="Search..."
         class="search-wrapper-header-input"
-        type="text"
+        type="search"
         name="search"
+        enterkeyhint="search"
+        autocapitalize="none"
+        autocorrect="off"
+        spellcheck="false"
         aria-label="Search the blog"
         autocomplete="off"
         autofocus
@@ -375,6 +379,8 @@
       event.preventDefault();
       select(selected - 1);
     } else if (event.key === "Enter") {
+      // Enter that confirms an IME composition (CJK, dead keys) is not a submit
+      if (event.isComposing || event.keyCode === 229) return;
       // With nothing selected, Enter opens the first result.
       const items = document.querySelectorAll(".search-result-item");
       const item = items[selected === -1 ? 0 : selected];
