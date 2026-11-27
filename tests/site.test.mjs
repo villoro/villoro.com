@@ -317,6 +317,14 @@ test("every table in a post can take keyboard focus, so it can be scrolled", () 
   assert.deepEqual([...new Set(offenders)], []);
 });
 
+test("the search modal is a native <dialog>, so it traps focus and makes the page inert", () => {
+  // A div with role="dialog" does neither; <dialog> opened with showModal() does both
+  const offenders = pages
+    .filter((page) => !/<dialog id="searchModal"/.test(page.body))
+    .map((page) => page.url);
+  assert.deepEqual(offenders, []);
+});
+
 test("every category page has its own description", () => {
   const categoryPages = pages.filter((page) => /^\/categories\/[^/]+\/$/.test(page.url));
   assert.ok(categoryPages.length > 0, "no category pages found");

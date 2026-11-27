@@ -11,14 +11,7 @@
  */
 ---
 
-<div
-  id="searchModal"
-  class="search-modal"
-  role="dialog"
-  aria-modal="true"
-  aria-label="Search"
->
-  <div id="searchModalOverlay" class="search-modal-overlay"></div>
+<dialog id="searchModal" class="search-modal" aria-label="Search">
   <div class="search-wrapper">
     <div class="search-wrapper-header">
       <div class="absolute left-7 top-[calc(50%-7px)]">
@@ -64,6 +57,7 @@
         name="search"
         aria-label="Search the blog"
         autocomplete="off"
+        autofocus
       />
     </div>
     <div id="searchBody" class="search-wrapper-body" aria-live="polite">
@@ -118,7 +112,7 @@
       </span>
     </div>
   </div>
-</div>
+</dialog>
 
 <script>
   interface SearchItem {
@@ -146,7 +140,8 @@
 
   const el = <T extends HTMLElement>(id: string) =>
     document.getElementById(id) as T | null;
-  const isOpen = () => el("searchModal")?.classList.contains("show") ?? false;
+  const modal = () => el<HTMLDialogElement>("searchModal");
+  const isOpen = () => modal()?.open ?? false;
 
   const escapeHtml = (text: string) =>
     text
@@ -323,17 +318,17 @@
   };
 
   const open = () => {
-    el("searchModal")?.classList.add("show");
+    const dialog = modal();
+    // showModal() traps focus, makes the page behind inert and draws the
+    // ::backdrop; Esc closes it natively. Ctrl/Cmd+K while open does nothing.
+    if (dialog && !dialog.open) dialog.showModal();
     el<HTMLInputElement>("searchInput")?.focus();
     loadIndex();
     render();
   };
 
-  const close = () => {
-    el("searchModal")?.classList.remove("show");
-    // Otherwise the hidden input keeps the focus and swallows the arrow keys
-    el<HTMLInputElement>("searchInput")?.blur();
-  };
+  // Closing returns the focus to whatever opened the dialog
+  const close = () => modal()?.close();
 
   const select = (next: number) => {
     const items = document.querySelectorAll(".search-result-item");
@@ -347,7 +342,9 @@
     const target = event.target as Element | null;
     if (!target) return;
     if (target.closest("[data-search-trigger]")) open();
-    else if (target.closest("#searchModalOverlay")) close();
+    // The dialog fills the viewport, so a click on it (not on the panel) is a
+    // click outside the panel
+    else if (target === modal()) close();
     else if (target.closest("#searchClear")) {
       const input = el<HTMLInputElement>("searchInput");
       if (input) input.value = "";
@@ -370,9 +367,8 @@
     // keys keep scrolling the page the rest of the time.
     if (!isOpen()) return;
 
-    if (event.key === "Escape") {
-      close();
-    } else if (event.key === "ArrowDown") {
+    // Escape is handled by the dialog itself
+    if (event.key === "ArrowDown") {
       event.preventDefault();
       select(selected + 1);
     } else if (event.key === "ArrowUp") {
