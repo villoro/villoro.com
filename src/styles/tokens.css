@@ -3,6 +3,10 @@
    Do not scatter hex codes into components — reference these variables instead. */
 
 :root {
+  /* Native UI (scrollbars, form controls, search input) follows the site theme,
+     which the .dark class can pin against the OS preference. */
+  color-scheme: light;
+
   /* --- Brand colors --- */
   --color-navy-900: #0b1026; /* primary text, dark sections (footer, newsletter, featured card) */
   --color-navy-800: #1a2040; /* hero side-card gradient base */
@@ -90,6 +94,8 @@
      for permanent dark backgrounds like footer and featured cards)
    ──────────────────────────────────────────────────────────────── */
 .dark {
+  color-scheme: dark;
+
   /* ── Accent swap: blue ↔ yellow ── */
   --color-blue-500: #ffc33a; /* brand blue   → yellow in dark */
   --color-yellow-400: #3a76ff; /* brand yellow → blue in dark   */
