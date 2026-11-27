@@ -40,7 +40,7 @@ npm run format:check   # what CI runs: fails if src/ isn't formatted
 npm test               # checks on the built site + unit tests (run `npm run build` first)
 ```
 
-The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `dist/search.json`, lazy-fetched by `SearchModal` on first open. It stores plain text (capped per post) and 320px pipeline thumbnails. The modal is `src/layouts/components/SearchModal.astro`: static markup plus a ~4 KB script that listens on `document` (so it survives `ClientRouter` navigations) and renders results as HTML strings, escaping everything that comes from the index or the query.
+The search index is an Astro endpoint (`src/pages/search.json.ts`): built to `dist/search.json`, lazy-fetched by `SearchModal` on first open. It stores plain text (capped per post) and 320px pipeline thumbnails. The modal is `src/layouts/components/SearchModal.astro`: a native `<dialog>` opened with `showModal()` (focus trap, inert page, Esc and `::backdrop` come from the browser) plus a ~4 KB script that listens on `document` (so it survives `ClientRouter` navigations) and renders results as HTML strings, escaping everything that comes from the index or the query.
 
 ## Tests
 
