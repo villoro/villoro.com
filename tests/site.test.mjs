@@ -325,6 +325,16 @@ test("the search modal is a native <dialog>, so it traps focus and makes the pag
   assert.deepEqual(offenders, []);
 });
 
+test("every <nav> landmark has an accessible name", () => {
+  // Several navs on a page are indistinguishable to a screen reader without one
+  const offenders = pages.flatMap((page) =>
+    (page.body.match(/<nav\b[^>]*>/g) ?? [])
+      .filter((tag) => !/\baria-label(ledby)?=/.test(tag))
+      .map((tag) => `${page.url}: ${tag.slice(0, 60)}`),
+  );
+  assert.deepEqual(offenders, []);
+});
+
 test("every category page has its own description", () => {
   const categoryPages = pages.filter((page) => /^\/categories\/[^/]+\/$/.test(page.url));
   assert.ok(categoryPages.length > 0, "no category pages found");

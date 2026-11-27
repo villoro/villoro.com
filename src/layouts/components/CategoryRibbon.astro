@@ -29,7 +29,11 @@ const { categories, activeKey } = Astro.props;
             ? activeKey === "all"
             : slugify(cat.key) === activeKey;
         return (
-          <a href={href} class:list={["cr__chip", { "is-active": isActive }]}>
+          <a
+            href={href}
+            class:list={["cr__chip", { "is-active": isActive }]}
+            aria-current={isActive ? "page" : undefined}
+          >
             {cat.name}
             <span class="cr__chip-count">{cat.count}</span>
           </a>

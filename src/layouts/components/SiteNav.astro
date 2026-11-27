@@ -22,7 +22,7 @@ const isBlog =
 ---
 
 <header class="sitenav">
-  <nav class="sitenav__inner">
+  <nav class="sitenav__inner" aria-label="Primary">
     <!-- Logo -->
     <div class="sitenav__logo">
       <Logo />
@@ -61,12 +61,13 @@ const isBlog =
     </div>
 
     <!-- Mobile hamburger (CSS-only toggle) -->
-    <input id="sitenav-toggle" type="checkbox" class="sitenav__checkbox" />
-    <label
-      for="sitenav-toggle"
-      class="sitenav__hamburger"
-      aria-label="Toggle menu"
-    >
+    <input
+      id="sitenav-toggle"
+      type="checkbox"
+      class="sitenav__checkbox"
+      aria-label="Menu"
+    />
+    <label for="sitenav-toggle" class="sitenav__hamburger">
       <span></span>
       <span></span>
       <span></span>
@@ -79,7 +80,11 @@ const isBlog =
     <div class="sitenav__menu">
       <ul class="sitenav__links" role="list">
         <li>
-          <a href="/" class:list={["sitenav__link", { "is-active": isHome }]}>
+          <a
+            href="/"
+            class:list={["sitenav__link", { "is-active": isHome }]}
+            aria-current={isHome ? "page" : undefined}
+          >
             Home
           </a>
         </li>
@@ -87,6 +92,7 @@ const isBlog =
           <a
             href="/about/"
             class:list={["sitenav__link", { "is-active": isAbout }]}
+            aria-current={isAbout ? "page" : undefined}
           >
             About
           </a>
@@ -95,6 +101,7 @@ const isBlog =
           <a
             href="/blog/"
             class:list={["sitenav__link", { "is-active": isBlog }]}
+            aria-current={isBlog ? "page" : undefined}
           >
             Blog
           </a>
@@ -263,6 +270,22 @@ const isBlog =
       padding-left: 0;
       margin-left: 0;
       border-left: 0;
+    }
+
+    /* Visually hidden but focusable (display:none would take the menu out
+       of the Tab order); the hamburger shows its focus ring. */
+    .sitenav__checkbox {
+      display: block;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      opacity: 0;
+    }
+    .sitenav__checkbox:focus-visible ~ .sitenav__hamburger {
+      outline: 2px solid var(--color-blue-500);
+      outline-offset: 2px;
+      border-radius: 4px;
     }
 
     .sitenav__hamburger {
