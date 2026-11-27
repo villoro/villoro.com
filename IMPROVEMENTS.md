@@ -8,7 +8,7 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 - **No React**, and no other UI framework. Search is plain JS and the shortcodes are `.astro` components.
 - **The PWA stays.** Only audit it for correctness.
-- **GA4 stays as it is.** No consent banner, no replacement.
+- **GA4 stays.** No consent banner, no replacement. Its script is fetched after the page's `load` event (approved 2026-11-27): visits that end before `load` are not counted.
 - **The brand blue `#3a76ff` stays everywhere**, logos included, even where it is under the contrast standard: white on `#3a76ff` is 4.02:1 and `#3a76ff` on the page background 3.89:1, against 4.5:1 (links, active nav item, kickers, primary buttons, table headers). Audit tools will keep reporting it. If it is ever revisited, the fix that keeps the logo is a slightly darker blue only where it carries text (about `#2f67e8`).
 - **Posts in `src/content/` are not run through Prettier** (it would reflow their tables and markers). The rest of `src/` is, and CI checks it.
 - **No 1280w post hero.** Phones draw the cover-cropped hero about 605 px wide, so at pixel ratio 2.6–3 they need the 1920w file anyway (see "Checked and fine").
@@ -37,7 +37,6 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 From the second pass over Chrome's [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) guides (2026-11-27). Everything cheap and safe from that pass is done; these need a decision or are low value. Ordered by value.
 
-1. **Defer gtag.js until after `load`** (decision: touches "GA4 stays"). Measured on the live post at 412 px, 1.6 Mbps, 4x CPU: blocking gtag.js moves LCP from about 2.35-2.40 s to 1.83-1.95 s, because its 165 KB competes with the 93 KB hero. Keep the `dataLayer` snippet and inject `gtag/js` from a `load` listener (or `requestIdleCallback`). Cost: visitors who leave before `load` are not counted; check GA4 Realtime after. Files: `BaseRedesign.astro`.
 2. **The sticky category ribbon uses a lot of the viewport** (design). At 1280x720 nav plus ribbon is 231 px (32%), because the 11 chips wrap to two rows; at 768 px the ribbon alone is 157 px. Its `top: 74px` is also a stale constant (the nav is 62-95 px). Make `.cr__chips` one scrollable row with a fade-mask hint and `scroll-initial-target` on the active chip, and replace the constant with a `--nav-h` variable. Guides: `single-line-overflow`, `content-first-noise-reduction`.
 5. **Breadcrumb markup**: bare links in a flex `<nav>`. The guide wants `<ol><li>`, underlined links and the label "Breadcrumbs". `about.astro` has its own copy of the markup instead of using `Breadcrumb.astro`: fold it in at the same time.
 6. **Search dialog has no open/close animation** (optional): `@starting-style` with `transition-behavior: allow-discrete`, off under `prefers-reduced-motion`. Guide: `animate-to-from-top-layer`.
