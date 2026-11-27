@@ -335,6 +335,16 @@ test("every <nav> landmark has an accessible name", () => {
   assert.deepEqual(offenders, []);
 });
 
+test("every chart <canvas> is an image with a text description", () => {
+  // A canvas is a blank box to a screen reader without role="img" and a label
+  const offenders = pages.flatMap((page) =>
+    (page.body.match(/<canvas\b[^>]*>/g) ?? [])
+      .filter((tag) => !/\brole="img"/.test(tag) || !/\baria-label="[^"]{10,}"/.test(tag))
+      .map((tag) => `${page.url}: ${tag.slice(0, 60)}`),
+  );
+  assert.deepEqual(offenders, []);
+});
+
 test("every category page has its own description", () => {
   const categoryPages = pages.filter((page) => /^\/categories\/[^/]+\/$/.test(page.url));
   assert.ok(categoryPages.length > 0, "no category pages found");

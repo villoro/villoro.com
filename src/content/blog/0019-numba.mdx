@@ -218,7 +218,7 @@ For the tests we will try different array lengths.
 
 It is important to mention that the results would be different using python lists instead of `numpy` arrays.
 
-<canvas id="chart_sum" style="width:100%;height:600px;"></canvas>
+<canvas id="chart_sum" role="img" aria-label="Line chart: Time of different sum functions. x axis Number of rows: 10^4, 10^5, 10^6, 10^7, 10^8, 10^9. y axis: Time [s]. series iter_and_sum (y from 0 to 96.13); sum (y from 0 to 76.54); np.sum (y from 0 to 0.43); jit (y from 0 to 0.24); njit (y from 0 to 0.23)" style="width:100%;height:600px;"></canvas>
 
 For small arrays `numpy.sum` is the best option but **for large arrays both `jit` and `njit` perform really well**.
 
@@ -450,7 +450,7 @@ def divmod_vectorize(df):
 
 Both `divmod_njit` and `divmod_vectorize` performs really well compared to the other options. It is interesting that my first approach (`zfill`) is the best for small dataframes but it starts to underperform at 10^5.
 
-<canvas id="chart_fix_time" style="width:100%;height:600px;"></canvas>
+<canvas id="chart_fix_time" role="img" aria-label="Line chart: Time of different fix_time functions. x axis Number of rows: 10^2, 10^3, 10^4, 10^5, 10^6, 10^7, 10^8. y axis: Time [s]. series zfill, fix_time_individual, fix_time_np_string, fix_time_np_datetime, np_divmod_jit, divmod_njit, divmod_vectorize" style="width:100%;height:600px;"></canvas>
 
 > [!success]
 > Working with numbers in numba is really fast.
@@ -482,7 +482,7 @@ Let's compare the results of two functions.
 
 If we take a look at the results we can see that they both perform similar. 
 
-<canvas id="chart_fix_time_comparison" style="width:100%;height:600px;"></canvas>
+<canvas id="chart_fix_time_comparison" role="img" aria-label="Line chart: Time of different fix_time functions with different machines. x axis Number of rows: 10^2, 10^3, 10^4, 10^5, 10^6, 10^7. y axis: Time [s]. series zfill azure (y from 0 to 37.43); divmod_vectorize azure (y from 0.09 to 2.8); zfill i5 (y from 0 to 35.19); divmod_vectorize i5 (y from 0.09 to 9.71)" style="width:100%;height:600px;"></canvas>
 
 It is important to remember that **pandas only work with one core** so I am not using the full potential of the machines. **Having more RAM allows to work with more data** but it does not increase the speed. With the **numba** vectorize the azure machine performs better as the size increases.
 

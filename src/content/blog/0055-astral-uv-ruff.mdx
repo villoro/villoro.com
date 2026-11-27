@@ -276,13 +276,13 @@ At <FancyLink linkText="uv benchmarks" url="https://github.com/astral-sh/uv/blob
 
 For quick reference here is a summary:
 
-<canvas id="astral_uv" style="width:100%;height:400px;"></canvas>
+<canvas id="astral_uv" role="img" aria-label="Bar chart: time in seconds to resolve and install dependencies, with a warm and a cold cache, for uv, PDM, Poetry and pip-sync. uv is the fastest in all four cases (0.05, 0.1, 0.4 and 1.1 seconds); pip-sync is the slowest at installing (3.8 seconds warm, 7.2 cold)" style="width:100%;height:400px;"></canvas>
 
 ### `ruff` benchmarks
 
 Here you can see the time it took to format <FancyLink linkText="Zulip" url="https://github.com/zulip/zulip" dark="true"/> codebase (~ 250k lines of code).
 
-<canvas id="astral_ruff" style="width:100%;height:130px;"></canvas>
+<canvas id="astral_ruff" role="img" aria-label="Bar chart: seconds to format the Zulip codebase (about 250,000 lines): ruff 0.1, black 3.2, yapf 17.77 and autopep8 19.56" style="width:100%;height:130px;"></canvas>
 
 More info at <FancyLink linkText="Ruff formatter" url="https://astral.sh/blog/the-ruff-formatter"/> .
 

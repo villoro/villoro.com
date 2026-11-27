@@ -295,7 +295,7 @@ The total execution times for the `python udf` and `java udf` are:
 
 As we expected the `java_udf` is faster than the `python_udf`.
 
-<canvas id="chart_times" style="width:100%;height:600px;"></canvas>
+<canvas id="chart_times" role="img" aria-label="Line chart: Time with different UDFs. x axis Number of rows: 10^3, 10^4, 10^5, 10^6, 10^7, 10^8. y axis: Time [s]. series python_udf (y from 2.35 to 195.03); java_udf (y from 0.49 to 88.88)" style="width:100%;height:600px;"></canvas>
 
 If we take a closer look at the values we can see that creating the `python_udf` has a cost.
 That is why the results are so bad for the small datasets.

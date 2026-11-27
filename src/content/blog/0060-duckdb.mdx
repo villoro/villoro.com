@@ -40,7 +40,7 @@ DuckDB’s engine is **columnar & vectorized** and aggressively **multithreaded*
 
 * **Single‑node pipeline vs Spark (40 GiB Parquet, 52 files, 94 cols, c2d‑standard‑16 16‑core/64 GB):** DuckDB finished the group‑by and wrote a single Parquet output in **3.99 s**. chDB took **9.30 s** and Spark **16.39 s** under the same setup. Source: <FancyLink linkText="Small‑Scale Data Pipeline: DuckDB vs. chDB vs. Spark" url="https://www.digitalturbine.com/blog/small-scale-data-pipeline-spark-vs-chdb-vs-duckdb" dark="true" company="default"/>.
 
-<canvas id="speed-by-tools" style="width:100%;height:350px;"></canvas>
+<canvas id="speed-by-tools" role="img" aria-label="Bar chart: Processing time (lower is better). categories on the vertical axis: Benchmark 1, Benchmark 2. horizontal axis: time [s]. series duckdb (x from 3.84 to 3.99); polars (x from 0 to 5.77); pandas (x from 0 to 19.57); chdb (x from 0 to 9.3); spark (x from 0 to 16.39)" style="width:100%;height:350px;"></canvas>
 
 > [!warning]
 > Spark shines when scaling to terabytes across clusters, but on tens of GB, DuckDB often wins due to zero cluster overhead.
@@ -69,7 +69,7 @@ Highlights on the same machine:
 * Scan other formats **\~8.5x**.
 * Group by **\~13x**
 
-<canvas id="plot-duckdb-improvements" style="width:100%;height:350px;"></canvas>
+<canvas id="plot-duckdb-improvements" role="img" aria-label="Line chart: Duckdb improvements over time. x axis: from 0.2.7 to 1.0.0. series Window Functions, Export, Analysis - Join, CSV Import, Scan other formats, Analysis - Group By" style="width:100%;height:350px;"></canvas>
 
 > [!tip]
 > DuckDB doesn’t just start fast—it’s getting faster with each release.
