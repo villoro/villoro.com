@@ -35,10 +35,7 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 ## Open items
 
-Found on 2026-11-27 by reading Chrome's [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) guides against the site (and running its `legacy-scan`). Ordered by value.
-
-1. **Giscus and `theme-color` ignore the theme toggle.** Giscus uses `data-theme="preferred_color_scheme"` and the `theme-color` metas use `prefers-color-scheme`, so if the toggle differs from the OS the comments (and the phone status bar) show the other theme. Giscus can be told with `postMessage({giscus:{setConfig:{theme}}})` from `ThemeSwitcher`. Guides: `dark-mode-toggle`, `browser-ui-theming`.
-2. **ThemeSwitcher stores a value on the first toggle** (`localStorage.theme`), so it pins the theme against the OS from then on. `dark-mode-toggle` recommends storing only when the choice differs from the system and removing it otherwise. Low priority: the switch already works.
+None.
 
 ## Waiting on upstream
 

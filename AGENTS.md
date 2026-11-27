@@ -146,7 +146,7 @@ Three top-level layouts; every page picks one:
 | `SiteNav.astro`       | every page                     | sticky top nav, search trigger, theme switcher, subscribe CTA        |
 | `SiteFooter.astro`    | every page                     | dark footer with email + social icons                                |
 | `Logo.astro`          | SiteNav                        | accepts optional `src` / `srcDarkmode` overrides                     |
-| `ThemeSwitcher.astro` | SiteNav                        | toggles `.dark` on `<html>`, persists to localStorage                |
+| `ThemeSwitcher.astro` | SiteNav                        | toggles `.dark` on `<html>`; `localStorage.theme` only holds a real override (picking the OS theme removes it); syncs `theme-color` metas + Giscus |
 | `Breadcrumb.astro`    | ArticleLayout, BlogListing     | `variant: "dark" \| "light"`                                         |
 | `CategoryRibbon.astro`| BlogListingLayout              | sticky blue bar with category chips                                  |
 | `PostCard.astro`      | index.astro, listings, related | `variant: "big" \| "medium" \| "small"` — single file, 3 layouts     |
@@ -259,7 +259,7 @@ Don't try to merge the two — the values differ slightly and consumers depend o
 
 ### Dark mode
 
-Class-based: `.dark` on `<html>`, set by `ThemeSwitcher.astro` (persists to `localStorage`). All dark overrides should go either in `tokens.css`'s `.dark { … }` block (preferred) or use `dark:` Tailwind variant.
+Class-based: `.dark` on `<html>`, set by `ThemeSwitcher.astro` (a choice different from the OS is kept in `localStorage`). All dark overrides should go either in `tokens.css`'s `.dark { … }` block (preferred) or use `dark:` Tailwind variant.
 
 ### Where prose styles live
 

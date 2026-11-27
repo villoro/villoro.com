@@ -86,41 +86,64 @@ const { theme_switcher } = config.settings;
   import { settings } from "@/config/config.json";
   const matchMedia = window.matchMedia("(prefers-color-scheme: dark)");
 
-  matchMedia.addEventListener("change", () =>
-    toggleTheme(
-      document.querySelectorAll<HTMLInputElement>("[data-theme-switcher]"),
-    ),
-  );
+  // What the site shows when the visitor has not chosen: the OS preference,
+  // or the fixed `default_theme` from config.json.
+  const baselineTheme = () =>
+    settings.default_theme === "system"
+      ? matchMedia.matches
+        ? "dark"
+        : "light"
+      : settings.default_theme;
+
+  const currentTheme = () => localStorage.getItem("theme") || baselineTheme();
+
+  // The phone's browser chrome and the Giscus iframe don't read the `.dark`
+  // class: tell them which theme is showing. (The theme-color metas are keyed
+  // on the OS preference, which is wrong once the toggle overrides it.)
+  const syncExternal = (isDarkTheme: boolean) => {
+    document
+      .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+      .forEach((meta) => (meta.content = isDarkTheme ? "#000" : "#fff"));
+    document
+      .querySelector<HTMLIFrameElement>("iframe.giscus-frame")
+      ?.contentWindow?.postMessage(
+        {
+          giscus: {
+            setConfig: { theme: isDarkTheme ? "dark" : "light" },
+          },
+        },
+        "https://giscus.app",
+      );
+  };
 
   function toggleTheme(themeSwitch: NodeListOf<HTMLInputElement>) {
-    const defaultTheme =
-      settings.default_theme === "system"
-        ? matchMedia.matches
-          ? "dark"
-          : "light"
-        : settings.default_theme;
-    const currentTheme = localStorage.getItem("theme") || defaultTheme;
-    const isDarkTheme = currentTheme === "dark";
+    const isDarkTheme = currentTheme() === "dark";
     themeSwitch.forEach((sw: HTMLInputElement) => (sw.checked = isDarkTheme));
     document.documentElement.classList.toggle("dark", isDarkTheme);
+    syncExternal(isDarkTheme);
   }
 
+  const switches = () =>
+    document.querySelectorAll<HTMLInputElement>("[data-theme-switcher]");
+
+  matchMedia.addEventListener("change", () => toggleTheme(switches()));
+  // The choice can change in another tab
+  window.addEventListener("storage", (event) => {
+    if (event.key === "theme") toggleTheme(switches());
+  });
+
   const setDarkMode = () => {
-    const themeSwitch = document.querySelectorAll<HTMLInputElement>(
-      "[data-theme-switcher]",
-    );
+    const themeSwitch = switches();
     toggleTheme(themeSwitch);
     themeSwitch.forEach((sw: HTMLInputElement) => {
       sw.addEventListener("click", function () {
-        const defaultTheme =
-          settings.default_theme === "system"
-            ? matchMedia.matches
-              ? "dark"
-              : "light"
-            : settings.default_theme;
-        const currentTheme = localStorage.getItem("theme") || defaultTheme;
-        const newTheme = currentTheme === "light" ? "dark" : "light";
-        localStorage.setItem("theme", newTheme);
+        // The opposite of what is showing now
+        const next = currentTheme() === "light" ? "dark" : "light";
+        // Store only a real override. Choosing what the OS already shows
+        // undoes it, so the site follows the OS again (a stored value equal to
+        // the OS would pin the theme against later OS changes, e.g. at night).
+        if (next === baselineTheme()) localStorage.removeItem("theme");
+        else localStorage.setItem("theme", next);
         toggleTheme(themeSwitch);
       });
     });
