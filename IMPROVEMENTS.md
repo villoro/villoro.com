@@ -35,7 +35,12 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 ## Open items
 
-None.
+Found on 2026-11-27 by reading Chrome's [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) guides against the site (and running its `legacy-scan`). Ordered by value.
+
+1. **Copy button on code blocks.** Posts have many snippets and none can be copied with one click (only `ShareRow` copies a link). Guide: `copy-button`. Add a button per `<pre>` (a small script or a rehype plugin), `aria-label="Copy code"`, a `role="status"` bubble outside the button, visible without hover on touch, 24 px minimum. Check the `FileName` and `TerminalOutput` shortcodes still look right.
+2. **Search modal as a native `<dialog>`.** `SearchModal.astro` is a `div role="dialog" aria-modal="true"`, but nothing traps focus, nothing makes the page behind inert, and the page still scrolls under it. `<dialog>` + `showModal()` gives all of that, plus Esc and the top layer. Guides: `dialog`, `light-dismiss-a-dialog`, `prevent-page-scroll-under-modal-dialog`. The script already listens on `document`, so only open/close and `search.css` change.
+3. **Giscus and `theme-color` ignore the theme toggle.** Giscus uses `data-theme="preferred_color_scheme"` and the `theme-color` metas use `prefers-color-scheme`, so if the toggle differs from the OS the comments (and the phone status bar) show the other theme. Giscus can be told with `postMessage({giscus:{setConfig:{theme}}})` from `ThemeSwitcher`. Guides: `dark-mode-toggle`, `browser-ui-theming`.
+4. **ThemeSwitcher stores a value on the first toggle** (`localStorage.theme`), so it pins the theme against the OS from then on. `dark-mode-toggle` recommends storing only when the choice differs from the system and removing it otherwise. Low priority: the switch already works.
 
 ## Waiting on upstream
 
@@ -73,3 +78,8 @@ So nobody audits these again soon:
 - The PWA precaches only hashed assets and serves pages network-first.
 - Security headers are set in `netlify.toml`. A `Content-Security-Policy` is missing, but with inline scripts, GA and Giscus it would need care to be worth it; not proposed.
 - Old `/post/*` URLs are redirected.
+- **Chrome's `modern-web-guidance`, checked 2026-11-27.** `legacy-scan src public/js` reports 4 findings; none worth a change:
+  - `scrollspy` (`ArticleTOC`): `scroll-target-group` is Chrome-only, so the `IntersectionObserver` would stay as the fallback. More code, not less.
+  - `dark-mode-toggle`: the guide wants `<meta name="color-scheme">` plus `light-dark()`. The site's `.dark` token remap already works; only the plain `color-scheme` property was missing (fixed).
+  - `js/copying-array-methods` (`sortFunctions.ts`): `toSorted` is not in the `es6` TS target. Nothing to gain.
+  - Speculation rules (`improve-next-page-load-performance`): not useful, `ClientRouter` navigates with `fetch`, not with browser navigations.
