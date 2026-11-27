@@ -128,3 +128,21 @@
   border-radius: 4px;
   z-index: 1000;
 }
+
+/* ────────────────────────────────────────────────────────────────
+   FORCED COLORS (Windows High Contrast)
+   The giant decorative words behind the heroes use a 5%-opacity colour. In
+   forced-colors mode the browser replaces it with solid text colour, so
+   "villoro." / "blog." would be painted over real content. They are
+   aria-hidden decoration: hide them. !important because the component
+   styles are unlayered and would otherwise win over this layer.
+   ──────────────────────────────────────────────────────────────── */
+@media (forced-colors: active) {
+  .hp-hero__watermark,
+  .hp-nl__bg,
+  .ab-hero__bg,
+  .ab-cta-bg,
+  .bl-hero__bg {
+    display: none !important;
+  }
+}

@@ -30,6 +30,7 @@
 .al-body .article-content pre {
   background: #272822 !important;
   color: #f8f8f2;
+  color-scheme: dark; /* dark block, dark scrollbar, in both site themes */
   padding: 22px 26px;
   border-radius: 0 0 12px 12px;
   overflow-x: auto;
@@ -132,6 +133,16 @@
   .al-body .article-content pre .code-copy__btn[data-failed] {
     opacity: 1;
   }
+}
+
+/* ── Text wrapping ───────────────────────────────────── */
+/* Balanced headings, no one-word last lines in paragraphs and lists.
+   Browsers without support (Firefox ignores "pretty") wrap as before. */
+.al-body .article-content :is(h2, h3, h4, h5) {
+  text-wrap: balance;
+}
+.al-body .article-content :is(p, li, blockquote) {
+  text-wrap: pretty;
 }
 
 /* ── Paragraphs, lists ───────────────────────────────── */
