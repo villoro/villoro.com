@@ -8,27 +8,45 @@ import config from "@/config/config.json";
       // Built here, not written as a <script src> tag, so data-theme can match
       // the site theme (the toggle may differ from the OS, which is all
       // "preferred_color_scheme" knows). ThemeSwitcher updates it afterwards.
-      const script = document.createElement("script");
-      script.src = "https://giscus.app/client.js";
-      script.async = true;
-      script.crossOrigin = "anonymous";
-      Object.entries({
-        repo: giscus.repo,
-        "repo-id": giscus.repoId,
-        category: giscus.category,
-        "category-id": giscus.categoryId,
-        mapping: "pathname",
-        strict: "0",
-        "reactions-enabled": "1",
-        "emit-metadata": "0",
-        "input-position": "top",
-        theme: document.documentElement.classList.contains("dark")
-          ? "dark"
-          : "light",
-        lang: "en",
-        loading: "lazy",
-      }).forEach(([key, value]) => script.setAttribute(`data-${key}`, value));
-      document.getElementById("giscus-host").appendChild(script);
+      const host = document.getElementById("giscus-host");
+      const load = () => {
+        const script = document.createElement("script");
+        script.src = "https://giscus.app/client.js";
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        Object.entries({
+          repo: giscus.repo,
+          "repo-id": giscus.repoId,
+          category: giscus.category,
+          "category-id": giscus.categoryId,
+          mapping: "pathname",
+          strict: "0",
+          "reactions-enabled": "1",
+          "emit-metadata": "0",
+          "input-position": "top",
+          theme: document.documentElement.classList.contains("dark")
+            ? "dark"
+            : "light",
+          lang: "en",
+          loading: "lazy",
+        }).forEach(([key, value]) => script.setAttribute(`data-${key}`, value));
+        host.appendChild(script);
+      };
+      // Contact giscus.app (and GitHub) only for readers who get to the
+      // comments: start loading 400px before they scroll into view.
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            if (!entries.some((entry) => entry.isIntersecting)) return;
+            observer.disconnect();
+            load();
+          },
+          { rootMargin: "400px 0px" },
+        );
+        observer.observe(host);
+      } else {
+        load();
+      }
     </script>
   </div>
 </div>
