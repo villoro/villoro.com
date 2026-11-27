@@ -96,7 +96,7 @@ sdf.write.format("parquet").mode("overwrite").save("weather_data.parquet")
 
 Now is possible to do things like counting the rows or the number of unique stations without spending too much time.
 
-<canvas id="count_time_by_format" style="width:100%;height:250px;"></canvas>
+<canvas id="count_time_by_format" role="img" aria-label="Bar chart: Time of some operations based on source format. categories on the vertical axis: count, unique_stations. horizontal axis: time [s]. series csv (x from 133.8 to 382.2); parquet (x from 0.65 to 44.33)" style="width:100%;height:250px;"></canvas>
 
 ### Explore possible partitions
 
@@ -116,7 +116,7 @@ By counting the number of rows by station we can see that:
 
 So this is a good column to use for partitions
 
-<canvas id="partition_station" style="width:100%;height:300px;"></canvas>
+<canvas id="partition_station" role="img" aria-label="Bar chart: Number of rows grouped by station. x axis: 212 categories from U8 to DP. y axis: Number of rows. series # rows (y from 8,302 to 2,987,600)" style="width:100%;height:300px;"></canvas>
 
 #### Using variable column
 
@@ -143,7 +143,7 @@ First remember to load the data from the partitioned file.
 
 If we take a look at basic operations we can see that the performance is similar as the one before setting the partition.
 
-<canvas id="count_time_by_partition" style="width:100%;height:250px;"></canvas>
+<canvas id="count_time_by_partition" role="img" aria-label="Bar chart: Time of some operations based on partition policy. categories on the vertical axis: count, unique_stations. horizontal axis: time [s]. series Default partition (x from 0.65 to 44.33); By station (x from 25.26 to 40.21)" style="width:100%;height:250px;"></canvas>
 
 However if we work with data from one partition the performance will be way better.
 

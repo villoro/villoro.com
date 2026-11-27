@@ -337,7 +337,7 @@ Posts are co-written, not generated in one go:
 
 ### Charts and tables
 
-- **Data charts use Chart.js**, not SVG: a `public/js/posts/<nnnn>-plots-<topic>.js` that loads Chart.js from the CDN (copy `0060-plots-duckdb.js`: the URL is pinned to an exact version and has an `integrity` hash, so a CDN compromise or a new major can't change old posts), a `<script type="module" src="/js/posts/...">` after the frontmatter, and a `<canvas id=...>` where the chart goes. Give the canvas `role="img"`, an `aria-label` with the numbers, and fallback text. Keep pandas in `#FF764D` as in earlier posts.
+- **Data charts use Chart.js**, not SVG: a `public/js/posts/<nnnn>-plots-<topic>.js` that loads Chart.js from the CDN (copy `0060-plots-duckdb.js`: the URL is pinned to an exact version and has an `integrity` hash, so a CDN compromise or a new major can't change old posts), a `<script type="module" src="/js/posts/...">` after the frontmatter, and a `<canvas id=...>` where the chart goes. Give the canvas `role="img"`, an `aria-label` with the numbers, and fallback text (`npm test` fails on a canvas without `role="img"` and a label). Keep pandas in `#FF764D` as in earlier posts.
 - **Tables right-align every column but the first** (`prose.css`), which suits numbers. For a column of text, mark it left-aligned in the Markdown (`| --- | :--- |`): it renders as an inline `text-align:left`, which wins over the stylesheet.
 
 ### SVG diagrams

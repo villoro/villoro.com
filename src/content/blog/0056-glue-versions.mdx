@@ -89,7 +89,7 @@ This brought the catalog size down **massively**:
 
 We can also visualize it with a distribution plot:
 
-<canvas id="plot-table-versions" style="width:100%;height:300px;"></canvas>
+<canvas id="plot-table-versions" role="img" aria-label="Line chart: Number of versions by table. x axis Version Count: from 1 to 5481. y axis: Smoothed Table Count. series before (y from 1 to 216); now (y from 0 to 1,552)" style="width:100%;height:300px;"></canvas>
 
 > [!note]
 > The canvas above is a **smoothed** version of the raw version count data for readability.
@@ -229,7 +229,7 @@ What surprised us the most was that **Athena performance improved dramatically**
 
 We suspected the performance hit came from Glue metadata overhead during query planning — and cleaning up versions helped significantly.
 
-<canvas id="plot-dbt-execution-time" style="width:100%;height:300px;"></canvas>
+<canvas id="plot-dbt-execution-time" role="img" aria-label="Line chart: DBT execution time [mins]. x axis: from 2025-03-02 to 2025-04-08. series daily (y from 57.01 to 134.9); hourly (y from 15.06 to 71.75)" style="width:100%;height:300px;"></canvas>
 
 Our main pipelines became faster:
 

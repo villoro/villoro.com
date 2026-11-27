@@ -40,7 +40,7 @@ The simplest way to smooth a time series is by reducing its granularity.
 - **Loss of resolution:** You trade detail for clarity
 - **Harder comparisons:** Aggregated results may hide important local variation
 
-<canvas id="plot_source" style="width:100%;height:300px;"></canvas>
+<canvas id="plot_source" role="img" aria-label="Line chart. x axis: from 2012-02-06 to 2025-03-24. series source (y from 3.08 to 9.73)" style="width:100%;height:300px;"></canvas>
 
 ## Smoothing with Python: From Simple to Smart
 
@@ -59,7 +59,7 @@ A moving average is the most common starting point for smoothing. It replaces ea
 
 We'll apply both trailing and centered versions and compare their impact on the series.
 
-<canvas id="plot_ma" style="width:100%;height:300px;"></canvas>
+<canvas id="plot_ma" role="img" aria-label="Line chart. x axis: from 2012-02-06 to 2025-03-24. series ma (y from 3.75 to 8.38); ma centered (y from 3.96 to 8.34); source (y from 3.08 to 9.73)" style="width:100%;height:300px;"></canvas>
 
 ### 🎯 Gaussian Smoother (`tsmoothie`)
 Gaussian smoothing uses a weighted moving average where weights follow a Gaussian (normal) distribution. Points closer to the center of the window receive higher weight.
@@ -84,7 +84,7 @@ smoother.smooth(df["numeric_column"])
 df["gaussian"] = smoother.smooth_data[0]
 ```
 
-<canvas id="plot_gaussian" style="width:100%;height:300px;"></canvas>
+<canvas id="plot_gaussian" role="img" aria-label="Line chart. x axis: from 2012-02-06 to 2025-03-24. series gaussian (y from 4.04 to 8.05); source (y from 3.08 to 9.73)" style="width:100%;height:300px;"></canvas>
 
 ### 📈 Lowess Smoother (`tsmoothie`)
 Lowess (Locally Weighted Scatterplot Smoothing) fits a local linear regression at each point using weighted neighboring data.
@@ -109,7 +109,7 @@ smoother.smooth(df["numeric_column"])
 df["lowess"] = smoother.smooth_data[0]
 ```
 
-<canvas id="plot_lowess" style="width:100%;height:300px;"></canvas>
+<canvas id="plot_lowess" role="img" aria-label="Line chart. x axis: from 2012-02-06 to 2025-03-24. series lowess (y from 4.84 to 8.04); source (y from 3.08 to 9.73)" style="width:100%;height:300px;"></canvas>
 
 ## Smoothing with SQL: What's Possible, What's Not
 
@@ -180,7 +180,7 @@ FROM data
 ORDER BY 1 DESC
 ```
 
-<canvas id="plot_median" style="width:100%;height:300px;"></canvas>
+<canvas id="plot_median" role="img" aria-label="Line chart. x axis: from 2012-02-06 to 2025-03-24. series median (y from 3.96 to 8.34); source (y from 3.08 to 9.73)" style="width:100%;height:300px;"></canvas>
 
 ### 🎹 Quantile Bands
 Quantile smoothing provides additional context:
@@ -226,7 +226,7 @@ WINDOW
 ORDER BY 1 DESC
 ```
 
-<canvas id="plot_sql" style="width:100%;height:300px;"></canvas>
+<canvas id="plot_sql" role="img" aria-label="Line chart. x axis: from 2012-02-06 to 2025-03-24. series p90 (y from 4.15 to 9.83); median (y from 3.96 to 8.34); p10 (y from 3.25 to 7.89); source (y from 3.08 to 9.73)" style="width:100%;height:300px;"></canvas>
 
 ---
 
@@ -234,7 +234,7 @@ ORDER BY 1 DESC
 
 To wrap up, we’ll place all techniques side by side:
 
-<canvas id="plot_all" style="width:100%;height:300px;"></canvas>
+<canvas id="plot_all" role="img" aria-label="Line chart. x axis: from 2012-02-06 to 2025-03-24. series p90, gaussian, lowess, median, ma, ma centered, p10, source" style="width:100%;height:300px;"></canvas>
 
 - Raw time series
 - Moving average

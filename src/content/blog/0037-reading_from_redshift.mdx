@@ -218,7 +218,7 @@ This is what we would have if we were doing periodical unloads into each subfold
 
 The first test is to compare the reading of one single file using the different methods.
 
-<canvas id="dataset_0" style="width:100%;height:300px;"></canvas>
+<canvas id="dataset_0" role="img" aria-label="Bar chart: Reading time for dataset 0 (single parquet). x axis: pandas_read, pyarrow_ds_read, pyarrow_parquet_ds_read, pyarrow_single_read. y axis: Time [seconds]. series no_filter (y from 0 to 9.43)" style="width:100%;height:300px;"></canvas>
 
 We see that the the **pyarrow** datasets options performs a little bit better.
 
@@ -230,7 +230,7 @@ There are 2 different readings that we are testing:
 * **no filter:** reading all data
 * **filter:** reading only a subset of the months
 
-<canvas id="dataset_2" style="width:100%;height:400px;"></canvas>
+<canvas id="dataset_2" role="img" aria-label="Bar chart: Reading time for dataset 2 (Multiple parquets by month). x axis: pandas_read, pyarrow_ds_read, pyarrow_parquet_ds_read, pyarrow_single_read. y axis: Time [seconds]. series filter (y from 0.58 to 29.65); no_filter (y from 7.27 to 28.81)" style="width:100%;height:400px;"></canvas>
 
 For `pandas_read` and `pyarrow_single_read` we see that including filtering is slower.
 This happens because we are first reading and then filtering, and thus adding more operations means an increase in the time taken.
@@ -241,13 +241,13 @@ This happens because **pyarrow** can push down those filters and avoid reading u
 If we repeat the same test but with `dataset_1` (one file per partition) we see the same pattern.
 Here the differences are even bigger.
 
-<canvas id="dataset_1" style="width:100%;height:400px;"></canvas>
+<canvas id="dataset_1" role="img" aria-label="Bar chart: Reading time for dataset 1 (One parquet by month). x axis: pandas_read, pyarrow_ds_read, pyarrow_parquet_ds_read, pyarrow_single_read. y axis: Time [seconds]. series filter (y from 0.39 to 7.43); no_filter (y from 4.56 to 5.35)" style="width:100%;height:400px;"></canvas>
 
 ### Comparing best options
 
 Let's zoom in and compare the best options (`pyarrow_ds_read` and `pyarrow_parquet_ds_read`) and compare both partitioned datasets.
 
-<canvas id="pyarrow_best" style="width:100%;height:400px;"></canvas>
+<canvas id="pyarrow_best" role="img" aria-label="Bar chart: Comparison between best reading options. x axis: dataset_1, dataset_2. y axis: Time [seconds]. series pyarrow_ds_read (y from 0.46 to 0.58); pyarrow_parquet_ds_read (y from 0 to 0.74)" style="width:100%;height:400px;"></canvas>
 
 Here it seems like the new `pyarrow.dataset` only performs better with a dataset with a lot of files.
 If we have a small number of files it performs slightly worse.
@@ -262,7 +262,7 @@ In this case we want to do another test where we apply 2 filters at the same tim
 > [!info]
 > We are using the same column we used for splitting the `dataset_2` as the second filter
 
-<canvas id="row_group" style="width:100%;height:400px;"></canvas>
+<canvas id="row_group" role="img" aria-label="Bar chart: Reading time when using row group filtering. x axis: dataset_1, dataset_2. y axis: Time [seconds]. series pyarrow_ds_read (y from 0.5 to 0.62); pyarrow_parquet_ds_read (y from 0 to 2)" style="width:100%;height:400px;"></canvas>
 
 In this case we see how the new `pyarrow.dataset` introduced in **pyarrow 3.0.0** performs way better.
 
