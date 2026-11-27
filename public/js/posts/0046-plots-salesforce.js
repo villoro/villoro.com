@@ -1,6 +1,8 @@
 // Importing Chart.js via CDN instead of module specifier
 const script = document.createElement('script');
-script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.6.2";
+script.integrity = "sha384-wFIO1nJgUOP2XDesMi2Xqyej8+jLnzOfBrJbdvz7Pp+UI88xOiL08fKFupi2KqR0";
+script.crossOrigin = "anonymous";
 script.type = 'text/javascript';
 script.onload = function () {
   // Your Chart.js code here
