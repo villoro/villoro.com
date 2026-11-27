@@ -102,7 +102,11 @@ if (toc.length === 0) return;
             window.scrollY -
             headerHeight -
             extraMargin,
-          behavior: "smooth",
+          // An explicit "smooth" ignores the CSS reduced-motion override
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "auto"
+            : "smooth",
         });
         history.pushState(null, "", href);
       });
