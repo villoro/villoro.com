@@ -71,7 +71,7 @@ So nobody audits these again soon:
 - The 577 images with empty `alt` are all decorative favicons inside `FancyLink`, where an empty `alt` is correct.
 - Hero images are preloaded with responsive AVIF, originals don't ship, OG images are JPG.
 - The PWA precaches only hashed assets and serves pages network-first.
-- Security headers are set in `netlify.toml`. A `Content-Security-Policy` is missing, but with inline scripts, GA and Giscus it would need care to be worth it; not proposed.
+- Security headers are set in `netlify.toml`, including a CSP limited to `frame-ancestors`, `object-src` and `base-uri` plus `Cross-Origin-Opener-Policy: same-origin-allow-popups`. A `script-src` is not set: with the inline GA4 and Giscus loaders it needs per-script hashes (they change when the inline code does), which is not worth it for a static blog without user input.
 - Old `/post/*` URLs are redirected.
 - **Chrome's `modern-web-guidance`, checked 2026-11-27.** `legacy-scan src public/js` reports 4 findings; none worth a change:
   - `scrollspy` (`ArticleTOC`): `scroll-target-group` is Chrome-only, so the `IntersectionObserver` would stay as the fallback. More code, not less.
