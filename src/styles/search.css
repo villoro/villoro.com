@@ -2,17 +2,64 @@
    focus and makes the page behind inert. It fills the viewport and is
    transparent; the dimming is its ::backdrop. */
 .search-modal {
-  @apply m-0 h-full max-h-none w-full max-w-none border-0 bg-transparent p-0 text-inherit;
+  @apply m-0 h-full max-h-none w-full max-w-none items-start justify-center border-0 bg-transparent p-0 text-inherit;
+}
+/* Only display is tied to [open]. The alignment above stays on the base rule:
+   while the dialog fades out [open] is already gone, and alignment declared on
+   [open] made the panel jump to the left edge for a few frames. */
+.search-modal[open] {
+  @apply flex;
+}
+
+/* Fade in and out. A dialog flips between display:none and display:flex and
+   sits in the top layer, so closing only animates if `display` and `overlay`
+   are transitioned too (allow-discrete) and the entry state is declared with
+   @starting-style. Browsers without these just show and hide instantly. The
+   global prefers-reduced-motion rule (base.css) shortens all of it. */
+.search-modal {
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    display 0.15s allow-discrete,
+    overlay 0.15s allow-discrete;
 }
 .search-modal[open] {
-  @apply flex items-start justify-center;
+  opacity: 1;
 }
 .search-modal::backdrop {
-  @apply bg-black/50;
+  background-color: rgb(0 0 0 / 0);
+  transition:
+    background-color 0.15s ease,
+    display 0.15s allow-discrete,
+    overlay 0.15s allow-discrete;
+}
+.search-modal[open]::backdrop {
+  background-color: rgb(0 0 0 / 0.5);
+}
+.search-modal .search-wrapper {
+  transform: translateY(-8px);
+  transition: transform 0.15s ease;
+}
+.search-modal[open] .search-wrapper {
+  transform: none;
+}
+@starting-style {
+  .search-modal[open] {
+    opacity: 0;
+  }
+  .search-modal[open]::backdrop {
+    background-color: rgb(0 0 0 / 0);
+  }
+  .search-modal[open] .search-wrapper {
+    transform: translateY(-8px);
+  }
 }
 /* The page must not scroll under the open dialog */
 html:has(.search-modal[open]) {
   overflow: hidden;
+  /* Keep the scrollbar's space, so the page does not widen by a scrollbar
+     when the lock is released while the dialog is still fading out */
+  scrollbar-gutter: stable;
 }
 
 .search-wrapper {
