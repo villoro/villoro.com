@@ -35,7 +35,7 @@
   border-radius: 0 0 12px 12px;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.7;
   margin: 0;
 }
@@ -110,7 +110,7 @@
   background: #0b1026;
   color: #fff;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
   white-space: nowrap;
   pointer-events: none;
@@ -147,12 +147,12 @@
 
 /* ── Paragraphs, lists ───────────────────────────────── */
 .al-body .article-content {
-  font-size: 17px;
+  font-size: 1.0625rem;
   line-height: 1.75;
   color: var(--color-navy-900);
 }
 .al-body .article-content > p:first-of-type {
-  font-size: 20px;
+  font-size: 1.25rem;
   color: var(--color-ink-800);
   margin-bottom: 32px;
 }
@@ -219,7 +219,7 @@
 
 .al-body .article-content h2 {
   counter-increment: al-h2;
-  font-size: 34px;
+  font-size: 2.125rem;
   letter-spacing: -0.02em;
   line-height: 1.15;
   margin: 56px 0 20px;
@@ -232,7 +232,7 @@
 
 .al-body .article-content h3 {
   counter-increment: al-h3;
-  font-size: 22px;
+  font-size: 1.375rem;
   letter-spacing: -0.015em;
   line-height: 1.25;
   margin: 40px 0 14px;
@@ -245,7 +245,7 @@
 
 .al-body .article-content h4 {
   counter-increment: al-h4;
-  font-size: 18px;
+  font-size: 1.125rem;
   margin: 28px 0 10px;
 }
 .al-body .article-content h4::before {
@@ -256,7 +256,7 @@
 
 .al-body .article-content h5 {
   counter-increment: al-h5;
-  font-size: 16px;
+  font-size: 1rem;
   margin: 22px 0 8px;
 }
 .al-body .article-content h5::before {
@@ -370,7 +370,7 @@
 .al-body .article-content .terminal-output__body {
   padding: 9px 26px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
@@ -456,7 +456,7 @@
   padding: 9px 22px;
   background: rgba(120, 120, 120, 0.1);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--color-navy-900);
 }
 
@@ -507,7 +507,7 @@
   align-items: center;
   flex-shrink: 0;
   margin-top: 2px;
-  font-size: 18px;
+  font-size: 1.125rem;
   line-height: 1;
 }
 .al-body .article-content .notice > span:last-child {
@@ -536,7 +536,7 @@
   -webkit-overflow-scrolling: touch;
   border-collapse: collapse;
   margin: 24px 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
   border: 1px solid var(--color-grey-100);
   border-radius: 10px;
 }
