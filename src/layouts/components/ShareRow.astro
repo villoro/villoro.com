@@ -22,9 +22,32 @@ const postUrl = `${base}/${blogFolder}/${slug}/`;
   <span class="sr__label">Share this post</span>
   <div class="sr__btns">
     <!-- Copy link -->
-    <button type="button" class="icon-btn" aria-label="Copy link" data-sr-copy>
-      <SocialIcon name="copy" size={16} />
+    <button
+      type="button"
+      class="icon-btn icon-btn-blue"
+      aria-label="Copy link"
+      data-sr-copy
+    >
+      <span class="sr__copy-icon">
+        <SocialIcon name="copy" size={16} />
+      </span>
+      <svg
+        class="sr__done-icon"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M20 6 9 17l-5-5"></path>
+      </svg>
     </button>
+    <!-- Announces the result; outside the button, whose children are presentational -->
+    <span class="sr-only" role="status" data-sr-status></span>
 
     <!-- LinkedIn -->
     <a
@@ -61,15 +84,27 @@ const postUrl = `${base}/${blogFolder}/${slug}/`;
 
 <script>
   function initCopyBtn() {
-    document.querySelectorAll("[data-sr-copy]").forEach((btn) => {
+    document.querySelectorAll<HTMLElement>("[data-sr-copy]").forEach((btn) => {
+      // astro:after-swap and astro:page-load both call this: bind once
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "true";
+      const status = btn.nextElementSibling as HTMLElement | null;
+      let timer: number;
       btn.addEventListener("click", async () => {
+        let ok = true;
         try {
           await navigator.clipboard.writeText(window.location.href);
-          (btn as HTMLElement).style.background = "var(--color-blue-500)";
-          setTimeout(() => {
-            (btn as HTMLElement).style.background = "";
-          }, 800);
-        } catch {}
+        } catch {
+          ok = false;
+        }
+        clearTimeout(timer);
+        // Icon swap, not a colour flash: the button is already blue
+        btn.toggleAttribute("data-copied", ok);
+        if (status) status.textContent = ok ? "Link copied" : "Copy failed";
+        timer = window.setTimeout(() => {
+          btn.removeAttribute("data-copied");
+          if (status) status.textContent = "";
+        }, 1500);
       });
     });
   }
@@ -102,6 +137,14 @@ const postUrl = `${base}/${blogFolder}/${slug}/`;
   .sr__btns {
     display: flex;
     gap: 8px;
+  }
+
+  .sr__done-icon,
+  [data-sr-copy][data-copied] .sr__copy-icon {
+    display: none;
+  }
+  [data-sr-copy][data-copied] .sr__done-icon {
+    display: block;
   }
 
   @media (max-width: 767px) {
