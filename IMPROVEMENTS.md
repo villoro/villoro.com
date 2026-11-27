@@ -80,6 +80,6 @@ So nobody audits these again soon:
 - Old `/post/*` URLs are redirected.
 - **Chrome's `modern-web-guidance`, checked 2026-11-27.** `legacy-scan src public/js` reports 4 findings; none worth a change:
   - `scrollspy` (`ArticleTOC`): `scroll-target-group` is Chrome-only, so the `IntersectionObserver` would stay as the fallback. More code, not less.
-  - `dark-mode-toggle`: the guide wants `<meta name="color-scheme">` plus `light-dark()`. The site's `.dark` token remap already works; only the plain `color-scheme` property was missing (fixed).
+  - `dark-mode-toggle`: the guide wants `<meta name="color-scheme">` plus `light-dark()`. The site's `.dark` token remap already works; only the plain `color-scheme` property was missing (set in the next PR).
   - `js/copying-array-methods` (`sortFunctions.ts`): `toSorted` is not in the `es6` TS target. Nothing to gain.
   - Speculation rules (`improve-next-page-load-performance`): not useful, `ClientRouter` navigates with `fetch`, not with browser navigations.
