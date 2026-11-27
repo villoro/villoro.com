@@ -1,0 +1,47 @@
+---
+/**
+ * TableScrollHint — marks the post tables that have more content off-screen,
+ * so prose.css can fade that edge. Script only.
+ *
+ * Tables scroll sideways on a phone and nothing says so: a clipped column
+ * looks like the end of the table. This sets `data-more="right"`, "left" or
+ * "left right" on each table as it scrolls or is resized. Plain scroll and
+ * resize listeners: works in every browser (CSS `scroll-state()` queries are
+ * Chromium-only).
+ */
+---
+
+<script>
+  const update = (table: HTMLElement) => {
+    const max = table.scrollWidth - table.clientWidth;
+    const more: string[] = [];
+    // Ignore a few pixels of overflow (borders, rounding): a fade for 3px of
+    // scroll would only look like a glitch. scrollLeft is fractional on some
+    // zoom levels, hence the 1px slack at the ends.
+    if (max > 8 && table.scrollLeft > 1) more.push("left");
+    if (max > 8 && table.scrollLeft < max - 1) more.push("right");
+    if (more.length) table.dataset.more = more.join(" ");
+    else delete table.dataset.more;
+  };
+
+  const setup = () => {
+    document
+      .querySelectorAll<HTMLElement>(".article-content table")
+      .forEach((table) => {
+        if (table.dataset.hint) return;
+        table.dataset.hint = "true";
+        table.addEventListener("scroll", () => update(table), {
+          passive: true,
+        });
+        update(table);
+      });
+  };
+
+  const refresh = () =>
+    document
+      .querySelectorAll<HTMLElement>(".article-content table")
+      .forEach(update);
+
+  window.addEventListener("resize", refresh);
+  document.addEventListener("astro:page-load", setup);
+</script>

@@ -26,6 +26,7 @@ import ArticleTOC from "@/components/ArticleTOC.astro";
 import CTAStrip from "@/components/CTAStrip.astro";
 import ShareRow from "@/components/ShareRow.astro";
 import CodeCopy from "@/components/CodeCopy.astro";
+import TableScrollHint from "@/components/TableScrollHint.astro";
 import RelatedPostsGrid from "@/components/RelatedPostsGrid.astro";
 import GiscusComments from "@/components/GiscusComments.astro";
 import { slugify } from "@/lib/utils/textConverter";
@@ -256,6 +257,7 @@ if (image) {
         <div class="article-content">
           <slot />
           <CodeCopy />
+          <TableScrollHint />
         </div>
 
         <CTAStrip />

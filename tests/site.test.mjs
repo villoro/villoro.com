@@ -342,6 +342,15 @@ test("every chart <canvas> is an image with a text description", () => {
       .filter((tag) => !/\brole="img"/.test(tag) || !/\baria-label="[^"]{10,}"/.test(tag))
       .map((tag) => `${page.url}: ${tag.slice(0, 60)}`),
   );
+test("every table has a name and column scopes, so a screen reader can announce it", () => {
+  const offenders = pages.flatMap((page) => [
+    ...(page.body.match(/<table\b[^>]*>/g) ?? [])
+      .filter((tag) => !/\baria-label="[^"]+"/.test(tag))
+      .map((tag) => `${page.url}: unnamed ${tag.slice(0, 50)}`),
+    ...(page.body.match(/<th\b[^>]*>/g) ?? [])
+      .filter((tag) => !/\bscope=/.test(tag))
+      .map((tag) => `${page.url}: ${tag} without scope`),
+  ]);
   assert.deepEqual(offenders, []);
 });
 
