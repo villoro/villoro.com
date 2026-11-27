@@ -35,7 +35,14 @@ What is left to improve on `villoro.com`, and how to carry on. It started as an 
 
 ## Open items
 
-None.
+From the second pass over Chrome's [modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) guides (2026-11-27). Everything cheap and safe from that pass is done; these need a decision or are low value. Ordered by value.
+
+1. **Defer gtag.js until after `load`** (decision: touches "GA4 stays"). Measured on the live post at 412 px, 1.6 Mbps, 4x CPU: blocking gtag.js moves LCP from about 2.35-2.40 s to 1.83-1.95 s, because its 165 KB competes with the 93 KB hero. Keep the `dataLayer` snippet and inject `gtag/js` from a `load` listener (or `requestIdleCallback`). Cost: visitors who leave before `load` are not counted; check GA4 Realtime after. Files: `BaseRedesign.astro`.
+2. **The sticky category ribbon uses a lot of the viewport** (design). At 1280x720 nav plus ribbon is 231 px (32%), because the 11 chips wrap to two rows; at 768 px the ribbon alone is 157 px. Its `top: 74px` is also a stale constant (the nav is 62-95 px). Make `.cr__chips` one scrollable row with a fade-mask hint and `scroll-initial-target` on the active chip, and replace the constant with a `--nav-h` variable. Guides: `single-line-overflow`, `content-first-noise-reduction`.
+3. **42 of the 43 chart `<canvas>` in old posts have no `role="img"` or `aria-label`.** New charts follow the rule in AGENTS.md; the old ones need a one-line description each (M, 16 posts).
+4. **Tables in posts**: scrolling tables are focusable but have no name or `role="region"`, no hint that more is off-screen (at 390 px a 687 px table sits in 348 px), and 28 `<th>` without `scope` on one post. `rehype-table-focus.mjs` could add `scope="col"`; a `scroll-state(scrollable)` edge shadow works in Chromium only. Guides: `responsive-table`, `scrollability-affordance-hints`.
+5. **Breadcrumb markup**: bare links in a flex `<nav>`. The guide wants `<ol><li>`, underlined links and the label "Breadcrumbs". `about.astro` has its own copy of the markup instead of using `Breadcrumb.astro`: fold it in at the same time.
+6. **Search dialog has no open/close animation** (optional): `@starting-style` with `transition-behavior: allow-discrete`, off under `prefers-reduced-motion`. Guide: `animate-to-from-top-layer`.
 
 ## Waiting on upstream
 
@@ -73,6 +80,12 @@ So nobody audits these again soon:
 - The PWA precaches only hashed assets and serves pages network-first.
 - Security headers are set in `netlify.toml`, including a CSP limited to `frame-ancestors`, `object-src` and `base-uri` plus `Cross-Origin-Opener-Policy: same-origin-allow-popups`. A `script-src` is not set: with the inline GA4 and Giscus loaders it needs per-script hashes (they change when the inline code does), which is not worth it for a static blog without user input.
 - Old `/post/*` URLs are redirected.
+- **Second pass over modern-web-guidance, checked 2026-11-27** (four reviewers plus manual checks; every finding was reproduced in Chrome before a fix):
+  - `defer-rendering-heavy-content`: `content-visibility: auto` on article blocks saved 0-200 ms of layout on the longest post (noisy) and changed its height by about 20% (wrong placeholder size, scrollbar jumps). Not worth it.
+  - `respect-os-text-scale` (`<meta name="text-scale">`): Chrome 146+ on Android only; the sizes are in `rem` now, so it could be enabled later, but layout boxes are still `px`.
+  - `optimize-image-priority`, `optimize-preload-priority`, `visually-stable-font-fallbacks`: already right (hero `fetchpriority=high` with matching AVIF preload; font swap shifts under 0.004 CLS).
+  - `scroll-padding-top` for sticky-nav focus: headings already have `scroll-margin-top`, and adding both would double the offset.
+  - `search-hidden-content`, `light-dismiss-a-dialog`: native `<details>` is findable, and the dialog fills the viewport so an outside click closes it everywhere.
 - **Chrome's `modern-web-guidance`, checked 2026-11-27.** `legacy-scan src public/js` reports 4 findings; none worth a change:
   - `scrollspy` (`ArticleTOC`): `scroll-target-group` is Chrome-only, so the `IntersectionObserver` would stay as the fallback. More code, not less.
   - `dark-mode-toggle`: the guide wants `<meta name="color-scheme">` plus `light-dark()`. The site's `.dark` token remap already works; only the plain `color-scheme` property was missing (set in the next PR).
